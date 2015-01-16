@@ -88,6 +88,7 @@ void dir_adddialog::setupUI()
     mainLayout->addLayout(mainPBLayout);
     dlg1Layout->addWidget(dirAliasL, 0, 0);
     dlg1Layout->addWidget(dirAliasLE, 0, 1, 1, 2);
+    connect(dirAliasLE, SIGNAL(editingFinished()), this, SLOT(transliteDirName()));
     dlg1Layout->addWidget(dirFieldNumL, 1, 0);
     dlg1Layout->addWidget(dirFieldNumSB, 1, 1, 1, 2);
     dlg1Layout->addWidget(dirBelongL, 2, 0);
@@ -190,16 +191,16 @@ void dir_adddialog::WriteAndClose()
     s_tqspinbox *sb = new s_tqspinbox;
     dirNameLE = this->findChild<s_tqLineEdit *>("dirName");
     if (dirNameLE == 0)
-        WarningAndClose(80);
+        WarningAndClose(11);
     dirAliasLE = this->findChild<s_tqLineEdit *>("dirAlias");
     if (dirAliasLE == 0)
-        WarningAndClose(80);
+        WarningAndClose(12);
     dirAccessLE = this->findChild<s_tqLineEdit *>("dirAccess");
     if (dirAccessLE == 0)
-        WarningAndClose(80);
+        WarningAndClose(13);
     dirB = this->findChild<s_tqCheckBox *>("dirBelong");
     if (dirB == 0)
-        WarningAndClose(80);
+        WarningAndClose(14);
     dir = (dirB->isChecked())?"sup.":"ent.";
     dir += dirNameLE->text();
     QSqlDatabase db = sqlc.getdb(dir.left(3));
@@ -227,13 +228,13 @@ void dir_adddialog::WriteAndClose()
     }
     sb = this->findChild<s_tqspinbox *>("dirFieldNum");
     if (sb == 0)
-        WarningAndClose(81);
+        WarningAndClose(15);
     sl.clear();
     for (i = 0; i < sb->value(); i++)
     {
         lef = this->findChild<s_tqLineEdit *>("parf"+QString::number(i)+"LE");
         if (lef == 0)
-            WarningAndClose(82);
+            WarningAndClose(16);
         sl << lef->text();
     }
 //    sl << "date" << "deleted";
@@ -337,35 +338,35 @@ void dir_adddialog::updateTWFields(int fn)
     {
         ll = this->findChild<s_tqLabel *>("par1"+QString::number(i)+"L");
         if (ll == 0)
-            WarningAndClose(71);
+            WarningAndClose(21);
         ll->setVisible(true);
         ll = this->findChild<s_tqLabel *>("par2"+QString::number(i)+"L");
         if (ll == 0)
-            WarningAndClose(72);
+            WarningAndClose(22);
         ll->setVisible(true);
         ll = this->findChild<s_tqLabel *>("par3"+QString::number(i)+"L");
         if (ll == 0)
-            WarningAndClose(73);
+            WarningAndClose(23);
         ll->setVisible(true);
         le = this->findChild<s_tqLineEdit *>("parf"+QString::number(i)+"LE");
         if (le == 0)
-            WarningAndClose(74);
+            WarningAndClose(24);
         le->setVisible(true);
         le = this->findChild<s_tqLineEdit *>("parv2"+QString::number(i)+"LE");
         if (le == 0)
-            WarningAndClose(75);
+            WarningAndClose(25);
         le->setVisible(true);
         le = this->findChild<s_tqLineEdit *>("parv"+QString::number(i)+"LE");
         if (le == 0)
-            WarningAndClose(76);
+            WarningAndClose(26);
         le->setVisible(true);
         cb = this->findChild<s_tqComboBox *>("par"+QString::number(i)+"CB");
         if (cb == 0)
-            WarningAndClose(77);
+            WarningAndClose(27);
         cb->setVisible(true);
         pb = this->findChild<s_tqPushButton *>("par"+QString::number(i)+"PB");
         if (pb == 0)
-            WarningAndClose(78);
+            WarningAndClose(28);
         pb->setVisible(true);
         if (cb->currentIndex() == 0)
         {
@@ -383,35 +384,35 @@ void dir_adddialog::updateTWFields(int fn)
     {
         ll = this->findChild<s_tqLabel *>("par1"+QString::number(i)+"L");
         if (ll == 0)
-            WarningAndClose(71);
+            WarningAndClose(29);
         ll->setVisible(false);
         ll = this->findChild<s_tqLabel *>("par2"+QString::number(i)+"L");
         if (ll == 0)
-            WarningAndClose(72);
+            WarningAndClose(30);
         ll->setVisible(false);
         ll = this->findChild<s_tqLabel *>("par3"+QString::number(i)+"L");
         if (ll == 0)
-            WarningAndClose(73);
+            WarningAndClose(31);
         ll->setVisible(false);
         le = this->findChild<s_tqLineEdit *>("parf"+QString::number(i)+"LE");
         if (le == 0)
-            WarningAndClose(74);
+            WarningAndClose(32);
         le->setVisible(false);
         le = this->findChild<s_tqLineEdit *>("parv"+QString::number(i)+"LE");
         if (le == 0)
-            WarningAndClose(75);
+            WarningAndClose(33);
         le->setVisible(false);
         le = this->findChild<s_tqLineEdit *>("parv2"+QString::number(i)+"LE");
         if (le == 0)
-            WarningAndClose(76);
+            WarningAndClose(34);
         le->setVisible(false);
         cb = this->findChild<s_tqComboBox *>("par"+QString::number(i)+"CB");
         if (cb == 0)
-            WarningAndClose(77);
+            WarningAndClose(35);
         cb->setVisible(false);
         pb = this->findChild<s_tqPushButton *>("par"+QString::number(i)+"PB");
         if (pb == 0)
-            WarningAndClose(78);
+            WarningAndClose(36);
         pb->setVisible(false);
         i++;
     }
@@ -449,15 +450,15 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
     s_tqspinbox *sb = new s_tqspinbox;
     sb = this->findChild<s_tqspinbox *>("dirFieldNum");
     if (sb == 0)
-        WarningAndClose(62);
+        WarningAndClose(41);
     s_tqComboBox *cb = new s_tqComboBox;
     cb = this->findChild<s_tqComboBox *>("par"+QString::number(idx)+"CB");
     if (cb == 0)
-        WarningAndClose(63);
+        WarningAndClose(42);
     s_tqLineEdit *le = new s_tqLineEdit;
     le = this->findChild<s_tqLineEdit *>("parv"+QString::number(idx)+"LE");
     if (le == 0)
-        WarningAndClose(64);
+        WarningAndClose(43);
     switch (cb->currentIndex())
     {
     case 0:
@@ -468,7 +469,7 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
     {
         sqlc.prepareslsfortree(sl1, sl2);
         if (sl1.isEmpty())
-            WarningAndClose(61);
+            WarningAndClose(44);
         s_tablefilterdialog *tabledialog = new s_tablefilterdialog;
         QString tmpString = le->text().split(".").last();
         tabledialog->SetupUI(sl1, sl2, tmpString);
@@ -488,7 +489,7 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
     {
         QSqlDatabase db = sqlc.getdb(dir.left(3));
         if (!db.isValid())
-            WarningAndClose(11);
+            WarningAndClose(45);
         QString tble = dir.right(dir.size()-4);
         QStringList fl = sqlc.getcolumnsfromtable(db, tble);
         s_tablefilterdialog *tabledialog = new s_tablefilterdialog;
@@ -541,9 +542,9 @@ void dir_adddialog::updateFLE(QString str)
     s_tqComboBox *cb = new s_tqComboBox;
     cb = this->findChild<s_tqComboBox *>("par"+QString::number(idx)+"CB");
     if (cb == 0)
-        WarningAndClose(42);
+        WarningAndClose(61);
     if (le == 0)
-        WarningAndClose(43);
+        WarningAndClose(62);
     switch (cb->currentIndex())
     {
     case 1:
@@ -576,7 +577,7 @@ void dir_adddialog::updateALE(long rights)
     s_tqLineEdit *le = new s_tqLineEdit;
     le = this->findChild<s_tqLineEdit *>("parv"+QString::number(idx)+"LE");
     if (le == 0)
-        WarningAndClose(31);
+        WarningAndClose(71);
     le->setText(QString::number(rights, 16));
 }
 
@@ -588,11 +589,11 @@ void dir_adddialog::fillFields()
     s_tqComboBox *cb = new s_tqComboBox;
     QSqlDatabase db = sqlc.getdb(dir.left(3));
     if (!db.isValid())
-        WarningAndClose(11);
+        WarningAndClose(72);
     QString tble = dir.right(dir.size()-4);
     QStringList fl = sqlc.getcolumnsfromtable(db, tble);
     if (fl.isEmpty())
-        WarningAndClose(12);
+        WarningAndClose(73);
     fl.removeAll("id"+tble); // поле с ИД пишется независимо
     fl.removeAll("idpers"); // поле idpers пишется независимо
     fl.removeAll("date"); // поле date пишется независимо
@@ -607,27 +608,27 @@ void dir_adddialog::fillFields()
     s_tqLineEdit *dirNameLE = new s_tqLineEdit;
     dirNameLE = this->findChild<s_tqLineEdit *>("dirName");
     if (dirNameLE == 0)
-        WarningAndClose(21);
+        WarningAndClose(74);
     s_tqLineEdit *dirAliasLE = new s_tqLineEdit;
     dirAliasLE = this->findChild<s_tqLineEdit *>("dirAlias");
     if (dirAliasLE == 0)
-        WarningAndClose(22);
+        WarningAndClose(75);
     s_tqCheckBox *dirBelongC = new s_tqCheckBox;
     dirBelongC = this->findChild<s_tqCheckBox *>("dirBelong");
     if (dirBelongC == 0)
-        WarningAndClose(23);
+        WarningAndClose(76);
     s_tqLineEdit *dirAccessLE = new s_tqLineEdit;
     dirAccessLE = this->findChild<s_tqLineEdit *>("dirAccess");
     if (dirAccessLE == 0)
-        WarningAndClose(24);
+        WarningAndClose(77);
     s_tqspinbox *sb = new s_tqspinbox;
     sb = this->findChild<s_tqspinbox *>("dirFieldNum");
     if (sb == 0)
-        WarningAndClose(25);
+        WarningAndClose(78);
     dirNameLE->setText(dir.right(dir.size()-4));
     QString tmpString = sqlc.getvaluefromtablebyfield(sqlc.getdb("sup"),"dirlist","dirlist","pc",dir);
     if (tmpString.isEmpty())
-        WarningAndClose(15);
+        WarningAndClose(79);
     dirAliasLE->setText(tmpString);
     if (dir.left(3) == "ent")
         dirBelongC->setChecked(false);
@@ -635,7 +636,7 @@ void dir_adddialog::fillFields()
         dirBelongC->setChecked(true);
     tmpString = sqlc.getvaluefromtablebyfield(sqlc.getdb("sup"),"dirlist","access","pc",dir);
     if (tmpString.isEmpty())
-        WarningAndClose(16);
+        WarningAndClose(80);
     dirAccessLE->setText(tmpString);
     sb->setValue(fl.size());
     for (int i = 0; i < fl.size(); i++)
@@ -644,16 +645,16 @@ void dir_adddialog::fillFields()
             break;
         lef = this->findChild<s_tqLineEdit *>("parf"+QString::number(i)+"LE"); // имя поля
         if (lef == 0)
-            WarningAndClose(26);
+            WarningAndClose(81);
         lel = this->findChild<s_tqLineEdit *>("parv"+QString::number(i)+"LE"); // строка 1
         if (lel == 0)
-            WarningAndClose(27);
+            WarningAndClose(82);
         lev = this->findChild<s_tqLineEdit *>("parv2"+QString::number(i)+"LE"); // строка 2
         if (lev == 0)
-            WarningAndClose(27);
+            WarningAndClose(83);
         cb = this->findChild<s_tqComboBox *>("par"+QString::number(i)+"CB");
         if (cb == 0)
-            WarningAndClose(28);
+            WarningAndClose(84);
         lef->setText(fl.at(i));
         if (i < vl1.size())
         {
@@ -680,11 +681,33 @@ void dir_adddialog::fillFields()
 
 void dir_adddialog::WarningAndClose(int res)
 {
-    s_acceptdialog *dlg = new s_acceptdialog("warning!","Ошибка заполнения №"+QString::number(res));
+    s_acceptdialog *dlg = new s_acceptdialog("warning!","Ошибка dir_adddialog №"+QString::number(res));
     connect(dlg,SIGNAL(accepted()), this, SLOT(close()));
 }
 
 void dir_adddialog::WarningStr(QString str)
 {
     QMessageBox::warning(this, "warning!", str);
+}
+
+void dir_adddialog::transliteFieldName()
+{
+
+}
+
+void dir_adddialog::transliteDirName()
+{
+    s_tqLineEdit *dirNameLE = new s_tqLineEdit;
+    s_tqLineEdit *dirAliasLE = new s_tqLineEdit;
+    dirNameLE = this->findChild<s_tqLineEdit *>("dirName");
+    if (dirNameLE == 0)
+        WarningAndClose(91);
+    if (dirNameLE->text().isEmpty())
+    {
+        dirAliasLE = this->findChild<s_tqLineEdit *>("dirAlias");
+        if (dirAliasLE == 0)
+            WarningAndClose(92);
+        QString tmpString = pc.getTranslit(dirAliasLE->text());
+        dirNameLE->setText(tmpString);
+    }
 }

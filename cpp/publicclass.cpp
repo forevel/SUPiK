@@ -265,11 +265,13 @@ QString PublicClass::getTranslit(QString str)
     QString newstr = "";
     for (i = 0; i < str.size(); i++)
     {
-        QChar chr = str.at(i);
+        chr = str.at(i);
         if (RUSLAT.contains(chr))
             newstr += RUSLAT.value(chr);
         else
             newstr += chr;
+        QString tmpString = RUSLAT.value('е');
+        chr = RUSLAT.key("E");
     }
     return newstr;
 }

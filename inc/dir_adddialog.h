@@ -42,6 +42,8 @@ private slots:
     void updateFLE(QString str);
     void updateALE(long rights);
     void fillFields();
+    void transliteDirName();
+    void transliteFieldName();
 };
 
 #endif // DIR_ADDDIALOG_H

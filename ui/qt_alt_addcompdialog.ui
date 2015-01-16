@@ -1,0 +1,1403 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>qt_alt_addcompdialog</class>
+ <widget class="QDialog" name="qt_alt_addcompdialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>622</width>
+    <height>592</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>622</width>
+    <height>592</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>622</width>
+    <height>592</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Редактор компонентов</string>
+  </property>
+  <property name="windowIcon">
+   <iconset>
+    <normaloff>:/pic/Pic/Супик.png</normaloff>:/pic/Pic/Супик.png</iconset>
+  </property>
+  <property name="whatsThis">
+   <string/>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">background-color: rgb(207, 255, 196);</string>
+  </property>
+  <property name="modal">
+   <bool>true</bool>
+  </property>
+  <widget class="QGroupBox" name="CompGB">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>50</y>
+     <width>361</width>
+     <height>112</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <italic>false</italic>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: rgb(170, 170, 0);
+background-color: rgb(200, 255, 196);</string>
+   </property>
+   <property name="title">
+    <string>Компонент</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+   </property>
+   <property name="flat">
+    <bool>false</bool>
+   </property>
+   <widget class="QLineEdit" name="PartNumberLE">
+    <property name="geometry">
+     <rect>
+      <x>110</x>
+      <y>70</y>
+      <width>241</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Наименование компонента. При выборе &amp;quot;НКП&amp;quot; в поле &amp;quot;Производитель&amp;quot; данное поле становится составным из полей &amp;quot;Ном. значение&amp;quot;, &amp;quot;Точность&amp;quot;, &amp;quot;Макс. рассеив. мощность&amp;quot; и &amp;quot;Тип корпуса&amp;quot; для разделов &amp;quot;Резисторы&amp;quot; и &amp;quot;Конденсаторы&amp;quot;. В остальных случаях производителя &amp;quot;НКП&amp;quot; для заполнения данного поля необходимо использовать поле &amp;quot;Префикс&amp;quot;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 85, 0);</string>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="ManufCB">
+    <property name="geometry">
+     <rect>
+      <x>110</x>
+      <y>31</y>
+      <width>171</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Производитель компонента. &amp;quot;НКП&amp;quot; означает &amp;quot;Неизвестный Китайский Производитель&amp;quot;, выбирается для компонентов, для которых нет однозначного наименования (например, для конденсаторов или резисторов). У поставщиков такие компоненты обычно именуются по нескольким характеристикам - номиналу, мощности, точности, типоразмеру. Подобная практика работает и здесь, при выборе &amp;quot;НКП&amp;quot; в данном поле начинают играть роль поля Ном. значения, Точности и т.д.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="toolTipDuration">
+     <number>-1</number>
+    </property>
+    <property name="whatsThis">
+     <string/>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 85, 0);</string>
+    </property>
+    <property name="maxVisibleItems">
+     <number>7</number>
+    </property>
+    <property name="insertPolicy">
+     <enum>QComboBox::InsertAtBottom</enum>
+    </property>
+   </widget>
+   <widget class="QLabel" name="ManufL">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>33</y>
+      <width>91</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 170, 0);</string>
+    </property>
+    <property name="text">
+     <string>Производитель</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="PartNumberL">
+    <property name="geometry">
+     <rect>
+      <x>11</x>
+      <y>70</y>
+      <width>91</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 170, 0);</string>
+    </property>
+    <property name="text">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Наименование&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="AddManufPB">
+    <property name="geometry">
+     <rect>
+      <x>290</x>
+      <y>30</y>
+      <width>61</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Добавить</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QLabel" name="AddCompL">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>2</y>
+     <width>201</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Ignored" vsizetype="Preferred">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="minimumSize">
+    <size>
+     <width>0</width>
+     <height>0</height>
+    </size>
+   </property>
+   <property name="maximumSize">
+    <size>
+     <width>361</width>
+     <height>31</height>
+    </size>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>15</pointsize>
+     <italic>false</italic>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: rgb(85, 170, 0);</string>
+   </property>
+   <property name="text">
+    <string>Добавить компонент</string>
+   </property>
+  </widget>
+  <widget class="QGroupBox" name="LibGB">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>170</y>
+     <width>361</width>
+     <height>111</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: rgb(170, 170, 0);
+background-color: rgb(200, 255, 196);</string>
+   </property>
+   <property name="title">
+    <string>Библиотеки</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+   </property>
+   <property name="flat">
+    <bool>false</bool>
+   </property>
+   <widget class="QComboBox" name="FootPrintCB">
+    <property name="geometry">
+     <rect>
+      <x>110</x>
+      <y>70</y>
+      <width>241</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Выбор посадочного места компонента из библиотеки. Для этого оно должно уже присутствовать в библиотеке&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 85, 0);</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="LibRefL">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>30</y>
+      <width>81</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 170, 0);</string>
+    </property>
+    <property name="text">
+     <string>УГО (символ)</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="FootPrintL">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>64</y>
+      <width>81</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 170, 0);</string>
+    </property>
+    <property name="text">
+     <string>Посадочное
+место</string>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="LibRefCB">
+    <property name="geometry">
+     <rect>
+      <x>110</x>
+      <y>30</y>
+      <width>241</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Выбор символа из библиотеки символов. Для этого символ должен уже присутствовать в библиотеке&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 85, 0);</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QGroupBox" name="PE3GB">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>290</y>
+     <width>361</width>
+     <height>112</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: rgb(170, 170, 0);
+background-color: rgb(200, 255, 196);</string>
+   </property>
+   <property name="title">
+    <string>Поля перечня элементов</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+   </property>
+   <widget class="QLineEdit" name="PEDescLE">
+    <property name="geometry">
+     <rect>
+      <x>110</x>
+      <y>30</y>
+      <width>241</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Описание компонента так, как оно будет представлено в перечне элементов&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 85, 0);</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="PEDescL">
+    <property name="geometry">
+     <rect>
+      <x>8</x>
+      <y>30</y>
+      <width>91</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 170, 0);</string>
+    </property>
+    <property name="text">
+     <string>Наименование</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="PENotesLE">
+    <property name="geometry">
+     <rect>
+      <x>110</x>
+      <y>70</y>
+      <width>241</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Поле &amp;quot;Примечание&amp;quot; для перечня элементов&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 85, 0);</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="PENotesL">
+    <property name="geometry">
+     <rect>
+      <x>8</x>
+      <y>70</y>
+      <width>71</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 170, 0);</string>
+    </property>
+    <property name="text">
+     <string>Примечание</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QGroupBox" name="PackageGB">
+   <property name="geometry">
+    <rect>
+     <x>380</x>
+     <y>320</y>
+     <width>231</width>
+     <height>81</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>MS Shell Dlg 2</family>
+     <weight>50</weight>
+     <italic>false</italic>
+     <bold>false</bold>
+     <underline>false</underline>
+     <strikeout>false</strikeout>
+     <stylestrategy>PreferDefault</stylestrategy>
+     <kerning>false</kerning>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: rgb(170, 170, 0);
+background-color: rgb(200, 255, 196);</string>
+   </property>
+   <property name="title">
+    <string>Корпус</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+   </property>
+   <widget class="QLabel" name="TypeL">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>20</y>
+      <width>31</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 170, 0);</string>
+    </property>
+    <property name="text">
+     <string>Тип</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="MarkL">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>50</y>
+      <width>61</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 170, 0);</string>
+    </property>
+    <property name="text">
+     <string>Маркировка</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="TypeLE">
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>20</y>
+      <width>111</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 85, 0);</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="MarkLE">
+    <property name="geometry">
+     <rect>
+      <x>110</x>
+      <y>50</y>
+      <width>111</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Буквенно-цифровая маркировка на корпусе компонента&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 85, 0);</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="isSMDL">
+    <property name="geometry">
+     <rect>
+      <x>167</x>
+      <y>20</y>
+      <width>31</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 170, 0);</string>
+    </property>
+    <property name="text">
+     <string>SMD?</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="isSMDCB">
+    <property name="geometry">
+     <rect>
+      <x>200</x>
+      <y>20</y>
+      <width>21</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="sizeIncrement">
+     <size>
+      <width>0</width>
+      <height>0</height>
+     </size>
+    </property>
+    <property name="baseSize">
+     <size>
+      <width>0</width>
+      <height>0</height>
+     </size>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Если компонент монтируется планарным способом, обязательно установите данную отметку&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="checked">
+     <bool>false</bool>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QGroupBox" name="TechGB">
+   <property name="geometry">
+    <rect>
+     <x>380</x>
+     <y>50</y>
+     <width>231</width>
+     <height>261</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: rgb(170, 170, 0);
+background-color: rgb(200, 255, 196);</string>
+   </property>
+   <property name="title">
+    <string>Характеристики</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+   </property>
+   <property name="flat">
+    <bool>false</bool>
+   </property>
+   <widget class="QLabel" name="NomValueL">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>20</y>
+      <width>81</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 170, 0);</string>
+    </property>
+    <property name="text">
+     <string>Ном. значение</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="NomVoltageL">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>49</y>
+      <width>91</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 170, 0);</string>
+    </property>
+    <property name="text">
+     <string>Доп. параметр 1</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="AccuracyL">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>104</y>
+      <width>61</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 170, 0);</string>
+    </property>
+    <property name="text">
+     <string>Точность</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="MinOpTL">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>134</y>
+      <width>91</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 170, 0);</string>
+    </property>
+    <property name="text">
+     <string>Мин. раб. темп.</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="MaxOpTL">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>164</y>
+      <width>91</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 170, 0);</string>
+    </property>
+    <property name="text">
+     <string>Макс. раб. темп.</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="NomValueLE">
+    <property name="geometry">
+     <rect>
+      <x>110</x>
+      <y>20</y>
+      <width>51</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 85, 0);</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="NomVoltageLE">
+    <property name="geometry">
+     <rect>
+      <x>110</x>
+      <y>50</y>
+      <width>82</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Параметр указывается с единицами измерения через пробел&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 85, 0);</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="AccuracyLE">
+    <property name="geometry">
+     <rect>
+      <x>110</x>
+      <y>104</y>
+      <width>82</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Точность указывается в % или буквенно-цифровым способом (например: X5R для конденсаторов). Знак процентов необходимо отделять от значения символом пробела&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 85, 0);</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="MinOpTLE">
+    <property name="geometry">
+     <rect>
+      <x>110</x>
+      <y>134</y>
+      <width>111</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Температуру следует указывать в формате: &amp;quot;+25&amp;quot; или &amp;quot;-10&amp;quot;, т.е. всегда указывать знак температуры&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 85, 0);</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="MaxOpTLE">
+    <property name="geometry">
+     <rect>
+      <x>110</x>
+      <y>164</y>
+      <width>111</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Температуру следует указывать в формате: &amp;quot;+25&amp;quot; или &amp;quot;-10&amp;quot;, т.е. всегда указывать знак температуры&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 85, 0);</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="MaxPowerLE">
+    <property name="geometry">
+     <rect>
+      <x>110</x>
+      <y>194</y>
+      <width>111</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 85, 0);</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="MaxPowerL">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>189</y>
+      <width>81</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 170, 0);</string>
+    </property>
+    <property name="text">
+     <string>Макс. рассеив.
+ мощность</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="TKCL">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>224</y>
+      <width>71</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 170, 0);</string>
+    </property>
+    <property name="text">
+     <string>ТКС (ТКЕ)</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="TKCLE">
+    <property name="geometry">
+     <rect>
+      <x>110</x>
+      <y>224</y>
+      <width>111</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Температурный коэффициент. Обычно указывается в ppm/град. С&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 85, 0);</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="isNeedToAccVoltageInNameCB">
+    <property name="geometry">
+     <rect>
+      <x>203</x>
+      <y>51</y>
+      <width>21</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="sizeIncrement">
+     <size>
+      <width>0</width>
+      <height>0</height>
+     </size>
+    </property>
+    <property name="baseSize">
+     <size>
+      <width>0</width>
+      <height>0</height>
+     </size>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Учёт поля &amp;quot;Доп. параметр 1&amp;quot; в наименовании компонента. Имеет смысл устанавливать данную отметку только для компонентов производителя &amp;quot;НКП&amp;quot; (Неизвестный Китайский Производитель)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="checked">
+     <bool>false</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="isNeedToAccVoltageInNameL">
+    <property name="geometry">
+     <rect>
+      <x>198</x>
+      <y>36</y>
+      <width>31</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 170, 0);</string>
+    </property>
+    <property name="text">
+     <string>Учёт</string>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="isNeedToAccAccuracyInNameCB">
+    <property name="geometry">
+     <rect>
+      <x>203</x>
+      <y>105</y>
+      <width>21</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="sizePolicy">
+     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+      <horstretch>0</horstretch>
+      <verstretch>0</verstretch>
+     </sizepolicy>
+    </property>
+    <property name="sizeIncrement">
+     <size>
+      <width>0</width>
+      <height>0</height>
+     </size>
+    </property>
+    <property name="baseSize">
+     <size>
+      <width>0</width>
+      <height>0</height>
+     </size>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Учёт поля &amp;quot;Точность&amp;quot; в наименовании компонента. Имеет смысл устанавливать данную отметку только для компонентов производителя &amp;quot;НКП&amp;quot; (Неизвестный Китайский Производитель)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="checked">
+     <bool>false</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="isNeedToAccAccuracyInNameL">
+    <property name="geometry">
+     <rect>
+      <x>198</x>
+      <y>90</y>
+      <width>31</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 170, 0);</string>
+    </property>
+    <property name="text">
+     <string>Учёт</string>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="UnitsCB">
+    <property name="geometry">
+     <rect>
+      <x>168</x>
+      <y>20</y>
+      <width>54</width>
+      <height>19</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Обязательно проверяйте выбранные единицы измерения!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 85, 0);</string>
+    </property>
+    <property name="editable">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="CommentL">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>77</y>
+      <width>91</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 170, 0);</string>
+    </property>
+    <property name="text">
+     <string>Доп. параметр 2</string>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="CommentLE">
+    <property name="geometry">
+     <rect>
+      <x>110</x>
+      <y>77</y>
+      <width>82</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Параметр указывается с единицами измерения через пробел&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 85, 0);</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QGroupBox" name="DSheetGB">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>410</y>
+     <width>601</width>
+     <height>61</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: rgb(170, 170, 0);
+background-color: rgb(200, 255, 196);</string>
+   </property>
+   <property name="title">
+    <string>Описание</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+   </property>
+   <property name="flat">
+    <bool>false</bool>
+   </property>
+   <widget class="QPushButton" name="DSheetPB">
+    <property name="geometry">
+     <rect>
+      <x>570</x>
+      <y>20</y>
+      <width>21</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>...</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="DSheetL">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>17</y>
+      <width>81</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 170, 0);</string>
+    </property>
+    <property name="text">
+     <string>Файл описания
+   (Datasheet)</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="DSheetLE">
+    <property name="geometry">
+     <rect>
+      <x>100</x>
+      <y>21</y>
+      <width>461</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Ссылка на файл описания компонента в формате .pdf. Целесообразно файл описания хранить на FSERVER в папке PCAD-Altium-Libs-DSheet в соответствующей категории папке&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">color: rgb(85, 85, 0);</string>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QPushButton" name="AcceptAndClosePB">
+   <property name="geometry">
+    <rect>
+     <x>360</x>
+     <y>560</y>
+     <width>151</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Запись компонента в базу данных для использования в САПР Altium и в 1С&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: rgb(220, 220, 220);</string>
+   </property>
+   <property name="text">
+    <string>Записать и закрыть</string>
+   </property>
+   <property name="icon">
+    <iconset resource="../res/pic.qrc">
+     <normaloff>:/pic/Pic/icon_zap.png</normaloff>:/pic/Pic/icon_zap.png</iconset>
+   </property>
+   <property name="autoDefault">
+    <bool>true</bool>
+   </property>
+   <property name="flat">
+    <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="DeclinePB">
+   <property name="geometry">
+    <rect>
+     <x>520</x>
+     <y>560</y>
+     <width>91</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">border-color: rgb(255, 0, 0);
+background-color: rgb(220, 220, 220);</string>
+   </property>
+   <property name="text">
+    <string>Отмена</string>
+   </property>
+   <property name="icon">
+    <iconset resource="../res/pic.qrc">
+     <normaloff>:/pic/Pic/cross.png</normaloff>:/pic/Pic/cross.png</iconset>
+   </property>
+  </widget>
+  <widget class="QLabel" name="idCompLE">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>550</x>
+     <y>12</y>
+     <width>61</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: rgb(85, 170, 0);</string>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::WinPanel</enum>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Sunken</enum>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="idCompL">
+   <property name="geometry">
+    <rect>
+     <x>530</x>
+     <y>12</y>
+     <width>21</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: rgb(85, 170, 0);</string>
+   </property>
+   <property name="text">
+    <string>iD:</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="SectionL">
+   <property name="geometry">
+    <rect>
+     <x>256</x>
+     <y>10</y>
+     <width>41</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: rgb(85, 170, 0);</string>
+   </property>
+   <property name="text">
+    <string>Раздел:</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="SectionLE">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>300</x>
+     <y>10</y>
+     <width>171</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: rgb(85, 170, 0);</string>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::WinPanel</enum>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Sunken</enum>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="DeletePB">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>560</y>
+     <width>81</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Кнопка пометки компонента на удаление&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: rgb(220, 220, 220);</string>
+   </property>
+   <property name="text">
+    <string>Удалить</string>
+   </property>
+   <property name="icon">
+    <iconset resource="../res/pic.qrc">
+     <normaloff>:/pic/Pic/Deldocy.png</normaloff>:/pic/Pic/Deldocy.png</iconset>
+   </property>
+   <property name="autoDefault">
+    <bool>true</bool>
+   </property>
+   <property name="flat">
+    <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="ModelParPB">
+   <property name="geometry">
+    <rect>
+     <x>140</x>
+     <y>560</y>
+     <width>171</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Параметры модели</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="PrefixLE">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>180</x>
+     <y>481</y>
+     <width>431</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Поле содержит начало строк &amp;quot;Наименование&amp;quot; для компонентов производителя &amp;quot;НКП&amp;quot;. Т.е. для, например, резистора &amp;quot;Чип рез. 0,125 Вт-47 Ом-5%, 0805&amp;quot; данное поле будет содержать начало строки: &amp;quot;Чип рез.&amp;quot;, остальное соберётся из других полей&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: rgb(85, 85, 0);</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="PrefixL">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>120</x>
+     <y>482</y>
+     <width>51</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <weight>50</weight>
+     <bold>false</bold>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: rgb(85, 170, 0);</string>
+   </property>
+   <property name="text">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Префикс&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="isActiveCB">
+   <property name="geometry">
+    <rect>
+     <x>92</x>
+     <y>481</y>
+     <width>21</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="sizeIncrement">
+    <size>
+     <width>0</width>
+     <height>0</height>
+    </size>
+   </property>
+   <property name="baseSize">
+    <size>
+     <width>0</width>
+     <height>0</height>
+    </size>
+   </property>
+   <property name="toolTip">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Обязательно поставьте эту отметку, если компонент в данный момент выпускается производителем!&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+   <property name="autoFillBackground">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="isActiveL">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>479</y>
+     <width>71</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: rgb(85, 170, 0);</string>
+   </property>
+   <property name="text">
+    <string>Выпускается</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="CategoryLE">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>89</x>
+     <y>520</y>
+     <width>491</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="toolTip">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: rgb(85, 85, 0);</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="CategoryL">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>522</y>
+     <width>61</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <weight>50</weight>
+     <bold>false</bold>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: rgb(85, 170, 0);</string>
+   </property>
+   <property name="text">
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Категория&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="CategoryPB">
+   <property name="geometry">
+    <rect>
+     <x>590</x>
+     <y>520</y>
+     <width>21</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>...</string>
+   </property>
+  </widget>
+ </widget>
+ <tabstops>
+  <tabstop>ManufCB</tabstop>
+  <tabstop>AddManufPB</tabstop>
+  <tabstop>PartNumberLE</tabstop>
+  <tabstop>LibRefCB</tabstop>
+  <tabstop>FootPrintCB</tabstop>
+  <tabstop>PEDescLE</tabstop>
+  <tabstop>PENotesLE</tabstop>
+  <tabstop>NomValueLE</tabstop>
+  <tabstop>UnitsCB</tabstop>
+  <tabstop>NomVoltageLE</tabstop>
+  <tabstop>isNeedToAccVoltageInNameCB</tabstop>
+  <tabstop>CommentLE</tabstop>
+  <tabstop>AccuracyLE</tabstop>
+  <tabstop>isNeedToAccAccuracyInNameCB</tabstop>
+  <tabstop>MinOpTLE</tabstop>
+  <tabstop>MaxOpTLE</tabstop>
+  <tabstop>MaxPowerLE</tabstop>
+  <tabstop>TKCLE</tabstop>
+  <tabstop>TypeLE</tabstop>
+  <tabstop>isSMDCB</tabstop>
+  <tabstop>MarkLE</tabstop>
+  <tabstop>DSheetPB</tabstop>
+  <tabstop>isActiveCB</tabstop>
+  <tabstop>PrefixLE</tabstop>
+  <tabstop>DeletePB</tabstop>
+  <tabstop>AcceptAndClosePB</tabstop>
+  <tabstop>DeclinePB</tabstop>
+ </tabstops>
+ <resources>
+  <include location="../res/pic.qrc"/>
+ </resources>
+ <connections/>
+</ui>

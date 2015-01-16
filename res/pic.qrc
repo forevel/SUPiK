@@ -1,0 +1,45 @@
+<RCC>
+    <qresource prefix="/pic">
+        <file>Pic/icon_zap.png</file>
+        <file>Pic/cross.png</file>
+        <file>Pic/Deldoc.png</file>
+        <file>Pic/editdoc.png</file>
+        <file>Pic/newdocx.png</file>
+        <file>Pic/newdocy.png</file>
+        <file>Pic/editdocy.png</file>
+        <file>Pic/Deldocy.png</file>
+        <file>Pic/langGB.png</file>
+        <file>Pic/LangRU.png</file>
+        <file>Pic/ico.ico</file>
+        <file>Pic/icon_zapnz.png</file>
+        <file>Pic/SUPiK.ico</file>
+        <file>Pic/altium.png</file>
+        <file>Pic/arrows3-1.png</file>
+        <file>Pic/kniga_logo.png</file>
+        <file>Pic/Preferences.png</file>
+        <file>Pic/settings.png</file>
+        <file>Pic/wh-out.png</file>
+        <file>Pic/wh-in.png</file>
+        <file>Pic/SdwPB.png</file>
+        <file>Pic/SgePB.png</file>
+        <file>Pic/1.x.png</file>
+        <file>Pic/supik.png</file>
+        <file>Pic/SysWallpaper.png</file>
+        <file>Pic/Sys2Wallpaper.png</file>
+        <file>Pic/CompWallpaper.jpg</file>
+        <file>Pic/directory.jpg</file>
+        <file>Pic/book-angle.png</file>
+        <file>Pic/book-open.png</file>
+        <file>Pic/hr.png</file>
+        <file>Pic/WhWallpaper.jpg</file>
+        <file>Pic/TBWallpaper.jpg</file>
+        <file>Pic/TN.png</file>
+        <file>Pic/lupa.gif</file>
+        <file>Pic/calend.png</file>
+        <file>Pic/export.png</file>
+        <file>Pic/import.png</file>
+        <file>Pic/refresh.png</file>
+        <file>Pic/ok.png</file>
+        <file>Pic/2cWallPaper.png</file>
+    </qresource>
+</RCC>

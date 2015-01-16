@@ -1,0 +1,6 @@
+#include "../inc/s_2cmodel.h"
+
+s_2cmodel::s_2cmodel(QObject *parent) :
+    QAbstractTableModel(parent)
+{
+}

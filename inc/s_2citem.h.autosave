@@ -1,0 +1,10 @@
+#ifndef S_NCITEM_H
+#define S_NCITEM_H
+
+class s_ncitem
+{
+public:
+    s_ncitem();
+};
+
+#endif // S_NCITEM_H

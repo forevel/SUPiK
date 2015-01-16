@@ -1,0 +1,6 @@
+#include "../inc/s_general2columnsdialog.h"
+
+s_general2columnsdialog::s_general2columnsdialog(QWidget *parent) :
+    QDialog(parent)
+{
+}

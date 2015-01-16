@@ -1,0 +1,65 @@
+=SPLASH=setting
+Setting user environment...
+Database connecting...
+=WINDOWTITLES=
+Supik :: Entrance
+Supik :: Settings
+Supik :: Main window
+=DIALOGS=
+---Entrance---
+User name:
+Password:
+Save
+Enter
+---Settings---
+Settings
+Path to Altium libraries:
+System language:
+SQL server address:
+Ok
+Cancel
+---10---
+Choose catalog with library files (including Symbols и Footprints libraries)
+---General---
+Ready
+---200---
+Error!
+Warning!
+User not found!
+Access group not found, contact with administrator!
+User not found or wrong password!
+Can't open database
+Wrong path to library files
+=COMPLABELS=
+Добавить компонент
+Компонент
+Производитель
+Наименование
+Библиотеки
+УГО (символ)
+Посадочное место
+Поля перечня элементов
+Наименование
+Примечание
+Описание
+Файл описания\n(Datasheet)
+Данные для моделирования
+Описание
+Имя файла
+Наим. модели
+Параметры модели
+Раздел
+Характеристики
+Ном. значение
+Ном. напряжение
+Точность
+Мин. раб. темп.
+Макс. раб. темп.
+Макс. рассеив.\nмощность
+ТКС (ТКЕ)
+Корпус
+Тип
+Маркировка
+Прочее
+Выпускается
+Примечания

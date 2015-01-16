@@ -111,7 +111,6 @@ public:
     bool Acknowledged; // признак того, что сообщение о поступлении новых событий мы уже выдавали
     bool UpdateInProgress; // признак того, что список сообщений обновляется
 
-// 0.4b {{{
     struct
     {
         QString MDescLE;
@@ -119,7 +118,79 @@ public:
         QString MNameCB;
         QString MParLE;
     } CompModelData;
-// }}} 0.4b
+
+    static QMap<QChar, QString> ruslat()
+    {
+        QMap<QChar, QString>map;
+        map.insert('А', "A");
+        map.insert('Б', "B");
+        map.insert('В', "V");
+        map.insert('Г', "G");
+        map.insert('Д', "D");
+        map.insert('Е', "E");
+        map.insert('Ё', "Yo");
+        map.insert('Ж', "Zh");
+        map.insert('З', "Z");
+        map.insert('И', "I");
+        map.insert('Й', "Y");
+        map.insert('К', "K");
+        map.insert('Л', "L");
+        map.insert('М', "M");
+        map.insert('Н', "N");
+        map.insert('О', "O");
+        map.insert('П', "P");
+        map.insert('Р', "R");
+        map.insert('С', "S");
+        map.insert('Т', "T");
+        map.insert('У', "U");
+        map.insert('Ф', "F");
+        map.insert('Х', "H");
+        map.insert('Ц', "C");
+        map.insert('Ч', "Ch");
+        map.insert('Ш', "Sh");
+        map.insert('Щ', "Shch");
+        map.insert('Ъ', "Y");
+        map.insert('Ы', "Y");
+        map.insert('Ь', "Y");
+        map.insert('Э', "E");
+        map.insert('Ю', "Yu");
+        map.insert('Я', "Ya");
+        map.insert('а', "a");
+        map.insert('б', "b");
+        map.insert('в', "v");
+        map.insert('г', "g");
+        map.insert('д', "d");
+        map.insert('е', "e");
+        map.insert('ё', "yo");
+        map.insert('ж', "zh");
+        map.insert('з', "z");
+        map.insert('и', "i");
+        map.insert('й', "y");
+        map.insert('к', "k");
+        map.insert('л', "l");
+        map.insert('и', "m");
+        map.insert('н', "n");
+        map.insert('о', "o");
+        map.insert('п', "p");
+        map.insert('р', "r");
+        map.insert('с', "s");
+        map.insert('т', "t");
+        map.insert('у', "u");
+        map.insert('ф', "f");
+        map.insert('х', "h");
+        map.insert('ц', "c");
+        map.insert('ч', "ch");
+        map.insert('ш', "sh");
+        map.insert('щ', "shch");
+        map.insert('ъ', "y");
+        map.insert('ы', "y");
+        map.insert('ь', "y");
+        map.insert('э', "e");
+        map.insert('ю', "yu");
+        map.insert('я', "ya");
+        return map;
+    }
+
     int S_TabWidgetWidth;
     QMap <QString, QColor> TabColors;
     QColor colors[6]; // определение набора цветов шрифта
@@ -130,6 +201,7 @@ public:
     void DBCheck();
     void fillallprob();
     void minutetest();
+    QString getTranslit(QString);
 
 private:
     void addmessage(QStringList &sl, QString mes);

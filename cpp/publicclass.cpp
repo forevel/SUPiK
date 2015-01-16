@@ -10,6 +10,8 @@
 
 PublicClass pc;
 
+static const QMap<QChar, QString> RUSLAT = PublicClass::ruslat();
+
 PublicClass::PublicClass()
 {
     LandP = new QSettings ("EvelSoft","Supik");
@@ -255,4 +257,19 @@ void PublicClass::fillallprob()
         pc.allprobs.append(pc.giMessages);
     if (pc.access & SADM_RO)
         pc.allprobs.append(pc.sadmMessages);
+}
+
+QString PublicClass::getTranslit(QString str)
+{
+    int i;
+    QString newstr = "";
+    for (i = 0; i < str.size(); i++)
+    {
+        QChar chr = str.at(i);
+        if (RUSLAT.contains(chr))
+            newstr += RUSLAT.value(chr);
+        else
+            newstr += chr;
+    }
+    return newstr;
 }

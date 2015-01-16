@@ -9,6 +9,7 @@
 #include <QMessageBox>
 #include <QInputDialog>
 
+#include "../inc/publicclass.h"
 #include "../inc/s_tqlabel.h"
 #include "../inc/s_tqcheckbox.h"
 #include "../inc/s_tqspinbox.h"
@@ -50,7 +51,7 @@ void dir_adddialog::setupUI()
     s_tqLabel *dirAliasL = new s_tqLabel("Имя справочника");
     s_tqLineEdit *dirAliasLE = new s_tqLineEdit;
     dirAliasLE->setObjectName("dirAlias");
-    s_tqLabel *dirNameL = new s_tqLabel("Имя таблицы справочника");
+    s_tqLabel *dirNameL = new s_tqLabel("Имя таблицы справочника (необязательно)");
     s_tqLineEdit *dirNameLE = new s_tqLineEdit;
     dirNameLE->setObjectName("dirName");
     s_tqLabel *dirFieldNumL = new s_tqLabel("Количество полей");
@@ -63,10 +64,18 @@ void dir_adddialog::setupUI()
     s_tqCheckBox *dirBelongC = new s_tqCheckBox;
     dirBelongC->setObjectName("dirBelong");
     dirBelongC->setChecked(false);
+    if (pc.access & 0x0002) // если есть права на изменение системных вещей
+        dirBelongC->setEnabled(true);
+    else
+        dirBelongC->setEnabled(false);
     s_tqLabel *dirAccessL = new s_tqLabel("Права доступа");
     s_tqLineEdit *dirAccessLE = new s_tqLineEdit;
     dirAccessLE->setObjectName("dirAccess");
     s_tqPushButton *dirAccessPB = new s_tqPushButton("...");
+    if (pc.access & 0x0002) // если есть права на изменение системных вещей
+        dirAccessPB->setEnabled(true);
+    else
+        dirAccessPB->setEnabled(false);
     s_tqLabel *mainL = new s_tqLabel("Редактор справочников");
     QFont font;
     font.setPointSize(15);
@@ -77,20 +86,24 @@ void dir_adddialog::setupUI()
     mainPBLayout->addStretch(300);
     mainLayout->addWidget(mainL, 0, Qt::AlignLeft);
     mainLayout->addLayout(mainPBLayout);
-    dlg1Layout->addWidget(dirNameL, 0, 0);
-    dlg1Layout->addWidget(dirNameLE, 0, 1, 1, 2);
-    dlg1Layout->addWidget(dirAliasL, 1, 0);
-    dlg1Layout->addWidget(dirAliasLE, 1, 1, 1, 2);
-    dlg1Layout->addWidget(dirFieldNumL, 2, 0);
-    dlg1Layout->addWidget(dirFieldNumSB, 2, 1, 1, 2);
-    dlg1Layout->addWidget(dirBelongL, 3, 0);
-    dlg1Layout->addWidget(dirBelongC, 3, 1, 1, 2);
-    dlg1Layout->addWidget(dirAccessL, 4, 0);
-    dlg1Layout->addWidget(dirAccessLE, 4, 1);
-    dlg1Layout->addWidget(dirAccessPB, 4, 2);
+    dlg1Layout->addWidget(dirAliasL, 0, 0);
+    dlg1Layout->addWidget(dirAliasLE, 0, 1, 1, 2);
+    dlg1Layout->addWidget(dirFieldNumL, 1, 0);
+    dlg1Layout->addWidget(dirFieldNumSB, 1, 1, 1, 2);
+    dlg1Layout->addWidget(dirBelongL, 2, 0);
+    dlg1Layout->addWidget(dirBelongC, 2, 1, 1, 2);
+    dlg1Layout->addWidget(dirAccessL, 3, 0);
+    dlg1Layout->addWidget(dirAccessLE, 3, 1);
+    dlg1Layout->addWidget(dirAccessPB, 3, 2);
+    dlg1Layout->addWidget(dirNameL, 4, 0);
+    dlg1Layout->addWidget(dirNameLE, 4, 1, 1, 2);
     dlg1Layout->setColumnStretch(0, 10);
     dlg1Layout->setColumnStretch(1, 90);
     dlg1Layout->setColumnStretch(2, 0);
+    QWidget *wdgt = new QWidget;
+    QVBoxLayout *wdgtl = new QVBoxLayout;
+    wdgtl->addStretch(100);
+    dlg1Layout->addWidget(wdgt, 5, 0, 1, 3);
     dlg1->setLayout(dlg1Layout);
     mainTW->addTab(dlg1, "Основные");
     QStringList FTypes;

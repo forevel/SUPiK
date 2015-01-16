@@ -6,7 +6,7 @@
 s_tqLineEdit::s_tqLineEdit(QWidget *parent) :
     QLineEdit(parent)
 {
-    setStyleSheet("QLineEdit {background-color: rgba(0,0,0,0); border: 2px solid gray; border-radius: 3px;}");
+    setStyleSheet("QLineEdit {background-color: rgba(0,0,0,0); border: 1px solid gray; border-radius: 5px;}");
     connect(this, SIGNAL(textChanged(QString)), this, SLOT(changetext(QString)));
 }
 

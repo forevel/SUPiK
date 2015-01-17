@@ -9,7 +9,7 @@ class sys_dialogconstdialog : public QDialog
     Q_OBJECT
 public:
     explicit sys_dialogconstdialog(QWidget *parent = 0); // создание нового диалога
-    explicit sys_dialogconstdialog(QString dialog, QWidget *parent = 0); // редактирование существующего диалога (dialog=dialogs из таблицы dialogs)
+/*    explicit sys_dialogconstdialog(QString dialog, QWidget *parent = 0); // редактирование существующего диалога (dialog=dialogs из таблицы dialogs)
 
 signals:
 
@@ -18,14 +18,14 @@ public slots:
 
 private:
     QList<constritem *> DItem; // набор экземпляров элементов диалога
-    int KeyField; // номер ключевого поля в диалоге
+    int KeyField; // номер ключевого поля в диалоге */
 };
 
 class constritem
 {
 public:
-    int AddItem(int floc, int fname, int ftype, int ltype, int relfnum, QString link, bool isKeyField);
-    int DeleteItem(int fnum);
+//    int AddItem(int floc, int fname, int ftype, int ltype, int relfnum, QString link, bool isKeyField);
+//    int DeleteItem(int fnum);
 
 private:
     int FieldNum; // порядковый номер поля в диалоге

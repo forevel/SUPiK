@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.6.20, for Win64 (x86_64)
+-- MySQL dump 10.13  Distrib 5.6.22, for Win64 (x86_64)
 --
 -- Host: localhost    Database: constructives
 -- ------------------------------------------------------
--- Server version	5.6.20
+-- Server version	5.6.22
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -99,4 +99,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-01-16 20:03:24
+-- Dump completed on 2015-01-18 23:01:45

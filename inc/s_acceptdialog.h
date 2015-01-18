@@ -7,10 +7,10 @@ class s_acceptdialog: public QDialog
 {
     Q_OBJECT
 public:
-    explicit s_acceptdialog(QString title, QString str, QWidget *parent=0);
+    explicit s_acceptdialog(QWidget *parent=0);
+    void setupUI(QString title, QString str);
 
 signals:
-    void caccepted();
 
 private slots:
     void OkPressed();

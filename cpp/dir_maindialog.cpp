@@ -371,6 +371,11 @@ void dir_maindialog::DeleteData()
 void dir_maindialog::AddDirDialog()
 {
     dir_adddialog *AddDialog = new dir_adddialog(false); // no update
+    if (AddDialog->result)
+    {
+        delete AddDialog;
+        return;
+    }
     AddDialog->exec();
 }
 

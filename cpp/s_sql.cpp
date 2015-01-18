@@ -205,6 +205,11 @@ QString s_sql::getvaluefromtablebyfield (QSqlDatabase db, QString tble, QString 
 
     tmpString = "SELECT `" + field + "` FROM `" + tble + "` WHERE `" + cmpfield + "`=\"" + cmpvalue + "\" AND `deleted`=0;";
     get_fields_from_db.exec(tmpString);
+    if (!get_fields_from_db.isActive())
+    {
+        result = 2;
+        return QString();
+    }
     get_fields_from_db.next();
     if (get_fields_from_db.isValid())
     {
@@ -236,6 +241,11 @@ QString s_sql::getvaluefromtablebyfields (QSqlDatabase db, QString tble, QString
     tmpString = tmpString.left(tmpString.size()-5); // удаляем последний AND
     tmpString +=  " AND `deleted`=0;";
     get_fields_from_db.exec(tmpString);
+    if (!get_fields_from_db.isActive())
+    {
+        result = 2;
+        return QString();
+    }
     get_fields_from_db.next();
     if (get_fields_from_db.isValid())
     {

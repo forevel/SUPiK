@@ -5,10 +5,14 @@
 #include "../inc/s_tqlabel.h"
 #include "../inc/s_tqpushbutton.h"
 
-s_acceptdialog::s_acceptdialog(QString title, QString str, QWidget *parent) :
+s_acceptdialog::s_acceptdialog(QWidget *parent) :
     QDialog(parent)
 {
     setAttribute(Qt::WA_DeleteOnClose);
+}
+
+void s_acceptdialog::setupUI(QString title, QString str)
+{
     QFont font;
     font.setPointSize(15);
     QVBoxLayout *mainLayout = new QVBoxLayout;
@@ -25,6 +29,5 @@ s_acceptdialog::s_acceptdialog(QString title, QString str, QWidget *parent) :
 
 void s_acceptdialog::OkPressed()
 {
-    emit caccepted();
     this->close();
 }

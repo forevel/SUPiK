@@ -15,6 +15,7 @@ class dir_adddialog : public QDialog
     Q_OBJECT
 public:
     explicit dir_adddialog(bool update, QString dir="", QWidget *parent = 0);
+    int result;
 
 signals:
 
@@ -24,17 +25,18 @@ private:
     void setupUI();
     bool isSomethingChanged, upd;
     int idx;
+    const int module_number = 0x100;
     QString dir;
     QStringList sl1, sl2;
+    QMap<QString, QString> dirBelongAliases;
     void addLineToDlg(QList<QWidget *> wl, QGridLayout &lyt, int row);
     void adjustFieldSize(QWidget *wdgt, int widthInChar);
 
 private slots:
-    void updateTWFields(int fn);
+    int updateTWFields(int fn);
     void WriteAndClose();
     void CancelAndClose();
     void WarningAndClose(int res);
-    void WarningStr(QString str);
     void setAccessRights();
     void acceptAccess(long);
     void FPBPressed(s_tqPushButton *ptr);
@@ -43,7 +45,7 @@ private slots:
     void updateALE(long rights);
     void fillFields();
     void transliteDirName();
-    void transliteFieldName();
+    void transliteFieldName(QString str, s_tqLineEdit *ptr);
 };
 
 #endif // DIR_ADDDIALOG_H

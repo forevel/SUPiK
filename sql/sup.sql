@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.6.20, for Win64 (x86_64)
+-- MySQL dump 10.13  Distrib 5.6.22, for Win64 (x86_64)
 --
 -- Host: localhost    Database: supik
 -- ------------------------------------------------------
--- Server version	5.6.20
+-- Server version	5.6.22
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -411,7 +411,7 @@ CREATE TABLE `tablefields` (
 
 LOCK TABLES `tablefields` WRITE;
 /*!40000 ALTER TABLE `tablefields` DISABLE KEYS */;
-INSERT INTO `tablefields` VALUES (1,'idnk','ent.nk','v','ИД','4.8','00','Номенклатура_полная',NULL,'0',NULL),(2,'nk','ent.nk',NULL,'Наименование','1.8','01','Номенклатура_полная',NULL,'0',NULL),(3,'idclasses','ent.nk',NULL,'Категория','2.2..Категории_сокращ.ИД','02','Номенклатура_полная',NULL,'0',NULL),(4,'idmanuf','ent.nk',NULL,'Производитель','2.2..Производители_сокращ.ИД','03','Номенклатура_полная',NULL,'0',NULL),(5,'idalt','ent.nk',NULL,'Элемент в БД altium','2.11..Категория','04','Номенклатура_полная',NULL,'0',NULL),(6,'idsdw','ent.nk',NULL,'Элемент в БД solidworks','2.11..Категория','05','Номенклатура_полная',NULL,'0',NULL),(7,'idsge','ent.nk',NULL,'Элемент в БД schemagee','2.11..Категория','06','Номенклатура_полная',NULL,'0',NULL),(8,'idctr','ent.nk',NULL,'Элемент в БД конструктивов','2.11..Категория','07','Номенклатура_полная',NULL,'0',NULL),(9,'iddev','ent.nk',NULL,'Элемент в БД устройств','2.11..Категория','08','Номенклатура_полная',NULL,'0',NULL),(10,'idclasses','ent.classes','v','ИД','4.8','00','Категории_сокращ',NULL,'0',NULL),(11,'alias','ent.classes',NULL,'Наименование','2.4..Категории_сокращ','01','Категории_сокращ',NULL,'0',NULL),(12,'idalias','ent.classes',NULL,'ИД_а','2.11..Наименование','02','Категории_сокращ',NULL,'0',NULL),(13,'idmanuf','ent.manuf','v','ИД','4.8','00','Производители_сокращ',NULL,'0',NULL);
+INSERT INTO `tablefields` VALUES (1,'idnk','ent.nk','v','ИД','4.8','00','Номенклатура_полная',NULL,'0',NULL),(2,'nk','ent.nk',NULL,'Наименование','1.8','01','Номенклатура_полная',NULL,'0',NULL),(3,'idclasses','ent.nk',NULL,'Категория','2.2..Категории_сокращ.ИД','02','Номенклатура_полная',NULL,'0',NULL),(4,'idmanuf','ent.nk',NULL,'Производитель','2.2..Производители_сокращ.ИД','03','Номенклатура_полная',NULL,'0',NULL),(5,'idalt','ent.nk',NULL,'Элемент в БД altium','2.11..Категория','04','Номенклатура_полная',NULL,'0',NULL),(6,'idsdw','ent.nk',NULL,'Элемент в БД solidworks','2.11..Категория','05','Номенклатура_полная',NULL,'0',NULL),(7,'idsge','ent.nk',NULL,'Элемент в БД schemagee','2.11..Категория','06','Номенклатура_полная',NULL,'0',NULL),(8,'idctr','ent.nk',NULL,'Элемент в БД конструктивов','2.11..Категория','07','Номенклатура_полная',NULL,'0',NULL),(9,'iddev','ent.nk',NULL,'Элемент в БД устройств','2.11..Категория','08','Номенклатура_полная',NULL,'0',NULL),(10,'idclasses','ent.classes','v','ИД','4.8','00','Категории_сокращ',NULL,'0',NULL),(11,'alias','ent.classes',NULL,'Наименование','1.8','01','Категории_сокращ',NULL,'0',NULL),(12,'idalias','ent.classes',NULL,'ИД_а','2.4..Наименование','02','Категории_сокращ',NULL,'0',NULL),(13,'idmanuf','ent.manuf','v','ИД','4.8','00','Производители_сокращ',NULL,'0',NULL);
 /*!40000 ALTER TABLE `tablefields` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -424,4 +424,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-01-16 20:03:23
+-- Dump completed on 2015-01-18 23:01:43

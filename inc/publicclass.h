@@ -27,14 +27,19 @@ QT_END_NAMESPACE
 #define MAX_DBS 50
 
 #define SYS_RO      0x0001
+#define SYS_WR      0x0002
 #define SYS_FULL    0x0007
 #define WH_RO       0x0008
+#define WH_WR       0x0010
 #define WH_FULL     0x0038
 #define ALT_RO      0x0040
+#define ALT_WR      0x0080
 #define ALT_FULL    0x01C0
 #define TB_RO       0x0200
+#define TB_WR       0x0400
 #define TB_FULL     0x0E00
 #define SADM_RO     0x1000
+#define SADM_WR     0x2000
 #define SADM_FULL   0x7000
 
 // определение проблем

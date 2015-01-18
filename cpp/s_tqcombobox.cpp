@@ -3,7 +3,7 @@
 s_tqComboBox::s_tqComboBox(QWidget *parent) :
     QComboBox(parent)
 {
-    setStyleSheet("QComboBox {background-color: rgba(0,0,0,0); border: 2px solid gray; border-radius: 3px;}"
+    setStyleSheet("QComboBox {background-color: rgba(0,0,0,0); border: 1px solid gray; border-radius: 5px;}"
 //                              "QComboBox::drop-down {background-color: rgba(0,0,0,0); border: 1px solid gray;}");
                               "QComboBox::drop-down {background-color: rgba(0,0,0,0); width: 0px; border-style: none;}");
     connect (this, SIGNAL(currentIndexChanged(QString)), this, SLOT(changetext(QString)));

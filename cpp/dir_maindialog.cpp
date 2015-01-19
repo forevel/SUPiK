@@ -382,8 +382,6 @@ void dir_maindialog::AddDirDialog()
 void dir_maindialog::EditDirDialog()
 {
     QString tmpString = getMainIndex(1);
-    QSqlDatabase db = sqlc.getdb("sup");
-    QString dirlink = sqlc.getvaluefromtablebyfield(db, "dirlist", "pc", "dirlist", tmpString);
-    dir_adddialog *EditDialog = new dir_adddialog(true, dirlink);
+    dir_adddialog *EditDialog = new dir_adddialog(true, tmpString);
     EditDialog->exec();
 }

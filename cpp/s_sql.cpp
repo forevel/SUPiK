@@ -589,7 +589,7 @@ QList<QStringList> s_sql::searchintablefieldlike(QSqlDatabase db, QString tble, 
     return sl;
 }
 
-// процедура возвращает набор строк из таблицы db.tble, значения field которых равны значению value
+// процедура возвращает набор строк из таблицы db.tble, значения cmpfield которых равны значению cmpvalue
 
 QList<QStringList> s_sql::getmorevaluesfromtablebyfield(QSqlDatabase db, QString tble, QStringList fields, QString cmpfield, QString cmpvalue, \
                                                         QString orderby, bool asc)

@@ -17,6 +17,10 @@
 #include "../inc/s_sql.h"
 #include "../inc/s_tablefilterdialog.h"
 #include "../inc/s_acceptdialog.h"
+#include "../inc/s_tqtreeview.h"
+#include "../inc/s_ntmodel.h"
+#include "../inc/s_tqtableview.h"
+#include "../inc/s_ncmodel.h"
 
 dir_adddialog::dir_adddialog(bool update, QString dir, QWidget *parent) :
     QDialog(parent)
@@ -401,6 +405,8 @@ void dir_adddialog::addLineToDlg(QList<QWidget *> wl, QGridLayout &lyt, int row)
         lyt.addWidget(wl.at(i), row, i);
 }
 
+// Вызов конструктора ссылок
+
 void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
 {
     try
@@ -409,26 +415,57 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
         s_tqspinbox *sb = new s_tqspinbox;
         sb = this->findChild<s_tqspinbox *>("dirFieldNum");
         if (sb == 0)
-            WarningAndClose(41);
+            throw(0x41);
         s_tqComboBox *cb = new s_tqComboBox;
-        cb = this->findChild<s_tqComboBox *>("ltype"+QString::number(idx)+"CB");
-        if (cb == 0)
-            WarningAndClose(42);
+        QStringListModel *cbmodel = new QStringListModel;
+        QStringList tmpStringList;
+        tmpStringList << "Предопределённое поле" << "Простое поле" << "Ссылка" << "Права доступа";
+        cbmodel->setStringList(tmpStringList);
+        cb->setModel(cbmodel);
+        s_tqComboBox *ltypecb = new s_tqComboBox;
+        QStringListModel *ltypecbmodel = new QStringListModel;
+        tmpStringList.clear();
+        tmpStringList << "Ссылка на поле" << "Ссылка на справочник" << "Ссылка на таблицу" << "Ссылка на БД" << "Косвенная ссылка";
+        ltypecbmodel->setStringList(tmpStringList);
+        ltypecb->setModel(ltypecbmodel);
         s_tqLineEdit *le = new s_tqLineEdit;
         le = this->findChild<s_tqLineEdit *>("value"+QString::number(idx)+"LE");
         if (le == 0)
-            WarningAndClose(43);
-        switch (cb->currentIndex())
+            throw(0x42);
+        s_tqtreeview *trv = new s_tqtreeview;
+        s_tqTableView *tbv = new s_tqTableView;
+        s_ntmodel *trvmodel = new s_ntmodel;
+        s_ncmodel *tbvmodel = new s_ncmodel;
+        PublicClass::fieldformat ff;
+        ff = pc.getFFfromLinks(le->text());
+        switch (ff.delegate)
+        case FD_LINEEDIT:
         {
-        case 0:
-        {
+            cb->setCurrentIndex(1);
+            ltypecb->setVisible(false);
             break;
         }
-        case 1: // ссылка на поле
+        case FD_DISABLED:
         {
+            cb->setCurrentIndex(0);
+            ltypecb->setVisible(false);
+            break;
+        }
+        case FD_CHOOSE:
+        {
+            cb->setCurrentIndex(2);
+            switch (ff.ftype)
+            {
+            case FW_LINK:
+            {
+                if (trvmodel->Setup(false, ff.link.at(0)) == 11) // если не дерево
+                {
+                    tbvmodel->
+                }
+            }
             sqlc.prepareslsfortree(sl1, sl2);
             if (sl1.isEmpty())
-                WarningAndClose(44);
+                throw(0x44);
             s_tablefilterdialog *tabledialog = new s_tablefilterdialog;
             QString tmpString = le->text().split(".").last();
             tabledialog->SetupUI(sl1, sl2, tmpString);
@@ -448,7 +485,7 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
         {
             QSqlDatabase db = sqlc.getdb(dir.left(3));
             if (!db.isValid())
-                WarningAndClose(45);
+                throw(0x45);
             QString tble = dir.right(dir.size()-4);
             QStringList fl = sqlc.getcolumnsfromtable(db, tble);
             s_tablefilterdialog *tabledialog = new s_tablefilterdialog;

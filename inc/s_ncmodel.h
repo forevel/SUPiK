@@ -6,46 +6,11 @@
 #include <QFont>
 #include <QIcon>
 
-// тип поля
-#define FW_COUNT    19 // количество типов полей
-#define FW_AUTONUM  0 // поле с автонумерацией в соответствии с номером строки
-#define FW_NUMBER   1 // простое число
-#define FW_LINK     2 // простая ссылка на столбец в таблице
-#define FW_DLINK    3 // ссылка на две таблицы
-#define FW_ALLINK   4 // ссылка на alias в таблице
-#define FW_MAXLINK  5 // ссылка на значение в столбце таблицы с максимальным ИД
-#define FW_MASKED   6 // форматированное число
-#define FW_EQUAT    7 // арифметическое выражение
-#define FW_PLAIN    8 // простое поле, без изысков
-#define FW_RIGHTS   9 // поле с бинарным отображением и организации делегата FD_CHOOSE с диалогом rights
-#define FW_TLINK    10 // ссылка на таблицу в списке таблиц
-#define FW_INDIRECT 11 // косвенная ссылка. Подробнее см. "СУПиК РП"
-#define FW_SMETHOD  12 // ссылка на метод СУПиКа
-#define FW_2CD      13 // отображение диалога редактирования строки таблицы (2cdialog)
-#define FW_LLINK    14 // отображение диалога конструктора ссылок
-#define FW_FLINK    15 // отображение диалога выбора имени файла
-#define FW_ILINK    16 // отображение диалога выбора имени каталога
-#define FW_FLLINK   17 // ссылка на элемент внутри файла
-#define FW_DATE     18 // отображение диалога выбора даты
-
-// тип делегата
-#define FD_SIMPLE   0 // простой делегат без рамки для надписей
-#define FD_LINEEDIT 1 // простое поле ввода
-#define FD_CHOOSE   2 // поле ввода с кнопкой выбора по ссылке
-#define FD_COMBO    3 // выпадающий список
-#define FD_DISABLED 4 // неактивное поле
-#define FD_SPIN     5 // счётчик
-#define FD_SIMGRID  7 // простой делегат с рамкой
-
-// тип арифм операции
-#define OP_PLUS     1
-#define OP_MINUS    2
-#define OP_MULT     3
-#define OP_DIV      4
 
 #include <QAbstractItemModel>
 #include <QStringList>
-#include "s_ncitem.h"
+#include "../inc/s_ncitem.h"
+#include "../inc/publicclass.h"
 
 class s_ncmodel : public QAbstractTableModel
 {

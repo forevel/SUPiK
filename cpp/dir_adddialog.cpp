@@ -8,7 +8,8 @@
 #include <QFontMetrics>
 #include <QMessageBox>
 #include <QInputDialog>
-
+#include <QHeaderView>
+#include "../inc/s_duniversal.h"
 #include "../inc/publicclass.h"
 #include "../inc/s_tqlabel.h"
 #include "../inc/s_tqcheckbox.h"
@@ -411,34 +412,47 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
 {
     try
     {
+        int i;
         idx = ptr->getAData().toInt(0);
         s_tqspinbox *sb = new s_tqspinbox;
         sb = this->findChild<s_tqspinbox *>("dirFieldNum");
         if (sb == 0)
             throw(0x41);
+        s_tqLabel *lbl1 = new s_tqLabel ("Тип поля");
+        s_tqLabel *lbl2 = new s_tqLabel ("Тип ссылки");
         s_tqComboBox *cb = new s_tqComboBox;
+        QList<QStringList> lsl;
         QStringListModel *cbmodel = new QStringListModel;
         QStringList tmpStringList;
         tmpStringList << "Предопределённое поле" << "Простое поле" << "Ссылка" << "Права доступа";
         cbmodel->setStringList(tmpStringList);
         cb->setModel(cbmodel);
+        adjustFieldSize(cb, 25);
         s_tqComboBox *ltypecb = new s_tqComboBox;
         QStringListModel *ltypecbmodel = new QStringListModel;
         tmpStringList.clear();
         tmpStringList << "Ссылка на поле" << "Ссылка на справочник" << "Ссылка на таблицу" << "Ссылка на БД" << "Косвенная ссылка";
         ltypecbmodel->setStringList(tmpStringList);
         ltypecb->setModel(ltypecbmodel);
+        adjustFieldSize(ltypecb, 30);
         s_tqLineEdit *le = new s_tqLineEdit;
         le = this->findChild<s_tqLineEdit *>("value"+QString::number(idx)+"LE");
         if (le == 0)
             throw(0x42);
         s_tqtreeview *trv = new s_tqtreeview;
-        s_tqTableView *tbv = new s_tqTableView;
+        s_tqTableView *tbv = new s_tqTableView(true);
         s_ntmodel *trvmodel = new s_ntmodel;
         s_ncmodel *tbvmodel = new s_ncmodel;
+        QDialog *dlg = new QDialog;
+        QVBoxLayout *lyout = new QVBoxLayout;
+        lyout->addWidget(lbl1, 0, Qt::AlignLeft);
+        lyout->addWidget(cb, 0, Qt::AlignLeft);
+        lyout->addWidget(lbl2, 0, Qt::AlignLeft);
+        lyout->addWidget(ltypecb, 0, Qt::AlignLeft);
         PublicClass::fieldformat ff;
         ff = pc.getFFfromLinks(le->text());
         switch (ff.delegate)
+        {
         case FD_LINEEDIT:
         {
             cb->setCurrentIndex(1);
@@ -460,20 +474,42 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
             {
                 if (trvmodel->Setup(false, ff.link.at(0)) == 11) // если не дерево
                 {
-                    tbvmodel->
+                    tmpStringList.clear();
+                    lsl = sqlc.searchintablefieldlike(sqlc.getdb("sup"), "tablefields", QStringList("tablename"), "tablename", "^.*_сокращ$");
+                    QStringList sl;
+                    sl = lsl.at(0);
+                    while (sl.size() > 0)
+                    {
+                        tmpStringList << sl.at(0);
+                        sl.removeAll(tmpStringList.last());
+                    }
+                    lsl.clear();
+                    lsl.append(tmpStringList);
+                    tbvmodel->fillModel(lsl);
+                    s_duniversal *uniDelegate = new s_duniversal;
+                    tbv->setEditTriggers(QAbstractItemView::AllEditTriggers);
+                    tbv->verticalHeader()->setVisible(false);
+                    tbv->horizontalHeader()->setVisible(false);
+                    tbv->setItemDelegate(uniDelegate);
+                    tbvmodel->setcolumnlinks(0, "7.8");
+                    tbv->setModel(tbvmodel);
+                    tbv->resizeColumnsToContents();
+                    tbv->resizeRowsToContents();
+                    lyout->addWidget(tbv);
                 }
             }
-            sqlc.prepareslsfortree(sl1, sl2);
+/*            sqlc.prepareslsfortree(sl1, sl2);
             if (sl1.isEmpty())
                 throw(0x44);
             s_tablefilterdialog *tabledialog = new s_tablefilterdialog;
             QString tmpString = le->text().split(".").last();
             tabledialog->SetupUI(sl1, sl2, tmpString);
             connect(tabledialog, SIGNAL(accepted(QString)), this, SLOT(updateFLE(QString)));
-            tabledialog->exec();
+            tabledialog->exec(); */
             break;
+            }
         }
-        case 2: // права доступа
+/*        case 2: // права доступа
         {
             s_accessdialog *accessdialog = new s_accessdialog;
             accessdialog->SetupUI(le->text().toLongLong(0, 16));
@@ -494,11 +530,13 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
             connect(tabledialog, SIGNAL(accepted(QString)), this, SLOT(updateFLE(QString)));
             tabledialog->exec();
             break;
-        }
+        } */
         default:
             break;
         }
-        updateTWFields(sb->value());
+        dlg->setLayout(lyout);
+        dlg->exec();
+//        updateTWFields(sb->value());
     }
     catch (int res)
     {

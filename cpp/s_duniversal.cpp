@@ -31,6 +31,7 @@ QWidget* s_duniversal::createEditor(QWidget *parent, const QStyleOptionViewItem 
     switch (ff.delegate)
     {
     case FD_CHOOSE:
+    case FD_CHOOSE_X:
     {
         combWidget = new s_tqwidget(parent);
         combWidget->setStyleSheet("QWidget {background: khaki};");
@@ -38,7 +39,10 @@ QWidget* s_duniversal::createEditor(QWidget *parent, const QStyleOptionViewItem 
         s_tqLineEdit *le = new s_tqLineEdit(combWidget);
         s_tqPushButton *pb = new s_tqPushButton(combWidget);
         le->setObjectName("fdcle");
-        le->setEnabled(false);
+        if (ff.delegate == FD_CHOOSE)
+            le->setEnabled(false);
+        else
+            le->setEnabled(true);
         pb->setObjectName("fdcpb");
         ml->addWidget(le, 80);
         ml->addWidget(pb,0);
@@ -140,6 +144,7 @@ void s_duniversal::setEditorData(QWidget *editor, const QModelIndex &index) cons
     switch (ff.delegate)
     {
     case FD_CHOOSE:
+    case FD_CHOOSE_X:
     {
         s_tqLineEdit *le = editor->findChild<s_tqLineEdit*>("fdcle");
         s_tqPushButton *pb = editor->findChild<s_tqPushButton*>("fdcpb");
@@ -183,6 +188,7 @@ void s_duniversal::setModelData(QWidget *editor, QAbstractItemModel *model, cons
     switch (ff.delegate)
     {
     case FD_CHOOSE:
+    case FD_CHOOSE_X:
     {
         s_tqwidget *wdgt = static_cast<s_tqwidget *>(editor);
         s_tqLineEdit *le = wdgt->findChild<s_tqLineEdit *>("fdcle");
@@ -252,7 +258,7 @@ void s_duniversal::pbclicked()
             chooseDialog->exec();
         }
         else // это таблица
-        {
+        { // МЕНЯТЬ!
             s_2cdialog *chooseDialog = new s_2cdialog(hdr);
             QSqlDatabase db = sqlc.getdb(ff.link.at(0));
             if (db.isValid())
@@ -274,7 +280,7 @@ void s_duniversal::pbclicked()
                 chooseDialog->sortModel();
                 chooseDialog->setTvCurrentText(le->text());
                 chooseDialog->exec();
-            }
+            } // МЕНЯТЬ!
         }
         break;
     }

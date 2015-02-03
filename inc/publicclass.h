@@ -83,6 +83,7 @@ QT_END_NAMESPACE
 #define FD_COMBO    3 // выпадающий список
 #define FD_DISABLED 4 // неактивное поле
 #define FD_SPIN     5 // счётчик
+#define FD_CHOOSE_X 6 // поле ввода с кнопкой выбора по ссылке с возможностью редактирования
 #define FD_SIMGRID  7 // простой делегат с рамкой
 
 // тип арифм операции

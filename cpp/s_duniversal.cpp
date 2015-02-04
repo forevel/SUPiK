@@ -1,5 +1,6 @@
 #include "../inc/s_duniversal.h"
 #include "../inc/s_tqlineedit.h"
+#include "../inc/s_tqspinbox.h"
 #include "../inc/s_tqpushbutton.h"
 #include "../inc/s_tqcalendarwidget.h"
 #include "../inc/s_sql.h"
@@ -126,10 +127,15 @@ QWidget* s_duniversal::createEditor(QWidget *parent, const QStyleOptionViewItem 
         int tmpInt = ff.link.at(0).count("n", Qt::CaseSensitive);
         QString tmpString;
         tmpString.fill('9', tmpInt);
-        QSpinBox *sb = new QSpinBox(parent);
+        int tmpInt2 = ff.link.at(0).count("d", Qt::CaseSensitive);
+        QString tmpString2;
+        tmpString2.fill('9', tmpInt2);
+        tmpString += "." + tmpString2;
+        s_tqspinbox *sb = new s_tqspinbox(parent);
         sb->setStyleSheet("QSpinBox {background: khaki};");
         sb->setMinimum(0);
-        sb->setMaximum(tmpString.toInt());
+        sb->setDecimals(tmpInt2);
+        sb->setMaximum(tmpString.toDouble());
         editor = sb;
         break;
     }
@@ -174,8 +180,8 @@ void s_duniversal::setEditorData(QWidget *editor, const QModelIndex &index) cons
     }
     case FD_SPIN:
     {
-        QSpinBox *sb = static_cast<QSpinBox *>(editor);
-        sb->setValue(index.data(Qt::EditRole).toInt(0));
+        s_tqspinbox *sb = static_cast<s_tqspinbox *>(editor);
+        sb->setValue(index.data(Qt::EditRole).toDouble());
         break;
     }
     default:
@@ -213,7 +219,7 @@ void s_duniversal::setModelData(QWidget *editor, QAbstractItemModel *model, cons
     }
     case FD_SPIN:
     {
-        QSpinBox *sb = static_cast<QSpinBox *>(editor);
+        s_tqspinbox *sb = static_cast<s_tqspinbox *>(editor);
         model->setData(index, QVariant(sb->value()), Qt::EditRole);
         break;
     }

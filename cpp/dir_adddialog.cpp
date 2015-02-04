@@ -412,7 +412,7 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
 {
     try
     {
-        int i;
+        //int i;
         idx = ptr->getAData().toInt(0);
         s_tqspinbox *sb = new s_tqspinbox;
         sb = this->findChild<s_tqspinbox *>("dirFieldNum");
@@ -439,7 +439,7 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
         le = this->findChild<s_tqLineEdit *>("value"+QString::number(idx)+"LE");
         if (le == 0)
             throw(0x42);
-        s_tqtreeview *trv = new s_tqtreeview;
+//        s_tqtreeview *trv = new s_tqtreeview;
         s_tqTableView *tbv = new s_tqTableView(true);
         s_ntmodel *trvmodel = new s_ntmodel;
         s_ncmodel *tbvmodel = new s_ncmodel;

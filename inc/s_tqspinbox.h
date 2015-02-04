@@ -1,9 +1,9 @@
 #ifndef S_TQSPINBOX_H
 #define S_TQSPINBOX_H
 
-#include <QSpinBox>
+#include <QDoubleSpinBox>
 
-class s_tqspinbox : public QSpinBox
+class s_tqspinbox : public QDoubleSpinBox
 {
     Q_OBJECT
 public:

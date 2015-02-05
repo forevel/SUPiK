@@ -2,27 +2,18 @@
 #define WH_DIALOG_H
 
 // относительная ширина столбцов по смысловому назначению
-#define SPIN    40
-#define DIS     70
-#define CB      60
-#define MASK    100
-#define OVERALL 1000
-#define EDIT    400
-
-// тип поля
-#define FW_AUTONUM  0
-#define FW_NUMBER   1
-#define FW_LINK     2
-#define FW_DLINK    3
-#define FW_ALLINK   4
-#define FW_MAXLINK  5
-#define FW_MASKED   6
-#define FW_EQUAT    7
+#define W_SPIN      40
+#define W_DIS       70
+#define W_COMBO     60
+#define W_LINEEDIT  100
+#define W_LINKS     250
+#define W_OVERALL   1000
+#define W_SIZE      5 // количество "ширин"
 
 #include <QDialog>
 #include <QSqlDatabase>
 #include <QDate>
-#include "../inc/s_whitemmodel.h"
+#include "../inc/s_ncmodel.h"
 #include "../inc/s_tqtableview.h"
 
 QT_BEGIN_NAMESPACE
@@ -48,9 +39,9 @@ private:
     bool firstShow, isIncoming, needtorefresh, SomethingChanged;
     QString ScanPath;
     QString Supplier, Consumer, DocNum, Reason;
-    s_whitemmodel *mainmodel;
+    s_ncmodel *mainmodel;
     s_tqTableView *mainTV;
-    float sw, dw, cw, mw, ew;
+    float widths[W_SIZE];
     QList<QString> CTypes;
     QList<int> FTypes;
     QStringList FlowFields;
@@ -61,6 +52,7 @@ private:
     int fillFlow(QString id);
     int fillNullFlow();
     void updateDialog();
+    void ShowMessage(int ernum);
 
 private slots:
     void chooseSupplier();

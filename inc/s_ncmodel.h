@@ -39,6 +39,7 @@ public:
     void setrowlinks(int row, QStringList links); // установка типов полей на строку модели
     bool checkforEmptyRows(); // проверка наличия строк, в которых элементы по индексам fieldsToCheck содержат пустые поля
     void setCellAttr(QModelIndex index, int fcset=0, int icon=-1);
+    QString getCellLinks(QModelIndex);
     void setRowAttr(int fcset=0, int icon=-1);
     void fillModel(QList<QStringList> sl);
     void prepareModel(QList<int> sl);

@@ -506,3 +506,10 @@ int s_ncmodel::maxcolwidthsize()
 {
     return maxcolswidth.size();
 }
+
+// процедура выдаёт значение атрибута links у ячейки
+
+QString s_ncmodel::getCellLinks(QModelIndex index)
+{
+    return data(index, Qt::UserRole);
+}

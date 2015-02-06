@@ -16,6 +16,7 @@ public:
     QStringList getvaluesfromtablebyid (QSqlDatabase db, QString tble, QStringList fields, QString id);
     QString getvaluefromtablebyid (QSqlDatabase db, QString tble, QString field, QString id);
     QStringList getvaluesfromtablebyfield (QSqlDatabase db, QString tble, QStringList fields, QString cmpfield, QString cmpvalue);
+    QStringList getvaluesfromtablebyfields (QSqlDatabase db, QString tble, QStringList fields, QStringList cmpfields, QStringList cmpvalues);
     QStringList getvaluesfromtablebycolumn (QSqlDatabase db, QString tble, QString column);
     QList<QStringList> getvaluesfromtablebycolumns (QSqlDatabase db, QString tble, QStringList columns);
     QStringList getvaluesfromtablebycolumnandfield(QSqlDatabase db, QString tble, QString field, QString cmpfield, QString cmpvalue);

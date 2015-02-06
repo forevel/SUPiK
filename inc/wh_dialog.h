@@ -10,6 +10,14 @@
 #define W_OVERALL   1000
 #define W_SIZE      5 // количество "ширин"
 
+// основание операции
+#define R_INPREM    0 // ввод остатков (INPUT REMAINS)
+#define R_BUY       1 // покупка комплектующих
+#define R_SELL      2 // продажа изделий
+#define R_IREPAIR   3 // приём в ремонт
+#define R_OREPAIR   4 // отправка из ремонта
+#define R_SIZE      3 // количество оснований
+
 #include <QDialog>
 #include <QSqlDatabase>
 #include <QDate>
@@ -26,7 +34,7 @@ class wh_dialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit wh_dialog(bool isIncoming, QString id, QWidget *parent = 0);
+    explicit wh_dialog(int Reason, QString id, QWidget *parent = 0);
 
 signals:
 
@@ -36,9 +44,11 @@ private:
     QVBoxLayout *mainbl;
     QHBoxLayout *ml1, *ml2;
     QGridLayout *bl1, *bl2;
-    bool firstShow, isIncoming, needtorefresh, SomethingChanged;
+    bool firstShow, needtorefresh, SomethingChanged;
     QString ScanPath;
-    QString Supplier, Consumer, DocNum, Reason;
+    QString Supplier, Consumer, DocNum;
+    int Reason;
+    QStringList ReasonTable, MainText;
     s_ncmodel *mainmodel;
     s_tqTableView *mainTV;
     float widths[W_SIZE];
@@ -53,6 +63,7 @@ private:
     int fillNullFlow();
     void updateDialog();
     void ShowMessage(int ernum);
+    QStringList getTableNFields (QString tablename, QString headers);
 
 private slots:
     void chooseSupplier();

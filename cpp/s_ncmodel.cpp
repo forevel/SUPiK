@@ -290,7 +290,11 @@ void s_ncmodel::prepareModel(QList<int> sl)
         for (i = hdr.size(); i < sl.size(); i++)
             addColumn("");
     }
-    for (i = 0; i < sl.at(0); i++)
+    int max = sl.at(0);
+    for (i = 0; i < sl.size(); i++)
+        if (sl.at(i) > max)
+            max = sl.at(i);
+    for (i = 0; i < max; i++)
     {
         if (i >= rowCount())
             addRow();

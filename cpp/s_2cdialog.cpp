@@ -116,7 +116,47 @@ void s_2cdialog::setup(QStringList sl, QStringList links, QString str)
     DialogIsNeedToBeResized = true;
 }
 
-// процедура подготавливает диалог заполнения полей таблицы db.tble по строке id
+// процедура подготавливает диалог из столбцов таблицы tble в tablefields
+
+int s_2cdialog::setupchoosetable(QString tble, QString str)
+{
+    s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
+    QList<QStringList> lsl;
+    QStringList fl;
+    int i;
+    fl << "tablefields" << "table" << "headers" << "links";
+    lsl = sqlc.getmorevaluesfromtablebyfield(pc.sup, "tablefields", fl, "tablename", tble, "fieldsorder", true);
+    if (sqlc.result)
+    {
+        QMessageBox::warning(this, "warning!", "Проблемы с получением значений по таблице "+tble+" из таблицы tablefields");
+        return 0x01;
+    }
+    fl.clear();
+    tble = lsl.at(0).at(1); // имя таблицы в формате db.tble
+    for (i = 0; i < lsl.size(); i++)
+    {
+        mainmodel->addColumn(lsl.at(i).at(2));
+        mainmodel->setcolumnlinks(i, lsl.at(i).at(3));
+        fl << lsl.at(i).at(0); // поля таблицы db.tble
+    }
+    QString db = tble.split(".").at(0);
+    tble = tble.split(".").at(1);
+    lsl=sqlc.getvaluesfromtablebycolumns(sqlc.getdb(db), tble, fl);
+    if (sqlc.result)
+    {
+        QMessageBox::warning(this, "warning!", "Проблемы с получением значений по таблице "+tble);
+        return 0x02;
+    }
+    mainmodel->fillModel(lsl);
+    QList<QModelIndex> item = tv->model()->match(tv->model()->index(0, 0), Qt::DisplayRole, QVariant::fromValue(str), 1, Qt::MatchExactly);
+    if (!item.isEmpty())
+        tv->setCurrentIndex(item.at(0));
+    tv->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    tv->resizeColumnsToContents();
+    DialogIsNeedToBeResized = true;
+}
+
+// процедура подготавливает диалог заполнения полей таблицы tble по строке id
 
 int s_2cdialog::setup(QString tble, QString id)
 {

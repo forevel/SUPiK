@@ -263,11 +263,11 @@ CREATE TABLE `documents` (
   `iddocuments` int(11) NOT NULL,
   `documents` varchar(128) DEFAULT NULL,
   `scanpath` varchar(128) DEFAULT NULL,
-  `idsupplier` varchar(128) DEFAULT NULL,
-  `idcustomer` varchar(128) DEFAULT NULL,
-  `reason` varchar(128) DEFAULT NULL,
-  `idpers` varchar(128) DEFAULT NULL,
-  `direction` varchar(128) DEFAULT NULL,
+  `idsupplier` varchar(10) DEFAULT NULL,
+  `idcustomer` varchar(10) DEFAULT NULL,
+  `reason` varchar(2) DEFAULT NULL,
+  `idpers` varchar(10) DEFAULT NULL,
+  `direction` varchar(1) DEFAULT NULL,
   `value` varchar(128) DEFAULT NULL,
   `date` varchar(128) DEFAULT NULL,
   `deleted` int(1) NOT NULL DEFAULT '0',
@@ -282,7 +282,7 @@ CREATE TABLE `documents` (
 
 LOCK TABLES `documents` WRITE;
 /*!40000 ALTER TABLE `documents` DISABLE KEYS */;
-INSERT INTO `documents` VALUES (1,'Номер ТН','','pc.ent.contractors','pc.ent.contractors','pc.ent.reasons','pc.sup.personel','','Сумма','0000-00-00 00:00:00',0),(2,'Номер ТН','Путь к файлу ТН','Поставщик','Получатель','Основание движения','ФИО создавшего','Направление движения','Сумма','0000-00-00 00:00:00',0),(4,'4','','3','3','4','2001','o','0.00','06/10/2014',0),(3,'3','','3','3','4','2001','i','0.00','06/10/2014',0),(5,'5','','3','3','4','2001','i','1239.24','21/10/2014',0);
+INSERT INTO `documents` VALUES (1,'Номер ТН','','pc.ent.con','pc.ent.con','pc','pc.sup.per','','Сумма','0000-00-00 00:00:00',0),(2,'Номер ТН','Путь к файлу ТН','Поставщик','Получатель','Ос','ФИО создав','Н','Сумма','0000-00-00 00:00:00',0),(4,'4','','3','3','4','2001','o','0.00','06/10/2014',0),(3,'3','','3','3','4','2001','i','0.00','06/10/2014',0),(5,'5','','3','3','4','2001','i','1239.24','21/10/2014',0);
 /*!40000 ALTER TABLE `documents` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -335,8 +335,6 @@ CREATE TABLE `ica` (
   `deleted` int(1) DEFAULT NULL,
   `idpers` varchar(128) DEFAULT NULL,
   `date` varchar(128) DEFAULT NULL,
-  `alias` varchar(128) DEFAULT NULL,
-  `idalias` varchar(128) DEFAULT NULL,
   PRIMARY KEY (`idica`),
   UNIQUE KEY `idica_UNIQUE` (`idica`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -688,33 +686,6 @@ LOCK TABLES `qschemagee` WRITE;
 UNLOCK TABLES;
 
 --
--- Table structure for table `reasons`
---
-
-DROP TABLE IF EXISTS `reasons`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `reasons` (
-  `idreasons` int(11) NOT NULL,
-  `reasons` varchar(45) DEFAULT NULL,
-  `deleted` int(1) DEFAULT '0',
-  `date` varchar(45) DEFAULT NULL,
-  `idpers` varchar(45) DEFAULT NULL,
-  PRIMARY KEY (`idreasons`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `reasons`
---
-
-LOCK TABLES `reasons` WRITE;
-/*!40000 ALTER TABLE `reasons` DISABLE KEYS */;
-INSERT INTO `reasons` VALUES (1,'Основание',0,NULL,NULL),(2,'Основание для отгрузки или приёмки',0,NULL,NULL),(3,'Заполнение',1,NULL,NULL),(4,'Ввод остатков',0,NULL,NULL),(5,'Приём в ремонт',0,NULL,'2001'),(6,'Изготовление',1,NULL,NULL),(7,'Изготовление',0,NULL,NULL),(8,'Из ремонта',0,NULL,'2001'),(9,'Закупка',0,NULL,'2001');
-/*!40000 ALTER TABLE `reasons` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `unitset`
 --
 
@@ -779,4 +750,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-02-04 21:21:27
+-- Dump completed on 2015-02-06 18:07:14

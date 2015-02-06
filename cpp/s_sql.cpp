@@ -133,7 +133,7 @@ QStringList s_sql::getvaluesfromtablebycolumn(QSqlDatabase db, QString tble, QSt
     QStringList vl;
     QSqlQuery get_fields_from_db (db);
 
-    tmpString = "SELECT `" + column + "` FROM `" + tble + "` WHERE `id" + tble + "`>2 AND `deleted`=0;";
+    tmpString = "SELECT `" + column + "` FROM `" + tble + "` WHERE `deleted`=0;";
     get_fields_from_db.exec(tmpString);
     vl.clear();
     while (get_fields_from_db.next())
@@ -156,7 +156,7 @@ QList<QStringList> s_sql::getvaluesfromtablebycolumns(QSqlDatabase db, QString t
     for (i = 0; i < columns.size(); i++)
         tmpString += "`" + columns.at(i) + "`,";
     tmpString = tmpString.left(tmpString.size()-1); // удаляем последнюю запятую
-    tmpString += " FROM `" + tble + "` WHERE `id" + tble + "`>2 AND `deleted`=0;";
+    tmpString += " FROM `" + tble + "` WHERE `deleted`=0;";
     get_fields_from_db.exec(tmpString);
     vl.clear();
     while (get_fields_from_db.next())
@@ -186,7 +186,7 @@ QStringList s_sql::getvaluesfromtablebycolumnandfield(QSqlDatabase db, QString t
     QStringList vl;
     QSqlQuery get_fields_from_db (db);
 
-    tmpString = "SELECT `" + column + "` FROM `" + tble + "` WHERE `id" + tble + "`>2 AND `deleted`=0 AND `" + cmpfield + "`=\"" + cmpvalue + "\";";
+    tmpString = "SELECT `" + column + "` FROM `" + tble + "` WHERE `deleted`=0 AND `" + cmpfield + "`=\"" + cmpvalue + "\";";
     get_fields_from_db.exec(tmpString);
     vl.clear();
     while (get_fields_from_db.next())
@@ -257,8 +257,50 @@ QString s_sql::getvaluefromtablebyfields (QSqlDatabase db, QString tble, QString
     return QString();
 }
 
+// процедура берёт из таблицы поля fields для строки, в которой поля cmpfield равны cmpvalues
+
+QStringList s_sql::getvaluesfromtablebyfields (QSqlDatabase db, QString tble, QStringList fields, QStringList cmpfields, QStringList cmpvalues)
+{
+    QString tmpString;
+    QString vl;
+    QSqlQuery get_fields_from_db (db);
+    int i;
+
+    if (cmpfields.isEmpty())
+        return 4;
+    if (cmpfields.size() != cmpvalues.size())
+        return 5;
+
+    tmpString = "SELECT ";
+    for (i = 0; i < fields.size(); i++)
+        tmpString += "`" + fields.at(i) + "`,";
+    tmpString = tmpString.left(tmpString.size()-1); // удаляем последнюю запятую
+    tmpString += " FROM `" + tble + "` WHERE ";
+    for (i = 0; i < cmpfields.size(); i++)
+        tmpString += "`" + cmpfields.at(i) + "`=\""+cmpvalues.at(i)+"\" AND ";
+    tmpString = tmpString.left(tmpString.size()-5); // удаляем последний AND
+    tmpString +=  " AND `deleted`=0;";
+    get_fields_from_db.exec(tmpString);
+    if (!get_fields_from_db.isActive())
+    {
+        result = 2;
+        return QString();
+    }
+    get_fields_from_db.next();
+    if (get_fields_from_db.isValid())
+    {
+        while (get_fields_from_db.next())
+            vl << get_fields_from_db.value(0).toString();
+        result = 0;
+        return vl;
+    }
+    result = 1;
+    return QString();
+}
+
 // процедура возвращает значение по ссылке из поля tablefields таблицы tablefields, для которой table.headers = tablenheaders
 // значение берётся для id<tablefields.at(1)>=<keyfieldid>
+// ЕСТЬ ОШИБКА В СТРОКЕ 3 - tablenheaders - ЭТО НЕ СПИСОК СТРОК, А ПРОСТО СТРОКА!!!
 
 QString s_sql::getvaluefromtablebytablefields(QString tablenheaders, QString keyfield, QString keyfieldid)
 {
@@ -359,22 +401,11 @@ int s_sql::updatevaluesintable(QSqlDatabase db, QString tble, QStringList fl, QS
 int s_sql::getnextfreeindex(QSqlDatabase db, QString tble)
 {
     long i = 3; // 1-я и 2-я запись в каждой таблице - табу, заложены для системных целей
-//    int j;
-
     QSqlQuery get_indexes (db);
-    QString tmpString = "SELECT `id" + tble + "` FROM `" + tble + "` WHERE `id" + tble + "`>2 ORDER BY `id" + tble + "` ASC;";
+    QString tmpString = "SELECT `id" + tble + "` FROM `" + tble + "` ORDER BY `id" + tble + "` ASC;";
     get_indexes.exec(tmpString); // индексы сортируем по возрастанию
-
-/*    get_indexes.next();
-    int tmpInt = get_indexes.value(0).toInt();
-    if (tmpInt>2) return (tmpInt+1);
-    else return 0; */
     while ((get_indexes.next()) && (get_indexes.value(0).toInt(0) == i)) // пока нет пропусков
-    {
-//        j = get_indexes.value(0).toInt(0);
         i++;
-    }
-
     return i;
 }
 
@@ -483,8 +514,7 @@ int s_sql::checkdbforemptyfields(QSqlDatabase db, QString tble, QStringList fiel
     QSqlQuery check_db (db);
     for (i = 0; i < fields.size(); i++)
     {
-        QString tmpString = "SELECT `id" + tble + "` FROM `" + tble + "` WHERE `id" + tble + "`>2"\
-                " AND `" + fields.at(i) + "` IS NULL AND `deleted`=0;";
+        QString tmpString = "SELECT `id" + tble + "` FROM `" + tble + "` WHERE `" + fields.at(i) + "` IS NULL AND `deleted`=0;";
         check_db.exec(tmpString);
         if (!check_db.isActive())
             tmpString = check_db.lastError().text();
@@ -570,7 +600,7 @@ QList<QStringList> s_sql::searchintablefieldlike(QSqlDatabase db, QString tble, 
     for (i = 0; i < col.size(); i++)
     {
         tmpsl.clear();
-        QString tmpString = "SELECT `"+col.at(i)+"` FROM `"+tble+"` WHERE `"+field+"` RLIKE '"+regexpstr+"' AND `id"+tble+"`>2 AND `deleted`=0;";
+        QString tmpString = "SELECT `"+col.at(i)+"` FROM `"+tble+"` WHERE `"+field+"` RLIKE '"+regexpstr+"' AND `deleted`=0;";
         search_db.exec(tmpString);
         int j = 0;
         while (search_db.next())

@@ -40,6 +40,10 @@ public:
     int createTable (QSqlDatabase db, QString tble, QStringList fl);
     void addColumn(QSqlDatabase db, QString tble, QString col, QString def = "NULL");
 
+    void bytablefieldsinsert (QString tble, QStringList headers, QStringList values);
+    void bytablefieldssetone (QString tble, QString headers, QString value, QString id);
+    QString bytablefieldsgetvalue (QString tble, QString headers);
+    QStringList bytablefieldsgetvalues (QString tble, QStringList headers);
     int result;
 };
 

@@ -663,3 +663,82 @@ QList<QStringList> s_sql::getmorevaluesfromtablebyfield(QSqlDatabase db, QString
         return sl;
     }
 }
+
+// процедура делает новую запись в таблицу tble (имя в tablefields)
+
+void s_sql::bytablefieldsinsert(QString tble, QStringList headers, QStringList values)
+{
+    QList<QStringList> lsl;
+    QStringList fl;
+    fl << "table" << "tablefields" << "headers" << "links";
+    lsl = sqlc.getmorevaluesfromtablebyfield(pc.sup, "tablefields", fl, "tablename", tble, "fieldsorder", true);
+    if (result)
+        return;
+    int i;
+    while (lsl.size() > 0)
+    {
+        QString curtble = lsl.at(0).at(0);
+        if (curtble == "-")
+        {
+            lsl.removeAt(0);
+            continue;
+        }
+        QStringList tmpvl, vl, ls;
+        QString tmpString;
+        fl.clear();
+        for (i = 0; i < lsl.size(); i++)
+        {
+            if (lsl.at(i).at(0) == curtble)
+            {
+                int hdindex = headers.indexOf(lsl.at(i).at(2));
+                if (hdindex == -1)
+                    continue;
+                if (hdindex < values.size())
+                    tmpvl << values.at(hdindex);
+                else
+                    continue;
+                fl << lsl.at(i).at(1);
+                ls << lsl.at(i).at(3);
+                lsl.removeAt(i); // в StringList-ах находятся только те поля, которые относятся к текущей таблице
+            }
+        }
+        // теперь надо отделить мух от котлет - "живые" значения от ссылочных
+        QStringList ls_splitted = ls.at(i).split(".");
+        for (i = 0; i < tmpvl.size(); i++)
+        {
+            switch (ls_splitted.at(1))
+            {
+            case FW_AUTONUM:
+            case FW_NUMBER:
+            case FW_MASKED:
+            case FW_EQUAT:
+            case FW_PLAIN:
+            case FW_RIGHTS:
+            case FW_DATE:
+            case FW_TLINK:
+            {
+                vl << tmpvl.at(i);
+                break;
+            }
+            case FW_DLINK:
+            {
+                if (tmpvl.at(i).left(2) == "q_") // при вызове функции в значение для DLINK необходимо в начале подставить "q_"
+                {
+                    tmpString = tmpvl.at(i).right(tmpvl.at(i).size()-2);
+                    ls_splitted.at()
+                }
+                vl << () ?  : tmpvl.at(i);
+            }
+            case FW_LINK:
+            case FW_ALLINK:
+            case FW_MAXLINK:
+            {
+
+            }
+            }
+        }
+        QStringList dbtble = curtble.split(".");
+
+
+    }
+}

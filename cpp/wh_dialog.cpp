@@ -461,7 +461,7 @@ void wh_dialog::acceptandclose()
             throw 0x25;
         vl << ll->text() << QString::number(pc.idPers);
         newID = sqlc.getvaluefromtablebyfield(pc.ent, "documents", "iddocuments", "documents", DocNum);
-        if (!sqlc.result) // есть такая запись, значит её надо удалить
+        if (!sqlc.result) // есть такая запись, значит, её надо удалить
         {
             QMessageBox tmpMB;
             tmpMB.setText("Для данного ордера в базе есть запись №" + newID + "");

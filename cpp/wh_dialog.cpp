@@ -486,80 +486,23 @@ void wh_dialog::acceptandclose()
             throw 0x27;
 
         // пишем теперь таблицу flow
-        QList<QStringList> lsl;
-        fl.clear();
-        fl << "table" << "tablefields" << "links";
-        lsl = sqlc.getmorevaluesfromtablebyfield(pc.sup, "tablefields", fl, "tablename", ReasonTable.at(Reason), "fieldsorder", true);
-        for (j = 0; j < mainmodel->rowCount(QModelIndex())-1; j++)
+        QStringList values, headers;
+        QString tble = ReasonTable.at(Reason);
+        for (j = 0; j < mainmodel->columnCount(QModelIndex()); j++)
+            headers << mainmodel->headerData(j, Qt::Horizontal, Qt::DisplayRole).toString();
+        int whidx = headers.indexOf("Склад");
+        headers.removeAt(whidx);
+        for (j = 0; j < mainmodel->rowCount(QModelIndex()); j++)
         {
-            fl.clear();
-            vl.clear();
-            fl << "flow";
-            vl << newID;
+            values.clear();
             for (i = 0; i < lsl.size(); i++)
-            {
-                if (lsl.at(i).at(0) != "-") // есть поля, которые надо пропускать
-                {
-                    tmpValue = mainmodel->data(mainmodel->index(j, i), Qt::DisplayRole).toString(); // выцарапываем само значение
-                    PublicClass::fieldformat ff = pc.getFFfromLinks(lsl.at(i).at(2));
-                    switch (ff.ftype)
-                    {
-                    case FW_ALLINK:
-                    {
-                        QStringList tmpfl =
-                        fl << "id"+tmpfl.at(1);
-                        tmpString = sqlc.getvaluefromtablebyfield(sqlc.getdb(tmpfl.at(0).split(".").at(0)), tmpfl.at(0).split(".").at(1), "id"+tmpfl.at(1), tmpfl.at(1), tmpValue);
-                        if (tmpString.isEmpty())
-                            throw 0x28;
-                        vl << tmpString;
-                        break;
-                    }
-                    case FW_AUTONUM:
-                    case FW_EQUAT:
-                    case FW_NUMBER:
-                    case FW_MASKED:
-                    default: // если тип поля неопределён (как для, например, spinboxdelegate), то по умолчанию пишем его в поле
-                    {
-                        fl << FlowFields.at(i);
-                        vl << tmpValue;
-                        break;
-                    }
-                    case FW_DLINK:
-                    {
-                        tmpString = sqlc.getvaluefromtablebyfield(sqlc.getdb(tmpsl.at(3)), tmpsl.at(4), "id"+tmpsl.at(4), tmpsl.at(4), tmpValue);
-                        if (tmpString.isEmpty()) // нет во второй таблице такого элемента, поищем в первой
-                        {
-                            tmpString = sqlc.getvaluefromtablebyfield(sqlc.getdb(tmpsl.at(1)), tmpsl.at(2), "id"+tmpsl.at(2), tmpsl.at(2), tmpValue);
-                            if (tmpString.isEmpty()) // нет такого значения ни в одной из таблиц
-                            {
-                                QMessageBox::warning(this, "warning!", "Нет такого элемента номенклатуры, как в строке № " + QString::number(j+1) + "!");
-                                return;
-                            }
-                            else // во второй таблице он всё-таки нашёлся
-                            {
-                                fl << "id"+tmpsl.at(2);
-                                vl << tmpString;
-                            }
-                        }
-                        else
-                        {
-                            fl << "id"+tmpsl.at(4);
-                            vl << tmpString;
-                        }
-                        break;
-                    }
-                    case FW_LINK:
-                    {
-                        fl << "id"+tmpsl.at(2);
-                        tmpString = sqlc.getvaluefromtablebyfield(sqlc.getdb(tmpsl.at(1)), tmpsl.at(2), "id"+tmpsl.at(2), tmpsl.at(3), tmpValue);
-                        if (tmpString.isEmpty())
-                        {
-                            QMessageBox::warning(this, "warning!", "Ошибка в таблице flowfields по полю" + FlowFields.at(i));
-                            return;
-                        }
-                        vl << tmpString;
-                        break;
-                    }
+                values << mainmodel->data(mainmodel->index(j, i), Qt::DisplayRole).toString(); // выцарапываем само значение
+            tmpString = values.at(whidx);
+            values.removeAt(whidx);
+            sqlc.bytablefieldsinsert(tble, headers, values);
+            // теперь пишем в склад
+
+        }
                     case FW_MAXLINK:
                     {
                         fl << FlowFields.at(i);

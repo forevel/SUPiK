@@ -670,7 +670,8 @@ void s_sql::bytablefieldsinsert(QString tble, QStringList headers, QStringList v
 {
     QList<QStringList> lsl;
     QStringList fl;
-    fl << "table" << "tablefields" << "headers" << "links";
+    QStringList tmpvl, vl, ls;
+    fl << "table" << "tablefields" << "headers" << "links" << "keyfield";
     lsl = sqlc.getmorevaluesfromtablebyfield(pc.sup, "tablefields", fl, "tablename", tble, "fieldsorder", true);
     if (result)
         return;
@@ -683,13 +684,18 @@ void s_sql::bytablefieldsinsert(QString tble, QStringList headers, QStringList v
             lsl.removeAt(0);
             continue;
         }
-        QStringList tmpvl, vl, ls;
+        tmpvl.clear();
+        vl.clear();
+        ls.clear();
         QString tmpString;
         fl.clear();
+        int ididx = -1;
         for (i = 0; i < lsl.size(); i++)
         {
             if (lsl.at(i).at(0) == curtble)
             {
+                if (lsl.at(i).at(4) == "v")
+                    ididx = i;
                 int hdindex = headers.indexOf(lsl.at(i).at(2));
                 if (hdindex == -1)
                     continue;
@@ -702,10 +708,16 @@ void s_sql::bytablefieldsinsert(QString tble, QStringList headers, QStringList v
                 lsl.removeAt(i); // в StringList-ах находятся только те поля, которые относятся к текущей таблице
             }
         }
+        if (ididx != -1)
+        {
+            fl.swap(0, ididx);
+            ls.swap(0, ididx);
+            tmpvl.swap(0, ididx);
+        }
         // теперь надо отделить мух от котлет - "живые" значения от ссылочных
-        QStringList ls_splitted = ls.at(i).split(".");
         for (i = 0; i < tmpvl.size(); i++)
         {
+            QStringList ls_splitted = ls.at(i).split(".");
             switch (ls_splitted.at(1))
             {
             case FW_AUTONUM:
@@ -722,23 +734,40 @@ void s_sql::bytablefieldsinsert(QString tble, QStringList headers, QStringList v
             }
             case FW_DLINK:
             {
-                if (tmpvl.at(i).left(2) == "q_") // при вызове функции в значение для DLINK необходимо в начале подставить "q_"
+/*                if (tmpvl.at(i).left(2) == "q_") // при вызове функции в значение для DLINK необходимо в начале подставить "q_"
                 {
                     tmpString = tmpvl.at(i).right(tmpvl.at(i).size()-2);
                     ls_splitted.at()
                 }
-                vl << () ?  : tmpvl.at(i);
+                vl << () ?  : tmpvl.at(i); */
             }
             case FW_LINK:
             case FW_ALLINK:
             case FW_MAXLINK:
             {
-
+                QStringList tmpsl = QStringList << "table" << "tablefields";
+                QStringList cmpfl = QStringList << "tablename" << "headers";
+                QStringList cmpvl = QStringList << ls_splitted.at(3) << ls_splitted.at(4);
+                QStringList tmpfl = getvaluesfromtablebyfields(pc.sup, "tablefields", tmpsl, cmpfl, cmpvl);
+                if (result)
+                    return;
+                QString tmpid = getvaluefromtablebyfield(getdb(tmpfl.at(0).split(".").at(0)), tmpfl.at(0).split(".").at(1), tmpfl.at(1), tmpfl.at(1).right(tmpfl.at(1).size()-2), tmpvl.at(i));
+                if (result)
+                    return;
+                vl << tmpid;
+                break;
             }
             }
         }
         QStringList dbtble = curtble.split(".");
-
-
+        tmpString = getvaluefromtablebyfield(getdb(dbtble.at(0)), dbtble.at(1), "id"+dbtble.at(1), fl.at(0), vl.at(0));
+        if (result == 2)
+            return;
+        else if (result == 0)
+            updatevaluesintable(getdb(dbtble.at(0)), dbtble.at(1), fl, vl, "id"+dbtble.at(1), tmpString);
+        else
+            insertvaluestotable(getdb(dbtble.at(0)), dbtble.at(1), fl, vl);
+        if (result)
+            return;
     }
 }

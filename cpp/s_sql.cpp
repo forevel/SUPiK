@@ -262,15 +262,20 @@ QString s_sql::getvaluefromtablebyfields (QSqlDatabase db, QString tble, QString
 QStringList s_sql::getvaluesfromtablebyfields (QSqlDatabase db, QString tble, QStringList fields, QStringList cmpfields, QStringList cmpvalues)
 {
     QString tmpString;
-    QString vl;
+    QStringList vl;
     QSqlQuery get_fields_from_db (db);
     int i;
 
     if (cmpfields.isEmpty())
-        return 4;
+    {
+        result = 4;
+        return QStringList();
+    }
     if (cmpfields.size() != cmpvalues.size())
-        return 5;
-
+    {
+        result = 5;
+        return QStringList();
+    }
     tmpString = "SELECT ";
     for (i = 0; i < fields.size(); i++)
         tmpString += "`" + fields.at(i) + "`,";
@@ -284,7 +289,7 @@ QStringList s_sql::getvaluesfromtablebyfields (QSqlDatabase db, QString tble, QS
     if (!get_fields_from_db.isActive())
     {
         result = 2;
-        return QString();
+        return QStringList();
     }
     get_fields_from_db.next();
     if (get_fields_from_db.isValid())
@@ -295,7 +300,7 @@ QStringList s_sql::getvaluesfromtablebyfields (QSqlDatabase db, QString tble, QS
         return vl;
     }
     result = 1;
-    return QString();
+    return QStringList();
 }
 
 // процедура возвращает значение по ссылке из поля tablefields таблицы tablefields, для которой table.headers = tablenheaders

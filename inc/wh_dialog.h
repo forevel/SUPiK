@@ -48,7 +48,7 @@ private:
     QString ScanPath;
     QString Supplier, Consumer, DocNum;
     int Reason;
-    QStringList ReasonTable, MainText;
+    QStringList Reasons, ReasonTable, MainText;
     s_ncmodel *mainmodel;
     s_tqTableView *mainTV;
     float widths[W_SIZE];
@@ -68,12 +68,10 @@ private:
 private slots:
     void chooseSupplier();
     void chooseConsumer();
-    void chooseReason();
     void chooseTN();
     void viewTN();
     void supplierChoosed(QString str);
     void consumerChoosed(QString str);
-    void reasonChoosed(QString str);
     void resizeMainTV(QModelIndex index1, QModelIndex index2);
     void cancelled();
     void acceptandclose();

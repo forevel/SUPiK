@@ -515,5 +515,5 @@ int s_ncmodel::maxcolwidthsize()
 
 QString s_ncmodel::getCellLinks(QModelIndex index)
 {
-    return data(index, Qt::UserRole);
+    return data(index, Qt::UserRole).toString();
 }

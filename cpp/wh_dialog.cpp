@@ -34,7 +34,7 @@ wh_dialog::wh_dialog(int Reason, QString id, QWidget *parent) :
         ShowMessage(0x01);
         this->close();
     }
-    mainmodel = new s_whitemmodel;
+    mainmodel = new s_ncmodel;
     bl1 = new QGridLayout;
     bl2 = new QGridLayout;
     mainbl = new QVBoxLayout;
@@ -46,6 +46,7 @@ wh_dialog::wh_dialog(int Reason, QString id, QWidget *parent) :
     needtorefresh = false;
     ReasonTable << "Ввод остатков_полная" << "Приём на склад_полная" << "Приём на склад_полная";
     MainText << "Приходный ордер №" << "Приходный ордер №" << "Расходный ордер №";
+    Reasons << "Ввод остатков" << "Закупка" << "Продажа" << "Приём в ремонт" << "Отправка из ремонта";
     FlowFields.clear();
     if (res = SetupUI(id))
     {
@@ -181,11 +182,9 @@ int wh_dialog::SetupUI(QString id)
     connect(viewTNPB, SIGNAL(clicked()), this, SLOT(viewTN()));
     s_tqLabel *reasonL = new s_tqLabel("Основание: ");;
     s_tqLineEdit *reasonLE = new s_tqLineEdit;
+    reasonLE->setText(Reasons[Reason]);
     reasonLE->setObjectName("Reason");
     reasonLE->setEnabled(false);
-    s_tqPushButton *chooseReasonPB = new s_tqPushButton;
-    chooseReasonPB->setText("...");
-    connect(chooseReasonPB, SIGNAL(clicked()), this, SLOT(chooseReason()));
     s_duniversal *universalDelegate = new s_duniversal;
     connect(universalDelegate, SIGNAL(commitData(QWidget*)), this, SLOT(CBChanged(QWidget*)));
     bl2->addWidget(docNumL, 0, 0, Qt::AlignLeft);
@@ -196,7 +195,6 @@ int wh_dialog::SetupUI(QString id)
     bl2->addWidget(viewTNPB, 0, 5, Qt::AlignCenter);
     bl2->addWidget(reasonL, 1, 0, Qt::AlignLeft);
     bl2->addWidget(reasonLE, 1, 1, 1, 4);
-    bl2->addWidget(chooseReasonPB, 1, 5, Qt::AlignCenter);
     bl2->setColumnStretch(0, 0);
     bl2->setColumnStretch(1, 10);
     bl2->setColumnStretch(2, 0);
@@ -281,8 +279,6 @@ void wh_dialog::updateDialog()
     le->setText(Consumer);
     le = this->findChild<s_tqLineEdit *>("TNNum");
     le->setText(DocNum);
-    le = this->findChild<s_tqLineEdit *>("Reason");
-    le->setText(Reason);
 }
 
 void wh_dialog::resizeMainTV(QModelIndex index1, QModelIndex index2)
@@ -290,13 +286,8 @@ void wh_dialog::resizeMainTV(QModelIndex index1, QModelIndex index2)
     Q_UNUSED(index1);
     Q_UNUSED(index2);
     float realwidths[W_SIZE];
-    QStringList sl;
     if (!mainmodel->checkforEmptyRows())
-    {
-        for (int i = 0; i < mainmodel->columnCount(QModelIndex()); i++)
-            sl << "";
-        mainmodel->addRow(sl);
-    }
+        mainmodel->addRow();
     int i;
     float k = this->geometry().width()-20;
     k = k / 1000;
@@ -316,7 +307,7 @@ void wh_dialog::chooseConsumer()
     int res = dlg->setupchoosetable("Контрагенты_сокращ", Consumer);
     if (res)
         return;
-    chooseDialog->SetupUI(tmpStringList, Consumer);
+//    chooseDialog->SetupUI(tmpStringList, Consumer);
     connect(dlg, SIGNAL(changeshasbeenMade(QString)), this, SLOT(consumerChoosed(QString)));
     dlg->exec();
 }
@@ -333,7 +324,7 @@ void wh_dialog::chooseSupplier()
     int res = dlg->setupchoosetable("Контрагенты_сокращ", Supplier);
     if (res)
         return;
-    chooseDialog->SetupUI(tmpStringList, Supplier);
+//    chooseDialog->SetupUI(tmpStringList, Supplier);
     connect(dlg, SIGNAL(changeshasbeenMade(QString)), this, SLOT(supplierChoosed(QString)));
     dlg->exec();
 }
@@ -341,23 +332,6 @@ void wh_dialog::chooseSupplier()
 void wh_dialog::supplierChoosed(QString str)
 {
     Supplier = str;
-    updateDialog();
-}
-
-void wh_dialog::chooseReason()
-{
-    s_2cdialog *dlg = new s_2cdialog("Выбор основания приёма/выдачи со склада");
-    int res = dlg->setupchoosetable("Основания_сокращ", Reason);
-    if (res)
-        return;
-    chooseDialog->SetupUI(tmpStringList, Reason);
-    connect(dlg, SIGNAL(changeshasbeenMade(QString)), this, SLOT(reasonChoosed(QString)));
-    dlg->exec();
-}
-
-void wh_dialog::reasonChoosed(QString str)
-{
-    Reason = str;
     updateDialog();
 }
 
@@ -408,6 +382,7 @@ void wh_dialog::acceptandclose()
     {
         QString newID;
         QString tmpString, tmpValue;
+        s_tqLineEdit *le;
         QStringList fl, vl, tmpsl;
         int i, j;
         // проверка введённых данных
@@ -436,7 +411,7 @@ void wh_dialog::acceptandclose()
 
         // пишем параметры ордера в таблицу documents
         fl << "date" << "idsupplier" << "idcustomer" << "reason" << "documents" << "scanpath" << "direction" << "value" << "idpers";
-        s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("Date");
+        le = this->findChild<s_tqLineEdit *>("Date");
         if (le == 0)
             throw 0x21;
         vl << le->text();
@@ -669,13 +644,8 @@ int wh_dialog::fillFlow(QString id)
     if (sqlc.result)
         return 13;
     Consumer = tmpString;
-    tmpString = sqlc.getvaluefromtablebyfield(pc.ent, "reasons", "reasons", "idreasons", vl.at(3));
-    if (sqlc.result)
-        return 14;
-    Reason = tmpString;
     DocNum = vl.at(4);
     ScanPath = vl.at(5);
-    isIncoming = (vl.at(6)=="i")?true:false;
     s_tqLabel *ll = this->findChild<s_tqLabel *>("Author");
     tmpString = sqlc.getvaluefromtablebyid(pc.sup, "personel", "personel", vl.at(7));
     if (sqlc.result)
@@ -789,14 +759,8 @@ int wh_dialog::fillNullFlow()
     s_tqLabel *ll = this->findChild<s_tqLabel *>("Author");
     ll->setText("Автор: " + pc.Pers);
     DocNum = "";
-    Reason = "";
     ScanPath = "";
-    QStringList sl;
-    int i;
-    sl.clear();
-    for (i = 0; i < mainmodel->columnCount(QModelIndex()); i++)
-        sl << "";
-    mainmodel->addRow(sl);
+    mainmodel->addRow();
     return 0;
 }
 

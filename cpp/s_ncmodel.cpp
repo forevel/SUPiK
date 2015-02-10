@@ -333,6 +333,12 @@ void s_ncmodel::fillModel(QList<QStringList> sl)
                         vl = sqlc.getvaluefromtablebyfield(db, ff.link.at(1), ff.link.at(2), "id"+ff.link.at(1), sl.at(j).at(i));
                     break;
                 }
+                case FW_ID:
+                {
+                    int num = ff.link.at(0).toInt();
+                    vl = QString("%1").arg(sl.at(j).at(i).toInt(), num, 10, QChar('0'));
+                    break;
+                }
                 default:
                 {
                     vl = sl.at(j).at(i);
@@ -516,4 +522,15 @@ int s_ncmodel::maxcolwidthsize()
 QString s_ncmodel::getCellLinks(QModelIndex index)
 {
     return data(index, Qt::UserRole).toString();
+}
+
+// процедура заполнения модели из таблицы tble в sup.tablefields
+
+int s_ncmodel::setup(QString tble)
+{
+    QList<QStringList> lsl = tfl.GetAllValues(tble);
+    if (tfl.result)
+        return (CM_ERROR+tfl.result);
+    fillModel(lsl);
+    return 0;
 }

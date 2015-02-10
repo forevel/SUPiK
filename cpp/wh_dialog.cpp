@@ -46,7 +46,6 @@ wh_dialog::wh_dialog(int Reason, QString id, QWidget *parent) :
     needtorefresh = false;
     ReasonTable << "Ввод остатков_полная" << "Приём на склад_полная" << "Приём на склад_полная";
     MainText << "Приходный ордер №" << "Приходный ордер №" << "Расходный ордер №";
-    Reasons << "Ввод остатков" << "Закупка" << "Продажа" << "Приём в ремонт" << "Отправка из ремонта";
     FlowFields.clear();
     if (res = SetupUI(id))
     {
@@ -182,9 +181,11 @@ int wh_dialog::SetupUI(QString id)
     connect(viewTNPB, SIGNAL(clicked()), this, SLOT(viewTN()));
     s_tqLabel *reasonL = new s_tqLabel("Основание: ");;
     s_tqLineEdit *reasonLE = new s_tqLineEdit;
-    reasonLE->setText(Reasons[Reason]);
     reasonLE->setObjectName("Reason");
     reasonLE->setEnabled(false);
+    s_tqPushButton *chooseReasonPB = new s_tqPushButton;
+    chooseReasonPB->setText("...");
+    connect(chooseReasonPB, SIGNAL(clicked()), this, SLOT(chooseReason()));
     s_duniversal *universalDelegate = new s_duniversal;
     connect(universalDelegate, SIGNAL(commitData(QWidget*)), this, SLOT(CBChanged(QWidget*)));
     bl2->addWidget(docNumL, 0, 0, Qt::AlignLeft);
@@ -195,6 +196,7 @@ int wh_dialog::SetupUI(QString id)
     bl2->addWidget(viewTNPB, 0, 5, Qt::AlignCenter);
     bl2->addWidget(reasonL, 1, 0, Qt::AlignLeft);
     bl2->addWidget(reasonLE, 1, 1, 1, 4);
+    bl2->addWidget(chooseReasonPB, 1, 5, Qt::AlignCenter);
     bl2->setColumnStretch(0, 0);
     bl2->setColumnStretch(1, 10);
     bl2->setColumnStretch(2, 0);
@@ -286,6 +288,7 @@ void wh_dialog::resizeMainTV(QModelIndex index1, QModelIndex index2)
     Q_UNUSED(index1);
     Q_UNUSED(index2);
     float realwidths[W_SIZE];
+    QStringList sl;
     if (!mainmodel->checkforEmptyRows())
         mainmodel->addRow();
     int i;
@@ -307,7 +310,6 @@ void wh_dialog::chooseConsumer()
     int res = dlg->setupchoosetable("Контрагенты_сокращ", Consumer);
     if (res)
         return;
-//    chooseDialog->SetupUI(tmpStringList, Consumer);
     connect(dlg, SIGNAL(changeshasbeenMade(QString)), this, SLOT(consumerChoosed(QString)));
     dlg->exec();
 }
@@ -324,7 +326,6 @@ void wh_dialog::chooseSupplier()
     int res = dlg->setupchoosetable("Контрагенты_сокращ", Supplier);
     if (res)
         return;
-//    chooseDialog->SetupUI(tmpStringList, Supplier);
     connect(dlg, SIGNAL(changeshasbeenMade(QString)), this, SLOT(supplierChoosed(QString)));
     dlg->exec();
 }
@@ -382,8 +383,9 @@ void wh_dialog::acceptandclose()
     {
         QString newID;
         QString tmpString, tmpValue;
-        s_tqLineEdit *le;
+        QStringList tmpsl1, tmpsl2;
         QStringList fl, vl, tmpsl;
+        s_tqLineEdit *le;
         int i, j;
         // проверка введённых данных
         if (Supplier.isEmpty())
@@ -436,7 +438,7 @@ void wh_dialog::acceptandclose()
             throw 0x25;
         vl << ll->text() << QString::number(pc.idPers);
         newID = sqlc.getvaluefromtablebyfield(pc.ent, "documents", "iddocuments", "documents", DocNum);
-        if (!sqlc.result) // есть такая запись, значит её надо удалить
+        if (!sqlc.result) // есть такая запись, значит, её надо удалить
         {
             QMessageBox tmpMB;
             tmpMB.setText("Для данного ордера в базе есть запись №" + newID + "");
@@ -446,7 +448,6 @@ void wh_dialog::acceptandclose()
             tmpMB.exec();
             if (tmpMB.clickedButton() == tmpOkPB)
             {
-                QStringList tmpsl1, tmpsl2;
                 tmpsl1 << "deleted";
                 tmpsl2 << "1";
                 sqlc.updatevaluesintable(pc.ent, "documents", tmpsl1, tmpsl2, "documents", newID);
@@ -461,160 +462,41 @@ void wh_dialog::acceptandclose()
             throw 0x27;
 
         // пишем теперь таблицу flow
-        QList<QStringList> lsl;
-        fl.clear();
-        fl << "table" << "tablefields" << "links";
-        lsl = sqlc.getmorevaluesfromtablebyfield(pc.sup, "tablefields", fl, "tablename", ReasonTable.at(Reason), "fieldsorder", true);
-        for (j = 0; j < mainmodel->rowCount(QModelIndex())-1; j++)
+        QStringList values, headers;
+        QString tble = ReasonTable.at(Reason);
+        for (j = 0; j < mainmodel->columnCount(QModelIndex()); j++)
+            headers << mainmodel->headerData(j, Qt::Horizontal, Qt::DisplayRole).toString();
+        int whidx = headers.indexOf("Склад");
+        if (whidx == -1)
+            throw 0x28;
+        int nkidx = headers.indexOf("Наименование");
+        if (nkidx == -1)
+            throw 0x29;
+        for (j = 0; j < mainmodel->rowCount(QModelIndex()); j++)
         {
-            fl.clear();
-            vl.clear();
-            fl << "flow";
-            vl << newID;
-            for (i = 0; i < lsl.size(); i++)
+            values.clear();
+            for (i = 0; i < headers.size(); i++)
+                values << mainmodel->data(mainmodel->index(j, i), Qt::DisplayRole).toString(); // выцарапываем само значение
+            tmpString = values.at(whidx);
+            QString tmpString2 = values.at(nkidx);
+            tmpString2 = sqlc.getvaluefromtablebyfield(pc.ent, "nk", "idnk", "nk", tmpString2); // берём idnk
+            tmpString = sqlc.getvaluefromtablebyfield(pc.ent, "wh", "idwh", "wh", tmpString); // берём idwh
+            tmpsl1 = QStringList() << "idnk" << "idwh"; // поля, по которым ищем запись idnkwh
+            tmpsl2 = QStringList() << tmpString2 << tmpString;
+            tmpString = sqlc.getvaluefromtablebyfields(pc.ent, "nkwh", "idnkwh", tmpsl1, tmpsl2);
+            if (sqlc.result == 1) // нет такой записи
             {
-                if (lsl.at(i).at(0) != "-") // есть поля, которые надо пропускать
-                {
-                    tmpValue = mainmodel->data(mainmodel->index(j, i), Qt::DisplayRole).toString(); // выцарапываем само значение
-                    PublicClass::fieldformat ff = pc.getFFfromLinks(lsl.at(i).at(2));
-                    switch (ff.ftype)
-                    {
-                    case FW_ALLINK:
-                    {
-                        QStringList tmpfl =
-                        fl << "id"+tmpfl.at(1);
-                        tmpString = sqlc.getvaluefromtablebyfield(sqlc.getdb(tmpfl.at(0).split(".").at(0)), tmpfl.at(0).split(".").at(1), "id"+tmpfl.at(1), tmpfl.at(1), tmpValue);
-                        if (tmpString.isEmpty())
-                            throw 0x28;
-                        vl << tmpString;
-                        break;
-                    }
-                    case FW_AUTONUM:
-                    case FW_EQUAT:
-                    case FW_NUMBER:
-                    case FW_MASKED:
-                    default: // если тип поля неопределён (как для, например, spinboxdelegate), то по умолчанию пишем его в поле
-                    {
-                        fl << FlowFields.at(i);
-                        vl << tmpValue;
-                        break;
-                    }
-                    case FW_DLINK:
-                    {
-                        tmpString = sqlc.getvaluefromtablebyfield(sqlc.getdb(tmpsl.at(3)), tmpsl.at(4), "id"+tmpsl.at(4), tmpsl.at(4), tmpValue);
-                        if (tmpString.isEmpty()) // нет во второй таблице такого элемента, поищем в первой
-                        {
-                            tmpString = sqlc.getvaluefromtablebyfield(sqlc.getdb(tmpsl.at(1)), tmpsl.at(2), "id"+tmpsl.at(2), tmpsl.at(2), tmpValue);
-                            if (tmpString.isEmpty()) // нет такого значения ни в одной из таблиц
-                            {
-                                QMessageBox::warning(this, "warning!", "Нет такого элемента номенклатуры, как в строке № " + QString::number(j+1) + "!");
-                                return;
-                            }
-                            else // во второй таблице он всё-таки нашёлся
-                            {
-                                fl << "id"+tmpsl.at(2);
-                                vl << tmpString;
-                            }
-                        }
-                        else
-                        {
-                            fl << "id"+tmpsl.at(4);
-                            vl << tmpString;
-                        }
-                        break;
-                    }
-                    case FW_LINK:
-                    {
-                        fl << "id"+tmpsl.at(2);
-                        tmpString = sqlc.getvaluefromtablebyfield(sqlc.getdb(tmpsl.at(1)), tmpsl.at(2), "id"+tmpsl.at(2), tmpsl.at(3), tmpValue);
-                        if (tmpString.isEmpty())
-                        {
-                            QMessageBox::warning(this, "warning!", "Ошибка в таблице flowfields по полю" + FlowFields.at(i));
-                            return;
-                        }
-                        vl << tmpString;
-                        break;
-                    }
-                    case FW_MAXLINK:
-                    {
-                        fl << FlowFields.at(i);
-                        bool ok;
-                        int tmpInt = tmpsl.at(4).toInt(&ok);
-                        if (ok) // в поз. 4 находится число => ссылка на ячейку таблицы ордера
-                        {
-                            tmpString = sqlc.getlastvaluefromtablebyfield(sqlc.getdb(tmpsl.at(1)), tmpsl.at(2), "id"+tmpsl.at(2), tmpsl.at(3),\
-                                                                      mainmodel->data(mainmodel->index(j, tmpInt), Qt::DisplayRole).toString());
-                            if (tmpString.isEmpty())
-                            {
-                                QMessageBox::warning(this, "warning!", "Ошибка в таблице flowfields по полю" + FlowFields.at(i));
-                                return;
-                            }
-                        }
-                        else // в поз. 4 находится имя поля из таблицы tmpsl.at(1).tmpsl.at(2).
-                        {
-                            tmpString = sqlc.getlastvaluefromtablebyfield(sqlc.getdb(tmpsl.at(1)), tmpsl.at(2), "id"+tmpsl.at(2), tmpsl.at(3),\
-                                                                      tmpsl.at(4));
-                            if (tmpString.isEmpty())
-                            {
-                                QMessageBox::warning(this, "warning!", "Ошибка в таблице flowfields по полю" + FlowFields.at(i));
-                                return;
-                            }
-                        }
-                        vl << tmpString;
-                        break;
-                    }
-                    }
-                }
+                tmpString = sqlc.insertvaluestotable(pc.ent, "nkwh", tmpsl1, tmpsl2);
+                if (sqlc.result)
+                    throw 0x2b;
+                s_2cdialog *dlg = new s_2cdialog;
+                dlg->setup("Расположение на складе_полн", tmpString);
+                dlg->exec();
             }
-            // fl ~ "idwh"
-            // vl ~ <idwh>
-            QSqlQuery get_whs(pc.ent);
-            int whidx = fl.indexOf("idwh"); // в таблице flowfields может и не быть поля links=ent.wh.wh
-            if (whidx != -1)
-            {
-                tmpString = "SELECT `idnkwh` FROM `nkwh` WHERE `idnk`=\""+vl.at(fl.indexOf("idnk"))+"\""
-                        " AND `idwh`=\""+vl.at(whidx)+"\";";
-                get_whs.exec(tmpString);
-                get_whs.next();
-                if (get_whs.isValid()) // есть такое расположение компонентов на складе
-                    vl.replace(whidx, get_whs.value(0).toString()); // пишем индекс расположения во flow
-                else // нет записи в nkwh о такой позиции на таком складе => необх. задать её местоположение
-                {
-                    QStringList tmpfl, tmpvl;
-                    tmpfl << "nkwh"; // для совместимости вызовов к таблицам
-                    tmpfl << "idnk" << "idwh" << "rack" << "box" << "cell" << "date" << "deleted";
-                    tmpvl << vl.at(fl.indexOf("idnk")); // для совместимости вызовов к таблицам
-                    tmpvl << vl.at(fl.indexOf("idnk")) << \
-                          vl.at(whidx) << "" << "" << "" << pc.DateTime << "0";
-                    tmpString = sqlc.insertvaluestotable(pc.ent, "nkwh", tmpfl, tmpvl);
-                    if (!sqlc.result)
-                    {
-                        s_sqlfieldsdialog *tmpDialog = new s_sqlfieldsdialog;
-                        if (!tmpDialog->SetupUI(pc.ent, "nkwh", tmpString, "Добавление расположения"))
-                        {
-                            vl.replace(whidx, tmpString);
-                            tmpDialog->exec();
-                        }
-                        else
-                        {
-                            QMessageBox::warning(this, "warning!", "Ошибка при создании диалога!");
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        QMessageBox::warning(this, "warning!", "Ошибка добавления в таблицу nkwh!");
-                        return;
-                    }
-                }
-                fl.replace(fl.indexOf("idwh"), "idnkwh");
-            }
-            sqlc.insertvaluestotable(pc.ent, "flow", fl, vl);
-            if (sqlc.result)
-            {
-                QMessageBox::warning(this, "warning!", "Ошибка добавления данных в таблицу flow!");
-                return;
-            }
+            else if (sqlc.result > 1) // ошибка
+                throw 0x2a;
+            values.replace(whidx, tmpString);
+            sqlc.bytablefieldsinsert(tble, headers, values);
         }
         this->close();
     }
@@ -623,6 +505,8 @@ void wh_dialog::acceptandclose()
         ShowMessage(res);
     }
 }
+
+// ДОШЁЛ ПОКА ДОСЮДА
 
 int wh_dialog::fillFlow(QString id)
 {
@@ -644,6 +528,9 @@ int wh_dialog::fillFlow(QString id)
     if (sqlc.result)
         return 13;
     Consumer = tmpString;
+    tmpString = sqlc.getvaluefromtablebyfield(pc.ent, "reasons", "reasons", "idreasons", vl.at(3));
+    if (sqlc.result)
+        return 14;
     DocNum = vl.at(4);
     ScanPath = vl.at(5);
     s_tqLabel *ll = this->findChild<s_tqLabel *>("Author");

@@ -45,8 +45,9 @@ s_ntmodel::~s_ntmodel()
     delete rootItem;
 }
 
-int s_ntmodel::columnCount(const QModelIndex &/*parent*/) const
+int s_ntmodel::columnCount(const QModelIndex &parent) const
 {
+    Q_UNUSED(parent);
     return rootItem->columnCount();
 }
 
@@ -279,6 +280,7 @@ void s_ntmodel::removeExpandedIndex(const QModelIndex &index)
 
 int s_ntmodel::Setup(bool twodb, QString table)
 {
+    ClearModel();
     // 1. взять столбцы tablefields из tablefields, где tablename=table
     // 2. найти среди них столбцы <db>.<tble>.alias и <db>.<tble>.idalias. Если нет - это не дерево, выход
     // 3. взять значения столбцов alias и idalias из таблицы <db>.<tble>
@@ -290,7 +292,7 @@ int s_ntmodel::Setup(bool twodb, QString table)
     QStringList fl = QStringList() << "table" << "tablefields" << "headers";
     vl = sqlc.getmorevaluesfromtablebyfield(sqlc.getdb("sup"), "tablefields", fl, "tablename", table, "fieldsorder", true);
     if (sqlc.result)
-        return 10; // нет такой таблицы в tablefields
+        return 0x10; // нет такой таблицы в tablefields
     // 2
     int idalpos=-1;
     for (i = 0; i < vl.size(); i++)
@@ -302,7 +304,7 @@ int s_ntmodel::Setup(bool twodb, QString table)
         }
     }
     if (idalpos == -1)
-        return 11; // не найдено поле idalias
+        return 0x11; // не найдено поле idalias
     // 3
     catlist = vl.at(idalpos).at(0).split("."); // catlist - таблица, из которой брать категории
     vl.removeAt(idalpos); // не включать ссылку на категорию в заголовок
@@ -322,6 +324,7 @@ int s_ntmodel::Setup(bool twodb, QString table)
 
 int s_ntmodel::Setup(QString cattble, QString slvtble)
 {
+    ClearModel();
     return 0;
 }
 
@@ -338,7 +341,7 @@ int s_ntmodel::BuildTree(QString id)
     tmpString = "SELECT `alias`,`id"+catlist.at(1)+"` FROM `"+catlist.at(1)+"` WHERE `idalias`=\""+id+"\" AND `deleted`=0 ORDER BY `id"+catlist.at(1)+"` ASC;";
     get_child_from_db1.exec(tmpString);
     if (!get_child_from_db1.isActive())
-        return 21;
+        return 0x21;
 // увеличиваем уровень дерева
     position++;
     if (id == "0") position = 0; // для корневых элементов position д.б. равен нулю
@@ -476,4 +479,12 @@ s_ntmodel::fieldformat s_ntmodel::getFFfromLinks(QString links) const
     for (int i = 0; i < tmpsl.size(); i++)
         ff.link << tmpsl.at(i);
     return ff;
+}
+
+void s_ntmodel::ClearModel()
+{
+    if (rowCount())
+        removeRows(0, rowCount());
+    if (columnCount())
+        removeColumns(0, columnCount());
 }

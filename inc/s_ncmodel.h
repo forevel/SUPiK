@@ -1,6 +1,8 @@
 #ifndef S_2CMODEL_H
 #define S_2CMODEL_H
 
+#define CM_ERROR   0x0100
+
 #include <QAbstractTableModel>
 #include <QColor>
 #include <QFont>
@@ -11,6 +13,7 @@
 #include <QStringList>
 #include "../inc/s_ncitem.h"
 #include "../inc/publicclass.h"
+#include "../inc/s_tablefields.h"
 
 class s_ncmodel : public QAbstractTableModel
 {
@@ -42,6 +45,7 @@ public:
     QString getCellLinks(QModelIndex);
     void setRowAttr(int fcset=0, int icon=-1);
     void fillModel(QList<QStringList> sl);
+    void fillInverseModel(QList<QStringList> sl);
     void prepareModel(QList<int> sl);
     int maxcolwidth(int column);
     int maxcolwidthsize();
@@ -54,6 +58,7 @@ public:
         map.insert("d", OP_DIV);
         return map;
     }
+    int setup(QString tble);
 
 signals:
 

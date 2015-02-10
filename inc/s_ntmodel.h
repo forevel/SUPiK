@@ -33,7 +33,7 @@ public:
     QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
     Qt::ItemFlags flags(const QModelIndex &index) const;
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
-    int columnCount(const QModelIndex &/*parent = QModelIndex()*/) const;
+    int columnCount(const QModelIndex &parent = QModelIndex()) const;
     bool insertColumns(int position, int columns, const QModelIndex &parent = QModelIndex());
     bool insertRows(int position, int rows, const QModelIndex &parent = QModelIndex());
     bool removeColumns(int position, int columns, const QModelIndex &parent = QModelIndex());
@@ -44,6 +44,7 @@ public:
     s_ntitem *getItem(const QModelIndex &index) const;
     int Setup (bool twodb, QString table);
     int Setup (QString cattble, QString slvtble);
+    void ClearModel();
     QList<QPersistentModelIndex> expandedIndexes;
 
 signals:

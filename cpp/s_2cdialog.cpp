@@ -154,6 +154,7 @@ int s_2cdialog::setupchoosetable(QString tble, QString str)
     tv->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     tv->resizeColumnsToContents();
     DialogIsNeedToBeResized = true;
+    return 0;
 }
 
 // процедура подготавливает диалог заполнения полей таблицы tble по строке id

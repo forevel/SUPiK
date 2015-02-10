@@ -14,6 +14,8 @@ dir_maindialog::dir_maindialog(QWidget *parent) :
     QDialog(parent)
 {
     firstShow = true;
+    MainTVIsTree = false;
+    SlaveTVIsTree = false;
     SetupUI();
 }
 
@@ -21,6 +23,8 @@ void dir_maindialog::SetupUI()
 {
     MainLayout = new QVBoxLayout;
     MainFrameLayout = new QHBoxLayout;
+    MainTreeModel = new s_ntmodel;
+    MainTableModel = new s_ncmodel;
     SlaveTV = new s_tqtreeview;
     MainTV = new s_tqtreeview;
     gridItemDelegate = new s_duniversal;
@@ -73,14 +77,32 @@ void dir_maindialog::setDirTree()
         disconnect(MainTV, SIGNAL(doubleClicked(QModelIndex)), 0, 0);
         connect (MainTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(showDirDialog(QModelIndex)));
 
-        if (MainTreeModel == (void*)0) delete MainTreeModel;
-        MainTreeModel = new s_aitemmodel(pc.sup, "dirlist", QSqlDatabase(), "", false); // если второй таблицы нет, в tble2 должна содержаться пустая строка (требование к таблице dirlist)
-        QItemSelectionModel *m = MainTV->selectionModel();
-        MainTreeModel->isEditable = false;
-        MainTV->setModel(MainTreeModel);
-        delete m;
-        connect(MainTV, SIGNAL(expanded(QModelIndex)), MainTreeModel, SLOT(addExpandedIndex(QModelIndex)));
-        connect(MainTV, SIGNAL(collapsed(QModelIndex)), MainTreeModel, SLOT(removeExpandedIndex(QModelIndex)));
+//        if (MainTreeModel == (void*)0) delete MainTreeModel;
+//        MainTreeModel = new s_aitemmodel(pc.sup, "dirlist", QSqlDatabase(), "", false); // если второй таблицы нет, в tble2 должна содержаться пустая строка (требование к таблице dirlist)
+        int res = MainTreeModel->Setup(false, "Справочники_сокращ");
+        if (res == 0x11) // это не дерево
+        {
+            int res = MainTableModel->setup("Справочники_сокращ");
+            if (res)
+            {
+                QMessageBox::warning(this, "warning!", "Проблема №" + QString::number(res));
+                QApplication::restoreOverrideCursor();
+                return;
+            }
+            MainTVIsTree = false;
+            QItemSelectionModel *m = MainTV->selectionModel();
+            MainTV->setModel(MainTableModel);
+            delete m;
+        }
+        else
+        {
+            MainTVIsTree = true;
+            QItemSelectionModel *m = MainTV->selectionModel();
+            MainTV->setModel(MainTreeModel);
+            delete m;
+            connect(MainTV, SIGNAL(expanded(QModelIndex)), MainTreeModel, SLOT(addExpandedIndex(QModelIndex)));
+            connect(MainTV, SIGNAL(collapsed(QModelIndex)), MainTreeModel, SLOT(removeExpandedIndex(QModelIndex)));
+        }
         connect(MainTV, SIGNAL(clicked(QModelIndex)), this, SLOT(showDirDialog(QModelIndex)));
         MainTV->header()->setVisible(false);
         MainTV->setIndentation(2);
@@ -93,7 +115,7 @@ void dir_maindialog::setDirTree()
 
 void dir_maindialog::showDirDialog()
 {
-    if (MainTV->model()->rowCount(MainTV->currentIndex()) != 0)
+    if (MainTVIsTree && (MainTV->model()->rowCount(MainTV->currentIndex()) != 0))
         setMainTVExpanded(MainTV->currentIndex());
     else
     {
@@ -145,7 +167,7 @@ void dir_maindialog::SystemSlaveContextMenu(QPoint)
     AddDataChild = new QAction ("Добавить элемент", this);
     AddDataChild->setSeparator(false);
     connect(AddDataChild, SIGNAL(triggered()), this, SLOT(AddDataChild()));
-    QAction *AddSubDataChild;
+/*    QAction *AddSubDataChild;
     AddSubDataChild = new QAction ("Добавить субэлемент", this);
     AddSubDataChild->setSeparator(false);
     if (SlaveTreeModel->isTree)
@@ -154,7 +176,7 @@ void dir_maindialog::SystemSlaveContextMenu(QPoint)
         AddSubDataChild->setEnabled(true);
     }
     else
-        AddSubDataChild->setEnabled(false);
+        AddSubDataChild->setEnabled(false); */
     QAction *DeleteAction = new QAction("Удалить элемент", this);
     DeleteAction->setSeparator(false);
     connect (DeleteAction, SIGNAL(triggered()), this, SLOT(DeleteData()));
@@ -163,7 +185,7 @@ void dir_maindialog::SystemSlaveContextMenu(QPoint)
     if (SlaveTVAccess & pc.access & 0x2492) // права на изменение
     {
         ContextMenu->addAction(AddDataChild);
-        ContextMenu->addAction(AddSubDataChild);
+//        ContextMenu->addAction(AddSubDataChild);
         ContextMenu->addAction(ChangeDataChild);
     }
     if (SlaveTVAccess & pc.access & 0x4924) // права на удаление
@@ -193,15 +215,17 @@ void dir_maindialog::ShowSlaveTree(QString str)
         }
         tble = tble.right(tble.size()-4);
         if (SlaveTreeModel == (void*)0) delete SlaveTreeModel;
-        SlaveTreeModel = new s_aitemmodel(db, tble, QSqlDatabase(), "", false); // если второй таблицы нет, в tble2 должна содержаться пустая строка (требование к таблице dirlist)
-        if (SlaveTreeModel->result)
+//        SlaveTreeModel = new s_aitemmodel(db, tble, QSqlDatabase(), "", false); // если второй таблицы нет, в tble2 должна содержаться пустая строка (требование к таблице dirlist)
+        SlaveTreeModel = new s_ntmodel;
+        int res = SlaveTreeModel->Setup(false, str + "_сокращ");
+        if (res)
         {
-            QMessageBox::warning(this, "warning!", "Проблема №" + QString::number(SlaveTreeModel->result));
+            QMessageBox::warning(this, "warning!", "Проблема №" + QString::number(res));
             QApplication::restoreOverrideCursor();
             return;
         }
         QItemSelectionModel *m = SlaveTV->selectionModel();
-        SlaveTreeModel->isEditable = false;
+//        SlaveTreeModel->isEditable = false;
         SlaveTV->setModel(SlaveTreeModel);
         delete m;
         SlaveTV->header()->setDefaultAlignment(Qt::AlignCenter);

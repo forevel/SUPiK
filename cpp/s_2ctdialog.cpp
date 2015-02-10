@@ -66,11 +66,10 @@ void s_2ctdialog::setupUI()
     setLayout(mainLayout);
 }
 
-// процедура подготавливает дерево выбора tble по таблице chooselists
+// процедура подготавливает дерево выбора tble по таблице tablefields
 
 int s_2ctdialog::setup(QString tble)
 {
-//    s_tqtreeview *tv = this->findChild<s_tqtreeview *>("mainTV");
     mainmodel = new s_ntmodel;
     mainmodel->Setup(false, tble);
     setupUI();

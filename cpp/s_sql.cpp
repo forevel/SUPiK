@@ -294,8 +294,8 @@ QStringList s_sql::getvaluesfromtablebyfields (QSqlDatabase db, QString tble, QS
     get_fields_from_db.next();
     if (get_fields_from_db.isValid())
     {
-        while (get_fields_from_db.next())
-            vl << get_fields_from_db.value(0).toString();
+        for (i = 0; i < fields.size(); i++)
+            vl << get_fields_from_db.value(i).toString();
         result = 0;
         return vl;
     }
@@ -667,4 +667,158 @@ QList<QStringList> s_sql::getmorevaluesfromtablebyfield(QSqlDatabase db, QString
         result = 0;
         return sl;
     }
+}
+
+// процедура делает новую запись в таблицу tble (имя в tablefields)
+
+void s_sql::bytablefieldsinsert(QString tble, QStringList headers, QStringList values)
+{
+    QList<QStringList> lsl;
+    QStringList fl;
+    QStringList tmpvl, vl, ls;
+    fl << "table" << "tablefields" << "headers" << "links" << "keyfield";
+    lsl = sqlc.getmorevaluesfromtablebyfield(pc.sup, "tablefields", fl, "tablename", tble, "fieldsorder", true);
+    if (result)
+        return;
+    int i;
+    while (lsl.size() > 0)
+    {
+        QString curtble = lsl.at(0).at(0);
+        if (curtble == "-")
+        {
+            lsl.removeAt(0);
+            continue;
+        }
+        tmpvl.clear();
+        vl.clear();
+        ls.clear();
+        QString tmpString;
+        fl.clear();
+        int ididx = -1;
+        for (i = 0; i < lsl.size(); i++)
+        {
+            if (lsl.at(i).at(0) == curtble)
+            {
+                if (lsl.at(i).at(4) == "v")
+                    ididx = i;
+                int hdindex = headers.indexOf(lsl.at(i).at(2));
+                if (hdindex == -1)
+                    continue;
+                if (hdindex < values.size())
+                    tmpvl << values.at(hdindex);
+                else
+                    continue;
+                fl << lsl.at(i).at(1);
+                ls << lsl.at(i).at(3);
+                lsl.removeAt(i); // в StringList-ах находятся только те поля, которые относятся к текущей таблице
+            }
+        }
+        if (ididx != -1)
+        {
+            fl.swap(0, ididx);
+            ls.swap(0, ididx);
+            tmpvl.swap(0, ididx);
+        }
+        // теперь надо отделить мух от котлет - "живые" значения от ссылочных
+        for (i = 0; i < tmpvl.size(); i++)
+        {
+            QStringList ls_splitted = ls.at(i).split(".");
+            switch (ls_splitted.at(1).toInt())
+            {
+            case FW_AUTONUM:
+            case FW_NUMBER:
+            case FW_MASKED:
+            case FW_EQUAT:
+            case FW_PLAIN:
+            case FW_RIGHTS:
+            case FW_DATE:
+            case FW_TLINK:
+            {
+                vl << tmpvl.at(i);
+                break;
+            }
+            case FW_DLINK:
+            {
+/*                if (tmpvl.at(i).left(2) == "q_") // при вызове функции в значение для DLINK необходимо в начале подставить "q_"
+                {
+                    tmpString = tmpvl.at(i).right(tmpvl.at(i).size()-2);
+                    ls_splitted.at()
+                }
+                vl << () ?  : tmpvl.at(i); */
+            }
+            case FW_LINK:
+            case FW_ALLINK:
+            {
+                QStringList tmpsl = QStringList() << "table" << "tablefields";
+                QStringList cmpfl = QStringList() << "tablename" << "headers";
+                QStringList cmpvl = QStringList() << ls_splitted.at(3) << ls_splitted.at(4);
+                QStringList tmpfl = getvaluesfromtablebyfields(pc.sup, "tablefields", tmpsl, cmpfl, cmpvl);
+                if (result)
+                    return;
+                QString tmpid = getvaluefromtablebyfield(getdb(tmpfl.at(0).split(".").at(0)), tmpfl.at(0).split(".").at(1), tmpfl.at(1), tmpfl.at(1).right(tmpfl.at(1).size()-2), tmpvl.at(i));
+                if (result)
+                {
+                    if (ls_splitted.at(0).toInt() == FD_CHOOSE_X)
+                    {
+                        // записать в карантинную таблицу (если такая есть или, если нет, то в обычную) значение tmpvl.at(i) и использовать его как tmpid
+                    }
+                    else
+                        return;
+                }
+                vl << tmpid;
+                break;
+            }
+            case FW_MAXLINK:
+            {
+/*                QStringList tmpsl = QStringList << "table" << "tablefields" << "links";
+                QStringList cmpfl = QStringList << "tablename" << "headers";
+                QStringList cmpvl = QStringList << ls_splitted.at(3) << ls_splitted.at(4);
+                QStringList tmpfl = getvaluesfromtablebyfields(pc.sup, "tablefields", tmpsl, cmpfl, cmpvl);
+                if (result)
+                    return;
+                bool ok;
+                int tmpInt = tmpfl.at(2).toInt(&ok);
+                if (ok) // в позиции находится число => ссылка на ячейку таблицы ордера
+                {
+                    tmpString = sqlc.getlastvaluefromtablebyfield(getdb(tmpfl.at(0).split(".").at(0)), tmpfl.at(0).split(".").at(1), tmpfl.at(1), "id"+tmpfl.at(2), tmpsl.at(3),\
+                                                              mainmodel->data(mainmodel->index(j, tmpInt), Qt::DisplayRole).toString());
+                    if (tmpString.isEmpty())
+                    {
+                        QMessageBox::warning(this, "warning!", "Ошибка в таблице flowfields по полю" + FlowFields.at(i));
+                        return;
+                    }
+                }
+                else // в поз. 4 находится имя поля из таблицы tmpsl.at(1).tmpsl.at(2).
+                {
+                    tmpString = sqlc.getlastvaluefromtablebyfield(sqlc.getdb(tmpsl.at(1)), tmpsl.at(2), "id"+tmpsl.at(2), tmpsl.at(3),\
+                                                              tmpsl.at(4));
+                    if (tmpString.isEmpty())
+                    {
+                        QMessageBox::warning(this, "warning!", "Ошибка в таблице flowfields по полю" + FlowFields.at(i));
+                        return;
+                    }
+                }
+                vl << tmpString; */
+                break;
+            }
+            default:
+                break;
+            }
+        }
+        QStringList dbtble = curtble.split(".");
+        tmpString = getvaluefromtablebyfield(getdb(dbtble.at(0)), dbtble.at(1), "id"+dbtble.at(1), fl.at(0), vl.at(0));
+        if (result == 2)
+            return;
+        else if (result == 0)
+            updatevaluesintable(getdb(dbtble.at(0)), dbtble.at(1), fl, vl, "id"+dbtble.at(1), tmpString);
+        else
+            insertvaluestotable(getdb(dbtble.at(0)), dbtble.at(1), fl, vl);
+        if (result)
+            return;
+    }
+}
+
+QString s_sql::bytablefieldsgetvalue(QString tble, QString headers)
+{
+    return QString();
 }

@@ -422,6 +422,7 @@ DROP TABLE IF EXISTS `nkwh`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `nkwh` (
   `idnkwh` int(11) NOT NULL,
+  `nkwh` varchar(45) DEFAULT NULL,
   `idnk` varchar(128) DEFAULT NULL,
   `idwh` varchar(128) DEFAULT NULL,
   `rack` varchar(128) DEFAULT NULL,
@@ -441,7 +442,7 @@ CREATE TABLE `nkwh` (
 
 LOCK TABLES `nkwh` WRITE;
 /*!40000 ALTER TABLE `nkwh` DISABLE KEYS */;
-INSERT INTO `nkwh` VALUES (1,'pc.ent.nk','pc.ent.wh','','','','','0000-00-00 00:00:00',0),(2,'','','Шкаф','Ящик','Ячейка','','0000-00-00 00:00:00',0),(4,'2087','2001','1','1','a1','2001','06/10/2014 09:53:14',0),(3,'2088','3','4','2','d1','2001','06/10/2014 09:53:14',0),(5,'2046','3','1','1','a1','2001','06/10/2014 16:31:12',0);
+INSERT INTO `nkwh` VALUES (1,'pc.ent.nk','pc.ent.nk','pc.ent.wh','','','','','0000-00-00 00:00:00',0),(2,'Элемент','','','Шкаф','Ящик','Ячейка','','0000-00-00 00:00:00',0),(4,'2087','2087','2001','1','1','a1','2001','06/10/2014 09:53:14',0),(3,'2088','2088','3','4','2','d1','2001','06/10/2014 09:53:14',0),(5,'2046','2046','3','1','1','a1','2001','06/10/2014 16:31:12',0);
 /*!40000 ALTER TABLE `nkwh` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -685,33 +686,6 @@ LOCK TABLES `qschemagee` WRITE;
 UNLOCK TABLES;
 
 --
--- Table structure for table `reasons`
---
-
-DROP TABLE IF EXISTS `reasons`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `reasons` (
-  `idreasons` int(11) NOT NULL,
-  `reasons` varchar(45) DEFAULT NULL,
-  `deleted` int(1) DEFAULT '0',
-  `date` varchar(45) DEFAULT NULL,
-  `idpers` varchar(45) DEFAULT NULL,
-  PRIMARY KEY (`idreasons`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `reasons`
---
-
-LOCK TABLES `reasons` WRITE;
-/*!40000 ALTER TABLE `reasons` DISABLE KEYS */;
-INSERT INTO `reasons` VALUES (1,'Основание',0,NULL,NULL),(2,'Основание для отгрузки или приёмки',0,NULL,NULL),(3,'Заполнение',1,NULL,NULL),(4,'Ввод остатков',0,NULL,NULL),(5,'Приём в ремонт',0,NULL,'2001'),(6,'Изготовление',1,NULL,NULL),(7,'Изготовление',0,NULL,NULL),(8,'Из ремонта',0,NULL,'2001'),(9,'Закупка',0,NULL,'2001');
-/*!40000 ALTER TABLE `reasons` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `unitset`
 --
 
@@ -776,4 +750,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-02-09 22:59:05
+-- Dump completed on 2015-02-10 19:05:58

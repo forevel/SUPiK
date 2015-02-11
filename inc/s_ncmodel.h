@@ -45,7 +45,7 @@ public:
     QString getCellLinks(QModelIndex);
     void setRowAttr(int fcset=0, int icon=-1);
     void fillModel(QList<QStringList> sl);
-    void fillInverseModel(QList<QStringList> sl);
+//    void fillInverseModel(QList<QStringList> sl);
     void prepareModel(QList<int> sl);
     int maxcolwidth(int column);
     int maxcolwidthsize();

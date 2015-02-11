@@ -73,6 +73,12 @@ QVariant s_ncmodel::data(const QModelIndex &index, int role) const
                     return QVariant(ff.link.at(0));
                     break;
                 }
+                case FW_ID:
+                {
+                    int num = ff.link.at(0).toInt();
+                    return QVariant(QString("%1").arg(maindata.at(index.row())->data(index.column()).toInt(), num, 10, QChar('0')));
+                    break;
+                }
                 }
 
                 if (ff.ftype == FW_EQUAT) // вычисляемое выражение
@@ -328,9 +334,7 @@ void s_ncmodel::fillModel(QList<QStringList> sl)
                 case FW_ALLINK:
                 case FW_LINK:
                 {
-                    QSqlDatabase db = sqlc.getdb(ff.link.at(0));
-                    if (db.isValid())
-                        vl = sqlc.getvaluefromtablebyfield(db, ff.link.at(1), ff.link.at(2), "id"+ff.link.at(1), sl.at(j).at(i));
+                    vl = tfl.GetOneValueByOneRowAndId(ff.link.at(0), ff.link.at(1), sl.at(j).at(i)).at(0);
                     break;
                 }
                 case FW_ID:
@@ -345,8 +349,6 @@ void s_ncmodel::fillModel(QList<QStringList> sl)
                     break;
                 }
                 }
-
-
                 setData(index(i, j, QModelIndex()), vl, Qt::EditRole);
             }
         }
@@ -528,9 +530,23 @@ QString s_ncmodel::getCellLinks(QModelIndex index)
 
 int s_ncmodel::setup(QString tble)
 {
+    int i;
     QList<QStringList> lsl = tfl.GetAllValues(tble);
     if (tfl.result)
         return (CM_ERROR+tfl.result);
+    // в lsl.at(1) содержатся links, в lsl.at(0) - заголовки
+    QStringList headers = lsl.at(0);
+    QStringList links = lsl.at(1);
+    lsl.removeAt(0);
+    lsl.removeAt(0);
+    for (i = 0; i < headers.size(); i++)
+        addColumn(headers.at(i));
+    QList<int> il;
+    for (i = 0; i < lsl.size(); i++)
+        il << lsl.at(i).size();
+    prepareModel(il);
+    for (i = 0; i < links.size(); i++)
+        setcolumnlinks(i, links.at(i));
     fillModel(lsl);
     return 0;
 }

@@ -10,7 +10,7 @@ public:
 
     QStringList GetAllValuesByOneRow (QString tble, QString headers);
     QList<QStringList> GetAllValues (QString tble);
-    QString GetOneValueByOneRowAndId (QString tble, QString headers, QString id);
+    QStringList GetOneValueByOneRowAndId (QString tble, QString headers, QString id);
 
     int result;
 };

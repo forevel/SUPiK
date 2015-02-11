@@ -475,8 +475,11 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
                 if (trvmodel->Setup(false, ff.link.at(0)) == 11) // если не дерево
                 {
                     tmpStringList.clear();
+<<<<<<< .merge_file_a02960
 
 // КАЖЕТСЯ, ЗДЕСЬ ЕСТЬ ОШИБКА
+=======
+>>>>>>> .merge_file_a04684
                     lsl = sqlc.searchintablefieldlike(sqlc.getdb("sup"), "tablefields", QStringList("tablename"), "tablename", "^.*_сокращ$");
                     QStringList sl;
                     sl = lsl.at(0);

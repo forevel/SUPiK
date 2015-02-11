@@ -333,12 +333,15 @@ void s_ncmodel::fillModel(QList<QStringList> sl)
                         vl = sqlc.getvaluefromtablebyfield(db, ff.link.at(1), ff.link.at(2), "id"+ff.link.at(1), sl.at(j).at(i));
                     break;
                 }
+<<<<<<< .merge_file_a04656
                 case FW_ID:
                 {
                     int num = ff.link.at(0).toInt();
                     vl = QString("%1").arg(sl.at(j).at(i).toInt(), num, 10, QChar('0'));
                     break;
                 }
+=======
+>>>>>>> .merge_file_a03176
                 default:
                 {
                     vl = sl.at(j).at(i);
@@ -521,6 +524,7 @@ int s_ncmodel::maxcolwidthsize()
 
 QString s_ncmodel::getCellLinks(QModelIndex index)
 {
+<<<<<<< .merge_file_a04656
     return data(index, Qt::UserRole).toString();
 }
 
@@ -533,4 +537,7 @@ int s_ncmodel::setup(QString tble)
         return (CM_ERROR+tfl.result);
     fillModel(lsl);
     return 0;
+=======
+    return data(index, Qt::UserRole);
+>>>>>>> .merge_file_a03176
 }

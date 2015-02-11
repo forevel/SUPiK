@@ -45,9 +45,14 @@ s_ntmodel::~s_ntmodel()
     delete rootItem;
 }
 
+<<<<<<< .merge_file_a04972
 int s_ntmodel::columnCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
+=======
+int s_ntmodel::columnCount(const QModelIndex &/*parent*/) const
+{
+>>>>>>> .merge_file_a04292
     return rootItem->columnCount();
 }
 
@@ -280,7 +285,10 @@ void s_ntmodel::removeExpandedIndex(const QModelIndex &index)
 
 int s_ntmodel::Setup(bool twodb, QString table)
 {
+<<<<<<< .merge_file_a04972
     ClearModel();
+=======
+>>>>>>> .merge_file_a04292
     // 1. взять столбцы tablefields из tablefields, где tablename=table
     // 2. найти среди них столбцы <db>.<tble>.alias и <db>.<tble>.idalias. Если нет - это не дерево, выход
     // 3. взять значения столбцов alias и idalias из таблицы <db>.<tble>
@@ -292,7 +300,11 @@ int s_ntmodel::Setup(bool twodb, QString table)
     QStringList fl = QStringList() << "table" << "tablefields" << "headers";
     vl = sqlc.getmorevaluesfromtablebyfield(sqlc.getdb("sup"), "tablefields", fl, "tablename", table, "fieldsorder", true);
     if (sqlc.result)
+<<<<<<< .merge_file_a04972
         return 0x10; // нет такой таблицы в tablefields
+=======
+        return 10; // нет такой таблицы в tablefields
+>>>>>>> .merge_file_a04292
     // 2
     int idalpos=-1;
     for (i = 0; i < vl.size(); i++)
@@ -304,7 +316,11 @@ int s_ntmodel::Setup(bool twodb, QString table)
         }
     }
     if (idalpos == -1)
+<<<<<<< .merge_file_a04972
         return 0x11; // не найдено поле idalias
+=======
+        return 11; // не найдено поле idalias
+>>>>>>> .merge_file_a04292
     // 3
     catlist = vl.at(idalpos).at(0).split("."); // catlist - таблица, из которой брать категории
     vl.removeAt(idalpos); // не включать ссылку на категорию в заголовок
@@ -324,7 +340,10 @@ int s_ntmodel::Setup(bool twodb, QString table)
 
 int s_ntmodel::Setup(QString cattble, QString slvtble)
 {
+<<<<<<< .merge_file_a04972
     ClearModel();
+=======
+>>>>>>> .merge_file_a04292
     return 0;
 }
 
@@ -341,7 +360,11 @@ int s_ntmodel::BuildTree(QString id)
     tmpString = "SELECT `alias`,`id"+catlist.at(1)+"` FROM `"+catlist.at(1)+"` WHERE `idalias`=\""+id+"\" AND `deleted`=0 ORDER BY `id"+catlist.at(1)+"` ASC;";
     get_child_from_db1.exec(tmpString);
     if (!get_child_from_db1.isActive())
+<<<<<<< .merge_file_a04972
         return 0x21;
+=======
+        return 21;
+>>>>>>> .merge_file_a04292
 // увеличиваем уровень дерева
     position++;
     if (id == "0") position = 0; // для корневых элементов position д.б. равен нулю
@@ -480,6 +503,7 @@ s_ntmodel::fieldformat s_ntmodel::getFFfromLinks(QString links) const
         ff.link << tmpsl.at(i);
     return ff;
 }
+<<<<<<< .merge_file_a04972
 
 void s_ntmodel::ClearModel()
 {
@@ -488,3 +512,5 @@ void s_ntmodel::ClearModel()
     if (columnCount())
         removeColumns(0, columnCount());
 }
+=======
+>>>>>>> .merge_file_a04292

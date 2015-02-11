@@ -1,8 +1,11 @@
 #ifndef S_2CMODEL_H
 #define S_2CMODEL_H
 
+<<<<<<< .merge_file_a04128
 #define CM_ERROR   0x0100
 
+=======
+>>>>>>> .merge_file_a03052
 #include <QAbstractTableModel>
 #include <QColor>
 #include <QFont>
@@ -13,7 +16,10 @@
 #include <QStringList>
 #include "../inc/s_ncitem.h"
 #include "../inc/publicclass.h"
+<<<<<<< .merge_file_a04128
 #include "../inc/s_tablefields.h"
+=======
+>>>>>>> .merge_file_a03052
 
 class s_ncmodel : public QAbstractTableModel
 {
@@ -45,7 +51,10 @@ public:
     QString getCellLinks(QModelIndex);
     void setRowAttr(int fcset=0, int icon=-1);
     void fillModel(QList<QStringList> sl);
+<<<<<<< .merge_file_a04128
     void fillInverseModel(QList<QStringList> sl);
+=======
+>>>>>>> .merge_file_a03052
     void prepareModel(QList<int> sl);
     int maxcolwidth(int column);
     int maxcolwidthsize();
@@ -58,7 +67,10 @@ public:
         map.insert("d", OP_DIV);
         return map;
     }
+<<<<<<< .merge_file_a04128
     int setup(QString tble);
+=======
+>>>>>>> .merge_file_a03052
 
 signals:
 

@@ -723,7 +723,11 @@ void s_sql::bytablefieldsinsert(QString tble, QStringList headers, QStringList v
         for (i = 0; i < tmpvl.size(); i++)
         {
             QStringList ls_splitted = ls.at(i).split(".");
+<<<<<<< .merge_file_a02316
             switch (ls_splitted.at(1).toInt())
+=======
+            switch (ls_splitted.at(1))
+>>>>>>> .merge_file_a02688
             {
             case FW_AUTONUM:
             case FW_NUMBER:
@@ -748,6 +752,7 @@ void s_sql::bytablefieldsinsert(QString tble, QStringList headers, QStringList v
             }
             case FW_LINK:
             case FW_ALLINK:
+<<<<<<< .merge_file_a02316
             {
                 QStringList tmpsl = QStringList() << "table" << "tablefields";
                 QStringList cmpfl = QStringList() << "tablename" << "headers";
@@ -771,11 +776,17 @@ void s_sql::bytablefieldsinsert(QString tble, QStringList headers, QStringList v
             case FW_MAXLINK:
             {
 /*                QStringList tmpsl = QStringList << "table" << "tablefields" << "links";
+=======
+            case FW_MAXLINK:
+            {
+                QStringList tmpsl = QStringList << "table" << "tablefields";
+>>>>>>> .merge_file_a02688
                 QStringList cmpfl = QStringList << "tablename" << "headers";
                 QStringList cmpvl = QStringList << ls_splitted.at(3) << ls_splitted.at(4);
                 QStringList tmpfl = getvaluesfromtablebyfields(pc.sup, "tablefields", tmpsl, cmpfl, cmpvl);
                 if (result)
                     return;
+<<<<<<< .merge_file_a02316
                 bool ok;
                 int tmpInt = tmpfl.at(2).toInt(&ok);
                 if (ok) // в позиции находится число => ссылка на ячейку таблицы ордера
@@ -803,6 +814,14 @@ void s_sql::bytablefieldsinsert(QString tble, QStringList headers, QStringList v
             }
             default:
                 break;
+=======
+                QString tmpid = getvaluefromtablebyfield(getdb(tmpfl.at(0).split(".").at(0)), tmpfl.at(0).split(".").at(1), tmpfl.at(1), tmpfl.at(1).right(tmpfl.at(1).size()-2), tmpvl.at(i));
+                if (result)
+                    return;
+                vl << tmpid;
+                break;
+            }
+>>>>>>> .merge_file_a02688
             }
         }
         QStringList dbtble = curtble.split(".");
@@ -817,8 +836,11 @@ void s_sql::bytablefieldsinsert(QString tble, QStringList headers, QStringList v
             return;
     }
 }
+<<<<<<< .merge_file_a02316
 
 QString s_sql::bytablefieldsgetvalue(QString tble, QString headers)
 {
     return QString();
 }
+=======
+>>>>>>> .merge_file_a02688

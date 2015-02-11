@@ -87,7 +87,11 @@ void supik::SetSupikMenuBar()
     get_mainmenu.exec(tmpString);
     while (get_mainmenu.next())
     {
+<<<<<<< .merge_file_a03852
         if (get_mainmenu.value(2).toString().toLong(0, 16) & pc.access)
+=======
+        if (get_mainmenu.value(2).toString().toLong(0, 16) && pc.access)
+>>>>>>> .merge_file_a04232
         {
             tmpInt = get_mainmenu.value(0).toInt(0);
             tmpMenu = AddChildToMenu (tmpInt);
@@ -144,7 +148,11 @@ QMenu *supik::AddChildToMenu(int id)
         tmpMenu->setStyleSheet("background: " + QString (SUPIKMENU_ITEM) + \
                                "; QMenu::item::selected {background: " + QString(SUPIKMENU_ITEM_BG_SELECTED) + \
                                "; color: " + QString(SUPIKMENU_ITEM_COLOR_SELECTED) + ";}");
+<<<<<<< .merge_file_a03852
         if (get_child_mainmenu.value(2).toString().toLongLong(0, 16) & pc.access)
+=======
+        if (get_child_mainmenu.value(2).toString().toLongLong(0, 16) && pc.access)
+>>>>>>> .merge_file_a04232
         {
             tmptmpMenu = AddChildToMenu (get_child_mainmenu.value(0).toInt(0));
             if (tmptmpMenu != NULL)

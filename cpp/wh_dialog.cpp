@@ -467,6 +467,7 @@ void wh_dialog::acceptandclose()
         for (j = 0; j < mainmodel->columnCount(QModelIndex()); j++)
             headers << mainmodel->headerData(j, Qt::Horizontal, Qt::DisplayRole).toString();
         int whidx = headers.indexOf("Склад");
+<<<<<<< .merge_file_a04884
         if (whidx == -1)
             throw 0x28;
         int nkidx = headers.indexOf("Наименование");
@@ -492,6 +493,99 @@ void wh_dialog::acceptandclose()
                 s_2cdialog *dlg = new s_2cdialog;
                 dlg->setup("Расположение на складе_полн", tmpString);
                 dlg->exec();
+=======
+        headers.removeAt(whidx);
+        for (j = 0; j < mainmodel->rowCount(QModelIndex()); j++)
+        {
+            values.clear();
+            for (i = 0; i < lsl.size(); i++)
+                values << mainmodel->data(mainmodel->index(j, i), Qt::DisplayRole).toString(); // выцарапываем само значение
+            tmpString = values.at(whidx);
+            values.removeAt(whidx);
+            sqlc.bytablefieldsinsert(tble, headers, values);
+            // теперь пишем в склад
+
+        }
+                    case FW_MAXLINK:
+                    {
+                        fl << FlowFields.at(i);
+                        bool ok;
+                        int tmpInt = tmpsl.at(4).toInt(&ok);
+                        if (ok) // в поз. 4 находится число => ссылка на ячейку таблицы ордера
+                        {
+                            tmpString = sqlc.getlastvaluefromtablebyfield(sqlc.getdb(tmpsl.at(1)), tmpsl.at(2), "id"+tmpsl.at(2), tmpsl.at(3),\
+                                                                      mainmodel->data(mainmodel->index(j, tmpInt), Qt::DisplayRole).toString());
+                            if (tmpString.isEmpty())
+                            {
+                                QMessageBox::warning(this, "warning!", "Ошибка в таблице flowfields по полю" + FlowFields.at(i));
+                                return;
+                            }
+                        }
+                        else // в поз. 4 находится имя поля из таблицы tmpsl.at(1).tmpsl.at(2).
+                        {
+                            tmpString = sqlc.getlastvaluefromtablebyfield(sqlc.getdb(tmpsl.at(1)), tmpsl.at(2), "id"+tmpsl.at(2), tmpsl.at(3),\
+                                                                      tmpsl.at(4));
+                            if (tmpString.isEmpty())
+                            {
+                                QMessageBox::warning(this, "warning!", "Ошибка в таблице flowfields по полю" + FlowFields.at(i));
+                                return;
+                            }
+                        }
+                        vl << tmpString;
+                        break;
+                    }
+                    }
+                }
+            }
+            // fl ~ "idwh"
+            // vl ~ <idwh>
+            QSqlQuery get_whs(pc.ent);
+            int whidx = fl.indexOf("idwh"); // в таблице flowfields может и не быть поля links=ent.wh.wh
+            if (whidx != -1)
+            {
+                tmpString = "SELECT `idnkwh` FROM `nkwh` WHERE `idnk`=\""+vl.at(fl.indexOf("idnk"))+"\""
+                        " AND `idwh`=\""+vl.at(whidx)+"\";";
+                get_whs.exec(tmpString);
+                get_whs.next();
+                if (get_whs.isValid()) // есть такое расположение компонентов на складе
+                    vl.replace(whidx, get_whs.value(0).toString()); // пишем индекс расположения во flow
+                else // нет записи в nkwh о такой позиции на таком складе => необх. задать её местоположение
+                {
+                    QStringList tmpfl, tmpvl;
+                    tmpfl << "nkwh"; // для совместимости вызовов к таблицам
+                    tmpfl << "idnk" << "idwh" << "rack" << "box" << "cell" << "date" << "deleted";
+                    tmpvl << vl.at(fl.indexOf("idnk")); // для совместимости вызовов к таблицам
+                    tmpvl << vl.at(fl.indexOf("idnk")) << \
+                          vl.at(whidx) << "" << "" << "" << pc.DateTime << "0";
+                    tmpString = sqlc.insertvaluestotable(pc.ent, "nkwh", tmpfl, tmpvl);
+                    if (!sqlc.result)
+                    {
+                        s_sqlfieldsdialog *tmpDialog = new s_sqlfieldsdialog;
+                        if (!tmpDialog->SetupUI(pc.ent, "nkwh", tmpString, "Добавление расположения"))
+                        {
+                            vl.replace(whidx, tmpString);
+                            tmpDialog->exec();
+                        }
+                        else
+                        {
+                            QMessageBox::warning(this, "warning!", "Ошибка при создании диалога!");
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        QMessageBox::warning(this, "warning!", "Ошибка добавления в таблицу nkwh!");
+                        return;
+                    }
+                }
+                fl.replace(fl.indexOf("idwh"), "idnkwh");
+            }
+            sqlc.insertvaluestotable(pc.ent, "flow", fl, vl);
+            if (sqlc.result)
+            {
+                QMessageBox::warning(this, "warning!", "Ошибка добавления данных в таблицу flow!");
+                return;
+>>>>>>> .merge_file_a04112
             }
             else if (sqlc.result > 1) // ошибка
                 throw 0x2a;

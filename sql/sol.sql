@@ -72,8 +72,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
-<<<<<<< .merge_file_a04288
 -- Dump completed on 2015-02-10 19:05:59
-=======
--- Dump completed on 2015-02-06 18:07:14
->>>>>>> .merge_file_a04844

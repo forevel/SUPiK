@@ -33,11 +33,7 @@ public:
     QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const;
     Qt::ItemFlags flags(const QModelIndex &index) const;
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
-<<<<<<< .merge_file_a04800
     int columnCount(const QModelIndex &parent = QModelIndex()) const;
-=======
-    int columnCount(const QModelIndex &/*parent = QModelIndex()*/) const;
->>>>>>> .merge_file_a03444
     bool insertColumns(int position, int columns, const QModelIndex &parent = QModelIndex());
     bool insertRows(int position, int rows, const QModelIndex &parent = QModelIndex());
     bool removeColumns(int position, int columns, const QModelIndex &parent = QModelIndex());
@@ -48,10 +44,7 @@ public:
     s_ntitem *getItem(const QModelIndex &index) const;
     int Setup (bool twodb, QString table);
     int Setup (QString cattble, QString slvtble);
-<<<<<<< .merge_file_a04800
     void ClearModel();
-=======
->>>>>>> .merge_file_a03444
     QList<QPersistentModelIndex> expandedIndexes;
 
 signals:

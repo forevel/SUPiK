@@ -9,12 +9,8 @@
 #include "s_tqframe.h"
 #include "s_tqtableview.h"
 #include "sys_acceptexist.h"
-<<<<<<< .merge_file_a04812
 #include "../inc/s_ntmodel.h"
 #include "../inc/s_ncmodel.h"
-=======
-#include "s_aitemmodel.h"
->>>>>>> .merge_file_a05028
 #include "s_sqlfieldsdialog.h"
 #include "s_duniversal.h"
 
@@ -51,13 +47,9 @@ private slots:
 private:
     s_tqtreeview *MainTV, *SlaveTV;
     s_duniversal *gridItemDelegate;
-<<<<<<< .merge_file_a04812
     s_ntmodel *MainTreeModel, *SlaveTreeModel;
     s_ncmodel *MainTableModel, *SlaveTableModel;
     bool MainTVIsTree, SlaveTVIsTree;
-=======
-    s_aitemmodel *MainTreeModel, *SlaveTreeModel;
->>>>>>> .merge_file_a05028
     s_tqLabel *MainL;
     QVBoxLayout *MainLayout;
     QHBoxLayout *MainFrameLayout;

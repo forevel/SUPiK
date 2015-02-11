@@ -508,11 +508,7 @@ void s_aitemmodel::addtreechild1(QString idparent)
 // строим дерево в модели model
     while (get_child_from_db1.next())
     {
-<<<<<<< .merge_file_a02336
         if ((noCredentials) || (get_child_from_db1.value(permissionsfields).toString().toLong(0, 16) & pc.access))
-=======
-        if ((noCredentials) || (get_child_from_db1.value(permissionsfields).toString().toLong(0, 16) && pc.access))
->>>>>>> .merge_file_a01128
         {
             tmpStringlist.clear();
             for (i = 0; i < db1fields.size(); i++)
@@ -642,11 +638,7 @@ void s_aitemmodel::addtable()
     // строим таблицу
     while (get_child_from_db1.next())
     {
-<<<<<<< .merge_file_a02336
         if ((noCredentials) || (get_child_from_db1.value(permissionsfields).toString().toLong(0, 16) & pc.access))
-=======
-        if ((noCredentials) || (get_child_from_db1.value(permissionsfields).toString().toLong(0, 16) && pc.access))
->>>>>>> .merge_file_a01128
         {
             tmpStringlist.clear();
             for (i = 0; i < db1fields.count(); i++)

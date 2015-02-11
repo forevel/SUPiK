@@ -24,8 +24,4 @@
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
-<<<<<<< .merge_file_a02432
 -- Dump completed on 2015-02-10 19:06:00
-=======
--- Dump completed on 2015-02-06 18:07:15
->>>>>>> .merge_file_a00912

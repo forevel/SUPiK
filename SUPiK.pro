@@ -65,12 +65,8 @@ SOURCES += cpp/main.cpp\
     cpp/s_ntitem.cpp \
     cpp/s_ntmodel.cpp \
     cpp/s_2ctdialog.cpp \
-<<<<<<< .merge_file_a03908
     cpp/sys_dialogconstdialog.cpp \
     cpp/s_tablefields.cpp
-=======
-    cpp/sys_dialogconstdialog.cpp
->>>>>>> .merge_file_a04540
 
 HEADERS  += inc/qtms_mw.h \
     inc/supik.h \
@@ -123,12 +119,8 @@ HEADERS  += inc/qtms_mw.h \
     inc/s_ntitem.h \
     inc/s_ntmodel.h \
     inc/s_2ctdialog.h \
-<<<<<<< .merge_file_a03908
     inc/sys_dialogconstdialog.h \
     inc/s_tablefields.h
-=======
-    inc/sys_dialogconstdialog.h
->>>>>>> .merge_file_a04540
 
 FORMS    += \
     ui/qt_alt_addcompdialog.ui \

@@ -55,24 +55,26 @@ void s_tqtreeview::updateTVGeometry()
     updateGeometry();
 }
 
-QSize s_tqtreeview::minimumSizeHint() const
+QSize s_tqtreeview::minimumSizeHint()
 {
     if (datachangedintable)
     {
         int f1 = 0;
-        int curwidth = QApplication::desktop()->screenGeometry(this).width();
-        int curheight = QApplication::desktop()->screenGeometry(this).height();
-        for (int i = 0; i < 15; i++)
+        int i;
+        for (i = 0; i < header()->count(); i++)
+            resizeColumnToContents(i);
+        int curwidth = static_cast<QDialog *>(parent())->geometry().width();
+        int curheight = static_cast<QDialog *>(parent())->geometry().height();
+        for (i = 0; i < model()->rowCount(); i++)
             f1 += 20;
         if (f1 > curheight)
             f1 = curheight;
         int f2 = 0;
-        for (int i = 0; i < this->header()->count(); i++)
+        for (i = 0; i < this->header()->count(); i++)
             f2 += this->columnWidth(i)+20;
         if (f2 > curwidth)
             f2 = curwidth;
         datachangedintable = false;
-//        return QSize(f2, f1);
         return QSize(f2, f1);
     }
     else
@@ -82,8 +84,8 @@ QSize s_tqtreeview::minimumSizeHint() const
 void s_tqtreeview::paintEvent(QPaintEvent *e)
 {
     setFixedSize(minimumSizeHint());
-    e->accept();
     QTreeView::paintEvent(e);
+    e->accept();
 }
 
 void s_tqtreeview::setTVexpanded(QModelIndex index)

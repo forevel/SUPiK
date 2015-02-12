@@ -12,7 +12,7 @@ public:
     explicit s_tqtreeview(QWidget *parent = 0);
     QVariant getAData();
     void setAData(QVariant dat);
-    QSize minimumSizeHint() const;
+    QSize minimumSizeHint();
     void updateTVGeometry();
 
 signals:

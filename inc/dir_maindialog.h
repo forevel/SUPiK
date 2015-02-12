@@ -34,12 +34,10 @@ private slots:
     void SystemSlaveContextMenu (QPoint);
     void setMainTVExpanded (QModelIndex index);
     void setSlaveTVExpanded(QModelIndex index);
-    void showDirDialog(QModelIndex);
-    void showDirDialog();
+    void showDirDialog(QModelIndex idx = QModelIndex());
     void AddDirDialog();
     void EditDirDialog();
-    void ChangeAdditionalFields ();
-    void ChangeAdditionalFields (QModelIndex index);
+    void ChangeAdditionalFields (QModelIndex index = QModelIndex());
     void AddDataChild();
     void AddSubDataChild();
     void DeleteData();
@@ -53,8 +51,7 @@ private:
     s_tqLabel *MainL;
     QVBoxLayout *MainLayout;
     QHBoxLayout *MainFrameLayout;
-    bool firstShow;
-    s_tqFrame *MainFrame;
+    bool firstShow, SlaveTVIsFilling;
     s_sqlfieldsdialog *sqldialog;
     QSqlDatabase db;
     QString tble;

@@ -16,6 +16,7 @@ dir_maindialog::dir_maindialog(QWidget *parent) :
     firstShow = true;
     MainTVIsTree = false;
     SlaveTVIsTree = false;
+    SlaveTVIsFilling = false;
     SetupUI();
 }
 
@@ -30,22 +31,21 @@ void dir_maindialog::SetupUI()
     SlaveTV = new s_tqtreeview;
     MainTV = new s_tqtreeview;
     gridItemDelegate = new s_duniversal;
-    MainFrame = new s_tqFrame;
     QFrame *line = new QFrame;
     line->setFrameShape(QFrame::VLine);
     line->setFrameShadow(QFrame::Sunken);
     line->setMaximumWidth(2);
-    MainFrameLayout->addWidget(MainTV, 10);
-    MainFrameLayout->addWidget(line, 1);
-    MainFrameLayout->addWidget(MainFrame, 25);
-    MainL = new s_tqLabel;
-    MainL->setText("Справочники");
+    MainFrameLayout->addWidget(MainTV, 10, Qt::AlignTop | Qt::AlignLeft);
+    MainFrameLayout->addWidget(line, 1, Qt::AlignLeft);
+    MainFrameLayout->addWidget(SlaveTV, 25, Qt::AlignTop | Qt::AlignLeft);
+    MainL = new s_tqLabel("Справочники");
     QFont font;
     font.setPointSize(15);
     MainL->setFont(font);
     MainLayout->addWidget(MainL, 0);
     MainLayout->setAlignment(MainL, Qt::AlignRight);
     MainLayout->addLayout (MainFrameLayout);
+    MainLayout->addStretch(100);
     setLayout(MainLayout);
 }
 
@@ -106,26 +106,19 @@ void dir_maindialog::setDirTree()
     MainTV->setIndentation(2);
     MainTV->setAnimated(false);
     MainTV->setItemDelegate(gridItemDelegate);
-    for (int i = 0; i < MainTV->header()->count(); i++)
-        MainTV->resizeColumnToContents(i);
+//    for (int i = 0; i < MainTV->header()->count(); i++)
+//        MainTV->resizeColumnToContents(i);
+    MainTV->updateTVGeometry();
     QApplication::restoreOverrideCursor();
-}
-
-void dir_maindialog::showDirDialog()
-{
-    if (MainTVIsTree && (MainTV->model()->rowCount(MainTV->currentIndex()) != 0))
-        setMainTVExpanded(MainTV->currentIndex());
-    else
-    {
-        MainFrameLayout->replaceWidget(MainFrame, SlaveTV, Qt::FindDirectChildrenOnly);
-        ShowSlaveTree(getMainIndex(1));
-    }
 }
 
 void dir_maindialog::showDirDialog(QModelIndex idx)
 {
-    MainTV->setCurrentIndex(idx);
-    showDirDialog();
+    Q_UNUSED(idx);
+    if (MainTVIsTree && (MainTV->model()->rowCount(MainTV->currentIndex()) != 0))
+        setMainTVExpanded(MainTV->currentIndex());
+    else
+        ShowSlaveTree(getMainIndex(1));
 }
 
 // ############################################ SLOTS ####################################################
@@ -197,78 +190,72 @@ void dir_maindialog::ShowSlaveTree(QString str)
 {
     QStringList fields, values;
     int i;
-
-    QApplication::setOverrideCursor(Qt::WaitCursor);
-//    fields << "pc" << "access";
-    fields << "dirlist" << "access";
-    values = sqlc.getvaluesfromtablebyfield(pc.sup, "dirlist", fields, "dirlist", str);
-    if (!sqlc.result)
+    if (!SlaveTVIsFilling)
     {
-//        tble = values.at(0);
-//        db = sqlc.getdb(tble.left(3));
-//        if (!db.isValid())
-//        {
-//            QMessageBox::warning(this, "warning!", "Нет такой базы данных: "+tble.left(3));
-//            QApplication::restoreOverrideCursor();
-//            return;
-//        }
-//        tble = tble.right(tble.size()-4);
-//        if (SlaveTreeModel == (void*)0) delete SlaveTreeModel;
-//        SlaveTreeModel = new s_aitemmodel(db, tble, QSqlDatabase(), "", false); // если второй таблицы нет, в tble2 должна содержаться пустая строка (требование к таблице dirlist)
-//        SlaveTreeModel = new s_ntmodel;
-        int res = SlaveTreeModel->Setup(false, values.at(0) + "_сокращ");
-        if (res == 0x11) // это не дерево
+        SlaveTVIsFilling = true;
+        QApplication::setOverrideCursor(Qt::WaitCursor);
+        fields << "dirlist" << "access";
+        values = sqlc.getvaluesfromtablebyfield(pc.sup, "dirlist", fields, "dirlist", str);
+        if (!sqlc.result)
         {
-            int res = SlaveTableModel->setup(values.at(0) + "_сокращ");
-            if (res)
+            int res = SlaveTreeModel->Setup(false, values.at(0) + "_сокращ");
+            if (res == 0x11) // это не дерево
             {
-                QMessageBox::warning(this, "warning!", "Проблема №" + QString::number(res));
-                QApplication::restoreOverrideCursor();
-                return;
+                int res = SlaveTableModel->setup(values.at(0) + "_сокращ");
+                if (res)
+                {
+                    QMessageBox::warning(this, "warning!", "Проблема №" + QString::number(res));
+                    QApplication::restoreOverrideCursor();
+                    return;
+                }
+                if (SlaveTVIsTree)
+                {
+                    QItemSelectionModel *m = SlaveTV->selectionModel();
+                    SlaveTV->setModel(SlaveTableModel);
+                    delete m;
+                }
+                else
+                    SlaveTV->setModel(SlaveTableModel);
+                SlaveTVIsTree = false;
             }
-            SlaveTVIsTree = false;
-            QItemSelectionModel *m = SlaveTV->selectionModel();
-            SlaveTV->setModel(SlaveTableModel);
-            delete m;
+            else
+            {
+                if (!SlaveTVIsTree)
+                {
+                    QItemSelectionModel *m = SlaveTV->selectionModel();
+                    SlaveTV->setModel(SlaveTreeModel);
+                    delete m;
+                }
+                else
+                    SlaveTV->setModel(SlaveTreeModel);
+                SlaveTVIsTree = true;
+                disconnect(SlaveTV, SIGNAL(expanded(QModelIndex)), 0, 0);
+                connect(SlaveTV, SIGNAL(expanded(QModelIndex)), SlaveTreeModel, SLOT(addExpandedIndex(QModelIndex)));
+                disconnect(SlaveTV, SIGNAL(collapsed(QModelIndex)), 0, 0);
+                connect(SlaveTV, SIGNAL(collapsed(QModelIndex)), SlaveTreeModel, SLOT(removeExpandedIndex(QModelIndex)));
+                disconnect(SlaveTV, SIGNAL(clicked(QModelIndex)), 0, 0);
+                connect(SlaveTV, SIGNAL(clicked(QModelIndex)), this, SLOT(setSlaveTVExpanded(QModelIndex)));
+            }
+            SlaveTV->header()->setDefaultAlignment(Qt::AlignCenter);
+            SlaveTV->header()->setVisible(true);
+            SlaveTV->setIndentation(2);
+            SlaveTV->setAnimated(false);
+            SlaveTV->setItemDelegate(gridItemDelegate);
+            for (i = 0; i < SlaveTV->header()->count(); i++)
+                SlaveTV->resizeColumnToContents(i);
+            SlaveTVAccess = values.at(1).toLongLong(0, 16);
+            SlaveTV->setContextMenuPolicy(Qt::CustomContextMenu);
+            SlaveTV->updateTVGeometry();
+            disconnect(SlaveTV, SIGNAL(customContextMenuRequested(QPoint)), 0, 0);
+            connect (SlaveTV, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(SystemSlaveContextMenu(QPoint)));
+            disconnect(SlaveTV, SIGNAL(doubleClicked(QModelIndex)), 0, 0);
+            connect (SlaveTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(ChangeAdditionalFields(QModelIndex)));
         }
         else
-        {
-            SlaveTVIsTree = true;
-            QItemSelectionModel *m = SlaveTV->selectionModel();
-            SlaveTV->setModel(SlaveTreeModel);
-            delete m;
-            connect(SlaveTV, SIGNAL(expanded(QModelIndex)), SlaveTreeModel, SLOT(addExpandedIndex(QModelIndex)));
-            connect(SlaveTV, SIGNAL(collapsed(QModelIndex)), SlaveTreeModel, SLOT(removeExpandedIndex(QModelIndex)));
-            disconnect(SlaveTV, SIGNAL(clicked(QModelIndex)), 0, 0);
-            connect(SlaveTV, SIGNAL(clicked(QModelIndex)), this, SLOT(setSlaveTVExpanded(QModelIndex)));
-        }
-//        QItemSelectionModel *m = SlaveTV->selectionModel();
-//        SlaveTreeModel->isEditable = false;
-//        SlaveTV->setModel(SlaveTreeModel);
-//        delete m;
-        SlaveTV->header()->setDefaultAlignment(Qt::AlignCenter);
-        SlaveTV->header()->setVisible(true);
-        SlaveTV->setIndentation(2);
-        SlaveTV->setAnimated(false);
-        SlaveTV->setItemDelegate(gridItemDelegate);
-        for (i = 0; i < SlaveTV->header()->count(); i++)
-            SlaveTV->resizeColumnToContents(i);
-        SlaveTVAccess = values.at(1).toLongLong(0, 16);
-        SlaveTV->setContextMenuPolicy(Qt::CustomContextMenu);
-        disconnect(SlaveTV, SIGNAL(customContextMenuRequested(QPoint)), 0, 0);
-        connect (SlaveTV, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(SystemSlaveContextMenu(QPoint)));
-        disconnect(SlaveTV, SIGNAL(doubleClicked(QModelIndex)), 0, 0);
-        connect (SlaveTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(ChangeAdditionalFields(QModelIndex)));
-//        disconnect(SlaveTV, SIGNAL(expanded(QModelIndex)), 0, 0);
-//        connect(SlaveTV, SIGNAL(expanded(QModelIndex)), SlaveTreeModel, SLOT(addExpandedIndex(QModelIndex)));
-//        disconnect(SlaveTV, SIGNAL(collapsed(QModelIndex)), 0, 0);
-//        connect(SlaveTV, SIGNAL(collapsed(QModelIndex)), SlaveTreeModel, SLOT(removeExpandedIndex(QModelIndex)));
-//        disconnect(SlaveTV, SIGNAL(clicked(QModelIndex)), 0, 0);
-//        connect(SlaveTV, SIGNAL(clicked(QModelIndex)), this, SLOT(setSlaveTVExpanded(QModelIndex)));
+            QMessageBox::warning(this, "warning", "Не найдена ссылка на таблицу справочника!", QMessageBox::Ok, QMessageBox::NoButton);
+        QApplication::restoreOverrideCursor();
+        SlaveTVIsFilling = false;
     }
-    else
-        QMessageBox::warning(this, "warning", "Не найдена ссылка на таблицу справочника!", QMessageBox::Ok, QMessageBox::NoButton);
-    QApplication::restoreOverrideCursor();
 }
 
 // обработка раскрывания корней дерева
@@ -321,18 +308,14 @@ QString dir_maindialog::getSlaveIndex(int column)
 
 void dir_maindialog::ChangeAdditionalFields(QModelIndex index)
 {
+    Q_UNUSED(index);
     if (SlaveTV->model()->rowCount(SlaveTV->currentIndex()) != 0) // для родителей запрещено иметь дополнительные поля
         setSlaveTVExpanded(SlaveTV->currentIndex());
     else
     {
         SlaveTV->setCurrentIndex(index);
-        ChangeAdditionalFields();
+        ChangeAdditionalFields(getSlaveIndex(0));
     }
-}
-
-void dir_maindialog::ChangeAdditionalFields()
-{
-    ChangeAdditionalFields(getSlaveIndex(0));
 }
 
 void dir_maindialog::ChangeAdditionalFields(QString str)

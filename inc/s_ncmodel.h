@@ -29,7 +29,7 @@ public:
     Qt::ItemFlags flags(const QModelIndex &index) const;
     QModelIndex index(int row, int column, const QModelIndex &index = QModelIndex()) const;
     int rowCount(const QModelIndex &index = QModelIndex()) const;
-    int columnCount(const QModelIndex &) const;
+    int columnCount(const QModelIndex &index = QModelIndex()) const;
     bool insertColumns(int position, int columns, const QModelIndex &index = QModelIndex());
     bool removeColumns(int position, int columns, const QModelIndex &index = QModelIndex());
     bool insertRows(int position, int rows, const QModelIndex &index = QModelIndex());
@@ -44,6 +44,7 @@ public:
     void setCellAttr(QModelIndex index, int fcset=0, int icon=-1);
     QString getCellLinks(QModelIndex);
     void setRowAttr(int fcset=0, int icon=-1);
+    void ClearModel();
     void fillModel(QList<QStringList> sl);
 //    void fillInverseModel(QList<QStringList> sl);
     void prepareModel(QList<int> sl);

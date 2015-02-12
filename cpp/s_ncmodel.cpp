@@ -223,8 +223,9 @@ bool s_ncmodel::removeRows(int position, int rows, const QModelIndex &index)
     return true;
 }
 
-int s_ncmodel::columnCount(const QModelIndex &/*parent*/) const
+int s_ncmodel::columnCount(const QModelIndex &index) const
 {
+    Q_UNUSED(index);
     return hdr.size();
 }
 
@@ -531,6 +532,7 @@ QString s_ncmodel::getCellLinks(QModelIndex index)
 int s_ncmodel::setup(QString tble)
 {
     int i;
+    ClearModel();
     QList<QStringList> lsl = tfl.GetAllValues(tble);
     if (tfl.result)
         return (CM_ERROR+tfl.result);
@@ -549,4 +551,12 @@ int s_ncmodel::setup(QString tble)
         setcolumnlinks(i, links.at(i));
     fillModel(lsl);
     return 0;
+}
+
+void s_ncmodel::ClearModel()
+{
+    hdr.clear();
+    maindata.clear();
+    fieldstoCheck.clear();
+    maxcolswidth.clear();
 }

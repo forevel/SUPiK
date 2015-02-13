@@ -9,7 +9,7 @@ supik::supik()
     SetSupikWindow();
     SetSupikStatusBar();
     pc.supikprocs << "ExitSupik" << "SysStructEdit" << "SettingsEdit" << "Components" << "Directories" << "BackupDir" << "RestoreDir" << "ProbCheck";
-    pc.supikprocs << "WhIncome" << "WhOutgoing" << "WhSearch" << "DocView" << "DialogEdit" << "";
+    pc.supikprocs << "WhIncome" << "WhOutgoing" << "WhSearch" << "DocView" << "DialogEdit" << "Quarantine" << "";
     pf["ExitSupik"] = &supik::ExitSupik;
     pf["SysStructEdit"] = &supik::SysStructEdit;
     pf["SettingsEdit"] = &supik::SettingsEdit;
@@ -22,6 +22,7 @@ supik::supik()
     pf["WhOutgoing"] = &supik::WhOutgoing;
     pf["WhSearch"] = &supik::WhSearch;
     pf["DialogEdit"] = &supik::DialogEdit;
+    pf["Quarantine"] = &supik::Quarantine;
 }
 
 void supik::showEvent(QShowEvent *event)
@@ -423,6 +424,23 @@ void supik::BackupDir()
 }
 
 void supik::RestoreDir()
+{
+    int idx = CheckForWidget(reinterpret_cast<QWidget *>(brd), "sys");
+    if (idx != -1)
+    {
+        MainTW->setCurrentIndex(idx);
+        return;
+    }
+
+    brd = new sys_backuprestoredirdialog (true);
+
+    int ids = MainTW->addTab(brd, "Импорт из файла");
+    MainTW->tabBar()->setTabData(ids, QVariant("sys"));
+    MainTW->tabBar()->setCurrentIndex(ids);
+    MainTW->repaint();
+}
+
+void supik::Quarantine()
 {
     int idx = CheckForWidget(reinterpret_cast<QWidget *>(brd), "sys");
     if (idx != -1)

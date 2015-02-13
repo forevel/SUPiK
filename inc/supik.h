@@ -78,6 +78,7 @@ private:
     void WhOutgoing();
     void WhSearch();
     void DialogEdit();
+    void Quarantine();
 
     void showEvent(QShowEvent *event);
 

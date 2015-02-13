@@ -17,6 +17,7 @@ dir_maindialog::dir_maindialog(QWidget *parent) :
     MainTVIsTree = false;
     SlaveTVIsTree = false;
     SlaveTVIsFilling = false;
+    IsQuarantine = false;
     SetupUI();
 }
 
@@ -115,74 +116,12 @@ void dir_maindialog::setDirTree()
 void dir_maindialog::showDirDialog(QModelIndex idx)
 {
     Q_UNUSED(idx);
-    if (MainTVIsTree && (MainTV->model()->rowCount(MainTV->currentIndex()) != 0))
-        setMainTVExpanded(MainTV->currentIndex());
+    if (MainTVIsTree && (MainTV->model()->rowCount(MainTV->currentIndex()) != 0));
     else
         ShowSlaveTree(getMainIndex(1));
 }
 
 // ############################################ SLOTS ####################################################
-
-// ########################################## CONTEXTS ###################################################
-
-// контекстное меню основного дерева
-
-void dir_maindialog::mainContextMenu(QPoint)
-{
-    QAction *OpenAction = new QAction("Открыть", this);
-    connect (OpenAction, SIGNAL(triggered()), this, SLOT(showDirDialog()));
-    QAction *EditAction = new QAction("Редактировать справочник", this);
-    connect (EditAction, SIGNAL(triggered()), this, SLOT(EditDirDialog()));
-    QAction *AddAction = new QAction("Добавить справочник", this);
-    connect (AddAction, SIGNAL(triggered()), this, SLOT(AddDirDialog()));
-
-    QMenu *SystemContextMenu = new QMenu;
-    SystemContextMenu->addAction(OpenAction);
-    if (pc.access & 0x0002)
-    {
-        SystemContextMenu->addAction(EditAction);
-        SystemContextMenu->addAction(AddAction);
-    }
-    SystemContextMenu->exec(QCursor::pos());
-}
-
-// контекстное меню дочернего дерева
-
-void dir_maindialog::SystemSlaveContextMenu(QPoint)
-{
-    QAction *ChangeDataChild;
-    ChangeDataChild = new QAction ("Изменить элемент", this);
-    ChangeDataChild->setSeparator(false);
-    connect(ChangeDataChild, SIGNAL(triggered()), this, SLOT(ChangeAdditionalFields()));
-    QAction *AddDataChild;
-    AddDataChild = new QAction ("Добавить элемент", this);
-    AddDataChild->setSeparator(false);
-    connect(AddDataChild, SIGNAL(triggered()), this, SLOT(AddDataChild()));
-/*    QAction *AddSubDataChild;
-    AddSubDataChild = new QAction ("Добавить субэлемент", this);
-    AddSubDataChild->setSeparator(false);
-    if (SlaveTreeModel->isTree)
-    {
-        connect(AddSubDataChild, SIGNAL(triggered()), this, SLOT(AddSubDataChild()));
-        AddSubDataChild->setEnabled(true);
-    }
-    else
-        AddSubDataChild->setEnabled(false); */
-    QAction *DeleteAction = new QAction("Удалить элемент", this);
-    DeleteAction->setSeparator(false);
-    connect (DeleteAction, SIGNAL(triggered()), this, SLOT(DeleteData()));
-    QMenu *ContextMenu = new QMenu;
-    ContextMenu->setTitle("Context menu");
-    if (SlaveTVAccess & pc.access & 0x2492) // права на изменение
-    {
-        ContextMenu->addAction(AddDataChild);
-//        ContextMenu->addAction(AddSubDataChild);
-        ContextMenu->addAction(ChangeDataChild);
-    }
-    if (SlaveTVAccess & pc.access & 0x4924) // права на удаление
-        ContextMenu->addAction(DeleteAction);
-    ContextMenu->exec(QCursor::pos()); // если есть права на удаление, на изменение тоже должны быть
-}
 
 // отображение подчинённого дерева в правой части
 
@@ -192,6 +131,10 @@ void dir_maindialog::ShowSlaveTree(QString str)
     int i;
     if (!SlaveTVIsFilling)
     {
+        if (str.contains("карантин", Qt::CaseInsensitive))
+            IsQuarantine = true;
+        else
+            IsQuarantine = false;
         SlaveTVIsFilling = true;
         QApplication::setOverrideCursor(Qt::WaitCursor);
         fields << "dirlist" << "access";
@@ -233,8 +176,8 @@ void dir_maindialog::ShowSlaveTree(QString str)
                 connect(SlaveTV, SIGNAL(expanded(QModelIndex)), SlaveTreeModel, SLOT(addExpandedIndex(QModelIndex)));
                 disconnect(SlaveTV, SIGNAL(collapsed(QModelIndex)), 0, 0);
                 connect(SlaveTV, SIGNAL(collapsed(QModelIndex)), SlaveTreeModel, SLOT(removeExpandedIndex(QModelIndex)));
-                disconnect(SlaveTV, SIGNAL(clicked(QModelIndex)), 0, 0);
-                connect(SlaveTV, SIGNAL(clicked(QModelIndex)), this, SLOT(setSlaveTVExpanded(QModelIndex)));
+//                disconnect(SlaveTV, SIGNAL(clicked(QModelIndex)), 0, 0);
+//                connect(SlaveTV, SIGNAL(clicked(QModelIndex)), this, SLOT(setSlaveTVExpanded(QModelIndex)));
             }
             SlaveTV->header()->setDefaultAlignment(Qt::AlignCenter);
             SlaveTV->header()->setVisible(true);
@@ -259,7 +202,7 @@ void dir_maindialog::ShowSlaveTree(QString str)
 }
 
 // обработка раскрывания корней дерева
-
+/*
 void dir_maindialog::setMainTVExpanded(QModelIndex index)
 {
     if (!index.column())
@@ -287,7 +230,7 @@ void dir_maindialog::setSlaveTVExpanded(QModelIndex index)
     for (int i = SlaveTV->header()->count(); i >= 0; --i)
         SlaveTV->resizeColumnToContents(i);
 }
-
+*/
 QString dir_maindialog::getMainIndex(int column)
 {
     QModelIndex index = MainTV->model()->index(MainTV->currentIndex().row(), column, MainTV->model()->parent(MainTV->currentIndex()));
@@ -309,24 +252,21 @@ QString dir_maindialog::getSlaveIndex(int column)
 void dir_maindialog::ChangeAdditionalFields(QModelIndex index)
 {
     Q_UNUSED(index);
-    if (SlaveTV->model()->rowCount(SlaveTV->currentIndex()) != 0) // для родителей запрещено иметь дополнительные поля
-        setSlaveTVExpanded(SlaveTV->currentIndex());
-    else
-    {
-        SlaveTV->setCurrentIndex(index);
-        ChangeAdditionalFields(getSlaveIndex(0));
-    }
+    if ((SlaveTVIsTree) && (SlaveTV->model()->rowCount(SlaveTV->currentIndex()) != 0))
+        return; // для родителей запрещено иметь дополнительные поля
+//    return;
+    ChangeAdditionalFields(getSlaveIndex(0));
 }
 
 void dir_maindialog::ChangeAdditionalFields(QString str)
 {
     int res;
     s_2cdialog *newdialog = new s_2cdialog("Справочники:"+getMainIndex(1));
+    if (IsQuarantine)
+        newdialog->IsQuarantine = true;
+    newdialog->Mode = MODE_EDIT;
     if (!(res = newdialog->setup(getMainIndex(1)+"_полная", str)))
-    {
-        //newdialog->setModal(true);
         newdialog->exec();
-    }
     else
     {
         delete newdialog;
@@ -410,3 +350,65 @@ void dir_maindialog::EditDirDialog()
     dir_adddialog *EditDialog = new dir_adddialog(true, tmpString);
     EditDialog->exec();
 }
+
+// ########################################## CONTEXTS ###################################################
+
+// контекстное меню основного дерева
+
+void dir_maindialog::mainContextMenu(QPoint)
+{
+    QAction *OpenAction = new QAction("Открыть", this);
+    connect (OpenAction, SIGNAL(triggered()), this, SLOT(showDirDialog()));
+    QAction *EditAction = new QAction("Редактировать справочник", this);
+    connect (EditAction, SIGNAL(triggered()), this, SLOT(EditDirDialog()));
+    QAction *AddAction = new QAction("Добавить справочник", this);
+    connect (AddAction, SIGNAL(triggered()), this, SLOT(AddDirDialog()));
+
+    QMenu *SystemContextMenu = new QMenu;
+    SystemContextMenu->addAction(OpenAction);
+    if (pc.access & 0x0002)
+    {
+        SystemContextMenu->addAction(EditAction);
+        SystemContextMenu->addAction(AddAction);
+    }
+    SystemContextMenu->exec(QCursor::pos());
+}
+
+// контекстное меню дочернего дерева
+
+void dir_maindialog::SystemSlaveContextMenu(QPoint)
+{
+    QAction *ChangeDataChild;
+    ChangeDataChild = new QAction ("Изменить элемент", this);
+    ChangeDataChild->setSeparator(false);
+    connect(ChangeDataChild, SIGNAL(triggered()), this, SLOT(ChangeAdditionalFields()));
+    QAction *AddDataChild;
+    AddDataChild = new QAction ("Добавить элемент", this);
+    AddDataChild->setSeparator(false);
+    connect(AddDataChild, SIGNAL(triggered()), this, SLOT(AddDataChild()));
+/*    QAction *AddSubDataChild;
+    AddSubDataChild = new QAction ("Добавить субэлемент", this);
+    AddSubDataChild->setSeparator(false);
+    if (SlaveTreeModel->isTree)
+    {
+        connect(AddSubDataChild, SIGNAL(triggered()), this, SLOT(AddSubDataChild()));
+        AddSubDataChild->setEnabled(true);
+    }
+    else
+        AddSubDataChild->setEnabled(false); */
+    QAction *DeleteAction = new QAction("Удалить элемент", this);
+    DeleteAction->setSeparator(false);
+    connect (DeleteAction, SIGNAL(triggered()), this, SLOT(DeleteData()));
+    QMenu *ContextMenu = new QMenu;
+    ContextMenu->setTitle("Context menu");
+    if (SlaveTVAccess & pc.access & 0x2492) // права на изменение
+    {
+        ContextMenu->addAction(AddDataChild);
+//        ContextMenu->addAction(AddSubDataChild);
+        ContextMenu->addAction(ChangeDataChild);
+    }
+    if (SlaveTVAccess & pc.access & 0x4924) // права на удаление
+        ContextMenu->addAction(DeleteAction);
+    ContextMenu->exec(QCursor::pos()); // если есть права на удаление, на изменение тоже должны быть
+}
+

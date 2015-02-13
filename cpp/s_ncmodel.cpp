@@ -148,11 +148,7 @@ Qt::ItemFlags s_ncmodel::flags(const QModelIndex &index) const
 {
     if (!index.isValid())
             return Qt::ItemIsEnabled;
-    s_ncmodel::fieldformat ff = getFFfromLinks(maindata.at(index.row())->linksdata(index.column()));
-    if (ff.delegate == FD_DISABLED)
-        return Qt::NoItemFlags;
-    else
-        return QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
+    return QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
 }
 
 QModelIndex s_ncmodel::index(int row, int column, const QModelIndex &index) const
@@ -358,12 +354,14 @@ void s_ncmodel::fillModel(QList<QStringList> sl)
 
 s_ncmodel::fieldformat s_ncmodel::getFFfromLinks(QString links) const
 {
-    QStringList tmpsl = links.split(".");
     fieldformat ff;
     ff.ftype = 8;
     ff.delegate = FD_SIMGRID;
     ff.dependson = -1;
     ff.link.clear();
+    if (links.isEmpty())
+        return ff;
+    QStringList tmpsl = links.split(".");
     if (!tmpsl.size())
         return ff;
     ff.delegate = tmpsl.at(0).toInt();

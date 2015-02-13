@@ -32,8 +32,8 @@ public slots:
 private slots:
     void mainContextMenu(QPoint);
     void SystemSlaveContextMenu (QPoint);
-    void setMainTVExpanded (QModelIndex index);
-    void setSlaveTVExpanded(QModelIndex index);
+//    void setMainTVExpanded (QModelIndex index);
+//    void setSlaveTVExpanded(QModelIndex index);
     void showDirDialog(QModelIndex idx = QModelIndex());
     void AddDirDialog();
     void EditDirDialog();
@@ -47,7 +47,7 @@ private:
     s_duniversal *gridItemDelegate;
     s_ntmodel *MainTreeModel, *SlaveTreeModel;
     s_ncmodel *MainTableModel, *SlaveTableModel;
-    bool MainTVIsTree, SlaveTVIsTree;
+    bool MainTVIsTree, SlaveTVIsTree, IsQuarantine;
     s_tqLabel *MainL;
     QVBoxLayout *MainLayout;
     QHBoxLayout *MainFrameLayout;

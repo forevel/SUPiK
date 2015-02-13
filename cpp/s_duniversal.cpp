@@ -27,7 +27,7 @@ QWidget* s_duniversal::createEditor(QWidget *parent, const QStyleOptionViewItem 
     Q_UNUSED(option);
     QStringList tmpStringList;
     ff = getFFfromLinks(index.data(Qt::UserRole).toString());
-    hdr=index.data(Qt::UserRole+1).toString();
+    hdr=index.data(Qt::UserRole+1).toString(); // в UserRole+1 должна содержаться aData, в которой находится подзаголовок диалога редактирования, вызываемого по кнопке в делегате
     QWidget *editor = 0;
     switch (ff.delegate)
     {
@@ -117,9 +117,9 @@ QWidget* s_duniversal::createEditor(QWidget *parent, const QStyleOptionViewItem 
     case FD_SIMPLE:
     case FD_DISABLED:
     {
-        QLabel *lbl = new QLabel(parent);
+//        QLabel *lbl = new QLabel(parent);
 //        lbl->setStyleSheet("QLabel {background: khaki};");
-        editor = lbl;
+//        editor = lbl;
         break;
     }
     case FD_SPIN:
@@ -264,15 +264,17 @@ void s_duniversal::pbclicked()
             chooseDialog->exec();
         }
         else // это таблица
-        { // МЕНЯТЬ!
+        {
+            s_tqLineEdit *le = combWidget->findChild<s_tqLineEdit *>("fdcle");
+            if (le == 0)
+                break;
             s_2cdialog *chooseDialog = new s_2cdialog(hdr);
-            QSqlDatabase db = sqlc.getdb(ff.link.at(0));
-            if (db.isValid())
+            int res = chooseDialog->setupchoosetable(ff.link.at(0), le->text());
+            if (!res)
             {
                 connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
                 chooseDialog->setMinimumWidth(500);
-                s_tqLineEdit *le = combWidget->findChild<s_tqLineEdit *>("fdcle");
-                QList<QStringList> tmpsl;
+/*                QList<QStringList> tmpsl;
                 QStringList tmpfl=QStringList()<<"id"+ff.link.at(1)<<ff.link.at(2);
                 tmpsl=sqlc.getvaluesfromtablebycolumns(db,ff.link.at(1),tmpfl);
                 QStringList tmpl1,tmpl2, tmpll1;
@@ -282,11 +284,10 @@ void s_duniversal::pbclicked()
                     tmpll1 << QString::number(FD_SIMGRID);
                     tmpl2 << tmpsl.at(i).at(1);
                 }
-                chooseDialog->setup(tmpl1, tmpll1, tmpl2, QStringList());
+                chooseDialog->setup(tmpl1, tmpll1, tmpl2, QStringList()); */
                 chooseDialog->sortModel();
-                chooseDialog->setTvCurrentText(le->text());
                 chooseDialog->exec();
-            } // МЕНЯТЬ!
+            }
         }
         break;
     }
@@ -323,49 +324,58 @@ void s_duniversal::pbclicked()
 
 void s_duniversal::accepted(QString str)
 {
-    QString tmpString = str;
-    s_tqLineEdit *le = combWidget->findChild<s_tqLineEdit*>("fdcle");
-    switch (ff.ftype)
+    try
     {
-    case FW_ALLINK:
-    {
-        QSqlDatabase db = sqlc.getdb(ff.link.at(0));
-        if (db.isValid())
-            tmpString = sqlc.getvaluefromtablebyfield(db, ff.link.at(1), ff.link.at(1), "id"+ff.link.at(1), str);
-        break;
-    }
-    case FW_LINK:
-    {
-        QSqlDatabase db = sqlc.getdb(ff.link.at(0));
-        if (db.isValid())
-            tmpString = sqlc.getvaluefromtablebyfield(db, ff.link.at(1), ff.link.at(2), "id"+ff.link.at(1), str);
-        break;
-    }
-    case FW_DLINK:
-    {
-        QSqlDatabase db = sqlc.getdb(ff.link.at(2));
-        if (db.isValid())
+        QString tmpString = str;
+        s_tqLineEdit *le = combWidget->findChild<s_tqLineEdit*>("fdcle");
+        if (le == 0)
+            throw 0x21;
+        switch (ff.ftype)
         {
-            tmpString = sqlc.getvaluefromtablebyfield(db, ff.link.at(3), ff.link.at(3), "id"+ff.link.at(3), str);
-            if (sqlc.result)
-            {
-                QSqlDatabase db = sqlc.getdb(ff.link.at(0));
-                if (db.isValid())
-                    tmpString = sqlc.getvaluefromtablebyfield(db, ff.link.at(1), ff.link.at(1), "id"+ff.link.at(1), str);
-            }
+/*        {
+            QSqlDatabase db = sqlc.getdb(ff.link.at(0));
+            if (db.isValid())
+                tmpString = sqlc.getvaluefromtablebyfield(db, ff.link.at(1), ff.link.at(1), "id"+ff.link.at(1), str);
+            break;
+        } */
+        case FW_ALLINK:
+        case FW_LINK:
+        {
+            QStringList tmpStringList = tfl.GetOneValueByOneRowAndId(ff.link.at(0), "Наименование", str);
+            tmpString = tmpStringList.at(0);
+            break;
         }
-        break;
+        case FW_DLINK:
+        {
+            QSqlDatabase db = sqlc.getdb(ff.link.at(2));
+            if (db.isValid())
+            {
+                tmpString = sqlc.getvaluefromtablebyfield(db, ff.link.at(3), ff.link.at(3), "id"+ff.link.at(3), str);
+                if (sqlc.result)
+                {
+                    QSqlDatabase db = sqlc.getdb(ff.link.at(0));
+                    if (db.isValid())
+                        tmpString = sqlc.getvaluefromtablebyfield(db, ff.link.at(1), ff.link.at(1), "id"+ff.link.at(1), str);
+                }
+            }
+            break;
+        }
+        case FW_RIGHTS:
+        {
+            break;
+        }
+        case FW_DATE:
+            break;
+        default:
+            break;
+        }
+        le->setText(tmpString);
     }
-    case FW_RIGHTS:
+    catch (int res)
     {
-        break;
+        Q_UNUSED(res);
+        return;
     }
-    case FW_DATE:
-        break;
-    default:
-        break;
-    }
-    le->setText(tmpString);
 }
 
 void s_duniversal::dateChoosed(QDate dte)

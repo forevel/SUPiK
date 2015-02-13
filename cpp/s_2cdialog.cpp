@@ -15,10 +15,28 @@
 #include <QApplication>
 #include <QDesktopWidget>
 
+// Диалог, состоящий из двух столбцов
+// Предназначен для организации списков выбора либо для редактирования полей различных таблиц
+// Списки выбора представляют собой таблицы (не деревья! для деревьев есть s_2ctdialog)
+// Режим задаётся в публичной переменной Mode (MODE_CHOOSE для режима выбора и MODE_EDIT - для режима редактирования)
+// В режиме выбора пользователь имеет возможность только выбрать из предлагаемой таблицы одно значение (строку), и слот
+// accepted() вернёт в сигнале "datachanged" значение нулевой колонки по выбранной строке
+// В режиме редактирования диалог представляет в первой колонке имена полей, а во второй - значения, причём значения
+// редактируются в зависимости от выбранного делегата. В этом случае слот accepted() осуществляет запись в базу новых значений
+//
+// Принцип работы с диалогом:
+// s_2cdialog *dlg = new s_2cdialog (hdr); // hdr - заголовок диалога в caption
+// dlg.Mode = MODE_CHOOSE; // выбор режима работы
+// dlg.IsQuarantine = true; // режим редактирования карантинных таблиц - особый, для него accepted() должен вызывать специальный обработчик
+// if (!(res = dlg.setup(table, id))) // если формирование диалога прошло нормально
+//      dlg.exec(); // вызов диалога
+
 s_2cdialog::s_2cdialog(QString hdr, QWidget *parent) :
     QDialog(parent)
 {
     DialogIsNeedToBeResized = false;
+    IsQuarantine = false;
+    Mode = MODE_CHOOSE;
     setStyleSheet("QDialog {background-color: rgba(204,204,153);}");
     setAttribute(Qt::WA_DeleteOnClose);
     QSizePolicy fixed(QSizePolicy::Fixed, QSizePolicy::Fixed);
@@ -118,43 +136,58 @@ void s_2cdialog::setup(QStringList sl, QStringList links, QString str)
 
 // процедура подготавливает диалог из столбцов таблицы tble в tablefields
 
-int s_2cdialog::setupchoosetable(QString tble, QString str)
+int s_2cdialog::setupchoosetable(QString tble, QString id)
 {
-    s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
-    QList<QStringList> lsl;
-    QStringList fl;
-    int i;
-    fl << "tablefields" << "table" << "headers" << "links";
-    lsl = sqlc.getmorevaluesfromtablebyfield(pc.sup, "tablefields", fl, "tablename", tble, "fieldsorder", true);
-    if (sqlc.result)
+    try
     {
-        QMessageBox::warning(this, "warning!", "Проблемы с получением значений по таблице "+tble+" из таблицы tablefields");
-        return 0x01;
+        this->tble = tble; // в слоте accepted() надо знать, с какой таблицей мы работаем
+        s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
+        if (tv == 0)
+            throw 0x51;
+        int res = mainmodel->setup(tble);
+        if (res)
+            throw res;
+/*        QList<QStringList> lsl;
+        QStringList fl;
+        int i;
+        fl << "tablefields" << "table" << "headers" << "links";
+        lsl = sqlc.getmorevaluesfromtablebyfield(pc.sup, "tablefields", fl, "tablename", tble, "fieldsorder", true);
+        if (sqlc.result)
+        {
+            QMessageBox::warning(this, "warning!", "Проблемы с получением значений по таблице "+tble+" из таблицы tablefields");
+            return 0x01;
+        }
+        fl.clear();
+        tble = lsl.at(0).at(1); // имя таблицы в формате db.tble
+        for (i = 0; i < lsl.size(); i++)
+        {
+            mainmodel->addColumn(lsl.at(i).at(2));
+            mainmodel->setcolumnlinks(i, lsl.at(i).at(3));
+            fl << lsl.at(i).at(0); // поля таблицы db.tble
+        }
+        QString db = tble.split(".").at(0);
+        tble = tble.split(".").at(1);
+        lsl=sqlc.getvaluesfromtablebycolumns(sqlc.getdb(db), tble, fl);
+        if (sqlc.result)
+        {
+            QMessageBox::warning(this, "warning!", "Проблемы с получением значений по таблице "+tble);
+            return 0x02;
+        }
+        mainmodel->fillModel(lsl); */
+        QList<QModelIndex> item = tv->model()->match(tv->model()->index(0, 0), Qt::DisplayRole, QVariant::fromValue(id), 1, Qt::MatchExactly);
+        if (!item.isEmpty())
+            tv->setCurrentIndex(item.at(0));
+        tv->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+        tv->resizeColumnsToContents();
+        DialogIsNeedToBeResized = true;
+        return 0;
     }
-    fl.clear();
-    tble = lsl.at(0).at(1); // имя таблицы в формате db.tble
-    for (i = 0; i < lsl.size(); i++)
+    catch (int res)
     {
-        mainmodel->addColumn(lsl.at(i).at(2));
-        mainmodel->setcolumnlinks(i, lsl.at(i).at(3));
-        fl << lsl.at(i).at(0); // поля таблицы db.tble
+        ShowMessage(res);
+        return res;
     }
-    QString db = tble.split(".").at(0);
-    tble = tble.split(".").at(1);
-    lsl=sqlc.getvaluesfromtablebycolumns(sqlc.getdb(db), tble, fl);
-    if (sqlc.result)
-    {
-        QMessageBox::warning(this, "warning!", "Проблемы с получением значений по таблице "+tble);
-        return 0x02;
-    }
-    mainmodel->fillModel(lsl);
-    QList<QModelIndex> item = tv->model()->match(tv->model()->index(0, 0), Qt::DisplayRole, QVariant::fromValue(str), 1, Qt::MatchExactly);
-    if (!item.isEmpty())
-        tv->setCurrentIndex(item.at(0));
-    tv->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-    tv->resizeColumnsToContents();
-    DialogIsNeedToBeResized = true;
-    return 0;
+
 }
 
 // процедура подготавливает диалог заполнения полей таблицы tble по строке id
@@ -306,10 +339,32 @@ void s_2cdialog::paintEvent(QPaintEvent *e)
 
 void s_2cdialog::accepted()
 {
-    s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
-    QString tmpString = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole).toString();
-    emit changeshasbeenMade(tmpString);
-    this->close();
+    QString tmpString;
+    try
+    {
+        if (IsQuarantine)
+        {
+            // отдельная обработка
+        }
+        if (Mode == MODE_EDIT)
+        {
+            // для режима редактирования - запись в базу
+        }
+        else
+        {
+            s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
+            if (tv == 0)
+                throw 0x21;
+            tmpString = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole).toString();
+        }
+        emit changeshasbeenMade(tmpString);
+        this->close();
+    }
+    catch (int res)
+    {
+        Q_UNUSED(res);
+        return;
+    }
 }
 
 void s_2cdialog::cancelled()
@@ -384,4 +439,9 @@ void s_2cdialog::fillModelAdata()
             break;
         }
     }
+}
+
+void s_2cdialog::ShowMessage(int ernum)
+{
+    QMessageBox::warning(this, "warning!", "Ошибка 2CD 0x" + QString::number(ernum, 16), QMessageBox::Ok, QMessageBox::NoButton);
 }

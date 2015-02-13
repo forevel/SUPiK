@@ -6,6 +6,9 @@
 #include "../inc/s_sql.h"
 #include "../inc/s_ncmodel.h"
 
+#define MODE_CHOOSE 1
+#define MODE_EDIT   2
+
 class s_2cdialog : public QDialog
 {
     Q_OBJECT
@@ -17,11 +20,14 @@ public:
     // sl - нередактируемые поля для списка, links - формат (можно не использовать), str - текущее значение
     void setup(QStringList sl, QStringList links=QStringList(), QString str="");
     // tble - таблица по tablefields, из которой построить список выбора, links - формат (можно не использовать), str - текущее значение
-    int setupchoosetable(QString tble, QString str="");
+    int setupchoosetable(QString tble, QString id="");
     // id - номер редактируемой строки таблицы db.tble
     int setup(QString tble, QString id);
     void sortModel();
     void setTvCurrentText(QString text);
+    void ShowMessage(int ernum);
+    bool IsQuarantine, Mode;
+    QString tble;
 
 signals:
     void changeshasbeenMade(QString);

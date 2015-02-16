@@ -19,14 +19,15 @@ public:
     void setup(QStringList sl1, QStringList links1, QStringList sl2, QStringList links2);
     // sl - нередактируемые поля для списка, links - формат (можно не использовать), str - текущее значение
     void setup(QStringList sl, QStringList links=QStringList(), QString str="");
-    // tble - таблица по tablefields, из которой построить список выбора, links - формат (можно не использовать), str - текущее значение
-    int setupchoosetable(QString tble, QString id="");
+//    // tble - таблица по tablefields, из которой построить список выбора, links - формат (можно не использовать), str - текущее значение
+//    int setupchoosetable(QString tble, QString id="");
     // id - номер редактируемой строки таблицы db.tble
     int setup(QString tble, QString id);
     void sortModel();
     void setTvCurrentText(QString text);
     void ShowMessage(int ernum);
-    bool IsQuarantine, Mode;
+    bool IsQuarantine;
+    int Mode;
     QString tble;
 
 signals:

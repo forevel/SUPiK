@@ -334,6 +334,10 @@ void s_ncmodel::fillModel(QList<QStringList> sl)
                     vl = tfl.GetOneValueByOneRowAndId(ff.link.at(0), ff.link.at(1), sl.at(j).at(i)).at(0);
                     break;
                 }
+                case FW_INDIRECT:
+                {
+
+                }
                 case FW_ID:
                 {
                     int num = ff.link.at(0).toInt();

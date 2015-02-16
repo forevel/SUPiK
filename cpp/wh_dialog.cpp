@@ -307,7 +307,7 @@ void wh_dialog::resizeMainTV(QModelIndex index1, QModelIndex index2)
 void wh_dialog::chooseConsumer()
 {
     s_2cdialog *dlg = new s_2cdialog("Выбор контрагента");
-    int res = dlg->setupchoosetable("Контрагенты_сокращ", Consumer);
+    int res = dlg->setup("Контрагенты_сокращ", Consumer);
     if (res)
         return;
     connect(dlg, SIGNAL(changeshasbeenMade(QString)), this, SLOT(consumerChoosed(QString)));
@@ -323,7 +323,7 @@ void wh_dialog::consumerChoosed(QString str)
 void wh_dialog::chooseSupplier()
 {
     s_2cdialog *dlg = new s_2cdialog("Выбор контрагента");
-    int res = dlg->setupchoosetable("Контрагенты_сокращ", Supplier);
+    int res = dlg->setup("Контрагенты_сокращ", Supplier);
     if (res)
         return;
     connect(dlg, SIGNAL(changeshasbeenMade(QString)), this, SLOT(supplierChoosed(QString)));

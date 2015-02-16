@@ -28,7 +28,7 @@
 // s_2cdialog *dlg = new s_2cdialog (hdr); // hdr - заголовок диалога в caption
 // dlg.Mode = MODE_CHOOSE; // выбор режима работы
 // dlg.IsQuarantine = true; // режим редактирования карантинных таблиц - особый, для него accepted() должен вызывать специальный обработчик
-// if (!(res = dlg.setup(table, id))) // если формирование диалога прошло нормально
+// if (!(res = dlg.setup(table, id)))
 //      dlg.exec(); // вызов диалога
 
 s_2cdialog::s_2cdialog(QString hdr, QWidget *parent) :
@@ -134,53 +134,144 @@ void s_2cdialog::setup(QStringList sl, QStringList links, QString str)
     DialogIsNeedToBeResized = true;
 }
 
-// процедура подготавливает диалог из столбцов таблицы tble в tablefields
+// процедура подготавливает диалог выбора из столбцов таблицы tble в tablefields
 
-int s_2cdialog::setupchoosetable(QString tble, QString id)
+int s_2cdialog::setup(QString tble, QString id)
 {
     try
     {
-        this->tble = tble; // в слоте accepted() надо знать, с какой таблицей мы работаем
         s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
         if (tv == 0)
             throw 0x51;
-        int res = mainmodel->setup(tble);
-        if (res)
-            throw res;
-/*        QList<QStringList> lsl;
-        QStringList fl;
-        int i;
-        fl << "tablefields" << "table" << "headers" << "links";
-        lsl = sqlc.getmorevaluesfromtablebyfield(pc.sup, "tablefields", fl, "tablename", tble, "fieldsorder", true);
-        if (sqlc.result)
+        switch (Mode)
         {
-            QMessageBox::warning(this, "warning!", "Проблемы с получением значений по таблице "+tble+" из таблицы tablefields");
-            return 0x01;
-        }
-        fl.clear();
-        tble = lsl.at(0).at(1); // имя таблицы в формате db.tble
-        for (i = 0; i < lsl.size(); i++)
+        case MODE_CHOOSE:
         {
-            mainmodel->addColumn(lsl.at(i).at(2));
-            mainmodel->setcolumnlinks(i, lsl.at(i).at(3));
-            fl << lsl.at(i).at(0); // поля таблицы db.tble
+            this->tble = tble; // в слоте accepted() надо знать, с какой таблицей мы работаем
+            int res = mainmodel->setup(tble);
+            if (res)
+                throw res;
+            QList<QModelIndex> item = tv->model()->match(tv->model()->index(0, 0), Qt::DisplayRole, QVariant::fromValue(id), 1, Qt::MatchExactly);
+            if (!item.isEmpty())
+                tv->setCurrentIndex(item.at(0));
+            tv->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+            tv->resizeColumnsToContents();
+            DialogIsNeedToBeResized = true;
+            return 0;
         }
-        QString db = tble.split(".").at(0);
-        tble = tble.split(".").at(1);
-        lsl=sqlc.getvaluesfromtablebycolumns(sqlc.getdb(db), tble, fl);
-        if (sqlc.result)
+        case MODE_EDIT:
         {
-            QMessageBox::warning(this, "warning!", "Проблемы с получением значений по таблице "+tble);
-            return 0x02;
+            this->tble = tble; // в слоте accepted() надо знать, с какой таблицей мы работаем
+            int res = mainmodel->setup(tble);
+            if (res)
+                throw res;
+/*            QList<QStringList> lsl;
+            QStringList fl;
+            QStringList headersvl;
+            QStringList tmpStringlist, overallStringList;
+            QString keydb, keytble;
+            int keyidx = -1;
+            int i;
+            fl << "tablefields" << "table" << "headers" << "links" << "keyfield";
+            lsl = sqlc.getmorevaluesfromtablebyfield(pc.sup, "tablefields", fl, "tablename", tble, "fieldsorder", true);
+            if (sqlc.result)
+            {
+                QMessageBox::warning(this, "warning!", "Проблемы с получением значений по таблице "+tble+" из таблицы tablefields");
+                return 1;
+            }
+            QStringList links, headers;
+            fl.clear();
+            links.clear();
+            headers.clear();
+            for (i = 0; i < lsl.size(); i++)
+            {
+                links << lsl.at(i).at(3);
+                headers << lsl.at(i).at(2);
+                if (lsl.at(i).at(4) == "v")
+                {
+                    keydb = lsl.at(i).at(1).split(".").at(0);
+                    keytble = lsl.at(i).at(1).split(".").at(1);
+                    keyidx = i;
+                }
+            }
+            if (keyidx == -1)
+            {
+                QMessageBox::warning(this, "warning!", "Отсутствует ключевое поле по таблице "+tble+" в таблице tablefields");
+                return 4;
+            }
+            if (id != "0") // если требуется изменить элемент
+            {
+                QStringList curfl;
+                overallStringList.clear();
+                headersvl.clear();
+                while (lsl.size() > 0)
+                {
+                    curfl.clear();
+                    QString curtble = lsl.at(0).at(1);
+                    for (i = 0; i < lsl.size(); i++)
+                    {
+                        if (lsl.at(i).at(1) == curtble)
+                        {
+                            curfl << lsl.at(i).at(0); // в curfl находятся только те поля, которые относятся к текущей таблице
+                            lsl.removeAt(i);
+                            headersvl << headers.at(i);
+                            headers.removeAt(i);
+                            i--;
+                        }
+                    }
+                    tmpStringlist = curtble.split(".");
+                    int idx = curfl.indexOf("id"+tmpStringlist.at(1));
+                    if (idx != -1)
+                        curfl.swap(0, idx);
+                    // считываем все данные из таблицы
+                    QSqlQuery get_child_from_db2 (sqlc.getdb(tmpStringlist.at(0)));
+                    QString tmpString = "SELECT ";
+                    for (i = 0; i < curfl.count(); i++)
+                        tmpString += "`" + curfl.at(i) + "`,";
+                    tmpString = tmpString.left(tmpString.size()-1); // убираем запятую
+                    tmpString += " FROM `"+tmpStringlist.at(1)+"` WHERE `id"+keytble+"`=\""+id+"\" AND `deleted`=0 ORDER BY `id"+tmpStringlist.at(1)+"` ASC;";
+                    get_child_from_db2.exec(tmpString);
+
+                    while (get_child_from_db2.next())
+                    {
+                        tmpStringlist.clear();
+                        for (i = 0; i < curfl.size(); i++)
+                            tmpStringlist << get_child_from_db2.value(i).toString();
+                    }
+                    overallStringList.append(tmpStringlist);
+                }
+                if (overallStringList.isEmpty())
+                {
+                    QMessageBox::warning(this, "warning!", "Проблемы с получением значений из таблицы "+tble+" по полю №"+id);
+                    return 3; // проблемы с получением данных по нужному id
+                }
+            }
+            else
+            {
+                for (i = 0; i < lsl.size(); i++)
+                    overallStringList << "";
+                overallStringList.replace(keyidx, QString::number(sqlc.getnextfreeindex(sqlc.getdb(keydb), keytble)));
+            }
+
+            lsl.clear();
+            lsl.append(headersvl);
+            lsl.append(overallStringList);
+            QList<int> il;
+            for (i = 0; i < lsl.size(); i++)
+                il << lsl.at(i).size();
+            mainmodel->prepareModel(il);
+            mainmodel->setcolumnlinks(0, "0.8"); // простые поля для первого столбца
+            mainmodel->setcolumnlinks(1, links); // какие записаны в таблице tablefields поля - для второго столбца
+            mainmodel->fillModel(lsl); */
+            fillModelAdata();
+            tv->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+            tv->resizeColumnsToContents();
+            DialogIsNeedToBeResized = true;
+            return 0;
         }
-        mainmodel->fillModel(lsl); */
-        QList<QModelIndex> item = tv->model()->match(tv->model()->index(0, 0), Qt::DisplayRole, QVariant::fromValue(id), 1, Qt::MatchExactly);
-        if (!item.isEmpty())
-            tv->setCurrentIndex(item.at(0));
-        tv->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-        tv->resizeColumnsToContents();
-        DialogIsNeedToBeResized = true;
-        return 0;
+        default:
+            break;
+        }
     }
     catch (int res)
     {
@@ -192,113 +283,12 @@ int s_2cdialog::setupchoosetable(QString tble, QString id)
 
 // процедура подготавливает диалог заполнения полей таблицы tble по строке id
 
-int s_2cdialog::setup(QString tble, QString id)
+/*int s_2cdialog::setup(QString tble, QString id)
 {
+
     s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
-    QList<QStringList> lsl;
-    QStringList fl;
-    QStringList headersvl;
-    QStringList tmpStringlist, overallStringList;
-    QString keydb, keytble;
-    int keyidx = -1;
-    int i;
-    fl << "tablefields" << "table" << "headers" << "links" << "keyfield";
-    lsl = sqlc.getmorevaluesfromtablebyfield(pc.sup, "tablefields", fl, "tablename", tble, "fieldsorder", true);
-    if (sqlc.result)
-    {
-        QMessageBox::warning(this, "warning!", "Проблемы с получением значений по таблице "+tble+" из таблицы tablefields");
-        return 1;
-    }
-    QStringList links, headers;
-    fl.clear();
-    links.clear();
-    headers.clear();
-    for (i = 0; i < lsl.size(); i++)
-    {
-        links << lsl.at(i).at(3);
-        headers << lsl.at(i).at(2);
-        if (lsl.at(i).at(4) == "v")
-        {
-            keydb = lsl.at(i).at(1).split(".").at(0);
-            keytble = lsl.at(i).at(1).split(".").at(1);
-            keyidx = i;
-        }
-    }
-    if (keyidx == -1)
-    {
-        QMessageBox::warning(this, "warning!", "Отсутствует ключевое поле по таблице "+tble+" в таблице tablefields");
-        return 4;
-    }
-    if (id != "0") // если требуется изменить элемент
-    {
-        QStringList curfl;
-        overallStringList.clear();
-        headersvl.clear();
-        while (lsl.size() > 0)
-        {
-            curfl.clear();
-            QString curtble = lsl.at(0).at(1);
-            for (i = 0; i < lsl.size(); i++)
-            {
-                if (lsl.at(i).at(1) == curtble)
-                {
-                    curfl << lsl.at(i).at(0); // в curfl находятся только те поля, которые относятся к текущей таблице
-                    lsl.removeAt(i);
-                    headersvl << headers.at(i);
-                    headers.removeAt(i);
-                    i--;
-                }
-            }
-            tmpStringlist = curtble.split(".");
-            int idx = curfl.indexOf("id"+tmpStringlist.at(1));
-            if (idx != -1)
-                curfl.swap(0, idx);
-            // считываем все данные из таблицы
-            QSqlQuery get_child_from_db2 (sqlc.getdb(tmpStringlist.at(0)));
-            QString tmpString = "SELECT ";
-            for (i = 0; i < curfl.count(); i++)
-                tmpString += "`" + curfl.at(i) + "`,";
-            tmpString = tmpString.left(tmpString.size()-1); // убираем запятую
-            tmpString += " FROM `"+tmpStringlist.at(1)+"` WHERE `id"+keytble+"`=\""+id+"\" AND `deleted`=0 ORDER BY `id"+tmpStringlist.at(1)+"` ASC;";
-            get_child_from_db2.exec(tmpString);
 
-            while (get_child_from_db2.next())
-            {
-                tmpStringlist.clear();
-                for (i = 0; i < curfl.size(); i++)
-                    tmpStringlist << get_child_from_db2.value(i).toString();
-            }
-            overallStringList.append(tmpStringlist);
-        }
-        if (overallStringList.isEmpty())
-        {
-            QMessageBox::warning(this, "warning!", "Проблемы с получением значений из таблицы "+tble+" по полю №"+id);
-            return 3; // проблемы с получением данных по нужному id
-        }
-    }
-    else
-    {
-        for (i = 0; i < lsl.size(); i++)
-            overallStringList << "";
-        overallStringList.replace(keyidx, QString::number(sqlc.getnextfreeindex(sqlc.getdb(keydb), keytble)));
-    }
 
-    lsl.clear();
-    lsl.append(headersvl);
-    lsl.append(overallStringList);
-    QList<int> il;
-    for (i = 0; i < lsl.size(); i++)
-        il << lsl.at(i).size();
-    mainmodel->prepareModel(il);
-    mainmodel->setcolumnlinks(0, "0.8"); // простые поля для первого столбца
-    mainmodel->setcolumnlinks(1, links); // какие записаны в таблице tablefields поля - для второго столбца
-    mainmodel->fillModel(lsl);
-    fillModelAdata();
-    tv->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-    tv->resizeColumnsToContents();
-    DialogIsNeedToBeResized = true;
-
-/*
     // в fl - наименования полей
     // в ll - ссылки на другие таблицы
     // в vl - значения полей
@@ -317,9 +307,9 @@ int s_2cdialog::setup(QString tble, QString id)
             break;
         }
         int res = addPushButtonWithDialog(vl.at(i), i, *GridLayout);
-*/
+
     return 0;
-}
+} */
 
 void s_2cdialog::resizemainTV()
 {

@@ -269,7 +269,7 @@ void s_duniversal::pbclicked()
             if (le == 0)
                 break;
             s_2cdialog *chooseDialog = new s_2cdialog(hdr);
-            int res = chooseDialog->setupchoosetable(ff.link.at(0), le->text());
+            int res = chooseDialog->setup(ff.link.at(0), le->text());
             if (!res)
             {
                 connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));

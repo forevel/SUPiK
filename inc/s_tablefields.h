@@ -11,12 +11,14 @@ class s_tablefields
 public:
     s_tablefields();
 
-    QStringList GetAllValuesByOneRow (QString tble, QString headers);
-    QList<QStringList> GetAllValues (QString tble);
-    QStringList GetOneValueByOneRowAndId (QString tble, QString headers, QString id);
-    QStringList GetIdByValue(QString tble, QString headers, QString value);
+    QStringList toidl (QString tble, QString headers);
+    QList<QStringList> tbtovll (QString tble);
+    QStringList toid (QString tble, QString headers, QString tbleid);
+    QString vtoid_ (QString tble, QString headers, QString value);
     QString vtoid (QString links, QString value);
     QString idtov (QString links, QString id);
+    QStringList tablefields (QString tble, QString headers);
+    QStringList headers (QString tble);
 
     int result;
 };

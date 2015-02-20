@@ -64,7 +64,7 @@ void s_2cdialog::setupUI(QString hdr)
     pbLayout->addWidget(pbCancel, 0);
     pmainmodel = new QSortFilterProxyModel;
     pmainmodel->setSourceModel(mainmodel);
-    mainTV->setModel(pmainmodel);
+    mainTV->setModel(mainmodel);
     mainTV->setEditTriggers(QAbstractItemView::AllEditTriggers);
     mainTV->verticalHeader()->setVisible(false);
     mainTV->horizontalHeader()->setVisible(false);
@@ -162,7 +162,7 @@ int s_2cdialog::setup(QString tble, QString id)
         case MODE_EDIT:
         {
             this->tble = tble; // в слоте accepted() надо знать, с какой таблицей мы работаем
-            int res = mainmodel->setup(tble);
+            int res = mainmodel->setupbyid(tble, id);
             if (res)
                 throw res;
 /*            QList<QStringList> lsl;

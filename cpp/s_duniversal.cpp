@@ -341,7 +341,7 @@ void s_duniversal::accepted(QString str)
         case FW_ALLINK:
         case FW_LINK:
         {
-            QStringList tmpStringList = tfl.GetOneValueByOneRowAndId(ff.link.at(0), "Наименование", str);
+            QStringList tmpStringList = tfl.toid(ff.link.at(0), "Наименование", str);
             tmpString = tmpStringList.at(0);
             break;
         }

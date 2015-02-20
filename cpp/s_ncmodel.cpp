@@ -251,8 +251,8 @@ void s_ncmodel::addRow()
 {
     int lastEntry = maindata.size();
     insertRows(lastEntry, 1, QModelIndex());
-    for (int i = 0; i < hdr.size(); i++)
-        setData(index(lastEntry, i, QModelIndex()), "", Qt::EditRole);
+//    for (int i = 0; i < hdr.size(); i++)
+//        setData(index(lastEntry, i, QModelIndex()), "", Qt::EditRole);
 }
 
 void s_ncmodel::setcolumnlinks(int column, QString links)
@@ -325,18 +325,19 @@ void s_ncmodel::fillModel(QList<QStringList> sl)
                 setData(index(i, j, QModelIndex()), "", Qt::EditRole);
             else
             {
-                ff = getFFfromLinks(data(index(i,j,QModelIndex()),Qt::UserRole).toString());
+                QString links = data(index(i,j,QModelIndex()),Qt::UserRole).toString();
+                ff = getFFfromLinks(links);
                 switch (ff.ftype)
                 {
                 case FW_ALLINK:
                 case FW_LINK:
                 {
-                    vl = tfl.GetOneValueByOneRowAndId(ff.link.at(0), ff.link.at(1), sl.at(j).at(i)).at(0);
+                    vl = tfl.idtov(links, sl.at(j).at(i));
                     break;
                 }
                 case FW_INDIRECT:
                 {
-
+                    break;
                 }
                 case FW_ID:
                 {
@@ -535,7 +536,7 @@ int s_ncmodel::setup(QString tble)
 {
     int i;
     ClearModel();
-    QList<QStringList> lsl = tfl.GetAllValues(tble);
+    QList<QStringList> lsl = tfl.tbtovll(tble);
     if (tfl.result)
         return (CM_ERROR+tfl.result);
     // в lsl.at(1) содержатся links, в lsl.at(0) - заголовки
@@ -551,6 +552,41 @@ int s_ncmodel::setup(QString tble)
     prepareModel(il);
     for (i = 0; i < links.size(); i++)
         setcolumnlinks(i, links.at(i));
+    fillModel(lsl);
+    return 0;
+}
+
+// процедура заполнения модели значениями headers и по table:tablefields из таблицы tble в sup.tablefields по одному id
+
+int s_ncmodel::setupbyid(QString tble, QString id)
+{
+    int i;
+    ClearModel();
+    QList<QStringList> lsl;
+    QStringList headers = tfl.headers(tble);
+    QStringList links, tmpStringList;
+    QString tmpString;
+    if (tfl.result)
+        return tfl.result;
+    lsl.append(headers);
+    QStringList tmpsl;
+    for (i = 0; i < headers.size(); i++)
+    {
+        tmpStringList = tfl.toid(tble, headers.at(i), id);
+        if (!tfl.result)
+        {
+            tmpsl << tmpStringList.at(0);
+            links << tmpStringList.at(1); // links
+        }
+    }
+    lsl.append(tmpsl);
+    addColumn("");
+    addColumn("");
+    QList<int> il;
+    il << headers.size() << headers.size();
+    prepareModel(il);
+    for (i = 0; i < links.size(); i++)
+        setData(index(i, 1, QModelIndex()), links.at(i), Qt::UserRole);
     fillModel(lsl);
     return 0;
 }

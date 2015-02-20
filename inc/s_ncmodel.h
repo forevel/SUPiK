@@ -60,6 +60,7 @@ public:
         return map;
     }
     int setup(QString tble);
+    int setupbyid(QString tble, QString id);
 
 signals:
 

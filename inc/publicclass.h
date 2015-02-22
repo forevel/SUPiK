@@ -252,6 +252,7 @@ public:
     } fieldformat;
 
     PublicClass::fieldformat getFFfromLinks (QString links) const;
+    QString getlinksfromFF (PublicClass::fieldformat ff);
     void InitiatePublicClass();
     void DBCheck();
     void fillallprob();

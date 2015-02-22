@@ -305,3 +305,12 @@ PublicClass::fieldformat PublicClass::getFFfromLinks(QString links) const
         ff.link << tmpsl.at(i);
     return ff;
 }
+
+QString PublicClass::getlinksfromFF(PublicClass::fieldformat ff)
+{
+    QString tmpString = QString::number(ff.delegate,10)+"."+QString::number(ff.ftype,10)+"."+QString::number(ff.dependson,10);
+    int i = 0;
+    while (i < ff.link.size())
+        tmpString += "."+ff.link.at(i);
+    return tmpString;
+}

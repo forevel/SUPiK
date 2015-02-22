@@ -81,7 +81,7 @@ void dir_maindialog::setDirTree()
     int res = MainTreeModel->Setup(false, "Справочники_сокращ");
     if (res == 0x11) // это не дерево
     {
-        int res = MainTableModel->setup("Справочники_сокращ");
+        int res = MainTableModel->setup("2.2..Справочники_сокращ");
         if (res)
         {
             QMessageBox::warning(this, "warning!", "Проблема №" + QString::number(res));
@@ -144,7 +144,7 @@ void dir_maindialog::ShowSlaveTree(QString str)
             int res = SlaveTreeModel->Setup(false, values.at(0) + "_сокращ");
             if (res == 0x11) // это не дерево
             {
-                int res = SlaveTableModel->setup(values.at(0) + "_сокращ");
+                int res = SlaveTableModel->setup("2.2.." + values.at(0) + "_сокращ");
                 if (res)
                 {
                     QMessageBox::warning(this, "warning!", "Проблема №" + QString::number(res));
@@ -265,7 +265,7 @@ void dir_maindialog::ChangeAdditionalFields(QString str)
     if (IsQuarantine)
         newdialog->IsQuarantine = true;
     newdialog->Mode = MODE_EDIT;
-    if (!(res = newdialog->setup(getMainIndex(1)+"_полная", str)))
+    if (!(res = newdialog->setup("2.2.." + getMainIndex(1)+"_полная", str)))
         newdialog->exec();
     else
     {

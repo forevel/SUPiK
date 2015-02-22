@@ -5,6 +5,7 @@
 #include <QSqlDatabase>
 #include <QDate>
 
+#include "../inc/publicclass.h"
 #include "../inc/s_tqwidget.h"
 
 class s_duniversal : public QStyledItemDelegate
@@ -37,15 +38,7 @@ private:
     mutable s_tqwidget *cbWidget;
     mutable QString query;
     mutable QString hdr;
-    typedef struct
-    {
-        int ftype;
-        int delegate;
-        int dependson;
-        QStringList link;
-    } fieldformat;
-    mutable s_duniversal::fieldformat ff;
-    s_duniversal::fieldformat getFFfromLinks (QString links) const;
+    mutable PublicClass::fieldformat ff;
 };
 
 #endif // S_DUNIVERSAL_H

@@ -405,7 +405,7 @@ int s_sql::updatevaluesintable(QSqlDatabase db, QString tble, QStringList fl, QS
 
 int s_sql::getnextfreeindex(QSqlDatabase db, QString tble)
 {
-    long i = 3; // 1-я и 2-я запись в каждой таблице - табу, заложены для системных целей
+    long i = 1;
     QSqlQuery get_indexes (db);
     QString tmpString = "SELECT `id" + tble + "` FROM `" + tble + "` ORDER BY `id" + tble + "` ASC;";
     get_indexes.exec(tmpString); // индексы сортируем по возрастанию

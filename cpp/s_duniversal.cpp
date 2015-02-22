@@ -8,6 +8,7 @@
 #include "../inc/s_2cdialog.h"
 #include "../inc/s_2ctdialog.h"
 #include "../inc/s_maskedle.h"
+#include "../inc/s_tablefields.h"
 #include <QComboBox>
 #include <QStringListModel>
 #include <QPainter>
@@ -26,7 +27,8 @@ QWidget* s_duniversal::createEditor(QWidget *parent, const QStyleOptionViewItem 
 {
     Q_UNUSED(option);
     QStringList tmpStringList;
-    ff = getFFfromLinks(index.data(Qt::UserRole).toString());
+    QString links = index.data(Qt::UserRole).toString();
+    ff = pc.getFFfromLinks(links);
     hdr=index.data(Qt::UserRole+1).toString(); // в UserRole+1 должна содержаться aData, в которой находится подзаголовок диалога редактирования, вызываемого по кнопке в делегате
     QWidget *editor = 0;
     switch (ff.delegate)
@@ -63,43 +65,36 @@ QWidget* s_duniversal::createEditor(QWidget *parent, const QStyleOptionViewItem 
         cb->setStyleSheet("QComboBox {background: khaki};");
         cb->setObjectName("fdccb");
         QStringListModel *tmpModel = new QStringListModel;
-        QSqlDatabase db = sqlc.getdb(ff.link.at(0));
-        if (db.isValid())
+        switch (ff.ftype)
         {
-            switch (ff.ftype)
-            {
-            case FW_ALLINK:
-            {
-                QString id = sqlc.getvaluefromtablebyfield(db, ff.link.at(1), "id"+ff.link.at(1), "alias", ff.link.at(2));
-                tmpStringList = sqlc.getvaluesfromtablebycolumnandfield(db, ff.link.at(1), "alias", "idalias", id);
-                break;
-            }
-            case FW_LINK:
-            {
-                tmpStringList = sqlc.getvaluesfromtablebycolumn(db, ff.link.at(1), ff.link.at(2));
-                break;
-            }
-            default:
-            {
+        case FW_ALLINK:
+        case FW_LINK:
+        {
+            tmpStringList = tfl.idtovl(links);
+            if (tfl.result)
                 return editor;
-                break;
-            }
-            }
-            tmpModel->setStringList(tmpStringList);
-            cb->setModel(tmpModel);
-            ml->addWidget(cb);
-            cbWidget->setLayout(ml);
-            editor = cbWidget;
+            break;
         }
+        default:
+        {
+            return editor;
+            break;
+        }
+        }
+        tmpModel->setStringList(tmpStringList);
+        cb->setModel(tmpModel);
+        ml->addWidget(cb);
+        cbWidget->setLayout(ml);
+        editor = cbWidget;
         break;
     }
     case FD_LINEEDIT:
     {
-        if (ff.link.size()) // masked lineedit
+        if (ff.ftype == FW_MASKED)
         {
             QString tmpString = "";
             for (int i = 0; i < ff.link.size(); i++)
-                tmpString += ff.link.at(i)+".";
+                tmpString += ff.link.at(i)+"."; // возвращение строке regexp первоначального вида, "побитого" при getFFfromlinks
             tmpString = tmpString.left(tmpString.size()-1);
             s_maskedle *le = new s_maskedle(tmpString, parent);
             le->setObjectName("msle");
@@ -116,12 +111,7 @@ QWidget* s_duniversal::createEditor(QWidget *parent, const QStyleOptionViewItem 
     case FD_SIMGRID:
     case FD_SIMPLE:
     case FD_DISABLED:
-    {
-//        QLabel *lbl = new QLabel(parent);
-//        lbl->setStyleSheet("QLabel {background: khaki};");
-//        editor = lbl;
         break;
-    }
     case FD_SPIN:
     {
         int tmpInt = ff.link.at(0).count("n", Qt::CaseSensitive);
@@ -167,11 +157,7 @@ void s_duniversal::setEditorData(QWidget *editor, const QModelIndex &index) cons
     case FD_SIMGRID:
     case FD_SIMPLE:
     case FD_DISABLED:
-    {
-//        QLabel *lbl = static_cast<QLabel *>(editor);
-//        lbl->setText(index.data(Qt::EditRole).toString());
         break;
-    }
     case FD_LINEEDIT:
     {
         QLineEdit *le = static_cast<QLineEdit *>(editor);
@@ -232,60 +218,41 @@ void s_duniversal::setModelData(QWidget *editor, QAbstractItemModel *model, cons
 
 void s_duniversal::pbclicked()
 {
+    s_tqLineEdit *le = combWidget->findChild<s_tqLineEdit *>("fdcle");
+    if (le == 0)
+        return;
     switch (ff.ftype)
     {
     case FW_ALLINK:
     {
         s_2cdialog *chooseDialog = new s_2cdialog(hdr);
-        QSqlDatabase db = sqlc.getdb(ff.link.at(0));
-        if (db.isValid())
-        {
-            connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
-            chooseDialog->setMinimumWidth(500);
-            QString id = sqlc.getvaluefromtablebyfield(db, ff.link.at(1), "id"+ff.link.at(1), "alias", ff.link.at(2));
-            QStringList tmpStringList = sqlc.getvaluesfromtablebycolumnandfield(db, ff.link.at(1), "alias", "idalias", id);
-            chooseDialog->setup(tmpStringList);
-            chooseDialog->exec();
-        }
+        connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
+        chooseDialog->setMinimumWidth(500);
+        chooseDialog->setup(pc.getlinksfromFF(ff));
+        chooseDialog->setTvCurrentText(le->text());
+        chooseDialog->exec();
         break;
     }
     case FW_LINK:
     {
-        QStringList tmpfl = QStringList() << "tablefields" << "tablename";
-        QStringList tmpvl = QStringList() << "alias" << ff.link.at(0);
-        sqlc.getvaluefromtablebyfields(sqlc.getdb("sup"),"tablefields","tablefields",tmpfl,tmpvl);
-        if (!sqlc.result) // это дерево
+        if (tfl.tableistree(ff.link.at(0))) // это дерево
         {
             s_2ctdialog *chooseDialog = new s_2ctdialog(hdr);
             chooseDialog->setup(ff.link.at(0));
             connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
-            s_tqLineEdit *le = combWidget->findChild<s_tqLineEdit *>("fdcle");
             chooseDialog->setTvCurrentText(le->text());
             chooseDialog->exec();
         }
         else // это таблица
         {
-            s_tqLineEdit *le = combWidget->findChild<s_tqLineEdit *>("fdcle");
-            if (le == 0)
-                break;
             s_2cdialog *chooseDialog = new s_2cdialog(hdr);
-            int res = chooseDialog->setup(ff.link.at(0), le->text());
+            int res = chooseDialog->setup(pc.getlinksfromFF(ff));
             if (!res)
             {
+                chooseDialog->setTvCurrentText(le->text());
                 connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
                 chooseDialog->setMinimumWidth(500);
-/*                QList<QStringList> tmpsl;
-                QStringList tmpfl=QStringList()<<"id"+ff.link.at(1)<<ff.link.at(2);
-                tmpsl=sqlc.getvaluesfromtablebycolumns(db,ff.link.at(1),tmpfl);
-                QStringList tmpl1,tmpl2, tmpll1;
-                for (int i = 0; i < tmpsl.size(); i++)
-                {
-                    tmpl1 << QString("%1").arg(tmpsl.at(i).at(0).toInt(0), 7, 10, QChar('0'));
-                    tmpll1 << QString::number(FD_SIMGRID);
-                    tmpl2 << tmpsl.at(i).at(1);
-                }
-                chooseDialog->setup(tmpl1, tmpll1, tmpl2, QStringList()); */
-                chooseDialog->sortModel();
+//                chooseDialog->sortModel();
                 chooseDialog->exec();
             }
         }
@@ -390,7 +357,7 @@ void s_duniversal::paint(QPainter *painter, const QStyleOptionViewItem &option, 
     if (index.isValid())
     {
         QRect rct = option.rect;
-        s_duniversal::fieldformat tmpff = getFFfromLinks(index.data(Qt::UserRole).toString());
+        PublicClass::fieldformat tmpff = pc.getFFfromLinks(index.data(Qt::UserRole).toString());
         if (option.state & QStyle::State_Selected)
         {
             painter->setPen(Qt::SolidLine);
@@ -417,7 +384,7 @@ QSize size = QStyledItemDelegate::sizeHint(option, index);
 return QSize(size.width(), size.height());
 } */
 
-s_duniversal::fieldformat s_duniversal::getFFfromLinks(QString links) const
+/*s_duniversal::fieldformat s_duniversal::getFFfromLinks(QString links) const
 {
     QStringList tmpsl = links.split(".");
     fieldformat ff;
@@ -445,7 +412,7 @@ s_duniversal::fieldformat s_duniversal::getFFfromLinks(QString links) const
     for (int i = 0; i < tmpsl.size(); i++)
         ff.link << tmpsl.at(i);
     return ff;
-}
+} */
 
 void s_duniversal::setTableHeader(QString hdr)
 {

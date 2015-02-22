@@ -22,7 +22,7 @@ public:
 //    // tble - таблица по tablefields, из которой построить список выбора, links - формат (можно не использовать), str - текущее значение
 //    int setupchoosetable(QString tble, QString id="");
     // id - номер редактируемой строки таблицы db.tble
-    int setup(QString tble, QString id);
+    int setup(QString links, QString id="");
     void sortModel();
     void setTvCurrentText(QString text);
     void ShowMessage(int ernum);

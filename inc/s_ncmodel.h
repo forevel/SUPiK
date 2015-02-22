@@ -59,7 +59,7 @@ public:
         map.insert("d", OP_DIV);
         return map;
     }
-    int setup(QString tble);
+    int setup(QString links);
     int setupbyid(QString tble, QString id);
 
 signals:

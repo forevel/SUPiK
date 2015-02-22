@@ -136,24 +136,20 @@ void s_2cdialog::setup(QStringList sl, QStringList links, QString str)
 
 // процедура подготавливает диалог выбора из столбцов таблицы tble в tablefields
 
-int s_2cdialog::setup(QString tble, QString id)
+int s_2cdialog::setup(QString links, QString id)
 {
     try
     {
         s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
         if (tv == 0)
             throw 0x51;
+        PublicClass::fieldformat ff = pc.getFFfromLinks(links);
+        tble = ff.link.at(0); // в слоте accepted() надо знать, с какой таблицей мы работаем
         switch (Mode)
         {
         case MODE_CHOOSE:
         {
-            this->tble = tble; // в слоте accepted() надо знать, с какой таблицей мы работаем
-            int res = mainmodel->setup(tble);
-            if (res)
-                throw res;
-            QList<QModelIndex> item = tv->model()->match(tv->model()->index(0, 0), Qt::DisplayRole, QVariant::fromValue(id), 1, Qt::MatchExactly);
-            if (!item.isEmpty())
-                tv->setCurrentIndex(item.at(0));
+            mainmodel->setup(links);
             tv->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
             tv->resizeColumnsToContents();
             DialogIsNeedToBeResized = true;
@@ -161,7 +157,6 @@ int s_2cdialog::setup(QString tble, QString id)
         }
         case MODE_EDIT:
         {
-            this->tble = tble; // в слоте accepted() надо знать, с какой таблицей мы работаем
             int res = mainmodel->setupbyid(tble, id);
             if (res)
                 throw res;
@@ -278,7 +273,7 @@ int s_2cdialog::setup(QString tble, QString id)
         ShowMessage(res);
         return res;
     }
-
+    return 0;
 }
 
 // процедура подготавливает диалог заполнения полей таблицы tble по строке id

@@ -11,14 +11,19 @@ class s_tablefields
 public:
     s_tablefields();
 
-    QStringList toidl (QString tble, QString headers);
-    QList<QStringList> tbtovll (QString tble);
+    QStringList toidl (QString tble, QString headers); // взять все значения по полю headers таблицы tble
+    QStringList toidlc (QString tble, QString headers, QString cheaders, QString value); // взять все значения по полю headers таблицы tble, где поле cheaders этой же таблицы равно value
+    QList<QStringList> tbtovll (QString links); // взять все значения по всем полям таблицы tble
     QStringList toid (QString tble, QString headers, QString tbleid);
-    QString vtoid_ (QString tble, QString headers, QString value);
-    QString vtoid (QString links, QString value);
-    QString idtov (QString links, QString id);
+    QString vtoid_ (QString tble, QString headers, QString value); // взять ИД из поля headers таблицы tble, для которого значение = value
+    QString vtoid (QString links, QString value); // взять один ИД по ссылке и значению
+    QString idtov (QString links, QString id); // взять одно значение по ссылке и ид
+    QStringList idtovl (QString links); // взять все значения по ссылке в зависимости от типа
+    int idtois (QString tble, QStringList headers, QStringList values);
+    QString insert(QString tble);
     QStringList tablefields (QString tble, QString headers);
     QStringList headers (QString tble);
+    bool tableistree (QString tble);
 
     int result;
 };

@@ -532,16 +532,18 @@ QString s_ncmodel::getCellLinks(QModelIndex index)
 
 // процедура заполнения модели из таблицы tble в sup.tablefields
 
-int s_ncmodel::setup(QString tble)
+int s_ncmodel::setup(QString links)
 {
     int i;
+    QList<QStringList> lsl;
     ClearModel();
-    QList<QStringList> lsl = tfl.tbtovll(tble);
+    QStringList headers, link;
+    lsl = tfl.tbtovll(links);
     if (tfl.result)
         return (CM_ERROR+tfl.result);
     // в lsl.at(1) содержатся links, в lsl.at(0) - заголовки
-    QStringList headers = lsl.at(0);
-    QStringList links = lsl.at(1);
+    headers = lsl.at(0);
+    link = lsl.at(1);
     lsl.removeAt(0);
     lsl.removeAt(0);
     for (i = 0; i < headers.size(); i++)
@@ -550,13 +552,14 @@ int s_ncmodel::setup(QString tble)
     for (i = 0; i < lsl.size(); i++)
         il << lsl.at(i).size();
     prepareModel(il);
-    for (i = 0; i < links.size(); i++)
-        setcolumnlinks(i, links.at(i));
+    for (i = 0; i < link.size(); i++)
+        setcolumnlinks(i, link.at(i));
     fillModel(lsl);
     return 0;
 }
 
 // процедура заполнения модели значениями headers и по table:tablefields из таблицы tble в sup.tablefields по одному id
+// предназначена для диалога редактирования справочников (s_2cdialog)
 
 int s_ncmodel::setupbyid(QString tble, QString id)
 {
@@ -565,7 +568,6 @@ int s_ncmodel::setupbyid(QString tble, QString id)
     QList<QStringList> lsl;
     QStringList headers = tfl.headers(tble);
     QStringList links, tmpStringList;
-    QString tmpString;
     if (tfl.result)
         return tfl.result;
     lsl.append(headers);

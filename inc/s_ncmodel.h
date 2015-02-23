@@ -46,7 +46,7 @@ public:
     void setRowAttr(int fcset=0, int icon=-1);
     void ClearModel();
     void fillModel(QList<QStringList> sl);
-//    void fillInverseModel(QList<QStringList> sl);
+    QStringList cvalues(int column); // выдать значения по столбцу column в выходной QStringList
     void prepareModel(QList<int> sl);
     int maxcolwidth(int column);
     int maxcolwidthsize();
@@ -75,14 +75,14 @@ private:
     QIcon icons[6]; // определение набора иконок
     QString getEq(QString arg1, QString arg2, int oper, const QModelIndex index, bool byRow) const; // подсчёт выражения "arg1 <oper> arg2"
     float getOperand(QString str, const QModelIndex index, bool byRow) const; // подсчёт арифм. выражения, содержащегося в строке str
-    typedef struct
+/*    typedef struct
     {
         int ftype;
         int delegate;
         int dependson;
         QStringList link;
     } fieldformat;
-    s_ncmodel::fieldformat getFFfromLinks (QString links) const;
+    s_ncmodel::fieldformat getFFfromLinks (QString links) const; */
     QList<int> maxcolswidth;
 };
 

@@ -308,9 +308,14 @@ PublicClass::fieldformat PublicClass::getFFfromLinks(QString links) const
 
 QString PublicClass::getlinksfromFF(PublicClass::fieldformat ff)
 {
-    QString tmpString = QString::number(ff.delegate,10)+"."+QString::number(ff.ftype,10)+"."+QString::number(ff.dependson,10);
+    QString tmpString = QString::number(ff.delegate,10)+"."+QString::number(ff.ftype,10)+".";
+    if (ff.dependson != -1)
+        tmpString += QString::number(ff.dependson,10);
     int i = 0;
     while (i < ff.link.size())
+    {
         tmpString += "."+ff.link.at(i);
+        ff.link.removeAt(0);
+    }
     return tmpString;
 }

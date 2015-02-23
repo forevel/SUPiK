@@ -9,6 +9,8 @@
 #define MODE_CHOOSE 1
 #define MODE_EDIT   2
 
+#define CD_ERROR    0x0200
+
 class s_2cdialog : public QDialog
 {
     Q_OBJECT

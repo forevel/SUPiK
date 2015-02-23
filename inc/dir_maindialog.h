@@ -38,8 +38,8 @@ private slots:
     void AddDirDialog();
     void EditDirDialog();
     void ChangeAdditionalFields (QModelIndex index = QModelIndex());
-    void AddDataChild();
-    void AddSubDataChild();
+//    void AddDataChild();
+//    void AddSubDataChild();
     void DeleteData();
 
 private:
@@ -67,7 +67,8 @@ private:
     void ChangeAdditionalFields(QString str);
     QString getMainIndex(int column);
     QString getSlaveIndex(int column);
-    void AddChild(QString, QString);
+//    void AddChild(QString, QString);
+    void AddNew();
 
 protected:
     void showEvent(QShowEvent *e);

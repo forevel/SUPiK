@@ -129,6 +129,7 @@ void dir_maindialog::ShowSlaveTree(QString str)
 {
     QStringList fields, values;
     int i;
+    tble = str; // для функций удаления и добавления необходимо знать имя текущей таблицы
     if (!SlaveTVIsFilling)
     {
         if (str.contains("карантин", Qt::CaseInsensitive))
@@ -289,7 +290,7 @@ void dir_maindialog::ChangeAdditionalFields(QString str)
     } */
 }
 
-void dir_maindialog::AddDataChild()
+/*void dir_maindialog::AddDataChild()
 {
     AddChild(QString::number(0), "");
 }
@@ -303,6 +304,12 @@ void dir_maindialog::AddChild(QString alias, QString str)
 {
     QString newID = QString::number(sqlc.getnextfreeindex(db, tble));
     ChangeAdditionalFields("0");
+} */
+
+void dir_maindialog::AddNew()
+{
+    QString newID = tfl.insert(tble+"_полная");
+    ChangeAdditionalFields(newID);
 }
 
 void dir_maindialog::DeleteData()
@@ -311,19 +318,11 @@ void dir_maindialog::DeleteData()
     msgBox.setText("Вы уверены, что хотите удалить элемент?");
     msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
     msgBox.setDefaultButton(QMessageBox::Cancel);
-    int ret = msgBox.exec();
-    if (ret == QMessageBox::Cancel)
+    int res = msgBox.exec();
+    if (res == QMessageBox::Cancel)
         return;
     QString tmpString = QString::number(getSlaveIndex(0).toLongLong(0,10));
-    QStringList tmpStringList = sqlc.getvaluesfromtablebycolumnandfield(db, tble, "id"+tble, "idalias", tmpString);
-    while (!tmpStringList.isEmpty())
-    {
-        int res = sqlc.deletefromdb(db, tble, "id"+tble, tmpStringList.at(0));
-        if (res)
-            QMessageBox::warning(this, "warning!", "Невозможно удалить элемент №"+tmpString);
-        tmpStringList.removeAt(0);
-    }
-    int res = sqlc.deletefromdb(db, tble, "id"+tble, tmpString);
+    res = tfl.remove(tble, tmpString);
     if (res)
         QMessageBox::warning(this, "warning!", "Невозможно удалить элемент №"+tmpString);
     else
@@ -382,10 +381,9 @@ void dir_maindialog::SystemSlaveContextMenu(QPoint)
     ChangeDataChild = new QAction ("Изменить элемент", this);
     ChangeDataChild->setSeparator(false);
     connect(ChangeDataChild, SIGNAL(triggered()), this, SLOT(ChangeAdditionalFields()));
-    QAction *AddDataChild;
-    AddDataChild = new QAction ("Добавить элемент", this);
-    AddDataChild->setSeparator(false);
-    connect(AddDataChild, SIGNAL(triggered()), this, SLOT(AddDataChild()));
+    QAction *AddData = new QAction ("Добавить элемент", this);
+    AddData->setSeparator(false);
+    connect(AddData, SIGNAL(triggered()), this, SLOT(AddNew()));
 /*    QAction *AddSubDataChild;
     AddSubDataChild = new QAction ("Добавить субэлемент", this);
     AddSubDataChild->setSeparator(false);

@@ -331,9 +331,13 @@ void s_2cdialog::accepted()
         {
             // отдельная обработка
         }
-        if (Mode == MODE_EDIT)
+        if (Mode == MODE_EDIT) // для режима редактирования - запись в базу
         {
-            // для режима редактирования - запись в базу
+            QStringList headers = mainmodel->cvalues(0);
+            QStringList values = mainmodel->cvalues(1);
+            tfl.idtois(tble, headers, values);
+            if (tfl.result)
+                ShowMessage(tfl.result);
         }
         else
         {
@@ -428,5 +432,5 @@ void s_2cdialog::fillModelAdata()
 
 void s_2cdialog::ShowMessage(int ernum)
 {
-    QMessageBox::warning(this, "warning!", "Ошибка 2CD 0x" + QString::number(ernum, 16), QMessageBox::Ok, QMessageBox::NoButton);
+    QMessageBox::warning(this, "warning!", "Ошибка 0x" + QString::number(CD_ERROR + ernum, 16), QMessageBox::Ok, QMessageBox::NoButton);
 }

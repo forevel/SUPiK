@@ -52,7 +52,7 @@ bool s_ncmodel::setHeaderData(int section, Qt::Orientation orientation, const QV
 QVariant s_ncmodel::data(const QModelIndex &index, int role) const
 {
     QString tmpString;
-    s_ncmodel::fieldformat ff;
+    PublicClass::fieldformat ff;
     if (index.isValid())
     {
         if ((index.row() < maindata.size()) && (index.column() < hdr.size()))
@@ -60,7 +60,7 @@ QVariant s_ncmodel::data(const QModelIndex &index, int role) const
             if ((role == Qt::DisplayRole) || (role == Qt::EditRole))
             {
                 tmpString = maindata.at(index.row())->linksdata(index.column());
-                ff = getFFfromLinks(tmpString);
+                ff = pc.getFFfromLinks(tmpString);
                 switch (ff.ftype)
                 {
                 case FW_AUTONUM:
@@ -308,7 +308,7 @@ void s_ncmodel::fillModel(QList<QStringList> sl)
 {
     int i;
     int j;
-    fieldformat ff;
+    PublicClass::fieldformat ff;
     QString vl;
     if (sl.size()>hdr.size()) // в переданном списке больше колонок, чем в модели
     {
@@ -326,7 +326,7 @@ void s_ncmodel::fillModel(QList<QStringList> sl)
             else
             {
                 QString links = data(index(i,j,QModelIndex()),Qt::UserRole).toString();
-                ff = getFFfromLinks(links);
+                ff = pc.getFFfromLinks(links);
                 switch (ff.ftype)
                 {
                 case FW_ALLINK:
@@ -357,7 +357,46 @@ void s_ncmodel::fillModel(QList<QStringList> sl)
     }
 }
 
-s_ncmodel::fieldformat s_ncmodel::getFFfromLinks(QString links) const
+// выдать значения по столбцу column в выходной QStringList
+
+QStringList s_ncmodel::cvalues(int column)
+{
+    if (column > columnCount())
+        return QStringList();
+    int row = 0;
+    QStringList tmpsl;
+    while (row < rowCount())
+    {
+        QString vl = data(index(row, column, QModelIndex()), Qt::DisplayRole).toString();
+        QString links = data(index(row,column,QModelIndex()),Qt::UserRole).toString();
+        PublicClass::fieldformat ff = pc.getFFfromLinks(links);
+        switch (ff.ftype)
+        {
+        case FW_ALLINK:
+        case FW_LINK:
+        {
+            vl = tfl.vtoid(links, vl);
+            break;
+        }
+        case FW_INDIRECT:
+        {
+            break;
+        }
+        case FW_ID:
+        {
+            vl = QString::number(vl.toInt(), 10);
+            break;
+        }
+        default:
+            break; // если не ссылки, то просто складываем vl в tmpsl
+        }
+        tmpsl.append(vl);
+        row++;
+    }
+    return tmpsl;
+}
+
+/*s_ncmodel::fieldformat s_ncmodel::getFFfromLinks(QString links) const
 {
     fieldformat ff;
     ff.ftype = 8;
@@ -388,7 +427,7 @@ s_ncmodel::fieldformat s_ncmodel::getFFfromLinks(QString links) const
         ff.link << tmpsl.at(i);
     return ff;
 }
-
+*/
 QString s_ncmodel::getEq(QString arg1, QString arg2, int oper, const QModelIndex index, bool byRow) const
 {
     float operand1 = getOperand(arg1, index, byRow);

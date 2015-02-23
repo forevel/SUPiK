@@ -444,6 +444,20 @@ QString s_tablefields::insert(QString tble)
     return newid;
 }
 
+// remove - "удаление" записи с индексом id из таблицы tble
+// важно: здесь не удаляются ссылки на данную запись, которая будет удалена, проверку "дохлых" ссылок на записи, у которых deleted=1, необходимо
+// проводить и исправлять при старте СУПиКа или при "обновлении проблем"
+
+int s_tablefields::remove(QString tble, QString id)
+{
+    QStringList fl = QStringList() << "table" << "tablefields";
+    QStringList cmpfl = QStringList() << "tablename" << "keyfield";
+    QStringList cmpvl = QStringList() << tble << "v";
+    QStringList keydbtble = sqlc.getvaluesfromtablebyfields(sqlc.getdb("sup"), "tablefields", fl, cmpfl, cmpvl);
+    int res = sqlc.deletefromdb(sqlc.getdb(keydbtble.at(0).split(".").at(0)), keydbtble.at(0).split(".").at(1), keydbtble.at(1), id);
+    return res;
+}
+
 QStringList s_tablefields::tablefields(QString tble, QString headers)
 {
     QStringList fl = QStringList() << "table" << "tablefields" << "links";

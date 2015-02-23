@@ -104,24 +104,16 @@ void s_2ctdialog::accepted(QModelIndex idx)
 
 void s_2ctdialog::accepted()
 {
-    int idx;
     s_tqtreeview *tv = this->findChild<s_tqtreeview *>("mainTV");
+    if (tv == 0)
+        return;
     QModelIndex curIndex;
     QModelIndex parIndex;
     curIndex = tv->currentIndex();
     parIndex = tv->currentIndex().parent();
-    idx = 0;
-    // ищем колонку с заголовком "Наименование", и значение в этой колонке возвращаем в вызвавший диалог. Иначе - из нулевой.
-    for (int i = 0; i < tv->model()->columnCount(); i++)
-    {
-        if (tv->model()->headerData(i, Qt::Horizontal, Qt::DisplayRole) == "Наименование")
-        {
-            idx = i;
-            break;
-        }
-    }
-    QModelIndex index = tv->model()->index(curIndex.row(), idx, parIndex);
-    emit changeshasbeenMade(index.data(Qt::DisplayRole).toString());
+    QModelIndex index = mainmodel->index(curIndex.row(), 0, parIndex); // 0-я колонка - это всегда должен быть ИД, по нему потом выбираются значения из таблиц
+    QString tmpString = index.data(Qt::DisplayRole).toString();
+    emit changeshasbeenMade(tmpString);
     this->close();
 }
 

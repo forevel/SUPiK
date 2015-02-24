@@ -41,6 +41,7 @@ private slots:
 //    void AddDataChild();
 //    void AddSubDataChild();
     void DeleteData();
+    void AddNew();
 
 private:
     s_tqtreeview *MainTV, *SlaveTV;
@@ -68,7 +69,6 @@ private:
     QString getMainIndex(int column);
     QString getSlaveIndex(int column);
 //    void AddChild(QString, QString);
-    void AddNew();
 
 protected:
     void showEvent(QShowEvent *e);

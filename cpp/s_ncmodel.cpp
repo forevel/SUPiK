@@ -372,7 +372,7 @@ QStringList s_ncmodel::cvalues(int column)
         PublicClass::fieldformat ff = pc.getFFfromLinks(links);
         switch (ff.ftype)
         {
-        case FW_ALLINK:
+/*        case FW_ALLINK:
         case FW_LINK:
         {
             vl = tfl.vtoid(links, vl);
@@ -381,7 +381,7 @@ QStringList s_ncmodel::cvalues(int column)
         case FW_INDIRECT:
         {
             break;
-        }
+        } */
         case FW_ID:
         {
             vl = QString::number(vl.toInt(), 10);

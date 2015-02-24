@@ -311,8 +311,12 @@ QStringList s_tablefields::idtovl(QString links)
 
 QString s_tablefields::vtoid(QString links, QString value)
 {
-    QStringList tmpsl;
     QString outs;
+    if (value == "") // пустая строка вполне имеет право на запись
+    {
+        result = 0;
+        return QString();
+    }
     int tmpi;
     PublicClass::fieldformat ff = pc.getFFfromLinks(links);
     switch (ff.ftype)
@@ -333,6 +337,7 @@ QString s_tablefields::vtoid(QString links, QString value)
     case FW_PLAIN:
     case FW_MASKED:
     case FW_EQUAT:
+    case FW_ID:
     {
         outs = value;
         break;
@@ -388,40 +393,67 @@ QString s_tablefields::vtoid_(QString tble, QString headers, QString value)
 
 int s_tablefields::idtois(QString tble, QStringList headers, QStringList values)
 {
+    if (headers.size() != values.size())
+        return 0x01;
     QStringList fl = QStringList() << "table" << "tablefields" << "headers";
     QStringList cmpfl = QStringList() << "tablename" << "keyfield";
     QStringList cmpvl = QStringList() << tble << "v";
     QStringList keydbtble = sqlc.getvaluesfromtablebyfields(sqlc.getdb("sup"), "tablefields", fl, cmpfl, cmpvl);
+    if (sqlc.result)
+        return 0x02;
     keydbtble.insert(1, keydbtble.at(0).split(".").at(1)); // в первом элементе будет tble
     QString tmpString = keydbtble.at(0);
     tmpString.remove(3, tmpString.size()-3);
     keydbtble.replace(0, tmpString); // в нулевом элементе оставляем только db
-    int ididx = headers.indexOf(keydbtble.at(2)); // вытаскиваем индекс ключевого поля
+    int ididx = headers.indexOf(keydbtble.at(3)); // вытаскиваем индекс ключевого поля
     if (ididx == -1)
-        return 0x01;
+        return 0x03;
     QString keyid;
     if (ididx < values.size())
         keyid = values.at(ididx); // id - ИД элемента в ключевом поле, используется при записи всех остальных полей
     else
-        return 0x02;
+        return 0x04;
+    QStringList tmptablefields, tmpvalues;
+    QString tmpdb, tmptble, tmpdbtble;
+    int i;
     while (headers.size() > 0)
     {
-        fl = QStringList() << "table" << "tablefields" << "links";
-        cmpfl = QStringList() << "tablename" << "headers";
-        cmpvl = QStringList() << tble << headers.at(0);
-        QStringList dbtble = sqlc.getvaluesfromtablebyfields(sqlc.getdb("sup"), "tablefields", fl, cmpfl, cmpvl);
-        if (sqlc.result)
-            return sqlc.result + 0x03;
-        QString id = vtoid(dbtble.at(2), values.at(0));
+        QStringList dbtble = tablefields(tble, headers.at(0));
         if (result)
-            return result + 0x07;
-        QString tmpdb = dbtble.at(0).split(".").at(0);
-        QString tmptble = dbtble.at(0).split(".").at(1);
-        result = sqlc.updatevaluesintable(sqlc.getdb(tmpdb), tmptble, QStringList(dbtble.at(1)), QStringList(id), keydbtble.at(2), keyid);
-        if (result)
-            return result + 0x0B;
-        headers.removeAt(0);
-        values.removeAt(0);
+            return result + 0x04;
+        if (dbtble.at(0) != "-") // если знак дефиса, поле не пишется в базу
+        {
+            tmpdbtble = dbtble.at(0);
+            tmpvalues = QStringList() << vtoid(dbtble.at(2), values.at(0)); // кладём первое значение в выходной буфер значений
+            if (result)
+                return result + 0x07;
+            tmptablefields = QStringList() << dbtble.at(1);
+            headers.removeAt(0);
+            values.removeAt(0);
+            i = 0;
+            while (i < headers.size())
+            {
+                dbtble = tablefields(tble, headers.at(i));
+                if (dbtble.at(0) == tmpdbtble) // здесь проверка на дефис не нужна, т.к. сравнение ведётся с tmpdbtble, который уже проверен ранее
+                {
+                    tmptablefields << dbtble.at(1);
+                    tmpvalues << vtoid(dbtble.at(2), values.at(i));
+                    if (result)
+                        return result + 0x0A;
+                    headers.removeAt(i);
+                    values.removeAt(i);
+                }
+                else
+                    i++;
+            }
+            tmpdb = tmpdbtble.split(".").at(0);
+            tmptble = tmpdbtble.split(".").at(1);
+            tmptablefields << "date" << "idpers";
+            tmpvalues << pc.DateTime << QString::number(pc.idPers);
+            result = sqlc.updatevaluesintable(sqlc.getdb(tmpdb), tmptble, tmptablefields, tmpvalues, keydbtble.at(2), keyid);
+            if (result)
+                return result + 0x0D;
+        }
     }
     return 0;
 }

@@ -401,7 +401,7 @@ void dir_maindialog::SystemSlaveContextMenu(QPoint)
     ContextMenu->setTitle("Context menu");
     if (SlaveTVAccess & pc.access & 0x2492) // права на изменение
     {
-        ContextMenu->addAction(AddDataChild);
+        ContextMenu->addAction(AddData);
 //        ContextMenu->addAction(AddSubDataChild);
         ContextMenu->addAction(ChangeDataChild);
     }

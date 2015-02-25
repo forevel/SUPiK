@@ -29,7 +29,9 @@ void dir_maindialog::SetupUI()
     MainTableModel = new s_ncmodel;
     SlaveTreeModel = new s_ntmodel;
     SlaveTableModel = new s_ncmodel;
+    SlaveProxyModel = new QSortFilterProxyModel;
     SlaveTV = new s_tqtreeview;
+    SlaveTV->setModel(SlaveProxyModel);
     MainTV = new s_tqtreeview;
     gridItemDelegate = new s_duniversal;
     QFrame *line = new QFrame;
@@ -152,26 +154,30 @@ void dir_maindialog::ShowSlaveTree(QString str)
                     QApplication::restoreOverrideCursor();
                     return;
                 }
-                if (SlaveTVIsTree)
+/*                if (SlaveTVIsTree) // если до этого было дерево, его надо удалить
                 {
                     QItemSelectionModel *m = SlaveTV->selectionModel();
                     SlaveTV->setModel(SlaveTableModel);
                     delete m;
                 }
                 else
-                    SlaveTV->setModel(SlaveTableModel);
+                    SlaveTV->setModel(SlaveTableModel); */
+                SlaveProxyModel->setSourceModel(SlaveTableModel);
+                SlaveProxyModel->sort(0, Qt::AscendingOrder);
                 SlaveTVIsTree = false;
             }
             else
             {
-                if (!SlaveTVIsTree)
+/*                if (!SlaveTVIsTree) // если до этого была таблица, её надо удалить
                 {
                     QItemSelectionModel *m = SlaveTV->selectionModel();
                     SlaveTV->setModel(SlaveTreeModel);
                     delete m;
                 }
                 else
-                    SlaveTV->setModel(SlaveTreeModel);
+                    SlaveTV->setModel(SlaveTreeModel); */
+                SlaveProxyModel->setSourceModel(SlaveTreeModel);
+                SlaveProxyModel->sort(0, Qt::AscendingOrder);
                 SlaveTVIsTree = true;
                 disconnect(SlaveTV, SIGNAL(expanded(QModelIndex)), 0, 0);
                 connect(SlaveTV, SIGNAL(expanded(QModelIndex)), SlaveTreeModel, SLOT(addExpandedIndex(QModelIndex)));
@@ -267,7 +273,10 @@ void dir_maindialog::ChangeAdditionalFields(QString str)
         newdialog->IsQuarantine = true;
     newdialog->Mode = MODE_EDIT;
     if (!(res = newdialog->setup("2.2.." + getMainIndex(1)+"_полная", str)))
+    {
         newdialog->exec();
+        showDirDialog();
+    }
     else
     {
         delete newdialog;

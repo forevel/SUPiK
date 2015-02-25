@@ -251,8 +251,6 @@ void s_ncmodel::addRow()
 {
     int lastEntry = maindata.size();
     insertRows(lastEntry, 1, QModelIndex());
-//    for (int i = 0; i < hdr.size(); i++)
-//        setData(index(lastEntry, i, QModelIndex()), "", Qt::EditRole);
 }
 
 void s_ncmodel::setcolumnlinks(int column, QString links)
@@ -372,7 +370,7 @@ QStringList s_ncmodel::cvalues(int column)
         PublicClass::fieldformat ff = pc.getFFfromLinks(links);
         switch (ff.ftype)
         {
-/*        case FW_ALLINK:
+        case FW_ALLINK:
         case FW_LINK:
         {
             vl = tfl.vtoid(links, vl);
@@ -381,7 +379,7 @@ QStringList s_ncmodel::cvalues(int column)
         case FW_INDIRECT:
         {
             break;
-        } */
+        }
         case FW_ID:
         {
             vl = QString::number(vl.toInt(), 10);
@@ -396,38 +394,6 @@ QStringList s_ncmodel::cvalues(int column)
     return tmpsl;
 }
 
-/*s_ncmodel::fieldformat s_ncmodel::getFFfromLinks(QString links) const
-{
-    fieldformat ff;
-    ff.ftype = 8;
-    ff.delegate = FD_SIMGRID;
-    ff.dependson = -1;
-    ff.link.clear();
-    if (links.isEmpty())
-        return ff;
-    QStringList tmpsl = links.split(".");
-    if (!tmpsl.size())
-        return ff;
-    ff.delegate = tmpsl.at(0).toInt();
-    tmpsl.removeAt(0);
-    if (!tmpsl.size())
-        return ff;
-    ff.ftype = tmpsl.at(0).toInt();
-    tmpsl.removeAt(0);
-    if (!tmpsl.size())
-        return ff;
-    bool ok;
-    ff.dependson = tmpsl.at(0).toInt(&ok, 10);
-    if (!ok)
-        ff.dependson = -1;
-    tmpsl.removeAt(0);
-    if (!tmpsl.size())
-        return ff;
-    for (int i = 0; i < tmpsl.size(); i++)
-        ff.link << tmpsl.at(i);
-    return ff;
-}
-*/
 QString s_ncmodel::getEq(QString arg1, QString arg2, int oper, const QModelIndex index, bool byRow) const
 {
     float operand1 = getOperand(arg1, index, byRow);

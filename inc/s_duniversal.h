@@ -32,6 +32,7 @@ private slots:
     void pbclicked();
     void accepted(QString);
     void dateChoosed(QDate);
+    void commitChanges(QString);
 
 private:
     mutable s_tqwidget *combWidget;

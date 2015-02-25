@@ -64,7 +64,7 @@ void s_2cdialog::setupUI(QString hdr)
     pbLayout->addWidget(pbCancel, 0);
     pmainmodel = new QSortFilterProxyModel;
     pmainmodel->setSourceModel(mainmodel);
-    mainTV->setModel(mainmodel);
+    mainTV->setModel(pmainmodel);
     mainTV->setEditTriggers(QAbstractItemView::AllEditTriggers);
     mainTV->verticalHeader()->setVisible(false);
     mainTV->horizontalHeader()->setVisible(false);
@@ -324,22 +324,44 @@ void s_2cdialog::paintEvent(QPaintEvent *e)
 
 void s_2cdialog::accepted()
 {
-    QString tmpString;
+    QString tmpString, oldtble, oldid, newid;
+    int tmph;
     try
     {
-        if (IsQuarantine)
-        {
-            // отдельная обработка
-        }
         if (Mode == MODE_EDIT) // для режима редактирования - запись в базу
         {
             QStringList headers = mainmodel->cvalues(0);
             QStringList values = mainmodel->cvalues(1);
+            if (IsQuarantine)
+            {
+                oldtble = tble;
+                tmph = headers.indexOf("ИД");
+                if (tmph != -1)
+                oldid = values.at(tmph);
+                int posq = tble.indexOf(" карантин");
+                if (posq != -1)
+                    tble.remove(posq, 9); // убираем " карантин", т.к. пишем в некарантинную таблицу
+                newid = tfl.insert(tble);
+                values.replace(tmph, newid); // создаём новую запись в некарантинной таблице
+            }
             tfl.idtois(tble, headers, values);
             if (tfl.result)
+            {
                 ShowMessage(tfl.result);
+                return;
+            }
+            QMessageBox::information(this, "Успешно!", "Записано успешно!");
+            if (IsQuarantine)
+            {
+                tfl.remove(oldtble, oldid); // при успешной записи в некарантин, из карантина старую надо удалить
+                if (tfl.result)
+                {
+                    ShowMessage(tfl.result);
+                    return;
+                }
+            }
         }
-        else
+        else // список выбора
         {
             s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
             if (tv == 0)

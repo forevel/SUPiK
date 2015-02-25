@@ -2,17 +2,18 @@
 #define DIR_MAINDIALOG_H
 
 #include <QDialog>
+#include <QSortFilterProxyModel>
 
-#include "publicclass.h"
-#include "s_tqlabel.h"
-#include "s_tqtreeview.h"
-#include "s_tqframe.h"
-#include "s_tqtableview.h"
-#include "sys_acceptexist.h"
+#include "../inc/publicclass.h"
+#include "../inc/s_tqlabel.h"
+#include "../inc/s_tqtreeview.h"
+#include "../inc/s_tqframe.h"
+#include "../inc/s_tqtableview.h"
+#include "../inc/sys_acceptexist.h"
 #include "../inc/s_ntmodel.h"
 #include "../inc/s_ncmodel.h"
-#include "s_sqlfieldsdialog.h"
-#include "s_duniversal.h"
+#include "../inc/s_sqlfieldsdialog.h"
+#include "../inc/s_duniversal.h"
 
 QT_BEGIN_NAMESPACE
 class QHBoxLayout;
@@ -48,6 +49,7 @@ private:
     s_duniversal *gridItemDelegate;
     s_ntmodel *MainTreeModel, *SlaveTreeModel;
     s_ncmodel *MainTableModel, *SlaveTableModel;
+    QSortFilterProxyModel *SlaveProxyModel;
     bool MainTVIsTree, SlaveTVIsTree, IsQuarantine;
     s_tqLabel *MainL;
     QVBoxLayout *MainLayout;

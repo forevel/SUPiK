@@ -146,6 +146,7 @@ void s_duniversal::setEditorData(QWidget *editor, const QModelIndex &index) cons
         s_tqPushButton *pb = editor->findChild<s_tqPushButton*>("fdcpb");
         pb->setText("...");
         le->setText(index.data(Qt::EditRole).toString());
+        connect(le,SIGNAL(textChanged(QString)),this,SLOT(commitChanges(QString)));
         break;
     }
     case FD_COMBO:
@@ -252,7 +253,7 @@ void s_duniversal::pbclicked()
                 chooseDialog->setTvCurrentText(le->text());
                 connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
                 chooseDialog->setMinimumWidth(500);
-//                chooseDialog->sortModel();
+                chooseDialog->sortModel();
                 chooseDialog->exec();
             }
         }
@@ -297,6 +298,7 @@ void s_duniversal::accepted(QString str)
         s_tqLineEdit *le = combWidget->findChild<s_tqLineEdit*>("fdcle");
         if (le == 0)
             throw 0x21;
+
         switch (ff.ftype)
         {
 /*        {
@@ -312,7 +314,7 @@ void s_duniversal::accepted(QString str)
             tmpString = tmpStringList.at(0);
             break;
         }
-        case FW_DLINK:
+        case FW_DLINK: // переписать!!!
         {
             QSqlDatabase db = sqlc.getdb(ff.link.at(2));
             if (db.isValid())
@@ -343,6 +345,13 @@ void s_duniversal::accepted(QString str)
         Q_UNUSED(res);
         return;
     }
+}
+
+void s_duniversal::commitChanges(QString str)
+{
+    Q_UNUSED(str);
+    emit commitData(combWidget);
+    emit closeEditor(combWidget);
 }
 
 void s_duniversal::dateChoosed(QDate dte)
@@ -382,36 +391,6 @@ initStyleOption(&options, index);
 
 QSize size = QStyledItemDelegate::sizeHint(option, index);
 return QSize(size.width(), size.height());
-} */
-
-/*s_duniversal::fieldformat s_duniversal::getFFfromLinks(QString links) const
-{
-    QStringList tmpsl = links.split(".");
-    fieldformat ff;
-    ff.ftype = 8;
-    ff.delegate = 4;
-    ff.dependson = -1;
-    ff.link.clear();
-    if (!tmpsl.size())
-        return ff;
-    ff.delegate = tmpsl.at(0).toInt();
-    tmpsl.removeAt(0);
-    if (!tmpsl.size())
-        return ff;
-    ff.ftype = tmpsl.at(0).toInt();
-    tmpsl.removeAt(0);
-    if (!tmpsl.size())
-        return ff;
-    bool ok;
-    ff.dependson = tmpsl.at(0).toInt(&ok, 10);
-    if (!ok)
-        ff.dependson = -1;
-    tmpsl.removeAt(0);
-    if (!tmpsl.size())
-        return ff;
-    for (int i = 0; i < tmpsl.size(); i++)
-        ff.link << tmpsl.at(i);
-    return ff;
 } */
 
 void s_duniversal::setTableHeader(QString hdr)

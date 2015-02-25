@@ -424,7 +424,7 @@ int s_tablefields::idtois(QString tble, QStringList headers, QStringList values)
         if (dbtble.at(0) != "-") // если знак дефиса, поле не пишется в базу
         {
             tmpdbtble = dbtble.at(0);
-            tmpvalues = QStringList() << vtoid(dbtble.at(2), values.at(0)); // кладём первое значение в выходной буфер значений
+            tmpvalues = QStringList() << values.at(0); // кладём первое значение в выходной буфер значений
             if (result)
                 return result + 0x07;
             tmptablefields = QStringList() << dbtble.at(1);
@@ -437,7 +437,7 @@ int s_tablefields::idtois(QString tble, QStringList headers, QStringList values)
                 if (dbtble.at(0) == tmpdbtble) // здесь проверка на дефис не нужна, т.к. сравнение ведётся с tmpdbtble, который уже проверен ранее
                 {
                     tmptablefields << dbtble.at(1);
-                    tmpvalues << vtoid(dbtble.at(2), values.at(i));
+                    tmpvalues << values.at(i);
                     if (result)
                         return result + 0x0A;
                     headers.removeAt(i);

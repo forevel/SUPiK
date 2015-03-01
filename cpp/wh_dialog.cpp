@@ -680,7 +680,7 @@ void wh_dialog::CBChanged(QWidget *wdgt)
         int tmpInt = mainmodel->getHeaderPosition("Курс", Qt::Horizontal, Qt::DisplayRole);
         QString tmpString = sqlc.getlastvaluefromtablebyfield(pc.ent, "periodic", "value", "periodic", \
                                                               cb->currentText());
-        mainmodel->setData(mainmodel->index(mainTV->currentIndex().row(), tmpInt, QModelIndex()), tmpString, Qt::EditRole);
+        mainmodel->setData(mainmodel->index(mainTV->currentIndex().row(), tmpInt, QModelIndex()), QVariant(tmpString), Qt::EditRole);
     }
 }
 

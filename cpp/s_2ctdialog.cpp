@@ -71,7 +71,7 @@ void s_2ctdialog::setupUI()
 int s_2ctdialog::setup(QString tble)
 {
     mainmodel = new s_ntmodel;
-    mainmodel->Setup(false, tble);
+    mainmodel->Setup(tble);
     setupUI();
     resizemainTV(QModelIndex(),QModelIndex());
     DialogIsNeedToBeResized = true;

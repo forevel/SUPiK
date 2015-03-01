@@ -7,16 +7,7 @@
 #include <QColor>
 #include <QFont>
 #include <QIcon>
-#include "s_ntitem.h"
-
-// тип делегата
-#define FD_SIMPLE   0 // простой делегат без рамки для надписей
-#define FD_LINEEDIT 1 // простое поле ввода
-#define FD_CHOOSE   2 // поле ввода с кнопкой выбора по ссылке
-#define FD_COMBO    3 // выпадающий список
-#define FD_DISABLED 4 // неактивное поле
-#define FD_SPIN     5 // счётчик
-#define FD_SIMGRID  7 // простой делегат с рамкой
+#include "../inc/s_ntitem.h"
 
 class s_ntmodel : public QAbstractItemModel
 {
@@ -42,8 +33,8 @@ public:
     void addRow(int position, int cfset, QModelIndex &parent = QModelIndex());
     QModelIndex getIndex(s_ntitem *item) const;
     s_ntitem *getItem(const QModelIndex &index) const;
-    int Setup (bool twodb, QString table);
-    int Setup (QString cattble, QString slvtble);
+    int Setup (QString table);
+    int Setup (QString maintble, QString slvtble);
     void ClearModel();
     QList<QPersistentModelIndex> expandedIndexes;
 
@@ -62,22 +53,22 @@ private:
     int position;
     QStringList catlist;
     QString slvtble;
-    bool twodb;
+    QStringList slvtblefields;
     QColor colors[6]; // определение набора цветов шрифта
     QFont fonts[6]; // определение набора шрифтов
     QIcon icons[6]; // определение набора иконок
-    typedef struct
+/*    typedef struct
     {
         int ftype;
         int delegate;
         int dependson;
         QStringList link;
     } fieldformat;
-    s_ntmodel::fieldformat getFFfromLinks (QString links) const;
+    s_ntmodel::fieldformat getFFfromLinks (QString links) const; */
 
-    int BuildTree (QString id);
+    int BuildTree (QString id, bool twodb);
     s_ntitem *addTreeCat (QString catlistid);
-    int addTreeSlvItem(QList<QStringList> sl, int position, QString id);
+    int addTreeSlvItem(int position, QString id);
     void additemtotree(int position, QStringList sl, int set);
 };
 

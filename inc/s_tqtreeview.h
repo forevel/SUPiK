@@ -4,6 +4,7 @@
 #include <QTreeView>
 #include <QProxyStyle>
 #include <QPaintEvent>
+#include "../inc/s_ntmodel.h"
 
 class s_tqtreeview : public QTreeView
 {
@@ -14,6 +15,7 @@ public:
     void setAData(QVariant dat);
     QSize minimumSizeHint();
     void updateTVGeometry();
+    bool isTree;
 
 signals:
     void datachanged();
@@ -25,7 +27,10 @@ private:
     void drawBranches(QPainter *painter, const QRect &rect, const QModelIndex &index);
     void dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles);
     QVariant adata;
+    int shown_rows;
     mutable bool datachangedintable;
+    int getVisibleChildsCount(s_ntitem *item);
+    void recalculateGeometry();
 
 protected:
     void paintEvent(QPaintEvent *e);

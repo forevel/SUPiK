@@ -29,9 +29,9 @@ void dir_maindialog::SetupUI()
     MainTableModel = new s_ncmodel;
     SlaveTreeModel = new s_ntmodel;
     SlaveTableModel = new s_ncmodel;
-    SlaveProxyModel = new QSortFilterProxyModel;
+//    SlaveProxyModel = new QSortFilterProxyModel;
     SlaveTV = new s_tqtreeview;
-    SlaveTV->setModel(SlaveProxyModel);
+//    SlaveTV->setModel(SlaveProxyModel);
     MainTV = new s_tqtreeview;
     gridItemDelegate = new s_duniversal;
     QFrame *line = new QFrame;
@@ -80,7 +80,7 @@ void dir_maindialog::setDirTree()
     disconnect(MainTV, SIGNAL(doubleClicked(QModelIndex)), 0, 0);
     connect (MainTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(showDirDialog(QModelIndex)));
 
-    int res = MainTreeModel->Setup(false, "Справочники_сокращ");
+    int res = MainTreeModel->Setup("Справочники_сокращ");
     if (res == 0x11) // это не дерево
     {
         int res = MainTableModel->setup("2.2..Справочники_сокращ");
@@ -130,7 +130,7 @@ void dir_maindialog::showDirDialog(QModelIndex idx)
 void dir_maindialog::ShowSlaveTree(QString str)
 {
     QStringList fields, values;
-    int i;
+    int i, res;
     tble = str; // для функций удаления и добавления необходимо знать имя текущей таблицы
     if (!SlaveTVIsFilling)
     {
@@ -144,7 +144,10 @@ void dir_maindialog::ShowSlaveTree(QString str)
         values = sqlc.getvaluesfromtablebyfield(pc.sup, "dirlist", fields, "dirlist", str);
         if (!sqlc.result)
         {
-            int res = SlaveTreeModel->Setup(false, values.at(0) + "_сокращ");
+            if (values.at(0) == "Номенклатура")
+                res = SlaveTreeModel->Setup("Категории_сокращ","Номенклатура_сокращ");
+            else
+                res = SlaveTreeModel->Setup(values.at(0) + "_сокращ");
             if (res == 0x11) // это не дерево
             {
                 int res = SlaveTableModel->setup("2.2.." + values.at(0) + "_сокращ");
@@ -162,8 +165,9 @@ void dir_maindialog::ShowSlaveTree(QString str)
                 }
                 else
                     SlaveTV->setModel(SlaveTableModel); */
-                SlaveProxyModel->setSourceModel(SlaveTableModel);
-                SlaveProxyModel->sort(0, Qt::AscendingOrder);
+//                SlaveProxyModel->setSourceModel(SlaveTableModel);
+//                SlaveProxyModel->sort(0, Qt::AscendingOrder);
+                SlaveTV->setModel(SlaveTableModel);
                 SlaveTVIsTree = false;
             }
             else
@@ -176,8 +180,9 @@ void dir_maindialog::ShowSlaveTree(QString str)
                 }
                 else
                     SlaveTV->setModel(SlaveTreeModel); */
-                SlaveProxyModel->setSourceModel(SlaveTreeModel);
-                SlaveProxyModel->sort(0, Qt::AscendingOrder);
+//                SlaveProxyModel->setSourceModel(SlaveTreeModel);
+//                 SlaveProxyModel->sort(0, Qt::AscendingOrder);
+                SlaveTV->setModel(SlaveTreeModel);
                 SlaveTVIsTree = true;
                 disconnect(SlaveTV, SIGNAL(expanded(QModelIndex)), 0, 0);
                 connect(SlaveTV, SIGNAL(expanded(QModelIndex)), SlaveTreeModel, SLOT(addExpandedIndex(QModelIndex)));

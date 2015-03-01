@@ -35,8 +35,8 @@ void s_tqTableView::dataChanged(const QModelIndex &topLeft, const QModelIndex &b
     Q_UNUSED(topLeft);
     Q_UNUSED(bottomRight);
     Q_UNUSED(roles);
-//    if (autoResize)
- //       resizeColumnsToContents();
+    if (autoResize)
+        resizeColumnsToContents();
     datachangedintable=true;
     emit datachanged();
 }

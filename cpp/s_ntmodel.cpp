@@ -1,6 +1,7 @@
 #include "../inc/s_ntmodel.h"
 #include "../inc/publicclass.h"
 #include "../inc/s_sql.h"
+#include "../inc/s_tablefields.h"
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QMap>
@@ -278,7 +279,7 @@ void s_ntmodel::removeExpandedIndex(const QModelIndex &index)
 
 // процедура инициализации модели данными из таблицы table = supik.chooselists и построение дерева по полям alias и idalias
 
-int s_ntmodel::Setup(bool twodb, QString table)
+int s_ntmodel::Setup(QString table)
 {
     ClearModel();
     // 1. взять столбцы tablefields из tablefields, где tablename=table
@@ -288,7 +289,6 @@ int s_ntmodel::Setup(bool twodb, QString table)
 
     // 1
     int i;
-    this->twodb=twodb;
     QStringList fl = QStringList() << "table" << "tablefields" << "headers";
     vl = sqlc.getmorevaluesfromtablebyfield(sqlc.getdb("sup"), "tablefields", fl, "tablename", table, "fieldsorder", true);
     if (sqlc.result)
@@ -308,11 +308,10 @@ int s_ntmodel::Setup(bool twodb, QString table)
     // 3
     catlist = vl.at(idalpos).at(0).split("."); // catlist - таблица, из которой брать категории
     vl.removeAt(idalpos); // не включать ссылку на категорию в заголовок
-    slvtble = table;
     for (i = 0; i < vl.size(); i++)
         setHeaderData(i, Qt::Horizontal, vl.at(i).at(2), Qt::EditRole);
     // 4
-    int res = BuildTree("0");
+    int res = BuildTree("0", false);
     if (res)
         return res;
     return 0;
@@ -322,16 +321,42 @@ int s_ntmodel::Setup(bool twodb, QString table)
 // из catdb.cattble берутся "родители", из slvtble - "дети", причём в slvtble должно присутствовать
 // поле `id<cattble>`. Slvtble = имя таблицы в supik.models
 
-int s_ntmodel::Setup(QString cattble, QString slvtble)
+int s_ntmodel::Setup(QString maintble, QString slvtble)
 {
     ClearModel();
+    // 1. взять столбцы tablefields из tablefields, где tablename=table и headers=ИД_а
+    // 4. построить дерево
+
+    // 1
+    int i;
+    QStringList tmpsl = tfl.tablefields(maintble, "ИД_а"); // взять table,tablefields,links из tablefields, где таблица maintble и заголовок ИД_а
+    if (tfl.result) // нет поля idalias в таблице - это не дерево!
+        return 0x21 + tfl.result;
+    catlist = tmpsl.at(0).split("."); // catlist - таблица, из которой брать категории
+    QStringList headers = tfl.headers(slvtble);
+    for (i = 0; i < headers.size(); i++)
+    {
+        setHeaderData(i, Qt::Horizontal, headers.at(i), Qt::EditRole);
+        tmpsl = tfl.tablefields(slvtble, headers.at(i));
+        if (tfl.result) // что-то не так с подчинённой таблицей нет такого заголовка
+            return 0x24 + tfl.result;
+        if (tmpsl.size() > 1)
+            slvtblefields << tmpsl.at(1);
+        else
+            return 0x27; // нет почему-то в возвращённом результате второго элемента
+        this->slvtble = tmpsl.at(0); // имя таблицы - в переменную (можно было бы один раз, да сто раз tfl вызывать не хочется, так что будет перезаписываться одно и то же
+    }
+    // 4
+    int res = BuildTree("0", true);
+    if (res)
+        return res;
     return 0;
 }
 
 // процедура построения дерева
 // на входе catlist (ссылка на таблицу категорий с полем idalias) и slvtble (название таблицы в chooselists, из которой брать записи категорий)
 
-int s_ntmodel::BuildTree(QString id)
+int s_ntmodel::BuildTree(QString id, bool twodb)
 {
     int res;
     QStringList tmpStringList;
@@ -341,7 +366,7 @@ int s_ntmodel::BuildTree(QString id)
     tmpString = "SELECT `alias`,`id"+catlist.at(1)+"` FROM `"+catlist.at(1)+"` WHERE `idalias`=\""+id+"\" AND `deleted`=0 ORDER BY `id"+catlist.at(1)+"` ASC;";
     get_child_from_db1.exec(tmpString);
     if (!get_child_from_db1.isActive())
-        return 0x21;
+        return 0x31;
 // увеличиваем уровень дерева
     position++;
     if (id == "0") position = 0; // для корневых элементов position д.б. равен нулю
@@ -352,66 +377,48 @@ int s_ntmodel::BuildTree(QString id)
         tmpStringList.clear();
         tmpStringList << QString("%1").arg(get_child_from_db1.value(1).toInt(0), 7, 10, QChar('0')) << get_child_from_db1.value(0).toString();
         additemtotree(position, tmpStringList, set);
-        res = BuildTree(get_child_from_db1.value(1).toString()); // в качестве аргумента функции используется индекс поля idalias
+        res = BuildTree(get_child_from_db1.value(1).toString(), twodb); // в качестве аргумента функции используется индекс поля idalias
         if (res)
             return res;
     }
     if (twodb)
     {
-        res = addTreeSlvItem(vl, position, id); // добавляем таблицу из подчинённой таблицы
+        res = addTreeSlvItem(position, id); // добавляем таблицу из подчинённой таблицы
         if (res)
-            return res;
+            return 0x32 + res;
     }
     position--; // после добавления всех детишек уровень понижается
     return 0;
 }
 
 // процедура добавления к модели записи
-// в sl передаются значения vl для того, чтобы можно было бы их искажать внутри процедуры, не трогая глобальные
+// в slvtble находится имя подчинённой таблицы
 // в position - уровень, в который добавляем, в id - ИД элемента, по которому отбираются данные (id<tble>)
 
-int s_ntmodel::addTreeSlvItem(QList<QStringList> sl, int position, QString id)
+int s_ntmodel::addTreeSlvItem(int position, QString id)
 {
     int i;
     QString tmpString;
     QStringList tmpStringlist;
-    QStringList overallStringList;
-    while (sl.size() > 0)
-    {
-        QString curtble = sl.at(0).at(0);
-        QStringList fl;
-        for (i = 0; i < sl.size(); i++)
-        {
-            if (sl.at(i).at(0) == curtble)
-            {
-                fl << sl.at(i).at(1); // в fl находятся только те поля, которые относятся к текущей таблице
-                sl.removeAt(i);
-            }
-        }
-        tmpStringlist = curtble.split(".");
-        int idx = fl.indexOf("id"+tmpStringlist.at(1));
-        if (idx != -1)
-            fl.swap(0, idx);
-        // считываем все данные из таблицы
-        QSqlQuery get_child_from_db2 (sqlc.getdb(tmpStringlist.at(0)));
-        tmpString = "SELECT ";
-        for (i = 0; i < fl.count(); i++)
-            tmpString += "`" + fl.at(i) + "`,";
-        tmpString = tmpString.left(tmpString.size()-1); // убираем запятую
-        tmpString += " FROM `"+tmpStringlist.at(1)+"` WHERE `id"+catlist.at(1)+"`=\""+id+"\" AND `deleted`=0 ORDER BY `id"+tmpStringlist.at(1)+"` ASC;";
-        get_child_from_db2.exec(tmpString);
 
-        while (get_child_from_db2.next())
-        {
-            tmpStringlist.clear();
-            for (i = 0; i < fl.size(); i++)
-                tmpStringlist << get_child_from_db2.value(i).toString();
-            if (idx != -1)
-                tmpStringlist.replace(0,QString("%1").arg(tmpStringlist.value(0).toInt(0), 7, 10, QChar('0')));
-        }
-        overallStringList.append(tmpStringlist);
+    tmpStringlist = slvtble.split(".");
+    // считываем все данные из таблицы
+    QSqlQuery get_child_from_db2 (sqlc.getdb(tmpStringlist.at(0)));
+    tmpString = "SELECT ";
+    for (i = 0; i < slvtblefields.count(); i++)
+        tmpString += "`" + slvtblefields.at(i) + "`,";
+    tmpString = tmpString.left(tmpString.size()-1); // убираем запятую
+    tmpString += " FROM `"+tmpStringlist.at(1)+"` WHERE `id"+catlist.at(1)+"`=\""+id+"\" AND `deleted`=0 ORDER BY `id"+tmpStringlist.at(1)+"` ASC;";
+    get_child_from_db2.exec(tmpString);
+
+    while (get_child_from_db2.next())
+    {
+        tmpStringlist.clear();
+        for (i = 0; i < slvtblefields.size(); i++)
+            tmpStringlist << get_child_from_db2.value(i).toString();
+        tmpStringlist.replace(0,QString("%1").arg(tmpStringlist.value(0).toInt(0), 7, 10, QChar('0')));
+        additemtotree(position, tmpStringlist, 0);
     }
-    additemtotree(position, overallStringList, 0);
     return 0;
 }
 
@@ -451,7 +458,7 @@ void s_ntmodel::additemtotree(int position, QStringList sl, int set)
     }
 }
 
-s_ntmodel::fieldformat s_ntmodel::getFFfromLinks(QString links) const
+/*s_ntmodel::fieldformat s_ntmodel::getFFfromLinks(QString links) const
 {
     QStringList tmpsl = links.split(".");
     fieldformat ff;
@@ -479,7 +486,7 @@ s_ntmodel::fieldformat s_ntmodel::getFFfromLinks(QString links) const
     for (int i = 0; i < tmpsl.size(); i++)
         ff.link << tmpsl.at(i);
     return ff;
-}
+} */
 
 void s_ntmodel::ClearModel()
 {

@@ -39,8 +39,8 @@ s_2cdialog::s_2cdialog(QString hdr, QWidget *parent) :
     Mode = MODE_CHOOSE;
     setStyleSheet("QDialog {background-color: rgba(204,204,153);}");
     setAttribute(Qt::WA_DeleteOnClose);
-    QSizePolicy fixed(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    setSizePolicy(fixed);
+//    QSizePolicy fixed(QSizePolicy::Fixed, QSizePolicy::Fixed);
+//    setSizePolicy(fixed);
     setupUI(hdr);
 }
 
@@ -388,7 +388,7 @@ void s_2cdialog::updatedialogsize()
     DialogIsNeedToBeResized = true;
 }
 
-QSize s_2cdialog::minimumSizeHint()
+/*QSize s_2cdialog::minimumSizeHint()
 {
     if (DialogIsNeedToBeResized)
     {
@@ -411,7 +411,7 @@ QSize s_2cdialog::minimumSizeHint()
     }
     else
         return this->size();
-}
+} */
 
 void s_2cdialog::sortModel()
 {
@@ -443,7 +443,7 @@ void s_2cdialog::fillModelAdata()
         case FW_ALLINK:
         case FW_LINK:
         {
-            mainmodel->setData(mainmodel->index(i,0,QModelIndex()),hdr+":"+hdradd,Qt::UserRole+1);
+            mainmodel->setData(mainmodel->index(i,0,QModelIndex()),QVariant(hdr+":"+hdradd),Qt::UserRole+1);
             break;
         }
         default:

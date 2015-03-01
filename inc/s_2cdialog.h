@@ -53,7 +53,7 @@ private slots:
 
 protected:
     void paintEvent(QPaintEvent *e);
-    QSize minimumSizeHint();
+//    QSize minimumSizeHint();
 };
 
 #endif // S_GENERAL2COLUMNSDIALOG_H

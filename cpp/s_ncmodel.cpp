@@ -51,15 +51,15 @@ bool s_ncmodel::setHeaderData(int section, Qt::Orientation orientation, const QV
 
 QVariant s_ncmodel::data(const QModelIndex &index, int role) const
 {
-    QString tmpString;
-    PublicClass::fieldformat ff;
+//    QString tmpString;
+//    PublicClass::fieldformat ff;
     if (index.isValid())
     {
         if ((index.row() < maindata.size()) && (index.column() < hdr.size()))
         {
             if ((role == Qt::DisplayRole) || (role == Qt::EditRole))
             {
-                tmpString = maindata.at(index.row())->linksdata(index.column());
+/*                tmpString = maindata.at(index.row())->linksdata(index.column());
                 ff = pc.getFFfromLinks(tmpString);
                 switch (ff.ftype)
                 {
@@ -88,7 +88,7 @@ QVariant s_ncmodel::data(const QModelIndex &index, int role) const
                     tmpString = getEq(ff.link.at(1), ff.link.at(2), tmpInt, index, byRow);
                     return tmpString;
                 }
-                else
+                else */
                     return maindata.at(index.row())->data(index.column());
             }
             else if (role == Qt::FontRole)
@@ -109,14 +109,47 @@ QVariant s_ncmodel::data(const QModelIndex &index, int role) const
 // value должен представлять из себя запись вида: <value>.<links>, где links - вспомогательное поле, определяющее
 // порядок работы с полем - подставляемый делегат, ссылку на списки и формат отображения
 
-bool s_ncmodel::setData(const QModelIndex &index, const QVariant &value, int role)
+bool s_ncmodel::setData(const QModelIndex &index, QVariant &value, int role)
 {
+    QString tmpString;
+    PublicClass::fieldformat ff;
     if (index.isValid())
     {
         if (role == Qt::EditRole)
         {
             if (index.column() < hdr.size())
             {
+                tmpString = maindata.at(index.row())->linksdata(index.column());
+                ff = pc.getFFfromLinks(tmpString);
+                switch (ff.ftype)
+                {
+                case FW_AUTONUM:
+                {
+                    value = QVariant(index.row()+1);
+                    break;
+                }
+                case FW_NUMBER:
+                {
+                    value = QVariant(ff.link.at(0));
+                    break;
+                }
+                case FW_ID:
+                {
+                    int num = ff.link.at(0).toInt();
+                    value = QVariant(QString("%1").arg(value.toInt(), num, 10, QChar('0')));
+                    break;
+                }
+                case FW_EQUAT: // вычисляемое выражение
+                {
+                    int tmpInt = OPER_MAP[ff.link.at(0)];
+                    bool byRow = (ff.link.at(1) == "r");
+                    tmpString = getEq(ff.link.at(1), ff.link.at(2), tmpInt, index, byRow);
+                    value = QVariant(tmpString);
+                    break;
+                }
+                default:
+                    break;
+                }
                 maindata.at(index.row())->setData(index.column(), value.toString()); // пишем само значение
                 if (index.column() < maxcolswidth.size())
                 {
@@ -256,7 +289,7 @@ void s_ncmodel::addRow()
 void s_ncmodel::setcolumnlinks(int column, QString links)
 {
     for (int i = 0; i < rowCount(); i++)
-        setData(index(i, column, QModelIndex()), links, Qt::UserRole);
+        setData(index(i, column, QModelIndex()), QVariant(links), Qt::UserRole);
 }
 
 void s_ncmodel::setcolumnlinks(int column, QStringList links)
@@ -264,9 +297,9 @@ void s_ncmodel::setcolumnlinks(int column, QStringList links)
     for (int i = 0; i < rowCount(); i++)
     {
         if (i < links.size())
-            setData(index(i, column, QModelIndex()), links.at(i), Qt::UserRole);
+            setData(index(i, column, QModelIndex()), QVariant(links.at(i)), Qt::UserRole);
         else
-            setData(index(i, column, QModelIndex()), links.last(), Qt::UserRole);
+            setData(index(i, column, QModelIndex()), QVariant(links.last()), Qt::UserRole);
     }
 }
 
@@ -275,9 +308,9 @@ void s_ncmodel::setrowlinks(int row, QStringList links)
     for (int i = 0; i < columnCount(QModelIndex()); i++)
     {
         if (i < links.size())
-            setData(index(row, i, QModelIndex()), links.at(i), Qt::UserRole);
+            setData(index(row, i, QModelIndex()), QVariant(links.at(i)), Qt::UserRole);
         else
-            setData(index(row, i, QModelIndex()), links.last(), Qt::UserRole);
+            setData(index(row, i, QModelIndex()), QVariant(links.last()), Qt::UserRole);
     }
 }
 
@@ -320,7 +353,7 @@ void s_ncmodel::fillModel(QList<QStringList> sl)
         for (j = 0; j < sl.size(); j++)
         {
             if (i > sl.at(j).size())
-                setData(index(i, j, QModelIndex()), "", Qt::EditRole);
+                setData(index(i, j, QModelIndex()), QVariant(""), Qt::EditRole);
             else
             {
                 QString links = data(index(i,j,QModelIndex()),Qt::UserRole).toString();
@@ -337,19 +370,19 @@ void s_ncmodel::fillModel(QList<QStringList> sl)
                 {
                     break;
                 }
-                case FW_ID:
-                {
-                    int num = ff.link.at(0).toInt();
-                    vl = QString("%1").arg(sl.at(j).at(i).toInt(), num, 10, QChar('0'));
-                    break;
-                }
+//                case FW_ID:
+//                {
+//                    int num = ff.link.at(0).toInt();
+//                    vl = QString("%1").arg(sl.at(j).at(i).toInt(), num, 10, QChar('0'));
+//                    break;
+//                }
                 default:
                 {
                     vl = sl.at(j).at(i);
                     break;
                 }
                 }
-                setData(index(i, j, QModelIndex()), vl, Qt::EditRole);
+                setData(index(i, j, QModelIndex()), QVariant(vl), Qt::EditRole);
             }
         }
     }
@@ -593,7 +626,7 @@ int s_ncmodel::setupbyid(QString tble, QString id)
     il << headers.size() << headers.size();
     prepareModel(il);
     for (i = 0; i < links.size(); i++)
-        setData(index(i, 1, QModelIndex()), links.at(i), Qt::UserRole);
+        setData(index(i, 1, QModelIndex()), QVariant(links.at(i)), Qt::UserRole);
     fillModel(lsl);
     return 0;
 }

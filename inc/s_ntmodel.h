@@ -57,14 +57,6 @@ private:
     QColor colors[6]; // определение набора цветов шрифта
     QFont fonts[6]; // определение набора шрифтов
     QIcon icons[6]; // определение набора иконок
-/*    typedef struct
-    {
-        int ftype;
-        int delegate;
-        int dependson;
-        QStringList link;
-    } fieldformat;
-    s_ntmodel::fieldformat getFFfromLinks (QString links) const; */
 
     int BuildTree (QString id, bool twodb);
     s_ntitem *addTreeCat (QString catlistid);

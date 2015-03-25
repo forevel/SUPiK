@@ -458,40 +458,12 @@ void s_ntmodel::additemtotree(int position, QStringList sl, int set)
     }
 }
 
-/*s_ntmodel::fieldformat s_ntmodel::getFFfromLinks(QString links) const
-{
-    QStringList tmpsl = links.split(".");
-    fieldformat ff;
-    ff.ftype = 8;
-    ff.delegate = FD_SIMGRID;
-    ff.dependson = -1;
-    ff.link.clear();
-    if (!tmpsl.size())
-        return ff;
-    ff.delegate = tmpsl.at(0).toInt();
-    tmpsl.removeAt(0);
-    if (!tmpsl.size())
-        return ff;
-    ff.ftype = tmpsl.at(0).toInt();
-    tmpsl.removeAt(0);
-    if (!tmpsl.size())
-        return ff;
-    bool ok;
-    ff.dependson = tmpsl.at(0).toInt(&ok, 10);
-    if (!ok)
-        ff.dependson = -1;
-    tmpsl.removeAt(0);
-    if (!tmpsl.size())
-        return ff;
-    for (int i = 0; i < tmpsl.size(); i++)
-        ff.link << tmpsl.at(i);
-    return ff;
-} */
-
 void s_ntmodel::ClearModel()
 {
-    if (rowCount())
-        removeRows(0, rowCount());
-    if (columnCount())
-        removeColumns(0, columnCount());
+    beginResetModel();
+    while (rowCount() > 0)
+        removeRows(0, 1);
+    endResetModel();
+//    if (columnCount())
+//        removeColumns(0, columnCount());
 }

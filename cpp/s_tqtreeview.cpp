@@ -66,10 +66,9 @@ QSize s_tqtreeview::minimumSizeHint()
         int i;
         for (i = 0; i < header()->count(); i++)
         {
-            f2 += this->columnWidth(i)+20;
+            f2 += this->columnWidth(i);
             resizeColumnToContents(i);
         }
-        f2 -= 43;
         int curwidth = static_cast<QDialog *>(parent())->geometry().width()-10;
         int curheight = static_cast<QDialog *>(parent())->geometry().height()-60;
         if (isTree)
@@ -116,6 +115,7 @@ void s_tqtreeview::setTVexpanded(QModelIndex index)
             setExpanded(index, true);
         }
     }
+    updateTVGeometry();
     for (int i = 0; i < header()->count(); i++)
         resizeColumnToContents(i);
 }
@@ -138,7 +138,13 @@ int s_tqtreeview::getVisibleChildsCount(s_ntitem *item)
 //пересчёт размера
 void s_tqtreeview::recalculateGeometry()
 {
-    int new_height = qMax(200, shown_rows*15);
+    int curheight = static_cast<QDialog *>(parent())->geometry().height();
+    int new_height = qMin(curheight, shown_rows*15);
     setMinimumHeight(new_height);
     setMaximumHeight(new_height);
+}
+
+void s_tqtreeview::setShownRows(int rowcount)
+{
+    shown_rows = rowcount;
 }

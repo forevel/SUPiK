@@ -183,6 +183,7 @@ void dir_maindialog::ShowSlaveTree(QString str)
 //                SlaveProxyModel->setSourceModel(SlaveTreeModel);
 //                 SlaveProxyModel->sort(0, Qt::AscendingOrder);
                 SlaveTV->setModel(SlaveTreeModel);
+                SlaveTV->setShownRows(SlaveTV->model()->rowCount());
                 SlaveTVIsTree = true;
                 disconnect(SlaveTV, SIGNAL(expanded(QModelIndex)), 0, 0);
                 connect(SlaveTV, SIGNAL(expanded(QModelIndex)), SlaveTreeModel, SLOT(addExpandedIndex(QModelIndex)));

@@ -17,6 +17,8 @@ public:
     void updateTVGeometry();
     bool isTree;
 
+    void setShownRows(int);
+
 signals:
     void datachanged();
 

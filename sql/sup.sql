@@ -353,6 +353,30 @@ INSERT INTO `personel` VALUES (2001,'Валуйских А.О.','vao','evel_4897
 UNLOCK TABLES;
 
 --
+-- Table structure for table `psw`
+--
+
+DROP TABLE IF EXISTS `psw`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `psw` (
+  `idpsw` int(11) NOT NULL,
+  `psw` varchar(45) DEFAULT NULL,
+  `dept` varchar(2) DEFAULT NULL,
+  PRIMARY KEY (`idpsw`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `psw`
+--
+
+LOCK TABLES `psw` WRITE;
+/*!40000 ALTER TABLE `psw` DISABLE KEYS */;
+/*!40000 ALTER TABLE `psw` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `syslist`
 --
 
@@ -423,4 +447,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-02-25 21:45:10
+-- Dump completed on 2015-05-12 21:20:32

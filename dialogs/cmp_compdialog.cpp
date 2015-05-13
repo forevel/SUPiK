@@ -55,7 +55,7 @@ cmp_compdialog::~cmp_compdialog()
 void cmp_compdialog::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
-    painter.drawPixmap(rect(), QPixmap(":/CompWallpaper.jpg"));
+    painter.drawPixmap(rect(), QPixmap(":/res/CompWallpaper.jpg"));
 
     event->accept();
 }
@@ -258,7 +258,7 @@ void cmp_compdialog::SetupUI()
     AcceptAndClosePB->setGeometry(QRect(360, 560, 151, 23));
     AcceptAndClosePB->setStyleSheet(QStringLiteral("background-color: rgb(220, 220, 220);"));
     QIcon icon1;
-    icon1.addFile(QStringLiteral(":/icon_zap.png"), QSize(), QIcon::Normal, QIcon::Off);
+    icon1.addFile(QStringLiteral(":/res/icon_zap.png"), QSize(), QIcon::Normal, QIcon::Off);
     AcceptAndClosePB->setIcon(icon1);
     AcceptAndClosePB->setAutoDefault(true);
     AcceptAndClosePB->setFlat(false);
@@ -268,7 +268,7 @@ void cmp_compdialog::SetupUI()
     DeclinePB->setStyleSheet(QLatin1String("border-color: rgb(255, 0, 0);\n"
 "background-color: rgb(220, 220, 220);"));
     QIcon icon2;
-    icon2.addFile(QStringLiteral(":/cross.png"), QSize(), QIcon::Normal, QIcon::Off);
+    icon2.addFile(QStringLiteral(":/res/cross.png"), QSize(), QIcon::Normal, QIcon::Off);
     DeclinePB->setIcon(icon2);
     idCompLE = new s_tqLabel(qt_cmp_addcompdialog);
     idCompLE->setObjectName(QStringLiteral("idCompLE"));
@@ -297,7 +297,7 @@ void cmp_compdialog::SetupUI()
     DeletePB->setGeometry(QRect(10, 560, 81, 23));
     DeletePB->setStyleSheet(QStringLiteral("background-color: rgb(220, 220, 220);"));
     QIcon icon3;
-    icon3.addFile(QStringLiteral(":/Deldocy.png"), QSize(), QIcon::Normal, QIcon::Off);
+    icon3.addFile(QStringLiteral(":/res/Deldocy.png"), QSize(), QIcon::Normal, QIcon::Off);
     DeletePB->setIcon(icon3);
     DeletePB->setAutoDefault(true);
     DeletePB->setFlat(false);

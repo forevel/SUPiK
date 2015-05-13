@@ -18,7 +18,7 @@ void sys_cantdeletedialog::SetupUI()
     resize (400,300);
 
     QIcon Icon1;
-    Icon1.addFile(QString::fromUtf8(":/supik.png"), QSize(), QIcon::Normal, QIcon::Off);
+    Icon1.addFile(QString::fromUtf8(":/res/supik.png"), QSize(), QIcon::Normal, QIcon::Off);
     setWindowIcon(Icon1);
     setStyleSheet("background-color: rgb(204, 204, 204);");
 

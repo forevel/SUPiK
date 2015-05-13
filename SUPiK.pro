@@ -64,7 +64,8 @@ SOURCES += main.cpp\
     widgets/s_colortabwidget.cpp \
     widgets/s_maskedle.cpp \
     gen/s_tablefields.cpp \
-    dialogs/sys_acceptexist.cpp
+    dialogs/sys_acceptexist.cpp \
+    startwindow.cpp
 
 HEADERS  += startwindow.h \
     supik.h \
@@ -116,7 +117,8 @@ HEADERS  += startwindow.h \
     widgets/s_colortabwidget.h \
     widgets/s_maskedle.h \
     gen/s_tablefields.h \
-    dialogs/sys_acceptexist.h
+    dialogs/sys_acceptexist.h \
+    startwindow.h
 
 RESOURCES += \
     pic.qrc

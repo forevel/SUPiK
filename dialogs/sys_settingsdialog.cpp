@@ -44,7 +44,7 @@ void sys_settingsdialog::closeEvent(QCloseEvent *event)
 void sys_settingsdialog::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
-    painter.drawPixmap(rect(), QPixmap(":/SysWallpaper.png"));
+    painter.drawPixmap(rect(), QPixmap(":/res/SysWallpaper.png"));
 
     event->accept();
     //    QDialog::paintEvent(event);
@@ -55,7 +55,7 @@ void sys_settingsdialog::SetupUI ()
 //    resize(384, 374);
     setMinimumSize(QSize(384, 194));
     setMaximumSize(QSize(16661, 11616));
-    qssdIcon.addFile(QString::fromUtf8(":/supik.png"), QSize(), QIcon::Normal, QIcon::Off);
+    qssdIcon.addFile(QString::fromUtf8(":/res/supik.png"), QSize(), QIcon::Normal, QIcon::Off);
     setWindowIcon(qssdIcon);
     SettingsL = new s_tqLabel;
     font.setPointSize(15);
@@ -76,9 +76,9 @@ void sys_settingsdialog::SetupUI ()
     ChooseSDirPB = new s_tqPushButton("...");
     LangL = new s_tqLabel;
     LangCB = new s_tqComboBox;
-    RusIcon.addFile(":/LangRU.png", QSize(), QIcon::Normal, QIcon::Off);
+    RusIcon.addFile(":/res/LangRU.png", QSize(), QIcon::Normal, QIcon::Off);
     LangCB->addItem(RusIcon, "RU");
-    EngIcon.addFile(":/langGB.png", QSize(), QIcon::Normal, QIcon::Off);
+    EngIcon.addFile(":/res/langGB.png", QSize(), QIcon::Normal, QIcon::Off);
     LangCB->addItem(EngIcon, "EN");
     LangCB->setCurrentIndex(0);
     timerperiodL = new s_tqLabel;

@@ -27,12 +27,10 @@ supik::supik()
 
 void supik::showEvent(QShowEvent *event)
 {
-    setWindowTitle(pl.WindowTitlesMessages[2]);
-    SetSupikMenuBar();
-    timer1s = new QTimer;
+    QTimer *timer1s = new QTimer;
     timer1s->setInterval(1000);
     connect (timer1s, SIGNAL(timeout()), this, SLOT(periodic1s()));
-    timer1m = new QTimer;
+    QTimer *timer1m = new QTimer;
 //    timer1m->setInterval(pc.timerperiod*60000);
     timer1m->setInterval(pc.timerperiod*3000);
     connect (timer1m, SIGNAL(timeout()), this, SLOT(periodicxm()));
@@ -43,33 +41,29 @@ void supik::showEvent(QShowEvent *event)
 
 void supik::SetSupikWindow()
 {
+    setWindowTitle("Супик :: главное окно");
     resize (984, 688);
-    SupikIcon.addFile(QString::fromUtf8(":/supik.png"), QSize(), QIcon::Normal, QIcon::Off);
+    SupikIcon.addFile(QString::fromUtf8(":/res/supik.png"), QSize(), QIcon::Normal, QIcon::Off);
     setWindowIcon(SupikIcon);
     setStyleSheet("background-color: rgb(204, 204, 204);");
     QVBoxLayout *mainLayout = new QVBoxLayout;
     QHBoxLayout *upperLayout = new QHBoxLayout;
-    QToolBar *MainToolBar = new QToolBar;
-    MainToolBar = addToolBar("123");
-    MainToolBar->setMovable(true);
-    MainToolBar->setMaximumHeight(25);
-    QAction *Preferences = new QAction (QIcon(":/Preferences.png"), pl.DialogMessages[4], this);
-    MainToolBar->addAction(Preferences);
-    upperLayout->addWidget(MainToolBar, 100);
     s_tqLabel *datetime = new s_tqLabel;
     datetime->setObjectName("datetime");
+    upperLayout->addStretch(99);
     upperLayout->addWidget(datetime, 0);
     mainLayout->addLayout(upperLayout, 0);
     MainTW = new S_ColorTabWidget;
     mainLayout->addWidget(MainTW, 100);
-    QWidget *Widget234 = new QWidget;
-    Widget234->setLayout(mainLayout);
-    setCentralWidget(Widget234);
+    QWidget *wdgt = new QWidget;
+    wdgt->setLayout(mainLayout);
+    setCentralWidget(wdgt);
+    SetSupikMenuBar();
 }
 
 void supik::ClearSupikMenuBar()
 {
-    if (SupikMenuBar == (void*)0) delete SupikMenuBar;
+    if (SupikMenuBar != (void*)0) delete SupikMenuBar;
 }
 
 void supik::SetSupikMenuBar()
@@ -187,7 +181,7 @@ void supik::ExecuteSub()
 
 int supik::CheckForWidget(QWidget *dlg, QString str)
 {
-    if (dlg)
+    if (dlg != 0)
         for (int i = 0; i < MainTW->tabBar()->count(); i++)
             if (MainTW->tabBar()->tabData(i).toString() == str)
                 return i;
@@ -202,7 +196,7 @@ void supik::SetSupikStatusBar()
                                   " background-color: rgb(234, 234, 214);"
                                   " font: bold");
     setStatusBar(SupikStatusBar);
-    SupikStatusBar->showMessage(pl.DialogMessages[SUPIK_D]);
+    SupikStatusBar->showMessage("Готов");
 }
 
 // ##################################### ДЕЙСТВИЯ ###################################
@@ -371,7 +365,7 @@ void supik::WhIncome()
     }
 
     whd = new s_ncdialog();
-    whd->setupUI("whincome", ":/WhWallpaper.jpg", DT_GENERAL);
+    whd->setupUI("whincome", ":/res/WhWallpaper.jpg", DT_GENERAL);
     int ids = MainTW->addTab(whd, "Приём на склад");
     MainTW->tabBar()->setTabData(ids, QVariant("whs"));
     MainTW->tabBar()->setCurrentIndex(ids);

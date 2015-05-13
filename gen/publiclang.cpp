@@ -15,11 +15,11 @@ bool publiclang::InitLang()
 {
     QFile file;
     QString tmpString;
-    int i;
+//    int i;
 
     pc.CurLang = pc.LandP->value("settings/lang","RU").toString();
 
-    tmpString = QDir::currentPath();
+/*    tmpString = QDir::currentPath();
     file.setFileName("lang\\lang." + pc.CurLang);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
         return false;
@@ -43,7 +43,7 @@ bool publiclang::InitLang()
         if (tmpString.left(3) != "---")
             DialogMessages[i++] = tmpString;
     }
-
+*/
     return true;
 }
 

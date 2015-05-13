@@ -18,7 +18,7 @@ void sys_acceptexist::SetupUI()
     setMinimumSize(QSize(400, 251));
     setMaximumSize(QSize(400, 251));
     QIcon icon;
-    icon.addFile(QString::fromUtf8(":/pic/Pic/supik.png"), QSize(), QIcon::Normal, QIcon::Off);
+    icon.addFile(QString::fromUtf8(":/res/pic/Pic/supik.png"), QSize(), QIcon::Normal, QIcon::Off);
     setWindowIcon(icon);
     setStyleSheet(QLatin1String("background-color: rgb(223, 223, 223); color: rgb(85, 85, 0);"));
     setModal(true);

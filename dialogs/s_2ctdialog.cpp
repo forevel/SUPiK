@@ -91,7 +91,7 @@ void s_2ctdialog::resizemainTV(QModelIndex index1, QModelIndex index2)
 void s_2ctdialog::paintEvent(QPaintEvent *e)
 {
     QPainter painter(this);
-    painter.drawPixmap(rect(), QPixmap(":/2cWallPaper.png"));
+    painter.drawPixmap(rect(), QPixmap(":/res/2cWallPaper.png"));
     setFixedSize(minimumSizeHint());
     e->accept();
 }

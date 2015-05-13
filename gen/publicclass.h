@@ -101,6 +101,7 @@ public:
     ~PublicClass();
 
     int timerperiod;
+    QString SQLUser, SQLPsw;
     QSqlDatabase ent;
     QSqlDatabase alt;
     QSqlDatabase sup;
@@ -109,7 +110,7 @@ public:
     QSqlDatabase sch;
     QSqlDatabase dev;
     QMap<QString, QSqlDatabase> db;
-    QString Date; // Сегодняшняя дата
+//    QString Date; // Сегодняшняя дата
     QString DateTime; // Сегодняшнее время
     int idRecord; // номер (id) текущей редактируемой записи в справочнике
     int idPers;  // текущий идентификатор пользователя, вошедшего в систему

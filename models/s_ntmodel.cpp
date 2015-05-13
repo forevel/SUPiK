@@ -27,11 +27,11 @@ s_ntmodel::s_ntmodel(QObject *parent) :
     QFont fontN = QFont("MS Sans Serif", -1, QFont::Normal);
     fonts[0] = fonts[3] = fonts[5] = fontN;
     fonts[1] = fonts[2] = fonts[4] = fontB;
-    icons[0] = QIcon(":/hr.png");
-    icons[1] = QIcon(":/ok.png");
-    icons[2] = QIcon(":/cross.png");
-    icons[3] = QIcon(":/book-angle.png");
-    icons[4] = QIcon(":/book-open.png");
+    icons[0] = QIcon(":/res/hr.png");
+    icons[1] = QIcon(":/res/ok.png");
+    icons[2] = QIcon(":/res/cross.png");
+    icons[3] = QIcon(":/res/book-angle.png");
+    icons[4] = QIcon(":/res/book-open.png");
     rootItem = new s_ntitem;
     parents.clear();
     indentations.clear();

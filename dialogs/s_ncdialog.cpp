@@ -309,7 +309,7 @@ QWidget *s_ncdialog::getWidget(int id, QString ftext, QString link, QString defs
         else if (defstr == "$pers")
             ftext = pc.Pers;
         else if (defstr == "$date")
-            ftext = pc.Date;
+            ftext = pc.DateTime.left(10);
         else if (defstr == "$datetime")
             ftext = pc.DateTime;
         else

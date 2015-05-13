@@ -6,7 +6,7 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    a.setStyle(QStyleFactory::create("Plastique"));
+//    a.setStyle(QStyleFactory::create("Plastique"));
     StartWindow w;
 
     w.show();

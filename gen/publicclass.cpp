@@ -46,14 +46,13 @@ void PublicClass::InitiatePublicClass()
     QFont fontN = QFont("MS Sans Serif", -1, QFont::Normal);
     fonts[0] = fonts[3] = fonts[5] = fontN;
     fonts[1] = fonts[2] = fonts[4] = fontB;
-    icons[0] = QIcon(":/hr.png");
-    icons[1] = QIcon(":/ok.png");
-    icons[2] = QIcon(":/cross.png");
-    icons[3] = QIcon(":/calend.png");
-    icons[4] = QIcon(":/refresh.png");
-    icons[5] = QIcon(":/TN.png");
-    QString tmpString;
-    Date = QDate::currentDate().toString("dd/MM/yyyy");
+    icons[0] = QIcon(":/res/hr.png");
+    icons[1] = QIcon(":/res/ok.png");
+    icons[2] = QIcon(":/res/cross.png");
+    icons[3] = QIcon(":/res/calend.png");
+    icons[4] = QIcon(":/res/refresh.png");
+    icons[5] = QIcon(":/res/TN.png");
+//    Date = QDate::currentDate().toString("dd/MM/yyyy");
     DateTime = QDateTime::currentDateTime().toString("dd/MM/yyyy hh:mm:ss");
     SQLPath = LandP->value("settings/SQLPath","localhost").toString();
     PathToLibs = LandP->value("settings/pathtolibs","//FSERVER//PCAD//Altium//Libs//").toString();
@@ -210,7 +209,6 @@ void PublicClass::addmessage(QStringList &sl, QString mes)
 }
 
 // функция таймера
-// каждую секунду обновлять поле с датой и временем
 // каждые Х минут (задаётся в настройках Settings) проверять наличие новых записей в таблицах qnk и qaltium
 
 void PublicClass::minutetest()
@@ -270,8 +268,8 @@ QString PublicClass::getTranslit(QString str)
             newstr += RUSLAT.value(chr);
         else
             newstr += chr;
-        QString tmpString = RUSLAT.value('е');
-        chr = RUSLAT.key("E");
+//        QString tmpString = RUSLAT.value('е');
+//        chr = RUSLAT.key("E");
     }
     return newstr;
 }

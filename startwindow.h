@@ -1,5 +1,5 @@
-#ifndef StartWindow_H
-#define StartWindow_H
+#ifndef STARTWINDOW_H
+#define STARTWINDOW_H
 
 #include <QMainWindow>
 
@@ -23,25 +23,26 @@ QT_END_NAMESPACE
 class StartWindow : public QMainWindow
 {
     Q_OBJECT
-    
 public:
+    explicit StartWindow(QWidget *parent = 0);
+    ~StartWindow();
     supik supik_main_window;
-    StartWindow ();
+
+signals:
+
+public slots:
 
 private slots:
     void OkPBClicked();
-
     void PasswdLEReturnPressed();
-
     void UNameLEReturnPressed();
-
     void SystemPBClicked();
 
 private:
     QSplashScreen *StartWindowSplashScreen;
     QGridLayout *StartWindowLayout;
     QHBoxLayout *StartWindowHBoxLayout;
-    QWidget *CentralWidget;
+//    QWidget *CentralWidget;
     QLabel *UNameL;
     QLabel *PasswdL;
     QLineEdit *UNameLE;
@@ -51,10 +52,10 @@ private:
     QLabel *SaveL;
     QPushButton *SystemPB;
     QStatusBar *statusBar;
-    QIcon StartWindowIcon, SystemPBIcon;
+//    QIcon StartWindowIcon, SystemPBIcon;
+    sys_settingsdialog qssd;
 
     void showEvent(QShowEvent *event);
-
     void SetupUI();
     void LoadLanguage();
     void Startup();
@@ -62,7 +63,6 @@ private:
     void DBCheck();
     void ReminderCheck();
     void CatalogueCheck();
-    sys_settingsdialog qssd;
 };
 
-#endif // StartWindow_H
+#endif // STARTWINDOW_H

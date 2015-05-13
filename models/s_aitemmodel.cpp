@@ -265,9 +265,9 @@ void s_aitemmodel::setupUI()
     colors[4] = Qt::darkGreen;
     colors[5] = Qt::gray;
 
-    icons[0] = QIcon(":/book-angle.png");
-    icons[1] = QIcon(":/book-open.png");
-    icons[2] = QIcon(":/hr.png");
+    icons[0] = QIcon(":/res/book-angle.png");
+    icons[1] = QIcon(":/res/book-open.png");
+    icons[2] = QIcon(":/res/hr.png");
 
     expandedIndexes.clear();
 }

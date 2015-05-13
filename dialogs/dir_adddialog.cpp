@@ -42,9 +42,9 @@ void dir_adddialog::setupUI()
     QVBoxLayout *mainLayout = new QVBoxLayout;
     QHBoxLayout *mainPBLayout = new QHBoxLayout;
     s_tqPushButton *WriteAndClosePB = new s_tqPushButton;
-    WriteAndClosePB->setIcon(QIcon(":/icon_zap.png"));
+    WriteAndClosePB->setIcon(QIcon(":/res/icon_zap.png"));
     s_tqPushButton *CancelAndClosePB = new s_tqPushButton;
-    CancelAndClosePB->setIcon(QIcon(":/cross.png"));
+    CancelAndClosePB->setIcon(QIcon(":/res/cross.png"));
     QTabWidget *mainTW = new QTabWidget;
     QDialog *dlg1 = new QDialog;
     QDialog *dlg2 = new QDialog;

@@ -57,7 +57,7 @@ wh_dialog::wh_dialog(int Reason, QString id, QWidget *parent) :
 void wh_dialog::paintEvent(QPaintEvent *e)
 {
     QPainter painter(this);
-    painter.drawPixmap(rect(), QPixmap(":/WhWallpaper.jpg"));
+    painter.drawPixmap(rect(), QPixmap(":/res/WhWallpaper.jpg"));
 
     if (needtorefresh)
     {
@@ -107,7 +107,7 @@ int wh_dialog::SetupUI(QString id)
     dateLE->setObjectName("Date");
     dateLE->setEnabled(false);
     s_tqPushButton *datePB = new s_tqPushButton;
-    datePB->setIcon(QIcon(":/calend.png"));
+    datePB->setIcon(QIcon(":/res/calend.png"));
     if (pc.access & 0x07)
     {
         connect(datePB, SIGNAL(clicked()), this, SLOT(chooseDate()));
@@ -124,10 +124,10 @@ int wh_dialog::SetupUI(QString id)
     QHBoxLayout *authorLayout = new QHBoxLayout;
     s_tqPushButton *acceptPB = new s_tqPushButton;
     acceptPB->setText("Записать и закрыть");
-    acceptPB->setIcon(QIcon(":/icon_zap.png"));
+    acceptPB->setIcon(QIcon(":/res/icon_zap.png"));
     s_tqPushButton *cancelPB = new s_tqPushButton;
     cancelPB->setText("Отменить");
-    cancelPB->setIcon(QIcon(":/cross.png"));
+    cancelPB->setIcon(QIcon(":/res/cross.png"));
     s_tqLabel *author = new s_tqLabel;
     author->setObjectName("Author");
     connect(acceptPB, SIGNAL(clicked()), this, SLOT(acceptandclose()));
@@ -176,7 +176,7 @@ int wh_dialog::SetupUI(QString id)
     loadTNPB->setToolTip("Указать путь к отсканированной ТН");
     connect(loadTNPB, SIGNAL(clicked()), this, SLOT(chooseTN()));
     s_tqPushButton *viewTNPB = new s_tqPushButton;
-    viewTNPB->setIcon(QIcon(":/TN.png"));
+    viewTNPB->setIcon(QIcon(":/res/TN.png"));
     viewTNPB->setToolTip("Просмотр отсканированной ТН");
     connect(viewTNPB, SIGNAL(clicked()), this, SLOT(viewTN()));
     s_tqLabel *reasonL = new s_tqLabel("Основание: ");;
@@ -642,7 +642,7 @@ int wh_dialog::fillFlow(QString id)
 int wh_dialog::fillNullFlow()
 {
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("Date");
-    le->setText(pc.Date);
+    le->setText(pc.DateTime.left(10));
     s_tqLabel *ll = this->findChild<s_tqLabel *>("Author");
     ll->setText("Автор: " + pc.Pers);
     DocNum = "";

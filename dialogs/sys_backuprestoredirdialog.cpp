@@ -30,7 +30,7 @@ sys_backuprestoredirdialog::sys_backuprestoredirdialog(bool isImport, QWidget *p
 void sys_backuprestoredirdialog::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
-    painter.drawPixmap(rect(), QPixmap(":/Sys2Wallpaper.png"));
+    painter.drawPixmap(rect(), QPixmap(":/res/Sys2Wallpaper.png"));
 
     event->accept();
 }
@@ -47,10 +47,10 @@ void sys_backuprestoredirdialog::SetupUI()
     mainTV->verticalHeader()->setVisible(false);
     s_tqPushButton *ImpExpPB = new s_tqPushButton;
     ImpExpPB->setText((isImport)?"Импорт":"Экспорт");
-    ImpExpPB->setIcon(QIcon((isImport)?":/import.png":":/export.png"));
+    ImpExpPB->setIcon(QIcon((isImport)?":/res/import.png":":/res/export.png"));
     s_tqPushButton *CancelPB = new s_tqPushButton;
     CancelPB->setText("Отмена");
-    CancelPB->setIcon(QIcon(":/cross.png"));
+    CancelPB->setIcon(QIcon(":/res/cross.png"));
     s_tqPushButton *loadFilePB = new s_tqPushButton("...");
     s_tqLabel *loadFileL = new s_tqLabel("Файл:");
     s_tqLineEdit *loadFileLE = new s_tqLineEdit;

@@ -1,72 +1,77 @@
-﻿#include <QtWidgets>
+#include <QSplashScreen>
+#include <QSettings>
+#include <QMessageBox>
+#include <QApplication>
+#include <QEventLoop>
+#include <QTime>
 
-#include "gen/s_sql.h"
 #include "startwindow.h"
+#include "gen/s_sql.h"
 
-StartWindow::StartWindow()
+StartWindow::StartWindow(QWidget *parent) : QMainWindow(parent)
 {
-    QPixmap StartWindowSplashPixmap(":/1.x.png");
+    QPixmap StartWindowSplashPixmap(":/res/1.x.png");
     StartWindowSplashScreen = new QSplashScreen(StartWindowSplashPixmap);
     StartWindowSplashScreen->show();
 
-    StartWindowSplashScreen->showMessage("Language check...", Qt::AlignRight, Qt::white);
-    qApp->processEvents();
-//    Sleep(1000);
+    StartWindowSplashScreen->showMessage("Загрузка языков...", Qt::AlignRight, Qt::white);
+/*    QTime tmr;
+    tmr.start();
+    while (tmr.elapsed() < 1000)
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100); */
     LoadLanguage();
 
     StartWindowSplashScreen->showMessage("Настройка пользовательского окружения...", Qt::AlignRight, Qt::white);
-    qApp->processEvents();
-//    Sleep(1000);
     SetupUI();
 
     StartWindowSplashScreen->showMessage("Подключение к базе данных...", Qt::AlignRight, Qt::white);
-    qApp->processEvents();
-//    Sleep(1000);
     Startup();
 
     StartWindowSplashScreen->finish(this);
 }
 
+StartWindow::~StartWindow()
+{
+
+}
+
 void StartWindow::showEvent(QShowEvent *event)
 {
-    setWindowTitle("Супик :: вход");
-    UNameL->setText("Имя польз.:");
-    PasswdL->setText("Пароль:");
-    SaveL->setText("Запомнить");
-    OkPB->setText("Вход");
     UNameLE->setFocus();
     event->accept();
 }
 
 void StartWindow::SetupUI()
 {
+    setWindowTitle("Супик :: вход");
     resize(213, 136);
     QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
     setSizePolicy(sizePolicy);
-    setMinimumSize(QSize(206, 130));
-//    setMaximumSize(QSize(16661, 11616));
-    StartWindowIcon.addFile(QString::fromUtf8(":/supik.png"), QSize(), QIcon::Normal, QIcon::Off);
+    setMinimumSize(QSize(213, 136));
+    setMaximumSize(QSize(213, 136));
+    QIcon StartWindowIcon;
+    StartWindowIcon.addFile(QString::fromUtf8(":/res/supik.png"), QSize(), QIcon::Normal, QIcon::Off);
     setWindowIcon(StartWindowIcon);
     setStyleSheet("background-color: rgb(204, 204, 204);");
-    CentralWidget = new QWidget(this);
-    UNameL = new QLabel;
-    PasswdL = new QLabel;
+    QWidget *CentralWidget = new QWidget(this);
+    UNameL = new QLabel("Имя польз.:");
+    PasswdL = new QLabel("Пароль:");
     UNameLE = new QLineEdit;
     PasswdLE = new QLineEdit;
     PasswdLE->setEchoMode(QLineEdit::Password);
     OkPB = new QPushButton;
     SaveCB = new QCheckBox;
-    SaveL = new QLabel;
+    SaveL = new QLabel("Запомнить");
     SystemPB = new QPushButton;
     SystemPB->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    SystemPB->setMinimumSize(10, 10);
     SystemPB->setMaximumSize(23, 23);
     SystemPB->setGeometry(QRect(187, 95, 10, 10));
-    SystemPBIcon.addFile(":/Preferences.png", QSize(), QIcon::Normal, QIcon::Off);
+    QIcon SystemPBIcon;
+    SystemPBIcon.addFile(":/res/Preferences.png", QSize(), QIcon::Normal, QIcon::Off);
     SystemPB->setIcon(SystemPBIcon);
-    OkPB = new QPushButton;
+    OkPB = new QPushButton("Вход");
 
-    StartWindowLayout = new QGridLayout(CentralWidget);
+    QGridLayout *StartWindowLayout = new QGridLayout;
     StartWindowLayout->addWidget(UNameL, 0, 0);
     StartWindowLayout->addWidget(UNameLE, 0, 1, 1, 2);
     StartWindowLayout->addWidget(PasswdL, 1, 0);
@@ -79,6 +84,7 @@ void StartWindow::SetupUI()
     StartWindowLayout->setColumnStretch(0, 0);
     StartWindowLayout->setColumnStretch(2, 0);
 
+    CentralWidget->setLayout(StartWindowLayout);
     setCentralWidget(CentralWidget);
     QWidget::setTabOrder(UNameLE, PasswdLE);
     QWidget::setTabOrder(PasswdLE, SaveCB);
@@ -141,24 +147,21 @@ void StartWindow::OkPBClicked()
 
         this->hide();
 
-        QPixmap StartWindowSplashPixmap(":/1.x.png");
+        QPixmap StartWindowSplashPixmap(":/res/1.x.png");
         StartWindowSplashScreen = new QSplashScreen(StartWindowSplashPixmap);
         StartWindowSplashScreen->show();
 
         StartWindowSplashScreen->showMessage("Проверка целостности данных...", Qt::AlignRight, Qt::white);
-        qApp->processEvents();
-    //    Sleep(1000);
-//        DBCheck();
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+        //        DBCheck();
 
         StartWindowSplashScreen->showMessage("Проверка наличия напоминаний...", Qt::AlignRight, Qt::white);
-        qApp->processEvents();
-    //    Sleep(1000);
-//        ReminderCheck();
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+        //        ReminderCheck();
 
         StartWindowSplashScreen->showMessage("Проверка структуры каталогов...", Qt::AlignRight, Qt::white);
-        qApp->processEvents();
-    //    Sleep(1000);
-//        CatalogueCheck();
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+        //        CatalogueCheck();
 
         StartWindowSplashScreen->finish(this);
 

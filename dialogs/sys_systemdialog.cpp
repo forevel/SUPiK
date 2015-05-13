@@ -22,7 +22,7 @@ sys_systemdialog::sys_systemdialog(QWidget *parent) :
 void sys_systemdialog::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
-    painter.drawPixmap(rect(), QPixmap(":/Sys2Wallpaper.png"));
+    painter.drawPixmap(rect(), QPixmap(":/res/Sys2Wallpaper.png"));
 
     event->accept();
 }

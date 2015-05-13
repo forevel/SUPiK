@@ -33,7 +33,7 @@ void sys_probsdialog::SetupUI()
     connect (mainTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(removeProb(QModelIndex)));
     mainLayout->addWidget(mainTV, 100);
     s_tqPushButton *pb = new s_tqPushButton("Обновить");
-    pb->setIcon(QIcon(":/refresh.png"));
+    pb->setIcon(QIcon(":/res/refresh.png"));
     connect(pb, SIGNAL(clicked()), this, SLOT(refresh()));
     mainLayout->addWidget(pb, 0);
     setLayout(mainLayout);

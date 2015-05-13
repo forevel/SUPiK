@@ -36,7 +36,7 @@ QT_END_NAMESPACE
 #define SUPIKMENU_ITEM_COLOR_SELECTED "#000000"
 #define SYS_TAB_BGCOLOR "#FF373A"
 
-#define SYSSTYLESHEET "background-image: url(:/SysWallpaper.png);"
+#define SYSSTYLESHEET "background-image: url(:/res/SysWallpaper.png);"
 
 class supik : public QMainWindow
 {
@@ -54,7 +54,6 @@ private:
     QMenuBar *SupikMenuBar;
     QIcon SupikIcon;
     S_ColorTabWidget *MainTW;
-    QTimer *timer1s, *timer1m;
 
     int WarningActionIndex;
     QHash <QString, void (supik::*)()> pf;

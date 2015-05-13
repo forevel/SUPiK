@@ -67,7 +67,7 @@ void s_sqltreedialog::SetupUI(QString index)
     connect(mainTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(choosed(QModelIndex)));
 
     s_tqPushButton *newPB = new s_tqPushButton;
-    newPB->setIcon(QIcon(":/newdocy.png"));
+    newPB->setIcon(QIcon(":/res/newdocy.png"));
     newPB->setToolTip("Создать новый элемент");
     connect(newPB, SIGNAL(clicked()), this, SLOT(execSqlFieldsDialog()));
     s_tqLabel *lb = new s_tqLabel ("Фильтр:");
@@ -76,7 +76,7 @@ void s_sqltreedialog::SetupUI(QString index)
     s_tqLineEdit *lls = new s_tqLineEdit;
     lls->setObjectName("lls");
     s_tqPushButton *spb = new s_tqPushButton;
-    spb->setIcon(QIcon(":/lupa.gif"));
+    spb->setIcon(QIcon(":/res/lupa.gif"));
     connect (le, SIGNAL(textChanged(QString)), this, SLOT(filter(QString)));
     connect(spb, SIGNAL(clicked()), this, SLOT(search()));
     QHBoxLayout *FilterLayout = new QHBoxLayout;

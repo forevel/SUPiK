@@ -25,7 +25,7 @@ public:
     Qt::ItemFlags flags(const QModelIndex &index) const;
     int rowCount(const QModelIndex &parent = QModelIndex()) const;
     int columnCount(const QModelIndex &parent = QModelIndex()) const;
-    bool insertColumns(int position, int columns, const QModelIndex &parent = QModelIndex());
+//    bool insertColumns(int position, int columns, const QModelIndex &parent = QModelIndex());
     bool insertRows(int position, int rows, const QModelIndex &parent = QModelIndex());
     bool removeColumns(int position, int columns, const QModelIndex &parent = QModelIndex());
     bool removeRows(int position, int rows, const QModelIndex &parent = QModelIndex());

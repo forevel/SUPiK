@@ -339,7 +339,7 @@ QWidget *s_ncdialog::getWidget(int id, QString ftext, QString link, QString defs
     }
     case FT_CHOOSE:
     {
-        s_tqchoosewidget *cw = new s_tqchoosewidget;
+        s_tqChooseWidget *cw = new s_tqChooseWidget;
         QString dlink;
         if ((links.at(1).toInt() < 2) || (links.at(1).toInt() > 18))
             return 0;
@@ -398,7 +398,7 @@ QWidget *s_ncdialog::getWidget(int id, QString ftext, QString link, QString defs
     }
     case FT_SPIN:
     {
-        s_tqspinbox *sb = new s_tqspinbox;
+        s_tqSpinBox *sb = new s_tqSpinBox;
         sb->setValue(ftext.toInt());
         connect (sb, SIGNAL(valueChanged(QString)), this, SLOT(somethingchanged(QString)));
         return sb;
@@ -406,7 +406,7 @@ QWidget *s_ncdialog::getWidget(int id, QString ftext, QString link, QString defs
     }
     case FT_MASKED:
     {
-        s_maskedle *le = new s_maskedle(links.at(2));
+        s_MaskedLineEdit *le = new s_MaskedLineEdit(links.at(2));
         le->setText(ftext);
         connect(le, SIGNAL(textChanged(QString)), this, SLOT(somethingchanged(QString)));
         return le;

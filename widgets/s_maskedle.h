@@ -1,5 +1,5 @@
-#ifndef S_maskedle_H
-#define S_maskedle_H
+#ifndef s_MaskedLineEdit_H
+#define s_MaskedLineEdit_H
 
 #define MONEY   1
 #define INTEG2  2
@@ -8,11 +8,11 @@
 #include <QLineEdit>
 #include <QKeyEvent>
 
-class s_maskedle : public QLineEdit
+class s_MaskedLineEdit : public QLineEdit
 {
     Q_OBJECT
 public:
-    explicit s_maskedle(QString regexp, QWidget *parent = 0);
+    explicit s_MaskedLineEdit(QString regexp, QWidget *parent = 0);
 
 signals:
 
@@ -25,4 +25,4 @@ protected:
     void keyPressEvent(QKeyEvent *e);
 };
 
-#endif // S_maskedle_H
+#endif // s_MaskedLineEdit_H

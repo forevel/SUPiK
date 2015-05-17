@@ -1,8 +1,6 @@
 #ifndef S_2CMODEL_H
 #define S_2CMODEL_H
 
-#define CM_ERROR   0x0100
-
 #include <QAbstractTableModel>
 #include <QColor>
 #include <QFont>
@@ -42,11 +40,13 @@ public:
     void setrowlinks(int row, QStringList links); // установка типов полей на строку модели
     bool checkforEmptyRows(); // проверка наличия строк, в которых элементы по индексам fieldsToCheck содержат пустые поля
     void setCellAttr(QModelIndex index, int fcset=0, int icon=-1);
-    QString getCellLinks(QModelIndex);
+    QString getCellType(int row, int column);
     void setRowAttr(int fcset=0, int icon=-1);
     void ClearModel();
     void fillModel(QList<QStringList> sl);
     QStringList cvalues(int column); // выдать значения по столбцу column в выходной QStringList
+    QStringList rvalues(int row); // выдать значения по строке row в выходной QStringList
+    QString value(int row, int column); // взять значение по строке row и столбцу column
     void prepareModel(QList<int> sl);
     int maxcolwidth(int column);
     int maxcolwidthsize();
@@ -75,15 +75,8 @@ private:
     QIcon icons[6]; // определение набора иконок
     QString getEq(QString arg1, QString arg2, int oper, const QModelIndex index, bool byRow) const; // подсчёт выражения "arg1 <oper> arg2"
     float getOperand(QString str, const QModelIndex index, bool byRow) const; // подсчёт арифм. выражения, содержащегося в строке str
-/*    typedef struct
-    {
-        int ftype;
-        int delegate;
-        int dependson;
-        QStringList link;
-    } fieldformat;
-    s_ncmodel::fieldformat getFFfromLinks (QString links) const; */
     QList<int> maxcolswidth;
+    int result;
 };
 
 #endif // S_2CMODEL_H

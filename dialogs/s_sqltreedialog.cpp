@@ -40,7 +40,7 @@ void s_sqltreedialog::SetupUI(QString index)
     int i;
 
     prModel = new QSortFilterProxyModel;
-    mainTV = new s_tqtreeview;
+    mainTV = new s_tqTreeView;
     treeModel->isEditable = false;
     prModel->setSourceModel(treeModel);
     prModel->setFilterKeyColumn(-1);

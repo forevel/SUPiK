@@ -6,11 +6,11 @@
 #include <QPaintEvent>
 #include "../models/s_ntmodel.h"
 
-class s_tqtreeview : public QTreeView
+class s_tqTreeView : public QTreeView
 {
     Q_OBJECT
 public:
-    explicit s_tqtreeview(QWidget *parent = 0);
+    explicit s_tqTreeView(QWidget *parent = 0);
     QVariant getAData();
     void setAData(QVariant dat);
     QSize minimumSizeHint();
@@ -38,11 +38,11 @@ protected:
     void paintEvent(QPaintEvent *e);
 };
 
-class s_tqtreeviewstyle : public QProxyStyle
+class s_tqTreeViewstyle : public QProxyStyle
 {
     Q_OBJECT
 public:
-    explicit s_tqtreeviewstyle();
+    explicit s_tqTreeViewstyle();
     void drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, QPainter *p, const QWidget *w) const;
 };
 

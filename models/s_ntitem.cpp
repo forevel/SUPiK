@@ -90,7 +90,7 @@ s_ntitem *s_ntitem::insertChild(int position, int columns)
     return item;
 }
 
-bool s_ntitem::insertColumns(int position, int columns)
+/*bool s_ntitem::insertColumns(int position, int columns)
 {
     if (position < 0 || position > itemData.size())
         return false;
@@ -99,7 +99,7 @@ bool s_ntitem::insertColumns(int position, int columns)
     foreach (s_ntitem *child, childItems)
         child->insertColumns(position, columns);
     return true;
-}
+} */
 
 s_ntitem *s_ntitem::parent()
 {
@@ -119,7 +119,7 @@ bool s_ntitem::removeColumns(int position, int columns)
 {
     if (position < 0 || ((position + columns) > itemData.size()))
         return false;
-    for (int column = 0; column < columns; ++column)
+    for (int column = 0; column < columns; column++)
         itemData.removeAt(position);
     foreach (s_ntitem *child, childItems)
         child->removeColumns(position, columns);

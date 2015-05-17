@@ -21,7 +21,7 @@ s_tablefilterdialog::s_tablefilterdialog(QWidget *parent) :
 void s_tablefilterdialog::SetupUI(QList<QStringList> sl, QString id)
 {
     slm = new s_aitemmodel(sl);
-    tv = new s_tqtreeview;
+    tv = new s_tqTreeView;
     slm->isEditable = false;
     proxyModel = new QSortFilterProxyModel;
     proxyModel->setSourceModel(slm);
@@ -35,7 +35,7 @@ void s_tablefilterdialog::SetupUI(QStringList sl, QString id)
     tmpsl.clear();
     tmpsl.append(sl);
     slm = new s_aitemmodel(tmpsl);
-    tv = new s_tqtreeview;
+    tv = new s_tqTreeView;
     slm->isEditable = false;
     proxyModel = new QSortFilterProxyModel;
     proxyModel->setSourceModel(slm);
@@ -46,7 +46,7 @@ void s_tablefilterdialog::SetupUI(QStringList sl, QString id)
 void s_tablefilterdialog::SetupUI(QStringList sl1, QStringList sl2, QString id)
 {
     slm = new s_aitemmodel(sl1, sl2);
-    tv = new s_tqtreeview;
+    tv = new s_tqTreeView;
     slm->isEditable = false;
     proxyModel = new QSortFilterProxyModel;
     proxyModel->setSourceModel(slm);

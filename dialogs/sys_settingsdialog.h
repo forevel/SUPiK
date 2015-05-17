@@ -1,7 +1,7 @@
 #ifndef SYS_SETTINGSDIALOG_H
 #define SYS_SETTINGSDIALOG_H
 
-#include <QWidget>
+#include <QDialog>
 #include <QIcon>
 #include "../gen/publicclass.h"
 #include "../gen/publiclang.h"
@@ -21,36 +21,25 @@ QT_END_NAMESPACE
 
 #define SYS_BGCOLOR "#FF6666"
 
-class sys_settingsdialog : public QWidget
+class sys_settingsdialog : public QDialog
 {
     Q_OBJECT
     
 public:
-    s_tqLineEdit *PathToLibsLE, *SQLPathLE, *PathToSupikLE;
-    s_tqComboBox *LangCB;
-    s_tqspinbox *timerperiodSB;
-    bool Completed;
-    sys_settingsdialog();
+    QString PathToLibs, SQLPath, PathToSupik, Lang;
+    double TimerPeriod;
+    explicit sys_settingsdialog(QWidget *parent=0);
+    void SetupUI ();
 
 private slots:
-
+    void LangChoosed(QString);
+    void TimerPeriodChoosed(double);
     void CancelPBClicked();
     void OKPBClicked();
     void ChooseDirPBClicked();
     void ChooseSDirPBClicked();
 
 private:
-    QGridLayout *GridLayout;
-    QVBoxLayout *MainLayout;
-    QFrame *MainFrame, *PBFrame;
-    QHBoxLayout *PBLayout;
-    QFont font;
-    s_tqLabel *SettingsL, *PathToLibsL, *LangL, *SQLPathL, *PathToSupikL, *timerperiodL;
-    s_tqPushButton *ChooseDirPB, *isOKPB, *CancelPB, *ChooseSDirPB;
-    QIcon qssdIcon, RusIcon, EngIcon;
-    bool FirstShow;
-
-    void SetupUI ();
     void showEvent(QShowEvent *event);
     void closeEvent(QCloseEvent *event);
     void paintEvent(QPaintEvent *event);

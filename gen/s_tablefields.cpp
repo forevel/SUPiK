@@ -2,7 +2,7 @@
 #include "publicclass.h"
 
 // класс s_tablefields предназначен для облегчения работы с таблицей tablefields БД supik и содержит в себе высокоуровневые процедуры работы с данной таблицей:
-// 1. toidl ([table:headers] to id stringlist) - взять все значения по ссылке table:tablefields из таблицы tablename для данного поля headers
+// 1. htovl ([table:header] to value list) - взять все значения по ссылке table:tablefields из таблицы tablename для данного поля header
 // 2. toid - то же, что и 1, но возвращает только одно значение по заданному id<tble>
 // 3. tbtovll - взять все значения по всем полям таблицы tble и вернуть их в QList<QStringList> - полезно для заполнения таблиц s_2cdialog, s_ncdialog
 // 4. idtov - по заданному ИД и строке links вытащить значение
@@ -16,41 +16,38 @@ s_tablefields::s_tablefields()
 {
 }
 
-// процедура для данного поля headers таблицы tble берёт все возможные значения
-// и передаёт их в QStringList tmpsl следующим образом:
-// tmpsl.at(0) = links для данного поля
-// tmpsl.at(1)-... = значения
+// процедура для данного поля header таблицы tble берёт все возможные значения
+// и передаёт их в QStringList tmpsl
 
-QStringList s_tablefields::toidl(QString tble, QString headers)
+QStringList s_tablefields::htovl(QString tble, QString header)
 {
-    QStringList sl = tablefields(tble, headers); // sl.at(0) = <table>, sl.at(1) = <tablefields>, sl.at(2) = <links>
+    QStringList sl = tablefields(tble, header); // sl.at(0) = <table>, sl.at(1) = <tablefields>
     if (result)
         return QStringList();
-    QString db = sl.at(0).split(".").at(0);
+    QString db = sl.at(0).split(".").at(0); // table = <db>.<tble>
     tble = sl.at(0).split(".").at(1);
     QStringList tmpsl = sqlc.getvaluesfromtablebycolumn(sqlc.getdb(db), tble, sl.at(1));
     if (sqlc.result)
     {
-        result = sqlc.result;
+        result = sqlc.result + 0x03 + ER_TFIELD;
         return QStringList();
     }
-    tmpsl.insert(0, sl.at(2));
     result = 0;
     return tmpsl;
 }
 
-// toidlc - это процедура toidl с дополнительным условием
-// берёт все значения по полю headers таблицы tble, где поле cheaders этой же таблицы равно value
+// htovlc - это процедура htovl с дополнительным условием
+// берёт все значения по полю header таблицы tble, где поле cheader этой же таблицы равно value
 
-QStringList s_tablefields::toidlc(QString tble, QString headers, QString cheaders, QString value)
+QStringList s_tablefields::htovlc(QString tble, QString header, QString cheader, QString value)
 {
-    QStringList sl = tablefields(tble, headers); // sl.at(0) = <table>, sl.at(1) = <tablefields>, sl.at(2) = <links>
+    QStringList sl = tablefields(tble, header); // sl.at(0) = <table>, sl.at(1) = <tablefields>
     if (result)
     {
         result += 0x11;
         return QStringList();
     }
-    QStringList cl = tablefields(tble, cheaders); // cl.at(1) = <tablefields>
+    QStringList cl = tablefields(tble, cheader); // cl.at(1) = <tablefields>
     if (result)
     {
         result += 0x15;
@@ -61,10 +58,9 @@ QStringList s_tablefields::toidlc(QString tble, QString headers, QString cheader
     QStringList tmpsl = sqlc.getvaluesfromtablebycolumnandfield(sqlc.getdb(db), tble, sl.at(1), cl.at(1), value);
     if (sqlc.result)
     {
-        result = sqlc.result + 0x1A;
+        result = sqlc.result + 0x1A + ER_TFIELD;
         return QStringList();
     }
-    tmpsl.insert(0, sl.at(2));
     result = 0;
     return tmpsl;
 }
@@ -72,91 +68,55 @@ QStringList s_tablefields::toidlc(QString tble, QString headers, QString cheader
 // процедура возвращает список из списков значений, взятых по полям для таблицы tble
 // нужна для организации списка выбора из таблиц а-ля "*_сокращ"
 
-QList<QStringList> s_tablefields::tbtovll(QString links)
+QList<QStringList> s_tablefields::tbvll(QString tble)
 {
     QList<QStringList> lsl;
     QStringList tmpsl;
-    PublicClass::fieldformat ff = pc.getFFfromLinks(links);
-    QString tble = ff.link.at(0);
-    QStringList sl = sqlc.getvaluesfromtablebycolumnandfield(sqlc.getdb("sup"), "tablefields", "links", "tablename", tble); // берём links
+    QStringList sl = tablelinks(tble); // берём links
     int i;
-    if (sqlc.result)
+    if (result)
     {
-        result = sqlc.result + 0x21;
+        result += 0x21;
         return QList<QStringList>();
     }
     lsl.append(sl);
-    sl = sqlc.getvaluesfromtablebycolumnandfield(sqlc.getdb("sup"), "tablefields", "headers", "tablename", tble); // берём headers
-    if (sqlc.result)
+    sl = tableheaders(tble); // берём header
+    if (result)
     {
-        result = sqlc.result + 0x24;
+        result += 0x24;
         return QList<QStringList>();
     }
     lsl.insert(0, sl); // на поз. 0 заголовки, на поз. 1 - links
-    switch (ff.ftype)
+    for (i = 0; i < sl.size(); i++)
     {
-    case FW_ALLINK:
-    {
-        QString id = vtoid_(ff.link.at(0), "Наименование", ff.link.at(1)); // взять ИД элемента, по ИД_а которого отбирать список элементов
-        if (result)
-        {
-            result += 0x51;
-            return QList<QStringList>();
-        }
-        for (i = 0; i < sl.size(); i++)
-        {
-            tmpsl = toidlc(ff.link.at(0), sl.at(i), "ИД_а", id);
-            if (result)
-            {
-                result += 0x54;
-                return QList<QStringList>();
-            }
-            lsl.append(tmpsl);
-        }
-        break;
-    }
-    case FW_MAXLINK:
-    case FW_LINK:
-    {
-        for (i = 0; i < sl.size(); i++)
-        {
-            tmpsl = toidl(tble, sl.at(i));
-            tmpsl.removeAt(0); // убираем links, который в этой функции уже оприходован
-            lsl.append(tmpsl);
-        }
-        break;
-    }
-    default:
-        return QList<QStringList>();
+        tmpsl = htovl(tble, sl.at(i));
+        lsl.append(tmpsl);
     }
     result = 0;
     return lsl;
 }
 
-// процедура возвращает список из двух значений:
-// 0 - значение по ссылке table.tablefields для заданной таблицы tble и поля headers
-// 1 - значение links для той же таблицы и того же headers
+// процедура возвращает значение по ссылке tbleid из table.tablefields для заданной таблицы tble и поля header
 
-QStringList s_tablefields::toid(QString tble, QString headers, QString tbleid)
+QString s_tablefields::tov(QString tble, QString header, QString tbleid)
 {
-    QStringList tmpStringList;
-    QStringList sl = tablefields(tble, headers); // sl.at(0) = <table>, sl.at(1) = <tablefields>, sl.at(2) = <links>
-    if (sqlc.result)
+    QString tmpString;
+    QStringList sl = tablefields(tble, header); // sl.at(0) = <table>, sl.at(1) = <tablefields>
+    if (result)
     {
-        result = sqlc.result + 0x31;
-        return QStringList();
+        result = result + 0x31;
+        return QString();
     }
     QString db = sl.at(0).split(".").at(0);
     tble = sl.at(0).split(".").at(1);
-    tmpStringList << sqlc.getvaluefromtablebyid(sqlc.getdb(db), tble, sl.at(1), tbleid);
-    tmpStringList << sl.at(2);
+    tmpString = sqlc.getvaluefromtablebyid(sqlc.getdb(db), tble, sl.at(1), tbleid);
     if (sqlc.result)
     {
-        result = sqlc.result + 0x34;
-        return QStringList();
+        result = sqlc.result + 0x34 + ER_TFIELD;
+        return QString();
     }
     result = 0;
-    return tmpStringList;
+    return tmpString;
 }
 
 // перевод ИД через строку links в таблице tablefields в имя
@@ -165,7 +125,6 @@ QStringList s_tablefields::toid(QString tble, QString headers, QString tbleid)
 
 QString s_tablefields::idtov(QString links, QString id)
 {
-    QStringList tmpsl;
     QString outs;
     int tmpi;
     PublicClass::fieldformat ff = pc.getFFfromLinks(links);
@@ -173,25 +132,23 @@ QString s_tablefields::idtov(QString links, QString id)
     {
     case FW_ALLINK:
     {
-        tmpsl = toid(ff.link.at(0), "Наименование", id);
+        outs = tov(ff.link.at(0), "Наименование", id);
         if (result)
         {
-            result += 0x41;
+            result += 0x41 + ER_TFIELD;
             return QString();
         }
-        outs=tmpsl.at(0);
         break;
     }
     case FW_LINK:
     case FW_MAXLINK:
     {
-        tmpsl = toid(ff.link.at(0), ff.link.at(1), id);
+        outs = tov(ff.link.at(0), ff.link.at(1), id);
         if (result)
         {
-            result += 0x44;
+            result += 0x44 + ER_TFIELD;
             return QString();
         }
-        outs=tmpsl.at(0);
         break;
     }
     case FW_AUTONUM:
@@ -205,59 +162,53 @@ QString s_tablefields::idtov(QString links, QString id)
     }
     case FW_DLINK:
     {
-        if (id.at(1) == '_') // символ подчёркивания во второй позиции ИД означает, что номер таблицы надо брать из первого символа
+        QStringList sl = id.split("."); // номер таблицы до точки (нумерация с нуля), id - после точки
+        tmpi = sl.at(0).toInt();
+        if (tmpi*2+1 > ff.link.size()) // нет в перечислении links таблицы с таким номером
         {
-            tmpi = id.at(0).digitValue();
-            if (tmpi*2+1 > ff.link.size()) // нет в перечислении links таблицы с таким номером
-            {
-                result = 0x48;
-                return QString();
-            }
-            id.remove(0, 2);
-        }
-        else
-            tmpi = 0;
-        tmpsl = toid(ff.link.at(tmpi*2), ff.link.at(tmpi*2+1), id);
-        if (result)
-        {
-            result += 0x4A;
+            result = 0x48 + ER_TFIELD;
             return QString();
         }
-        outs=tmpsl.at(0);
+        outs = "_"+sl.at(0)+tov(ff.link.at(tmpi*2), ff.link.at(tmpi*2+1), sl.at(1)); // _ - признак того, что в ячейку надо сохранить доп. информацию о номере таблицы
+        if (result)
+        {
+            result += 0x4A + ER_TFIELD;
+            return QString();
+        }
         break;
     }
     case FW_RIGHTS:
     {
         bool ok;
-        tmpi = id.toInt(&ok, 16); // перевод прав в шестнадцатиричную систему
+        quint32 tmpui = id.toUInt(&ok, 16); // перевод прав в шестнадцатиричную систему
         if (!ok)
-            return 0x4D;
+            return 0x4D + ER_TFIELD;
         outs.clear();
         int j = 0;
-        while (tmpi)
+        while (tmpui)
         {
             switch (j%3)
             {
             case 0:
             {
-                outs += (tmpi & 0x0001) ? "у" : ".";
+                outs.insert(0, (tmpui & 0x0001) ? "у" : ".");
                 break;
             }
             case 1:
             {
-                outs += (tmpi & 0x0001) ? "з" : ".";
+                outs.insert(0, (tmpui & 0x0001) ? "з" : ".");
                 break;
             }
             case 2:
             {
-                outs += (tmpi & 0x0001) ? "ч" : ".";
+                outs.insert(0, (tmpui & 0x0001) ? "ч" : ".");
                 break;
             }
             default:
                 break;
             }
             j++;
-            tmpi >>= 1;
+            tmpui >>= 1;
         }
         break;
     }
@@ -281,7 +232,7 @@ QStringList s_tablefields::idtovl(QString links)
             result += 0x51;
             return QStringList();
         }
-        tmpsl = toidlc(ff.link.at(0), "Наименование", "ИД_а", id);
+        tmpsl = htovlc(ff.link.at(0), "Наименование", "ИД_а", id);
         if (result)
         {
             result += 0x54;
@@ -292,7 +243,7 @@ QStringList s_tablefields::idtovl(QString links)
     case FW_MAXLINK:
     case FW_LINK:
     {
-        tmpsl = toidl(ff.link.at(0), ff.link.at(1));
+        tmpsl = htovl(ff.link.at(0), ff.link.at(1));
         if (result)
         {
             result += 0x57;
@@ -323,13 +274,13 @@ QString s_tablefields::vtoid(QString links, QString value)
     {
     case FW_ALLINK:
     {
-        outs = vtoid_(ff.link.at(0), "Наименование", value);
+        outs = toid(ff.link.at(0), "Наименование", value);
         break;
     }
     case FW_LINK:
     case FW_MAXLINK:
     {
-        outs = vtoid_(ff.link.at(0), ff.link.at(1), value);
+        outs = toid(ff.link.at(0), ff.link.at(1), value);
         break;
     }
     case FW_AUTONUM:
@@ -344,19 +295,19 @@ QString s_tablefields::vtoid(QString links, QString value)
     }
     case FW_DLINK:
     {
-        if (value.at(1) == '_') // символ подчёркивания во второй позиции ИД означает, что номер таблицы надо брать из первого символа
+        if (value.at(0) == '_') // символ подчёркивания в первой позиции ИД означает, что номер таблицы надо брать из второго символа
         {
-            tmpi = value.at(0).digitValue();
+            tmpi = value.at(1).digitValue();
             if (tmpi*2+1 > ff.link.size()) // нет в перечислении links таблицы с таким номером
             {
-                result = 0x51;
+                result = 0x5A + ER_TFIELD;
                 return QString();
             }
             value.remove(0, 2);
         }
         else
             tmpi = 0;
-        outs = vtoid_(ff.link.at(tmpi*2), ff.link.at(tmpi*2+1), value);
+        outs = toid(ff.link.at(tmpi*2), ff.link.at(tmpi*2+1), value);
         break;
     }
     }
@@ -365,15 +316,15 @@ QString s_tablefields::vtoid(QString links, QString value)
     return outs;
 }
 
-// вспомогательная процедура возвращает ИД по значению value для заданной таблицы tble и поля headers
+// вспомогательная процедура возвращает ИД по значению value для заданной таблицы tble и поля header
 
-QString s_tablefields::vtoid_(QString tble, QString headers, QString value)
+QString s_tablefields::toid(QString tble, QString header, QString value)
 {
     QString tmpString;
-    QStringList sl = tablefields(tble, headers); // sl.at(0) = <table>, sl.at(1) = <tablefields>, sl.at(2) = <links>
-    if (sqlc.result)
+    QStringList sl = tablefields(tble, header); // sl.at(0) = <table>, sl.at(1) = <tablefields>
+    if (result)
     {
-        result = 0x41;
+        result += 0x61;
         return QString();
     }
     QString db = sl.at(0).split(".").at(0);
@@ -381,7 +332,7 @@ QString s_tablefields::vtoid_(QString tble, QString headers, QString value)
     tmpString = sqlc.getlastvaluefromtablebyfield(sqlc.getdb(db), tble, "id"+tble, sl.at(1), value);
     if (sqlc.result)
     {
-        result = sqlc.result + 0x45;
+        result = sqlc.result + 0x65 + ER_TFIELD;
         return QString();
     }
     result = 0;
@@ -389,44 +340,40 @@ QString s_tablefields::vtoid_(QString tble, QString headers, QString value)
 }
 
 // idtois - процедура добавления новой записи values по адресу table:tablefields для таблицы tble
-// ИД записи, по которой добавляются значения, хранятся в values.at(headers.indexof("ИД"))
+// ИД записи, по которой добавляются значения, хранятся в values.at(header.indexof("ИД"))
 
 int s_tablefields::idtois(QString tble, QStringList headers, QStringList values)
 {
     if (headers.size() != values.size())
-        return 0x01;
-    QStringList fl = QStringList() << "table" << "tablefields" << "headers";
+        return 0x71 + ER_TFIELD;
+    QStringList fl = QStringList() << "table" << "tablefields" << "header";
     QStringList cmpfl = QStringList() << "tablename" << "keyfield";
     QStringList cmpvl = QStringList() << tble << "v";
     QStringList keydbtble = sqlc.getvaluesfromtablebyfields(sqlc.getdb("sup"), "tablefields", fl, cmpfl, cmpvl);
     if (sqlc.result)
-        return 0x02;
+        return 0x72 + ER_TFIELD;
     keydbtble.insert(1, keydbtble.at(0).split(".").at(1)); // в первом элементе будет tble
     QString tmpString = keydbtble.at(0);
     tmpString.remove(3, tmpString.size()-3);
     keydbtble.replace(0, tmpString); // в нулевом элементе оставляем только db
     int ididx = headers.indexOf(keydbtble.at(3)); // вытаскиваем индекс ключевого поля
     if (ididx == -1)
-        return 0x03;
+        return 0x73 + ER_TFIELD;
     QString keyid;
     if (ididx < values.size())
         keyid = values.at(ididx); // id - ИД элемента в ключевом поле, используется при записи всех остальных полей
     else
-        return 0x04;
+        return 0x74 + ER_TFIELD;
     QStringList tmptablefields, tmpvalues;
     QString tmpdb, tmptble, tmpdbtble;
     int i;
     while (headers.size() > 0)
     {
         QStringList dbtble = tablefields(tble, headers.at(0));
-        if (result)
-            return result + 0x04;
         if (dbtble.at(0) != "-") // если знак дефиса, поле не пишется в базу
         {
             tmpdbtble = dbtble.at(0);
             tmpvalues = QStringList() << values.at(0); // кладём первое значение в выходной буфер значений
-            if (result)
-                return result + 0x07;
             tmptablefields = QStringList() << dbtble.at(1);
             headers.removeAt(0);
             values.removeAt(0);
@@ -438,8 +385,6 @@ int s_tablefields::idtois(QString tble, QStringList headers, QStringList values)
                 {
                     tmptablefields << dbtble.at(1);
                     tmpvalues << values.at(i);
-                    if (result)
-                        return result + 0x0A;
                     headers.removeAt(i);
                     values.removeAt(i);
                 }
@@ -452,7 +397,7 @@ int s_tablefields::idtois(QString tble, QStringList headers, QStringList values)
             tmpvalues << pc.DateTime << QString::number(pc.idPers);
             result = sqlc.updatevaluesintable(sqlc.getdb(tmpdb), tmptble, tmptablefields, tmpvalues, keydbtble.at(2), keyid);
             if (result)
-                return result + 0x0D;
+                return result + 0x7D + ER_TFIELD;
         }
     }
     return 0;
@@ -469,7 +414,7 @@ QString s_tablefields::insert(QString tble)
     QString newid = sqlc.insertvaluestotable(sqlc.getdb(keydbtble.split(".").at(0)), keydbtble.split(".").at(1), QStringList(), QStringList()); // вставка новой пустой строки
     if (sqlc.result)
     {
-        result = 1;
+        result = sqlc.result + 0x81 + ER_TFIELD;
         return QString();
     }
     result = 0;
@@ -490,27 +435,39 @@ int s_tablefields::remove(QString tble, QString id)
     return res;
 }
 
-QStringList s_tablefields::tablefields(QString tble, QString headers)
+QStringList s_tablefields::tablefields(QString tble, QString header)
 {
-    QStringList fl = QStringList() << "table" << "tablefields" << "links";
-    QStringList cmpfl = QStringList() << "tablename" << "headers";
-    QStringList cmpvl = QStringList() << tble << headers;
+    QStringList fl = QStringList() << "table" << "tablefields";
+    QStringList cmpfl = QStringList() << "tablename" << "header";
+    QStringList cmpvl = QStringList() << tble << header;
     QStringList sl = sqlc.getvaluesfromtablebyfields(sqlc.getdb("sup"), "tablefields", fl, cmpfl, cmpvl);
     if (sqlc.result)
     {
-        result = sqlc.result + 0x55;
+        result = sqlc.result + 0x85 + ER_TFIELD;
         return QStringList();
     }
     result = 0;
     return sl;
 }
 
-QStringList s_tablefields::headers(QString tble)
+QStringList s_tablefields::tableheaders(QString tble)
 {
-    QStringList sl = sqlc.getvaluesfromtablebycolumnandfield(sqlc.getdb("sup"), "tablefields", "headers", "tablename", tble);
+    QStringList sl = sqlc.getvaluesfromtablebycolumnandfield(sqlc.getdb("sup"), "tablefields", "header", "tablename", tble);
     if (sqlc.result)
     {
-        result = sqlc.result + 0x65;
+        result = sqlc.result + 0x89 + ER_TFIELD;
+        return QStringList();
+    }
+    result = 0;
+    return sl;
+}
+
+QStringList s_tablefields::tablelinks(QString tble)
+{
+    QStringList sl = sqlc.getvaluesfromtablebycolumnandfield(sqlc.getdb("sup"), "tablefields", "links", "tablename", tble);
+    if (sqlc.result)
+    {
+        result = sqlc.result + 0x8D + ER_TFIELD;
         return QStringList();
     }
     result = 0;

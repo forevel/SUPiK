@@ -24,7 +24,34 @@ QT_END_NAMESPACE
 
 #include "publiclang.h"
 
-#define MAX_DBS 50
+// диалоговые окна в СУПиКе
+#define TW_SET      0x100 // настройки (Settings)
+#define TW_SYSST    0x101 // SysStructEdit - редактор структуры системы
+#define TW_COMP     0x102 // редактор компонентов
+#define TW_DIR      0x103 // справочники
+#define TW_PROB     0x104 // диалог событий
+#define TW_WH       0x105 // склады
+#define TW_SYSBU    0x106 // резервное копирование
+#define TW_SYSRS    0x107 // восстановление
+#define TW_QUAR     0x108 // работа с карантином
+#define TW_DOC      0x109 // редактор документов
+#define TW_ADM      0x10A // сисадминистрирование
+
+// Коды ошибок
+#define ER_TFIELD   0x0200 // tablefields
+#define ER_NTMODEL  0x3000 // s_ntmodel
+#define ER_NCMODEL  0x4000 // s_ncmodel
+#define ER_DIRMAIN  0x10000 // dir_maindialog
+
+#define DB_ALT      0x00
+#define DB_ENT      0x01
+#define DB_SUP      0x02
+#define DB_SOL      0x03
+#define DB_DEV      0x04
+#define DB_SCH      0x05
+#define DB_CON      0x06
+
+#define MAX_DBS     50
 
 #define SYS_RO      0x0001
 #define SYS_WR      0x0002
@@ -100,7 +127,7 @@ public:
     PublicClass();
     ~PublicClass();
 
-    int timerperiod;
+    double timerperiod;
     QString SQLUser, SQLPsw;
     QSqlDatabase ent;
     QSqlDatabase alt;
@@ -240,7 +267,7 @@ public:
     }
 
     int S_TabWidgetWidth;
-    QMap <QString, QColor> TabColors;
+    QMap <int, QColor> TabColors;
     QColor colors[6]; // определение набора цветов шрифта
     QFont fonts[6]; // определение набора шрифтов
     QIcon icons[6]; // определение набора иконок

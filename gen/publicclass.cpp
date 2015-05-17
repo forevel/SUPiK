@@ -15,14 +15,14 @@ static const QMap<QChar, QString> RUSLAT = PublicClass::ruslat();
 PublicClass::PublicClass()
 {
     LandP = new QSettings ("EvelSoft","Supik");
-    TabColors["gen"] = QColor(153, 153, 153); // GENERAL
-    TabColors["sys"] = QColor(194, 194, 194); // SYSTEM
-    TabColors["set"] = QColor(255, 204, 204); // SETTINGS
-    TabColors["cmp"] = QColor(153, 204, 153); // COMPONENTS
-    TabColors["dir"] = QColor(255, 255, 153); // DIRECTORY
-    TabColors["adm"] = QColor(102, 102, 153); // ADMIN
-    TabColors["whs"] = QColor(204, 204, 51); // WAREHOUSE
-    TabColors["doc"] = QColor(204, 204, 153); // DOCUMENTS
+    TabColors[TW_PROB] = QColor(153, 153, 153); // GENERAL
+    TabColors[TW_SYSBU] = TabColors[TW_SYSRS] = TabColors[TW_SYSST] = QColor(194, 194, 194); // SYSTEM
+    TabColors[TW_SET] = QColor(255, 204, 204); // SETTINGS
+    TabColors[TW_COMP] = QColor(153, 204, 153); // COMPONENTS
+    TabColors[TW_DIR] = QColor(255, 255, 153); // DIRECTORY
+    TabColors[TW_ADM] = QColor(102, 102, 153); // ADMIN
+    TabColors[TW_WH] = QColor(204, 204, 51); // WAREHOUSE
+    TabColors[TW_DOC] = QColor(204, 204, 153); // DOCUMENTS
 
     NewNotifyHasArrived = false;
     Acknowledged = false;

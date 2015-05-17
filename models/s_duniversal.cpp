@@ -96,7 +96,7 @@ QWidget* s_duniversal::createEditor(QWidget *parent, const QStyleOptionViewItem 
             for (int i = 0; i < ff.link.size(); i++)
                 tmpString += ff.link.at(i)+"."; // возвращение строке regexp первоначального вида, "побитого" при getFFfromlinks
             tmpString = tmpString.left(tmpString.size()-1);
-            s_maskedle *le = new s_maskedle(tmpString, parent);
+            s_MaskedLineEdit *le = new s_MaskedLineEdit(tmpString, parent);
             le->setObjectName("msle");
             editor = le;
         }
@@ -121,7 +121,7 @@ QWidget* s_duniversal::createEditor(QWidget *parent, const QStyleOptionViewItem 
         QString tmpString2;
         tmpString2.fill('9', tmpInt2);
         tmpString += "." + tmpString2;
-        s_tqspinbox *sb = new s_tqspinbox(parent);
+        s_tqSpinBox *sb = new s_tqSpinBox(parent);
         sb->setStyleSheet("QSpinBox {background: khaki};");
         sb->setMinimum(0);
         sb->setDecimals(tmpInt2);
@@ -167,7 +167,7 @@ void s_duniversal::setEditorData(QWidget *editor, const QModelIndex &index) cons
     }
     case FD_SPIN:
     {
-        s_tqspinbox *sb = static_cast<s_tqspinbox *>(editor);
+        s_tqSpinBox *sb = static_cast<s_tqSpinBox *>(editor);
         sb->setValue(index.data(Qt::EditRole).toDouble());
         break;
     }
@@ -206,7 +206,7 @@ void s_duniversal::setModelData(QWidget *editor, QAbstractItemModel *model, cons
     }
     case FD_SPIN:
     {
-        s_tqspinbox *sb = static_cast<s_tqspinbox *>(editor);
+        s_tqSpinBox *sb = static_cast<s_tqSpinBox *>(editor);
         model->setData(index, QVariant(sb->value()), Qt::EditRole);
         break;
     }
@@ -310,8 +310,7 @@ void s_duniversal::accepted(QString str)
         case FW_ALLINK:
         case FW_LINK:
         {
-            QStringList tmpStringList = tfl.toid(ff.link.at(0), "Наименование", str);
-            tmpString = tmpStringList.at(0);
+            tmpString = tfl.toid(ff.link.at(0), "Наименование", str);
             break;
         }
         case FW_DLINK: // переписать!!!

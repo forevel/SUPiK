@@ -40,7 +40,7 @@ private:
     QHBoxLayout *SlaveLayout;
     s_aitemmodel *slm;
     QSortFilterProxyModel *proxyModel;
-    s_tqtreeview *tv;
+    s_tqTreeView *tv;
     s_tqLabel *lbl;
     s_tqPushButton *pb, *filtpb;
     s_tqLineEdit *filtle;

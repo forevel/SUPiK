@@ -4,11 +4,11 @@
 #include <QDesktopWidget>
 #include <QDialog>
 
-s_tqtreeview::s_tqtreeview(QWidget *parent) :
+s_tqTreeView::s_tqTreeView(QWidget *parent) :
     QTreeView(parent)
 {
     isTree = true;
-    s_tqtreeviewstyle *style = new s_tqtreeviewstyle;
+    s_tqTreeViewstyle *style = new s_tqTreeViewstyle;
     setAttribute(Qt::WA_TranslucentBackground);
     setStyleSheet("QTreeView {background-color: rgba(0,0,0,0);}");
     setFrameStyle(QFrame::NoFrame);
@@ -20,28 +20,28 @@ s_tqtreeview::s_tqtreeview(QWidget *parent) :
         connect(this, SIGNAL(clicked(QModelIndex)), this, SLOT(setTVexpanded(QModelIndex)));
 }
 
-s_tqtreeviewstyle::s_tqtreeviewstyle() : QProxyStyle()
+s_tqTreeViewstyle::s_tqTreeViewstyle() : QProxyStyle()
 {
 
 }
 
-void s_tqtreeviewstyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, QPainter *p, const QWidget *w) const
+void s_tqTreeViewstyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, QPainter *p, const QWidget *w) const
 {
     if (pe != QStyle::PE_IndicatorBranch)
         QProxyStyle::drawPrimitive(pe, opt, p, w);
 }
 
-void s_tqtreeview::setAData(QVariant dat)
+void s_tqTreeView::setAData(QVariant dat)
 {
     this->adata = dat;
 }
 
-QVariant s_tqtreeview::getAData()
+QVariant s_tqTreeView::getAData()
 {
     return this->adata;
 }
 
-void s_tqtreeview::dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles)
+void s_tqTreeView::dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles)
 {
     Q_UNUSED(topLeft);
     Q_UNUSED(bottomRight);
@@ -50,14 +50,14 @@ void s_tqtreeview::dataChanged(const QModelIndex &topLeft, const QModelIndex &bo
     emit datachanged();
 }
 
-void s_tqtreeview::updateTVGeometry()
+void s_tqTreeView::updateTVGeometry()
 {
     datachangedintable = true;
     update();
     updateGeometry();
 }
 
-QSize s_tqtreeview::minimumSizeHint()
+QSize s_tqTreeView::minimumSizeHint()
 {
     if (datachangedintable)
     {
@@ -91,14 +91,14 @@ QSize s_tqtreeview::minimumSizeHint()
         return this->size();
 }
 
-void s_tqtreeview::paintEvent(QPaintEvent *e)
+void s_tqTreeView::paintEvent(QPaintEvent *e)
 {
     setFixedSize(minimumSizeHint());
     QTreeView::paintEvent(e);
     e->accept();
 }
 
-void s_tqtreeview::setTVexpanded(QModelIndex index)
+void s_tqTreeView::setTVexpanded(QModelIndex index)
 {
     if (!index.column())
     {
@@ -120,7 +120,7 @@ void s_tqtreeview::setTVexpanded(QModelIndex index)
         resizeColumnToContents(i);
 }
 
-int s_tqtreeview::getVisibleChildsCount(s_ntitem *item)
+int s_tqTreeView::getVisibleChildsCount(s_ntitem *item)
 {
 // нужно вычислить, сколько всего открытых потомков у узла, до уровня листьев дерева
     int childs_count = item->childCount();
@@ -136,7 +136,7 @@ int s_tqtreeview::getVisibleChildsCount(s_ntitem *item)
 }
 
 //пересчёт размера
-void s_tqtreeview::recalculateGeometry()
+void s_tqTreeView::recalculateGeometry()
 {
     int curheight = static_cast<QDialog *>(parent())->geometry().height();
     int new_height = qMin(curheight, shown_rows*15);
@@ -144,7 +144,7 @@ void s_tqtreeview::recalculateGeometry()
     setMaximumHeight(new_height);
 }
 
-void s_tqtreeview::setShownRows(int rowcount)
+void s_tqTreeView::setShownRows(int rowcount)
 {
     shown_rows = rowcount;
 }

@@ -19,16 +19,19 @@ public:
     void setColor(int column, QColor color);
     void setFont(int column, QFont font);
     void setIcon(int column, QIcon icon);
-    void setaData(QString str);
+    void setAData(QString str);
+    void setTData(int column, QString str);
     QColor color(int column);
     QFont font(int column);
     QIcon icon(int column);
-    QString aData();
+    QString AData();
+    QString TData(int column);
 
 private:
     QStringList itemData; // содержимое строки
     QStringList linksData; // содержимое вспомогательного поля
-    QString AData; // вспомогательное содержимое
+    QString aData; // вспомогательное содержимое для всего итема
+    QStringList tDataList; // вспомогательное содержимое для каждой ячейки итема
     QList<QColor> itemColor;
     QList<QFont> itemFont;
     QList<QIcon> itemIcon;

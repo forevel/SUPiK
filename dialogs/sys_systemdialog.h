@@ -36,7 +36,7 @@ signals:
 public slots:
 
 private:
-    s_tqtreeview *MainTV, *SlaveTV;
+    s_tqTreeView *MainTV, *SlaveTV;
     s_duniversal *gridItemDelegate;
     s_aitemmodel *MainTreeModel, *SlaveTreeModel;
     s_tqLabel *MainL;

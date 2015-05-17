@@ -7,7 +7,7 @@
 #include "../dialogs/s_2cdialog.h"
 #include "s_tqcalendarwidget.h"
 
-s_tqchoosewidget::s_tqchoosewidget(QWidget *parent) :
+s_tqChooseWidget::s_tqChooseWidget(QWidget *parent) :
     QWidget(parent)
 {
     ff.ftype = -1; // проверка на то, вызывали ли перед работой с виджетом функцию getlinks
@@ -26,7 +26,7 @@ s_tqchoosewidget::s_tqchoosewidget(QWidget *parent) :
     setLayout(ml);
 }
 
-void s_tqchoosewidget::pbclicked()
+void s_tqChooseWidget::pbclicked()
 {
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("cwle");
     QString lestr = le->text();
@@ -143,7 +143,7 @@ void s_tqchoosewidget::pbclicked()
     }
 }
 
-void s_tqchoosewidget::accepted(QString str)
+void s_tqChooseWidget::accepted(QString str)
 {
     QString tmpString = str;
     s_tqLineEdit *le = this->findChild<s_tqLineEdit*>("cwle");
@@ -184,18 +184,18 @@ void s_tqchoosewidget::accepted(QString str)
     emit datachanged();
 }
 
-void s_tqchoosewidget::setlinks(QString links)
+void s_tqChooseWidget::setlinks(QString links)
 {
     ff = getFFfromLinks(links);
 }
 
-void s_tqchoosewidget::setdata(QString data)
+void s_tqChooseWidget::setdata(QString data)
 {
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("cwle");
     le->setText(data);
 }
 
-s_tqchoosewidget::fieldformat s_tqchoosewidget::getFFfromLinks(QString links)
+s_tqChooseWidget::fieldformat s_tqChooseWidget::getFFfromLinks(QString links)
 {
     QStringList tmpsl = links.split(".");
     fieldformat ff;
@@ -225,17 +225,17 @@ s_tqchoosewidget::fieldformat s_tqchoosewidget::getFFfromLinks(QString links)
     return ff;
 }
 
-void s_tqchoosewidget::dateChoosed(QDate dte)
+void s_tqChooseWidget::dateChoosed(QDate dte)
 {
     accepted(dte.toString("dd/MM/yyyy"));
 }
 
-void s_tqchoosewidget::setAData(QVariant dat)
+void s_tqChooseWidget::setAData(QVariant dat)
 {
     this->adata = dat;
 }
 
-QVariant s_tqchoosewidget::getAData()
+QVariant s_tqChooseWidget::getAData()
 {
     return this->adata;
 }

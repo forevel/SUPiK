@@ -41,8 +41,8 @@ void sys_systemdialog::SetupUI()
 {
     MainLayout = new QVBoxLayout;
     MainFrameLayout = new QHBoxLayout;
-    SlaveTV = new s_tqtreeview;
-    MainTV = new s_tqtreeview;
+    SlaveTV = new s_tqTreeView;
+    MainTV = new s_tqTreeView;
     gridItemDelegate = new s_duniversal;
     MainFrame = new QFrame;
     MainFrame->setAttribute(Qt::WA_TranslucentBackground);

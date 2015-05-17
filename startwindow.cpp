@@ -4,14 +4,16 @@
 #include <QApplication>
 #include <QEventLoop>
 #include <QTime>
+#include <QGridLayout>
 
 #include "startwindow.h"
 #include "gen/s_sql.h"
+#include "widgets/s_tqcheckbox.h"
 
 StartWindow::StartWindow(QWidget *parent) : QMainWindow(parent)
 {
     QPixmap StartWindowSplashPixmap(":/res/1.x.png");
-    StartWindowSplashScreen = new QSplashScreen(StartWindowSplashPixmap);
+    QSplashScreen *StartWindowSplashScreen = new QSplashScreen(StartWindowSplashPixmap);
     StartWindowSplashScreen->show();
 
     StartWindowSplashScreen->showMessage("Загрузка языков...", Qt::AlignRight, Qt::white);
@@ -37,7 +39,9 @@ StartWindow::~StartWindow()
 
 void StartWindow::showEvent(QShowEvent *event)
 {
-    UNameLE->setFocus();
+    s_tqLineEdit *UNameLE = this->findChild<s_tqLineEdit *>("UNameLE");
+    if (UNameLE != 0)
+        UNameLE->setFocus();
     event->accept();
 }
 
@@ -54,22 +58,22 @@ void StartWindow::SetupUI()
     setWindowIcon(StartWindowIcon);
     setStyleSheet("background-color: rgb(204, 204, 204);");
     QWidget *CentralWidget = new QWidget(this);
-    UNameL = new QLabel("Имя польз.:");
-    PasswdL = new QLabel("Пароль:");
-    UNameLE = new QLineEdit;
-    PasswdLE = new QLineEdit;
+    s_tqLabel *UNameL = new s_tqLabel("Имя польз.:");
+    s_tqLabel *PasswdL = new s_tqLabel("Пароль:");
+    s_tqLineEdit *UNameLE = new s_tqLineEdit;
+    UNameLE->setObjectName("UNameLE");
+    s_tqLineEdit *PasswdLE = new s_tqLineEdit;
+    PasswdLE->setObjectName("PasswdLE");
     PasswdLE->setEchoMode(QLineEdit::Password);
-    OkPB = new QPushButton;
-    SaveCB = new QCheckBox;
-    SaveL = new QLabel("Запомнить");
-    SystemPB = new QPushButton;
-    SystemPB->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    SystemPB->setMaximumSize(23, 23);
-    SystemPB->setGeometry(QRect(187, 95, 10, 10));
+    s_tqPushButton *OkPB = new s_tqPushButton("Вход");
+    s_tqCheckBox *SaveCB = new s_tqCheckBox;
+    SaveCB->setObjectName("SaveCB");
+    s_tqLabel *SaveL = new s_tqLabel("Запомнить");
+    s_tqPushButton *SystemPB = new s_tqPushButton;
+    SystemPB->setMaximumSize(25, 25);
     QIcon SystemPBIcon;
     SystemPBIcon.addFile(":/res/Preferences.png", QSize(), QIcon::Normal, QIcon::Off);
     SystemPB->setIcon(SystemPBIcon);
-    OkPB = new QPushButton("Вход");
 
     QGridLayout *StartWindowLayout = new QGridLayout;
     StartWindowLayout->addWidget(UNameL, 0, 0);
@@ -92,7 +96,7 @@ void StartWindow::SetupUI()
     QWidget::setTabOrder(OkPB, SystemPB);
 
     connect (OkPB, SIGNAL(clicked()), this, SLOT(OkPBClicked()));
-    connect (SystemPB, SIGNAL(clicked()), this, SLOT(SystemPBClicked()));
+    connect (SystemPB, SIGNAL(clicked()), this, SLOT(OpenSettingsDialog()));
     connect (UNameLE, SIGNAL(returnPressed()), this, SLOT(UNameLEReturnPressed()));
     connect (PasswdLE, SIGNAL(returnPressed()), this, SLOT(PasswdLEReturnPressed()));
 }
@@ -101,6 +105,15 @@ void StartWindow::OkPBClicked()
 {
     QString tmpString;
 
+    s_tqLineEdit *UNameLE = this->findChild<s_tqLineEdit *>("UNameLE");
+    if (UNameLE == 0)
+        return;
+    s_tqLineEdit *PasswdLE = this->findChild<s_tqLineEdit *>("PasswdLE");
+    if (PasswdLE == 0)
+        return;
+    s_tqCheckBox *SaveCB = this->findChild<s_tqCheckBox *>("SaveCB");
+    if (SaveCB == 0)
+        return;
     tmpString = sqlc.getvaluefromtablebyfield(pc.sup, "personel", "psw", "login", UNameLE->text());
     if (tmpString == PasswdLE->text())
     {
@@ -148,7 +161,7 @@ void StartWindow::OkPBClicked()
         this->hide();
 
         QPixmap StartWindowSplashPixmap(":/res/1.x.png");
-        StartWindowSplashScreen = new QSplashScreen(StartWindowSplashPixmap);
+        QSplashScreen *StartWindowSplashScreen = new QSplashScreen(StartWindowSplashPixmap);
         StartWindowSplashScreen->show();
 
         StartWindowSplashScreen->showMessage("Проверка целостности данных...", Qt::AlignRight, Qt::white);
@@ -165,8 +178,9 @@ void StartWindow::OkPBClicked()
 
         StartWindowSplashScreen->finish(this);
 
-        supik_main_window.setVisible(true);
-        supik_main_window.setEnabled(true);
+        supik *supik_main_window = new supik;
+        supik_main_window->setVisible(true);
+        supik_main_window->setEnabled(true);
     }
     else
     {
@@ -186,17 +200,6 @@ void StartWindow::UNameLEReturnPressed()
     OkPBClicked();
 }
 
-void StartWindow::SystemPBClicked()
-{
-    qssd.PathToLibsLE->setText(pc.LandP->value("settings/pathtolibs","////FSERVER//PCAD//Altium//Libs//").toString());
-    qssd.PathToSupikLE->setText(pc.LandP->value("settings/pathtosup","////NS//SUPiK").toString());
-    qssd.LangCB->setCurrentText(pc.LandP->value("settings/lang","RU").toString());
-    qssd.SQLPathLE->setText(pc.LandP->value("settings/SQLPath","localhost").toString());
-    qssd.timerperiodSB->setValue(pc.LandP->value("settings/timerperiod","1").toInt());
-    qssd.show();
-    qssd.setFocus();
-}
-
 void StartWindow::LoadLanguage()
 {
     if (!pl.InitLang())
@@ -205,31 +208,44 @@ void StartWindow::LoadLanguage()
 
 void StartWindow::Startup()
 {
+    s_tqLineEdit *UNameLE = this->findChild<s_tqLineEdit *>("UNameLE");
+    if (UNameLE == 0)
+        return;
+    s_tqLineEdit *PasswdLE = this->findChild<s_tqLineEdit *>("PasswdLE");
+    if (PasswdLE == 0)
+        return;
+    s_tqCheckBox *SaveCB = this->findChild<s_tqCheckBox *>("SaveCB");
+    if (SaveCB == 0)
+        return;
     UNameLE->setText(pc.LandP->value("login/login","").toString());
     PasswdLE->setText(pc.LandP->value("login/psw","").toString());
     SaveCB->setChecked(pc.LandP->value("login/ischecked",false).toBool());
     QString tmpString = pc.LandP->value("settings/lang","").toString();
     if (tmpString.isEmpty())
-    {
-        qssd.PathToLibsLE->setText(pc.LandP->value("settings/pathtolibs","////FSERVER//PCAD//Altium//Libs//").toString());
-        qssd.PathToSupikLE->setText(pc.LandP->value("settings/pathtosup","////NS//SUPiK").toString());
-        qssd.LangCB->setCurrentText(pc.LandP->value("settings/lang","EN").toString());
-        qssd.show();
-    }
+        OpenSettingsDialog();
     pc.InitiatePublicClass();
-    OpenAndCheckDB(pc.alt);
-    OpenAndCheckDB(pc.con);
-    OpenAndCheckDB(pc.dev);
-    OpenAndCheckDB(pc.ent);
-    OpenAndCheckDB(pc.sch);
-    OpenAndCheckDB(pc.sol);
-    OpenAndCheckDB(pc.sup);
+    OpenAndCheckDB(pc.alt, DB_ALT);
+    OpenAndCheckDB(pc.con, DB_CON);
+    OpenAndCheckDB(pc.dev, DB_DEV);
+    OpenAndCheckDB(pc.ent, DB_ENT);
+    OpenAndCheckDB(pc.sch, DB_SCH);
+    OpenAndCheckDB(pc.sol, DB_SOL);
+    OpenAndCheckDB(pc.sup, DB_SUP);
 }
 
-void StartWindow::OpenAndCheckDB(QSqlDatabase db)
+void StartWindow::OpenSettingsDialog()
+{
+    sys_settingsdialog *qssd = new sys_settingsdialog;
+    qssd->SetupUI();
+    qssd->exec();
+}
+
+void StartWindow::OpenAndCheckDB(QSqlDatabase db, int signid)
 {
     if (!db.open())
         QMessageBox::critical(this, "Ошибка!", db.lastError().text(), QMessageBox::Ok, QMessageBox::NoButton);
+    else
+        emit DBOpened(signid);
 }
 
 void StartWindow::DBCheck()

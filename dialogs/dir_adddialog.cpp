@@ -61,7 +61,7 @@ void dir_adddialog::setupUI()
     s_tqLineEdit *dirNameLE = new s_tqLineEdit;
     dirNameLE->setObjectName("dirName");
     s_tqLabel *dirFieldNumL = new s_tqLabel("Количество полей");
-    s_tqspinbox *dirFieldNumSB = new s_tqspinbox;
+    s_tqSpinBox *dirFieldNumSB = new s_tqSpinBox;
     dirFieldNumSB->setObjectName("dirFieldNum");
     dirFieldNumSB->setValue(1);
     dirFieldNumSB->setMinimum(1);
@@ -209,7 +209,7 @@ void dir_adddialog::WriteAndClose()
         s_tqLineEdit *dirAliasLE = new s_tqLineEdit;
         s_tqLineEdit *dirAccessLE = new s_tqLineEdit;
         s_tqComboBox *dirB = new s_tqComboBox;
-        s_tqspinbox *sb = new s_tqspinbox;
+        s_tqSpinBox *sb = new s_tqSpinBox;
         dirNameLE = this->findChild<s_tqLineEdit *>("dirName");
         if (dirNameLE == 0)
             throw(0x11);
@@ -234,7 +234,7 @@ void dir_adddialog::WriteAndClose()
                                   QMessageBox::No) == QMessageBox::No)
                 return;
         }
-        sb = this->findChild<s_tqspinbox *>("dirFieldNum");
+        sb = this->findChild<s_tqSpinBox *>("dirFieldNum");
         if (sb == 0)
             throw(0x15);
         QSqlDatabase db = sqlc.getdb("sup");
@@ -414,8 +414,8 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
     {
         //int i;
         idx = ptr->getAData().toInt(0);
-        s_tqspinbox *sb = new s_tqspinbox;
-        sb = this->findChild<s_tqspinbox *>("dirFieldNum");
+        s_tqSpinBox *sb = new s_tqSpinBox;
+        sb = this->findChild<s_tqSpinBox *>("dirFieldNum");
         if (sb == 0)
             throw(0x41);
         s_tqLabel *lbl1 = new s_tqLabel ("Тип поля");
@@ -439,7 +439,7 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
         le = this->findChild<s_tqLineEdit *>("value"+QString::number(idx)+"LE");
         if (le == 0)
             throw(0x42);
-//        s_tqtreeview *trv = new s_tqtreeview;
+//        s_tqTreeView *trv = new s_tqTreeView;
         s_tqTableView *tbv = new s_tqTableView(true);
         s_ntmodel *trvmodel = new s_ntmodel;
         s_ncmodel *tbvmodel = new s_ncmodel;
@@ -660,8 +660,8 @@ void dir_adddialog::fillFields()
         dirAccessLE = this->findChild<s_tqLineEdit *>("dirAccess");
         if (dirAccessLE == 0)
             throw(0x76);
-        s_tqspinbox *sb = new s_tqspinbox;
-        sb = this->findChild<s_tqspinbox *>("dirFieldNum");
+        s_tqSpinBox *sb = new s_tqSpinBox;
+        sb = this->findChild<s_tqSpinBox *>("dirFieldNum");
         if (sb == 0)
             throw(0x77);
         dirAliasLE->setText(dir);

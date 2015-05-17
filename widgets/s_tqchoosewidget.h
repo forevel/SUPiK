@@ -5,11 +5,11 @@
 #include <QDate>
 #include <QVariant>
 
-class s_tqchoosewidget : public QWidget
+class s_tqChooseWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit s_tqchoosewidget(QWidget *parent = 0);
+    explicit s_tqChooseWidget(QWidget *parent = 0);
 
     void setlinks (QString links);
     void setdata (QString data);
@@ -29,8 +29,8 @@ private:
         int dependson;
         QStringList link;
     } fieldformat;
-    s_tqchoosewidget::fieldformat ff;
-    s_tqchoosewidget::fieldformat getFFfromLinks (QString links);
+    s_tqChooseWidget::fieldformat ff;
+    s_tqChooseWidget::fieldformat getFFfromLinks (QString links);
 
 private slots:
     void pbclicked();

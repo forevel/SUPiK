@@ -31,7 +31,7 @@ public slots:
 private:
     QVBoxLayout *MainLayout;
     s_aitemmodel *treeModel;
-    s_tqtreeview *mainTV;
+    s_tqTreeView *mainTV;
     QSortFilterProxyModel *prModel, *filterModel;
     QSqlDatabase db1, db2;
     QString tble1, tble2;

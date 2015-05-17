@@ -51,46 +51,12 @@ bool s_ncmodel::setHeaderData(int section, Qt::Orientation orientation, const QV
 
 QVariant s_ncmodel::data(const QModelIndex &index, int role) const
 {
-//    QString tmpString;
-//    PublicClass::fieldformat ff;
     if (index.isValid())
     {
         if ((index.row() < maindata.size()) && (index.column() < hdr.size()))
         {
             if ((role == Qt::DisplayRole) || (role == Qt::EditRole))
-            {
-/*                tmpString = maindata.at(index.row())->linksdata(index.column());
-                ff = pc.getFFfromLinks(tmpString);
-                switch (ff.ftype)
-                {
-                case FW_AUTONUM:
-                {
-                    return QVariant(index.row()+1);
-                    break;
-                }
-                case FW_NUMBER:
-                {
-                    return QVariant(ff.link.at(0));
-                    break;
-                }
-                case FW_ID:
-                {
-                    int num = ff.link.at(0).toInt();
-                    return QVariant(QString("%1").arg(maindata.at(index.row())->data(index.column()).toInt(), num, 10, QChar('0')));
-                    break;
-                }
-                }
-
-                if (ff.ftype == FW_EQUAT) // вычисляемое выражение
-                {
-                    int tmpInt = OPER_MAP[ff.link.at(0)];
-                    bool byRow = (ff.link.at(1) == "r");
-                    tmpString = getEq(ff.link.at(1), ff.link.at(2), tmpInt, index, byRow);
-                    return tmpString;
-                }
-                else */
-                    return maindata.at(index.row())->data(index.column());
-            }
+                return maindata.at(index.row())->data(index.column());
             else if (role == Qt::FontRole)
                 return QVariant::fromValue(QFont(maindata.at(index.row())->font(index.column())));
             else if (role == Qt::ForegroundRole)
@@ -100,7 +66,9 @@ QVariant s_ncmodel::data(const QModelIndex &index, int role) const
             else if (role == Qt::UserRole)
                 return maindata.at(index.row())->linksdata(index.column());
             else if (role == Qt::UserRole+1)
-                return maindata.at(index.row())->aData();
+                return maindata.at(index.row())->AData();
+            else if (role == Qt::UserRole+2)
+                return maindata.at(index.row())->TData(index.column());
         }
     }
     return QVariant();
@@ -160,7 +128,17 @@ bool s_ncmodel::setData(const QModelIndex &index, QVariant &value, int role)
                 return true;
             }
         }
-        if (role == Qt::UserRole)
+        else if (role == Qt::ForegroundRole)
+        {
+            maindata.at(index.row())->setColor(index.column(), value.value<QColor>());
+            return true;
+        }
+        else if (role == Qt::FontRole)
+        {
+            maindata.at(index.row())->setFont(index.column(), value.value<QFont>());
+            return true;
+        }
+        else if (role == Qt::UserRole)
         {
             if (index.column() < hdr.size())
             {
@@ -168,9 +146,14 @@ bool s_ncmodel::setData(const QModelIndex &index, QVariant &value, int role)
                 return true;
             }
         }
-        if (role == Qt::UserRole+1)
+        else if (role == Qt::UserRole+1)
         {
-            maindata.at(index.row())->setaData(value.toString());
+            maindata.at(index.row())->setAData(value.toString());
+            return true;
+        }
+        else if (role == Qt::UserRole+2)
+        {
+            maindata.at(index.row())->setTData(index.column(), value.toString());
             return true;
         }
     }
@@ -315,6 +298,7 @@ void s_ncmodel::setrowlinks(int row, QStringList links)
 }
 
 // подготовка модели для того, чтобы можно было писать в links до записи, собственно, данных
+// в sl передаётся список размеров столбцов
 
 void s_ncmodel::prepareModel(QList<int> sl)
 {
@@ -334,53 +318,40 @@ void s_ncmodel::prepareModel(QList<int> sl)
             addRow();
     }
 }
-
-void s_ncmodel::fillModel(QList<QStringList> sl)
+void s_ncmodel::fillModel(QList<QStringList> lsl)
 {
     int i;
     int j;
     PublicClass::fieldformat ff;
     QString vl;
-    if (sl.size()>hdr.size()) // в переданном списке больше колонок, чем в модели
+    result = 0;
+    if (lsl.size()>hdr.size()) // в переданном списке больше колонок, чем в модели
     {
-        for (i = hdr.size(); i < sl.size(); i++)
+        for (i = hdr.size(); i < lsl.size(); i++)
             addColumn("");
     }
-    for (i = 0; i < sl.at(0).size(); i++)
+    for (i = 0; i < lsl.at(0).size(); i++)  // цикл по строкам
     {
         if (i >= rowCount())
             addRow();
-        for (j = 0; j < sl.size(); j++)
+        for (j = 0; j < lsl.size(); j++) // цикл по столбцам
         {
-            if (i > sl.at(j).size())
+            if (i > lsl.at(j).size()) // если строк в текущем столбце меньше, чем текущий номер строки, пишем пустое значение
                 setData(index(i, j, QModelIndex()), QVariant(""), Qt::EditRole);
             else
             {
-                QString links = data(index(i,j,QModelIndex()),Qt::UserRole).toString();
-                ff = pc.getFFfromLinks(links);
-                switch (ff.ftype)
+                QString links = data(index(i,j,QModelIndex()),Qt::UserRole).toString(); // берём заранее подготовленное значение links в текущей ячейке. Если не подготовлено,
+                                                                                        // то по умолчанию берётся PLAIN
+                vl = tfl.idtov(links, lsl.at(j).at(i));
+                if (vl.at(0) == '_') // идентификатор составного значения - номер таблицы и само значение
                 {
-                case FW_ALLINK:
-                case FW_LINK:
-                {
-                    vl = tfl.idtov(links, sl.at(j).at(i));
-                    break;
+                    setData(index(i,j,QModelIndex()),QVariant(vl.at(1)),Qt::UserRole+2); // пишем доп. информацию о номере таблицы для ячейки
+                    vl = vl.right(vl.size()-2); // убираем номер таблицы и идентификатор
                 }
-                case FW_INDIRECT:
+                if (tfl.result)
                 {
-                    break;
-                }
-//                case FW_ID:
-//                {
-//                    int num = ff.link.at(0).toInt();
-//                    vl = QString("%1").arg(sl.at(j).at(i).toInt(), num, 10, QChar('0'));
-//                    break;
-//                }
-                default:
-                {
-                    vl = sl.at(j).at(i);
-                    break;
-                }
+                    result = tfl.result+ER_NCMODEL+0x01;
+                    continue; // если какая-то проблема с получением данных, пропускаем ячейку
                 }
                 setData(index(i, j, QModelIndex()), QVariant(vl), Qt::EditRole);
             }
@@ -394,37 +365,43 @@ QStringList s_ncmodel::cvalues(int column)
 {
     if (column > columnCount())
         return QStringList();
-    int row = 0;
+    result = 0;
     QStringList tmpsl;
-    while (row < rowCount())
-    {
-        QString vl = data(index(row, column, QModelIndex()), Qt::DisplayRole).toString();
-        QString links = data(index(row,column,QModelIndex()),Qt::UserRole).toString();
-        PublicClass::fieldformat ff = pc.getFFfromLinks(links);
-        switch (ff.ftype)
-        {
-        case FW_ALLINK:
-        case FW_LINK:
-        {
-            vl = tfl.vtoid(links, vl);
-            break;
-        }
-        case FW_INDIRECT:
-        {
-            break;
-        }
-        case FW_ID:
-        {
-            vl = QString::number(vl.toInt(), 10);
-            break;
-        }
-        default:
-            break; // если не ссылки, то просто складываем vl в tmpsl
-        }
-        tmpsl.append(vl);
-        row++;
-    }
+    for (int row=0; row < rowCount(); row++)
+        tmpsl.append(value(row,column));
     return tmpsl;
+}
+
+// выдать значения по строке row в выходной QStringList
+
+QStringList s_ncmodel::rvalues(int row)
+{
+    if (row > rowCount())
+        return QStringList();
+    result = 0;
+    QStringList tmpsl;
+    for (int column = 0; column<columnCount(); column++)
+        tmpsl.append(value(row,column));
+    return tmpsl;
+}
+
+QString s_ncmodel::value(int row, int column)
+{
+    QString vl = data(index(row, column, QModelIndex()), Qt::DisplayRole).toString();
+    QString links = data(index(row,column,QModelIndex()),Qt::UserRole).toString();
+    QString tablenum = data(index(row,column,QModelIndex()),Qt::UserRole+2).toString();
+    if (tablenum != "") // если значение относится к полю типа DLINK, то добавляем в начало номер таблицы и спецсимвол
+    {
+        vl.insert(0,tablenum);
+        vl.insert(0,'_');
+    }
+    vl = tfl.vtoid(links, vl);
+    if (tfl.result)
+    {
+        result = tfl.result + ER_NCMODEL+0x04;
+        return QString(); // если произошла ошибка при получении ИД по значению, добавляем пустую строку
+    }
+    return vl;
 }
 
 QString s_ncmodel::getEq(QString arg1, QString arg2, int oper, const QModelIndex index, bool byRow) const
@@ -563,25 +540,25 @@ int s_ncmodel::maxcolwidthsize()
 
 // процедура выдаёт значение атрибута links у ячейки
 
-QString s_ncmodel::getCellLinks(QModelIndex index)
+QString s_ncmodel::getCellType(int row, int column)
 {
-    return data(index, Qt::UserRole).toString();
+    return data(index(row,column,QModelIndex()), Qt::UserRole).toString().split(".").at(0);
 }
 
 // процедура заполнения модели из таблицы tble в sup.tablefields
 
-int s_ncmodel::setup(QString links)
+int s_ncmodel::setup(QString tble)
 {
     int i;
     QList<QStringList> lsl;
     ClearModel();
-    QStringList headers, link;
-    lsl = tfl.tbtovll(links);
+    QStringList headers, links;
+    lsl = tfl.tbvll(tble);
     if (tfl.result)
-        return (CM_ERROR+tfl.result);
+        return (tfl.result+ER_NCMODEL+0x11);
     // в lsl.at(1) содержатся links, в lsl.at(0) - заголовки
     headers = lsl.at(0);
-    link = lsl.at(1);
+    links = lsl.at(1);
     lsl.removeAt(0);
     lsl.removeAt(0);
     for (i = 0; i < headers.size(); i++)
@@ -590,8 +567,8 @@ int s_ncmodel::setup(QString links)
     for (i = 0; i < lsl.size(); i++)
         il << lsl.at(i).size();
     prepareModel(il);
-    for (i = 0; i < link.size(); i++)
-        setcolumnlinks(i, link.at(i));
+    for (i = 0; i < links.size(); i++)
+        setcolumnlinks(i, links.at(i));
     fillModel(lsl);
     return 0;
 }
@@ -604,20 +581,18 @@ int s_ncmodel::setupbyid(QString tble, QString id)
     int i;
     ClearModel();
     QList<QStringList> lsl;
-    QStringList headers = tfl.headers(tble);
-    QStringList links, tmpStringList;
+    QStringList headers = tfl.tableheaders(tble);
+    QStringList links = tfl.tablelinks(tble);
+    QString tmpString;
     if (tfl.result)
-        return tfl.result;
+        return tfl.result+ER_NCMODEL+0x21;
     lsl.append(headers);
     QStringList tmpsl;
     for (i = 0; i < headers.size(); i++)
     {
-        tmpStringList = tfl.toid(tble, headers.at(i), id);
+        tmpString = tfl.idtov(links.at(i), id);
         if (!tfl.result)
-        {
-            tmpsl << tmpStringList.at(0);
-            links << tmpStringList.at(1); // links
-        }
+            tmpsl << tmpString;
     }
     lsl.append(tmpsl);
     addColumn("");
@@ -625,8 +600,7 @@ int s_ncmodel::setupbyid(QString tble, QString id)
     QList<int> il;
     il << headers.size() << headers.size();
     prepareModel(il);
-    for (i = 0; i < links.size(); i++)
-        setData(index(i, 1, QModelIndex()), QVariant(links.at(i)), Qt::UserRole);
+    setcolumnlinks(1, links);
     fillModel(lsl);
     return 0;
 }

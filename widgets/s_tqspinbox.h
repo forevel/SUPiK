@@ -3,11 +3,11 @@
 
 #include <QDoubleSpinBox>
 
-class s_tqspinbox : public QDoubleSpinBox
+class s_tqSpinBox : public QDoubleSpinBox
 {
     Q_OBJECT
 public:
-    explicit s_tqspinbox(QWidget *parent = 0);
+    explicit s_tqSpinBox(QWidget *parent = 0);
     QVariant getAData();
     void setAData(QVariant dat);
 

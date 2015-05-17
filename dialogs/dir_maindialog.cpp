@@ -2,6 +2,15 @@
 #include "dir_adddialog.h"
 #include "../gen/s_sql.h"
 #include "s_2cdialog.h"
+#include "../models/s_duniversal.h"
+#include "../widgets/s_tqlabel.h"
+#include "../widgets/s_tqtreeview.h"
+#include "../widgets/s_tqframe.h"
+#include "../widgets/s_tqtableview.h"
+#include "sys_acceptexist.h"
+#include "../models/s_ntmodel.h"
+#include "../models/s_ncmodel.h"
+#include "s_sqlfieldsdialog.h"
 
 #include <QApplication>
 #include <QPainter>
@@ -9,6 +18,7 @@
 #include <QAction>
 #include <QMenu>
 #include <QMessageBox>
+#include <QSortFilterProxyModel>
 
 dir_maindialog::dir_maindialog(QWidget *parent) :
     QDialog(parent)
@@ -16,24 +26,18 @@ dir_maindialog::dir_maindialog(QWidget *parent) :
     firstShow = true;
     MainTVIsTree = false;
     SlaveTVIsTree = false;
-    SlaveTVIsFilling = false;
     IsQuarantine = false;
     SetupUI();
 }
 
 void dir_maindialog::SetupUI()
 {
-    MainLayout = new QVBoxLayout;
-    MainFrameLayout = new QHBoxLayout;
-    MainTreeModel = new s_ntmodel;
-    MainTableModel = new s_ncmodel;
-    SlaveTreeModel = new s_ntmodel;
-    SlaveTableModel = new s_ncmodel;
-//    SlaveProxyModel = new QSortFilterProxyModel;
-    SlaveTV = new s_tqtreeview;
-//    SlaveTV->setModel(SlaveProxyModel);
-    MainTV = new s_tqtreeview;
-    gridItemDelegate = new s_duniversal;
+    QVBoxLayout *MainLayout = new QVBoxLayout;
+    QHBoxLayout *MainFrameLayout = new QHBoxLayout;
+    s_tqTreeView *SlaveTV = new s_tqTreeView;
+    s_tqTableView *MainTV = new s_tqTableView;
+    MainTV->setObjectName("MainTV");
+    SlaveTV->setObjectName("SlaveTV");
     QFrame *line = new QFrame;
     line->setFrameShape(QFrame::VLine);
     line->setFrameShadow(QFrame::Sunken);
@@ -41,7 +45,7 @@ void dir_maindialog::SetupUI()
     MainFrameLayout->addWidget(MainTV, 10, Qt::AlignTop | Qt::AlignLeft);
     MainFrameLayout->addWidget(line, 1, Qt::AlignLeft);
     MainFrameLayout->addWidget(SlaveTV, 25, Qt::AlignTop | Qt::AlignLeft);
-    MainL = new s_tqLabel("Справочники");
+    QLabel *MainL = new s_tqLabel("Справочники");
     QFont font;
     font.setPointSize(15);
     MainL->setFont(font);
@@ -72,55 +76,41 @@ void dir_maindialog::paintEvent(QPaintEvent *e)
 
 void dir_maindialog::setDirTree()
 {
+    s_ncmodel *MainTableModel = new s_ncmodel;
+    s_tqTableView *MainTV = this->findChild<s_tqTableView *>("MainTV");
+    if (MainTV == 0)
+    {
+        ShowErMsg(ER_DIRMAIN+0x01);
+        return;
+    }
     QApplication::setOverrideCursor(Qt::WaitCursor);
     MainTV->setContextMenuPolicy(Qt::CustomContextMenu);
-    disconnect(MainTV, SIGNAL(customContextMenuRequested(QPoint)), 0, 0);
-    connect (MainTV, SIGNAL(customContextMenuRequested(QPoint)), \
-             this, SLOT(mainContextMenu(QPoint)));
-    disconnect(MainTV, SIGNAL(doubleClicked(QModelIndex)), 0, 0);
+    connect (MainTV, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(mainContextMenu(QPoint)));
     connect (MainTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(showDirDialog(QModelIndex)));
 
-    int res = MainTreeModel->Setup("Справочники_сокращ");
-    if (res == 0x11) // это не дерево
+    int res = MainTableModel->setup("2.2..Справочники_сокращ");
+    if (res)
     {
-        int res = MainTableModel->setup("2.2..Справочники_сокращ");
-        if (res)
-        {
-            QMessageBox::warning(this, "warning!", "Проблема №" + QString::number(res));
-            QApplication::restoreOverrideCursor();
-            return;
-        }
-        MainTVIsTree = false;
-        QItemSelectionModel *m = MainTV->selectionModel();
-        MainTV->setModel(MainTableModel);
-        delete m;
+        ShowErMsg(res+ER_DIRMAIN+0x04);
+        QApplication::restoreOverrideCursor();
+        return;
     }
-    else
-    {
-        MainTVIsTree = true;
-        QItemSelectionModel *m = MainTV->selectionModel();
-        MainTV->setModel(MainTreeModel);
-        delete m;
-        connect(MainTV, SIGNAL(expanded(QModelIndex)), MainTreeModel, SLOT(addExpandedIndex(QModelIndex)));
-        connect(MainTV, SIGNAL(collapsed(QModelIndex)), MainTreeModel, SLOT(removeExpandedIndex(QModelIndex)));
-    }
+    MainTV->setModel(MainTableModel);
     connect(MainTV, SIGNAL(clicked(QModelIndex)), this, SLOT(showDirDialog(QModelIndex)));
-    MainTV->header()->setVisible(false);
-    MainTV->setIndentation(2);
-    MainTV->setAnimated(false);
+    MainTV->horizontalHeader()->setVisible(false);
+    MainTV->verticalHeader()->setVisible(false);
+    s_duniversal *gridItemDelegate = new s_duniversal;
     MainTV->setItemDelegate(gridItemDelegate);
-//    for (int i = 0; i < MainTV->header()->count(); i++)
-//        MainTV->resizeColumnToContents(i);
-    MainTV->updateTVGeometry();
+    MainTV->resizeColumnsToContents();
     QApplication::restoreOverrideCursor();
 }
 
 void dir_maindialog::showDirDialog(QModelIndex idx)
 {
     Q_UNUSED(idx);
-    if (MainTVIsTree && (MainTV->model()->rowCount(MainTV->currentIndex()) != 0));
-    else
-        ShowSlaveTree(getMainIndex(1));
+    QString tmpString = getMainIndex(1);
+    if (!tmpString.isEmpty())
+        ShowSlaveTree(tmpString);
 }
 
 // ############################################ SLOTS ####################################################
@@ -129,73 +119,57 @@ void dir_maindialog::showDirDialog(QModelIndex idx)
 
 void dir_maindialog::ShowSlaveTree(QString str)
 {
+    s_tqTreeView *SlaveTV = this->findChild<s_tqTreeView *>("SlaveTV");
+    if (SlaveTV == 0)
+    {
+        ShowErMsg(ER_DIRMAIN+0x11);
+        return;
+    }
     QStringList fields, values;
     int i, res;
     tble = str; // для функций удаления и добавления необходимо знать имя текущей таблицы
-    if (!SlaveTVIsFilling)
+    if (str.contains("карантин", Qt::CaseInsensitive))
+        IsQuarantine = true;
+    else
+        IsQuarantine = false;
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    fields << "dirlist" << "access";
+    values = sqlc.getvaluesfromtablebyfield(pc.sup, "dirlist", fields, "dirlist", str);
+    if (!sqlc.result)
     {
-        if (str.contains("карантин", Qt::CaseInsensitive))
-            IsQuarantine = true;
-        else
-            IsQuarantine = false;
-        SlaveTVIsFilling = true;
-        QApplication::setOverrideCursor(Qt::WaitCursor);
-        fields << "dirlist" << "access";
-        values = sqlc.getvaluesfromtablebyfield(pc.sup, "dirlist", fields, "dirlist", str);
-        if (!sqlc.result)
+        if (values.at(1).toUInt() & pc.access)
         {
-            if (values.at(0) == "Номенклатура")
-                res = SlaveTreeModel->Setup("Категории_сокращ","Номенклатура_сокращ");
+            s_ntmodel *SlaveTreeModel = new s_ntmodel;
+            if (values.at(0).contains("Номенклатура", Qt::CaseSensitive))
+                res = SlaveTreeModel->Setup("Категории_сокращ",values.at(0)+"_сокращ");
             else
                 res = SlaveTreeModel->Setup(values.at(0) + "_сокращ");
-            if (res == 0x11) // это не дерево
+            if (res == ER_NTMODEL) // это не дерево
             {
-                int res = SlaveTableModel->setup("2.2.." + values.at(0) + "_сокращ");
+                s_ncmodel *SlaveTableModel = new s_ncmodel;
+                int res = SlaveTableModel->setup(values.at(0) + "_сокращ");
                 if (res)
                 {
-                    QMessageBox::warning(this, "warning!", "Проблема №" + QString::number(res));
+                    ShowErMsg(res+0x14+ER_DIRMAIN);
                     QApplication::restoreOverrideCursor();
                     return;
                 }
-/*                if (SlaveTVIsTree) // если до этого было дерево, его надо удалить
-                {
-                    QItemSelectionModel *m = SlaveTV->selectionModel();
-                    SlaveTV->setModel(SlaveTableModel);
-                    delete m;
-                }
-                else
-                    SlaveTV->setModel(SlaveTableModel); */
-//                SlaveProxyModel->setSourceModel(SlaveTableModel);
-//                SlaveProxyModel->sort(0, Qt::AscendingOrder);
                 SlaveTV->setModel(SlaveTableModel);
                 SlaveTVIsTree = false;
             }
             else
             {
-/*                if (!SlaveTVIsTree) // если до этого была таблица, её надо удалить
-                {
-                    QItemSelectionModel *m = SlaveTV->selectionModel();
-                    SlaveTV->setModel(SlaveTreeModel);
-                    delete m;
-                }
-                else
-                    SlaveTV->setModel(SlaveTreeModel); */
-//                SlaveProxyModel->setSourceModel(SlaveTreeModel);
-//                 SlaveProxyModel->sort(0, Qt::AscendingOrder);
                 SlaveTV->setModel(SlaveTreeModel);
                 SlaveTV->setShownRows(SlaveTV->model()->rowCount());
                 SlaveTVIsTree = true;
-                disconnect(SlaveTV, SIGNAL(expanded(QModelIndex)), 0, 0);
                 connect(SlaveTV, SIGNAL(expanded(QModelIndex)), SlaveTreeModel, SLOT(addExpandedIndex(QModelIndex)));
-                disconnect(SlaveTV, SIGNAL(collapsed(QModelIndex)), 0, 0);
                 connect(SlaveTV, SIGNAL(collapsed(QModelIndex)), SlaveTreeModel, SLOT(removeExpandedIndex(QModelIndex)));
-//                disconnect(SlaveTV, SIGNAL(clicked(QModelIndex)), 0, 0);
-//                connect(SlaveTV, SIGNAL(clicked(QModelIndex)), this, SLOT(setSlaveTVExpanded(QModelIndex)));
             }
             SlaveTV->header()->setDefaultAlignment(Qt::AlignCenter);
             SlaveTV->header()->setVisible(true);
             SlaveTV->setIndentation(2);
             SlaveTV->setAnimated(false);
+            s_duniversal *gridItemDelegate = new s_duniversal;
             SlaveTV->setItemDelegate(gridItemDelegate);
             for (i = 0; i < SlaveTV->header()->count(); i++)
                 SlaveTV->resizeColumnToContents(i);
@@ -208,56 +182,37 @@ void dir_maindialog::ShowSlaveTree(QString str)
             connect (SlaveTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(ChangeAdditionalFields(QModelIndex)));
         }
         else
-            QMessageBox::warning(this, "warning", "Не найдена ссылка на таблицу справочника!", QMessageBox::Ok, QMessageBox::NoButton);
-        QApplication::restoreOverrideCursor();
-        SlaveTVIsFilling = false;
+            QMessageBox::warning(this, "warning", "Недостаточно прав для работы со справочником!");
     }
+    else
+        QMessageBox::warning(this, "warning", "Не найдена ссылка на таблицу справочника!", QMessageBox::Ok, QMessageBox::NoButton);
+    QApplication::restoreOverrideCursor();
 }
 
-// обработка раскрывания корней дерева
-/*
-void dir_maindialog::setMainTVExpanded(QModelIndex index)
-{
-    if (!index.column())
-    {
-        if (MainTV->isExpanded(index))
-            MainTV->setExpanded(index, false);
-        else
-            MainTV->setExpanded(index, true);
-    }
-    for (int i = MainTV->header()->count(); i >= 0; --i)
-        MainTV->resizeColumnToContents(i);
-}
-
-// обработка раскрывания корней дочернего дерева
-
-void dir_maindialog::setSlaveTVExpanded(QModelIndex index)
-{
-    if (!index.column())
-    {
-        if (SlaveTV->isExpanded(index))
-            SlaveTV->setExpanded(index, false);
-        else
-            SlaveTV->setExpanded(index, true);
-    }
-    for (int i = SlaveTV->header()->count(); i >= 0; --i)
-        SlaveTV->resizeColumnToContents(i);
-}
-*/
 QString dir_maindialog::getMainIndex(int column)
 {
-    QModelIndex index = MainTV->model()->index(MainTV->currentIndex().row(), column, MainTV->model()->parent(MainTV->currentIndex()));
-    QString tmpString = index.data(Qt::DisplayRole).toString();
-    if (!column)
+    s_tqTableView *MainTV = this->findChild<s_tqTableView *>("MainTV");
+    if (MainTV == 0)
+    {
+        ShowErMsg(ER_DIRMAIN+0x31);
+        return QString();
+    }
+    QString tmpString = MainTV->model()->index(MainTV->currentIndex().row(), column, QModelIndex()).data(Qt::DisplayRole).toString();
+    if (!column) // в нулевом столбце всегда ИД элемента с нулями в начале, надо незначащие нули убрать
         tmpString = QString::number(tmpString.toInt(0));
     return tmpString;
 }
 
 QString dir_maindialog::getSlaveIndex(int column)
 {
-    QModelIndex index = SlaveTV->model()->index(SlaveTV->currentIndex().row(), column, SlaveTV->model()->parent(SlaveTV->currentIndex()));
-    QString tmpString = index.data(Qt::DisplayRole).toString();
-    if (!column)
+    s_tqTreeView *SlaveTV = this->findChild<s_tqTreeView *>("SlaveTV");
+    if (SlaveTV == 0)
+    {
+        ShowErMsg(ER_DIRMAIN+0x41);
+        return QString();
+    }
+    QString tmpString = SlaveTV->model()->index(SlaveTV->currentIndex().row(), column, SlaveTV->model()->parent(SlaveTV->currentIndex())).data(Qt::DisplayRole).toString();
+    if (!column) // в нулевом столбце всегда ИД элемента с нулями в начале, надо незначащие нули убрать
         tmpString = QString::number(tmpString.toInt(0));
     return tmpString;
 }
@@ -265,61 +220,42 @@ QString dir_maindialog::getSlaveIndex(int column)
 void dir_maindialog::ChangeAdditionalFields(QModelIndex index)
 {
     Q_UNUSED(index);
+    s_tqTreeView *SlaveTV = this->findChild<s_tqTreeView *>("SlaveTV");
+    if (SlaveTV == 0)
+    {
+        ShowErMsg(ER_DIRMAIN+0x41);
+        return;
+    }
     if ((SlaveTVIsTree) && (SlaveTV->model()->rowCount(SlaveTV->currentIndex()) != 0))
         return; // для родителей запрещено иметь дополнительные поля
-//    return;
-    ChangeAdditionalFields(getSlaveIndex(0));
+    QString tmpString = getSlaveIndex(0);
+    if (!tmpString.isEmpty())
+        ChangeAdditionalFields(tmpString);
+    else
+        ShowErMsg(ER_DIRMAIN+0x44);
 }
 
 void dir_maindialog::ChangeAdditionalFields(QString str)
 {
     int res;
-    s_2cdialog *newdialog = new s_2cdialog("Справочники:"+getMainIndex(1));
+    QString tmps = getMainIndex(1);
+    if (tmps.isEmpty())
+    {
+        ShowErMsg(ER_DIRMAIN+0x51);
+        return;
+    }
+    s_2cdialog *newdialog = new s_2cdialog("Справочники:"+tmps);
     if (IsQuarantine)
         newdialog->IsQuarantine = true;
     newdialog->Mode = MODE_EDIT;
-    if (!(res = newdialog->setup("2.2.." + getMainIndex(1)+"_полная", str)))
+    if (!(res = newdialog->setup(tmps+"_полная", str)))
     {
         newdialog->exec();
         showDirDialog();
     }
     else
-    {
-        delete newdialog;
-        QMessageBox::information(this,"Ошибка при создании диалога!",\
-                             QString::number(res),\
-                             QMessageBox::Ok, QMessageBox::NoButton);
-    }
-/*    sqldialog = new s_sqlfieldsdialog;
-    if (!(res = sqldialog->SetupUI(db, tble, str, "Справочник:"+getMainIndex(1)))) // берём ИД текущего элемента
-    {
-        connect(sqldialog, SIGNAL(accepted()), this, SLOT(showDirDialog()));
-        sqldialog->exec();
-    }
-    else
-    {
-        delete sqldialog;
-        QMessageBox::information(this,"Ошибка при создании диалога!",\
-                             QString::number(res),\
-                             QMessageBox::Ok, QMessageBox::NoButton);
-    } */
+        ShowErMsg(ER_DIRMAIN+0x54);
 }
-
-/*void dir_maindialog::AddDataChild()
-{
-    AddChild(QString::number(0), "");
-}
-
-void dir_maindialog::AddSubDataChild()
-{
-    AddChild(QString::number(getSlaveIndex(0).toLongLong(0,10)), "");
-}
-
-void dir_maindialog::AddChild(QString alias, QString str)
-{
-    QString newID = QString::number(sqlc.getnextfreeindex(db, tble));
-    ChangeAdditionalFields("0");
-} */
 
 void dir_maindialog::AddNew()
 {
@@ -425,3 +361,7 @@ void dir_maindialog::SystemSlaveContextMenu(QPoint)
     ContextMenu->exec(QCursor::pos()); // если есть права на удаление, на изменение тоже должны быть
 }
 
+void dir_maindialog::ShowErMsg(int ermsg)
+{
+    QMessageBox::warning(this, "warning!", "Ошибка №" + QString::number(ermsg));
+}

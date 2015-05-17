@@ -23,7 +23,7 @@ public:
 //    int childNumber() const;
     int columnCount() const;
     s_ntitem *insertChild(int position, int columns);
-    bool insertColumns(int position, int columns);
+//    bool insertColumns(int position, int columns);
     bool removeChildren(int position, int count);
     bool removeColumns(int position, int columns);
     int row() const;

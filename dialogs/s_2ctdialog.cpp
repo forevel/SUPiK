@@ -30,7 +30,7 @@ void s_2ctdialog::setupUI()
 {
     QVBoxLayout *mainLayout = new QVBoxLayout;
     QHBoxLayout *pbLayout = new QHBoxLayout;
-    s_tqtreeview *mainTV = new s_tqtreeview;
+    s_tqTreeView *mainTV = new s_tqTreeView;
     mainTV->setObjectName("mainTV");
     s_duniversal *uniDelegate = new s_duniversal;
     s_tqPushButton *pbOk = new s_tqPushButton("Ага");
@@ -83,7 +83,7 @@ void s_2ctdialog::resizemainTV(QModelIndex index1, QModelIndex index2)
     int i;
     Q_UNUSED(index1);
     Q_UNUSED(index2);
-    s_tqtreeview *tv = this->findChild<s_tqtreeview *>("mainTV");
+    s_tqTreeView *tv = this->findChild<s_tqTreeView *>("mainTV");
     for (i = 0; i < tv->header()->count(); i++)
         tv->resizeColumnToContents(i);
 }
@@ -104,7 +104,7 @@ void s_2ctdialog::accepted(QModelIndex idx)
 
 void s_2ctdialog::accepted()
 {
-    s_tqtreeview *tv = this->findChild<s_tqtreeview *>("mainTV");
+    s_tqTreeView *tv = this->findChild<s_tqTreeView *>("mainTV");
     if (tv == 0)
         return;
     QModelIndex curIndex;
@@ -134,7 +134,7 @@ QSize s_2ctdialog::minimumSizeHint()
         int curwidth = QApplication::desktop()->screenGeometry(this).width();
         int curheight = QApplication::desktop()->screenGeometry(this).height();
         int f2 = 0;
-        s_tqtreeview *tv = this->findChild<s_tqtreeview *>("mainTV");
+        s_tqTreeView *tv = this->findChild<s_tqTreeView *>("mainTV");
         for (int i = 0; i < tv->header()->count(); i++)
             f2 += tv->columnWidth(i)+20;
         if (f2 > curwidth)
@@ -159,7 +159,7 @@ void s_2ctdialog::sortModel()
 
 void s_2ctdialog::setTvCurrentText(QString text)
 {
-    s_tqtreeview *tv = this->findChild<s_tqtreeview *>("mainTV");
+    s_tqTreeView *tv = this->findChild<s_tqTreeView *>("mainTV");
     QList<QModelIndex> item = tv->model()->match(tv->model()->index(0, 0), Qt::DisplayRole, QVariant::fromValue(text), 1, Qt::MatchRecursive);
     if (!item.isEmpty())
         tv->setCurrentIndex(item.at(0));

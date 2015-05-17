@@ -87,6 +87,16 @@ bool s_ntmodel::setData(const QModelIndex &index, const QVariant &value, int rol
                 emit dataChanged(index, index);
             return result;
         }
+        else if (role == Qt::ForegroundRole)
+        {
+            item->setColor(index.column(), value.value<QColor>());
+            return true;
+        }
+        else if (role == Qt::FontRole)
+        {
+            item->setFont(index.column(), value.value<QFont>());
+            return true;
+        }
 /*        else if (role == Qt::UserRole)
         {
             bool result = item->setLinksData(index.column(), value.toString());
@@ -108,7 +118,7 @@ Qt::ItemFlags s_ntmodel::flags(const QModelIndex &index) const
     if ((ff.delegate == FD_SIMPLE) || (ff.delegate == FD_DISABLED))
         return Qt::NoItemFlags;
     else */
-        return Qt::ItemIsEnabled | Qt::ItemIsSelectable;// | Qt::ItemIsEditable;
+    return Qt::ItemIsEnabled | Qt::ItemIsSelectable;// | Qt::ItemIsEditable;
 }
 
 QVariant s_ntmodel::headerData(int section, Qt::Orientation orientation,
@@ -131,14 +141,14 @@ QModelIndex s_ntmodel::index(int row, int column, const QModelIndex &parent) con
         return QModelIndex();
 }
 
-bool s_ntmodel::insertColumns(int position, int columns, const QModelIndex &parent)
+/*bool s_ntmodel::insertColumns(int position, int columns, const QModelIndex &parent)
 {
     bool success;
     beginInsertColumns(parent, position, position + columns - 1);
     success = rootItem->insertColumns(position, columns);
     endInsertColumns();
     return success;
-}
+}*/
 
 bool s_ntmodel::insertRows(int position, int rows, const QModelIndex &parent)
 {
@@ -226,12 +236,12 @@ QModelIndex s_ntmodel::getIndex(s_ntitem *item) const
 
 s_ntitem *s_ntmodel::getItem(const QModelIndex &index) const
 {
-    s_ntitem *parentItem;
+    s_ntitem *item;
     if (index.isValid())
-        parentItem = static_cast<s_ntitem*>(index.internalPointer());
+        item = static_cast<s_ntitem*>(index.internalPointer());
     else
-        parentItem = rootItem;
-    return parentItem;
+        item = rootItem;
+    return item;
 }
 
 void s_ntmodel::addRow(int position, int cfset, QModelIndex &parent)
@@ -292,7 +302,7 @@ int s_ntmodel::Setup(QString table)
     QStringList fl = QStringList() << "table" << "tablefields" << "headers";
     vl = sqlc.getmorevaluesfromtablebyfield(sqlc.getdb("sup"), "tablefields", fl, "tablename", table, "fieldsorder", true);
     if (sqlc.result)
-        return 0x10; // нет такой таблицы в tablefields
+        return sqlc.result + 0x10 + ER_NTMODEL; // нет такой таблицы в tablefields
     // 2
     int idalpos=-1;
     for (i = 0; i < vl.size(); i++)
@@ -304,7 +314,7 @@ int s_ntmodel::Setup(QString table)
         }
     }
     if (idalpos == -1)
-        return 0x11; // не найдено поле idalias
+        return ER_NTMODEL; // не найдено поле idalias
     // 3
     catlist = vl.at(idalpos).at(0).split("."); // catlist - таблица, из которой брать категории
     vl.removeAt(idalpos); // не включать ссылку на категорию в заголовок
@@ -313,7 +323,7 @@ int s_ntmodel::Setup(QString table)
     // 4
     int res = BuildTree("0", false);
     if (res)
-        return res;
+        return res+ER_NTMODEL;
     return 0;
 }
 
@@ -331,25 +341,27 @@ int s_ntmodel::Setup(QString maintble, QString slvtble)
     int i;
     QStringList tmpsl = tfl.tablefields(maintble, "ИД_а"); // взять table,tablefields,links из tablefields, где таблица maintble и заголовок ИД_а
     if (tfl.result) // нет поля idalias в таблице - это не дерево!
-        return 0x21 + tfl.result;
+        return ER_NTMODEL;
     catlist = tmpsl.at(0).split("."); // catlist - таблица, из которой брать категории
-    QStringList headers = tfl.headers(slvtble);
+    QStringList headers = tfl.tableheaders(slvtble);
+    if (tfl.result)
+        return ER_NTMODEL + tfl.result;
     for (i = 0; i < headers.size(); i++)
     {
         setHeaderData(i, Qt::Horizontal, headers.at(i), Qt::EditRole);
         tmpsl = tfl.tablefields(slvtble, headers.at(i));
         if (tfl.result) // что-то не так с подчинённой таблицей нет такого заголовка
-            return 0x24 + tfl.result;
+            return tfl.result+ER_NTMODEL;
         if (tmpsl.size() > 1)
             slvtblefields << tmpsl.at(1);
         else
-            return 0x27; // нет почему-то в возвращённом результате второго элемента
+            return 0x07+ER_NTMODEL; // нет почему-то в возвращённом результате второго элемента
         this->slvtble = tmpsl.at(0); // имя таблицы - в переменную (можно было бы один раз, да сто раз tfl вызывать не хочется, так что будет перезаписываться одно и то же
     }
     // 4
     int res = BuildTree("0", true);
     if (res)
-        return res;
+        return res+ER_NTMODEL+0x04;
     return 0;
 }
 
@@ -366,7 +378,7 @@ int s_ntmodel::BuildTree(QString id, bool twodb)
     tmpString = "SELECT `alias`,`id"+catlist.at(1)+"` FROM `"+catlist.at(1)+"` WHERE `idalias`=\""+id+"\" AND `deleted`=0 ORDER BY `id"+catlist.at(1)+"` ASC;";
     get_child_from_db1.exec(tmpString);
     if (!get_child_from_db1.isActive())
-        return 0x31;
+        return 0x11+ER_NTMODEL;
 // увеличиваем уровень дерева
     position++;
     if (id == "0") position = 0; // для корневых элементов position д.б. равен нулю
@@ -379,13 +391,13 @@ int s_ntmodel::BuildTree(QString id, bool twodb)
         additemtotree(position, tmpStringList, set);
         res = BuildTree(get_child_from_db1.value(1).toString(), twodb); // в качестве аргумента функции используется индекс поля idalias
         if (res)
-            return res;
+            return res+0x14+ER_NTMODEL;
     }
     if (twodb)
     {
         res = addTreeSlvItem(position, id); // добавляем таблицу из подчинённой таблицы
         if (res)
-            return 0x32 + res;
+            return 0x17 + res+ER_NTMODEL;
     }
     position--; // после добавления всех детишек уровень понижается
     return 0;
@@ -451,10 +463,9 @@ void s_ntmodel::additemtotree(int position, QStringList sl, int set)
     addRow(parent->childCount(), set, parentIndex);
     for (int column = 0; column < sl.size(); ++column)
     {
-//        parent->child(parent->childCount() - 1)->setData(column, sl[column]);
-//        parent->child(parent->childCount()-1)->setColor(column, color);
-//        parent->child(parent->childCount()-1)->setFont(column, font);
         setData(index(parent->childCount()-1, column, parentIndex), sl[column], Qt::EditRole);
+        setData(index(parent->childCount()-1, column, parentIndex), color, Qt::ForegroundRole);
+        setData(index(parent->childCount()-1, column, parentIndex), font, Qt::FontRole);
     }
 }
 

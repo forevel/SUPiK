@@ -3,27 +3,25 @@
 
 #include "s_sql.h"
 
-// 1. stol - перевод имени в его ИД через строку links в таблице tablefields (для записи значения ИД по имени)
-// 2. ltos - перевод ИД через строку links в таблице tablefields в имя (для чтения имени по значению ИД)
-
 class s_tablefields
 {
 public:
     s_tablefields();
 
-    QStringList toidl (QString tble, QString headers); // взять все значения по полю headers таблицы tble
-    QStringList toidlc (QString tble, QString headers, QString cheaders, QString value); // взять все значения по полю headers таблицы tble, где поле cheaders этой же таблицы равно value
-    QList<QStringList> tbtovll (QString links); // взять все значения по всем полям таблицы tble
-    QStringList toid (QString tble, QString headers, QString tbleid);
-    QString vtoid_ (QString tble, QString headers, QString value); // взять ИД из поля headers таблицы tble, для которого значение = value
+    QStringList htovl (QString tble, QString header); // взять все значения по полю header таблицы tble
+    QStringList htovlc (QString tble, QString header, QString cheader, QString value); // взять все значения по полю header таблицы tble, где поле cheader этой же таблицы равно value
+    QList<QStringList> tbvll (QString tble); // взять все значения по всем полям таблицы tble
+    QString tov(QString tble, QString header, QString tbleid); // взять значение по id=tbleid из table.tablefields для заданного поля header таблицы tble
+    QString toid(QString tble, QString header, QString value); // взять ИД из поля header таблицы tble, для которого значение = value
     QString vtoid (QString links, QString value); // взять один ИД по ссылке и значению
     QString idtov (QString links, QString id); // взять одно значение по ссылке и ид
     QStringList idtovl (QString links); // взять все значения по ссылке в зависимости от типа
-    int idtois (QString tble, QStringList headers, QStringList values);
+    int idtois (QString tble, QStringList header, QStringList values);
     QString insert(QString tble);
     int remove(QString tble, QString id); // "удаление" элемента из таблицы
-    QStringList tablefields (QString tble, QString headers);
-    QStringList headers (QString tble);
+    QStringList tablefields (QString tble, QString header);
+    QStringList tableheaders (QString tble);
+    QStringList tablelinks (QString tble);
     bool tableistree (QString tble);
 
     int result;

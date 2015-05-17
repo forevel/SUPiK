@@ -298,7 +298,7 @@ void wh_dialog::resizeMainTV(QModelIndex index1, QModelIndex index2)
         realwidths[i] = k * widths[i];
     for (i = 0; i < mainTV->horizontalHeader()->count(); i++)
     {
-        int links = mainmodel->getCellLinks(mainmodel->index(0, i, QModelIndex())).split(".").at(0).toInt();
+        int links = mainmodel->getCellType(0, i).toInt();
         mainTV->setColumnWidth(i, realwidths[links]);
     }
     needtorefresh = true;

@@ -7,7 +7,10 @@ s_ncitem::s_ncitem(s_ncitem *parent)
 
 QString s_ncitem::data(int column) const
 {
-    return itemData.at(column);
+    if (column < itemData.size())
+        return itemData.at(column);
+    else
+        return QString();
 }
 
 QString s_ncitem::linksdata(int column) const
@@ -68,9 +71,17 @@ void s_ncitem::setIcon(int column, QIcon icon)
         itemIcon.append(icon);
 }
 
-void s_ncitem::setaData(QString str)
+void s_ncitem::setTData(int column, QString str)
 {
-    AData = str;
+    if (column < tDataList.size())
+        tDataList.replace(column, str);
+    else
+        tDataList.append(str);
+}
+
+void s_ncitem::setAData(QString str)
+{
+    aData = str;
 }
 
 QColor s_ncitem::color(int column)
@@ -97,7 +108,15 @@ QIcon s_ncitem::icon(int column)
         return QIcon();
 }
 
-QString s_ncitem::aData()
+QString s_ncitem::AData()
 {
-    return AData;
+    return aData;
+}
+
+QString s_ncitem::TData(int column)
+{
+    if (column < tDataList.size())
+        return tDataList.at(column);
+    else
+        return QString();
 }

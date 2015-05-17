@@ -10,7 +10,7 @@ class s_tqPushButton : public QPushButton
 public:
     explicit s_tqPushButton(QWidget *parent = 0);
     explicit s_tqPushButton(QString str, QWidget *parent = 0);
-    explicit s_tqPushButton(QColor &color, QWidget *parent = 0);
+    explicit s_tqPushButton(QColor &color, QString str="", QWidget *parent = 0);
     QVariant getAData();
     void setAData(QVariant dat);
 

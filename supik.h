@@ -4,31 +4,6 @@
 #include <QMainWindow>
 #include <QPaintEvent>
 
-#include "dialogs/sys_settingsdialog.h"
-#include "dialogs/sys_systemdialog.h"
-#include "dialogs/dir_maindialog.h"
-#include "dialogs/sys_probsdialog.h"
-#include "dialogs/cmp_compdialog.h"
-#include "dialogs/wh_dialog.h"
-#include "dialogs/sys_backuprestoredirdialog.h"
-#include "dialogs/s_ncdialog.h"
-
-#include "gen/publicclass.h"
-#include "gen/publiclang.h"
-#include "widgets/s_colortabwidget.h"
-
-QT_BEGIN_NAMESPACE
-class QAction;
-class QMenu;
-class QMenuBar;
-class QStatusBar;
-class QIcon;
-class QTableView;
-class QHBoxLayout;
-class QVBoxLayout;
-class QTimer;
-QT_END_NAMESPACE
-
 #define SUPIKMENUBAR_BG "transparent"
 #define SUPIKMENUBAR_ITEM_SELECTED "#EEEEEE"
 #define SUPIKMENU_ITEM "#CCCCCC"
@@ -50,21 +25,16 @@ signals:
 public slots:
 
 private:
-    QStatusBar *SupikStatusBar;
-    QMenuBar *SupikMenuBar;
-    QIcon SupikIcon;
-    S_ColorTabWidget *MainTW;
-
     int WarningActionIndex;
     QHash <QString, void (supik::*)()> pf;
-    void ClearSupikMenuBar();
     void SetSupikMenuBar();
     QMenu *AddChildToMenu(int);
     void AddChildToAction (QAction *, int);
     void SetSupikStatusBar();
-    void SetSupikWindow();
-    int CheckForWidget (QWidget *, QString);
 
+    int CheckForWidget (int);
+
+    void SetSupikWindow();
     void ExitSupik ();
     void Components();
     void Directories();
@@ -76,19 +46,9 @@ private:
     void WhIncome();
     void WhOutgoing();
     void WhSearch();
-    void DialogEdit();
     void Quarantine();
 
     void showEvent(QShowEvent *event);
-
-    cmp_compdialog *qccda;
-    sys_probsdialog *probDialog;
-    sys_settingsdialog *qssda;
-    sys_systemdialog *qsyda;
-    dir_maindialog *dird;
-//    wh_dialog *whd;
-    s_ncdialog *whd;
-    sys_backuprestoredirdialog *brd;
 
 private slots:
     void ExecuteSub();

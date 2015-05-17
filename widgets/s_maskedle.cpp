@@ -3,7 +3,7 @@
 #include <QRegExp>
 #include <QValidator>
 
-s_maskedle::s_maskedle(QString regexp, QWidget *parent) :
+s_MaskedLineEdit::s_MaskedLineEdit(QString regexp, QWidget *parent) :
     QLineEdit(parent)
 {
     QRegExp re;
@@ -12,7 +12,7 @@ s_maskedle::s_maskedle(QString regexp, QWidget *parent) :
     setValidator(val);
 }
 
-void s_maskedle::keyPressEvent(QKeyEvent *e)
+void s_MaskedLineEdit::keyPressEvent(QKeyEvent *e)
 {
 /*    QLocale german(QLocale::German);
     float tmpf = german.toFloat(text());
@@ -32,7 +32,7 @@ void s_maskedle::keyPressEvent(QKeyEvent *e)
     }
 }
 /*
-bool s_maskedle::event(QEvent *e)
+bool s_MaskedLineEdit::event(QEvent *e)
 {
     if(e->type() == QEvent::KeyPress)
     {

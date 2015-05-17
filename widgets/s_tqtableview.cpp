@@ -4,7 +4,7 @@
 #include <QDesktopWidget>
 #include <QDialog>
 
-s_tqTableView::s_tqTableView(bool autoResize=false, QWidget *parent) :
+s_tqTableView::s_tqTableView(bool autoResize, QWidget *parent) :
     QTableView(parent)
 {
     setAttribute(Qt::WA_TranslucentBackground, true);

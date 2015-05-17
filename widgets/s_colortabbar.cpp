@@ -23,7 +23,7 @@ void S_ColorTabBar::paintEvent(QPaintEvent *event)
 
 
             QRect S_tabRect = tabRect(i);
-            S_color = pc.TabColors[tabData(i).toString()];
+            S_color = pc.TabColors[tabData(i).toInt()];
             S_YEnd = 0;
             if (i != currentIndex()) // если неактивная вкладка
             {

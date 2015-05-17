@@ -1,24 +1,9 @@
 #ifndef S_WHITEMMODEL_H
 #define S_WHITEMMODEL_H
 
-// тип поля
-#define FW_AUTONUM  0
-#define FW_NUMBER   1
-#define FW_LINK     2
-#define FW_DLINK    3
-#define FW_ALLINK   4
-#define FW_MAXLINK  5
-#define FW_MASKED   6
-#define FW_EQUAT    7
-
-// тип арифм операции
-#define OP_PLUS     1
-#define OP_MINUS    2
-#define OP_MULT     3
-#define OP_DIV      4
-
 #include <QAbstractItemModel>
 #include <QStringList>
+#include "../gen/publicclass.h"
 #include "s_whitem.h"
 
 class s_whitemmodel : public QAbstractTableModel

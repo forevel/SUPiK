@@ -179,7 +179,7 @@ void dir_maindialog::ShowSlaveTree(QString str)
             disconnect(SlaveTV, SIGNAL(customContextMenuRequested(QPoint)), 0, 0);
             connect (SlaveTV, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(SystemSlaveContextMenu(QPoint)));
             disconnect(SlaveTV, SIGNAL(doubleClicked(QModelIndex)), 0, 0);
-            connect (SlaveTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(ChangeAdditionalFields(QModelIndex)));
+            connect (SlaveTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(EditItem(QModelIndex)));
         }
         else
             QMessageBox::warning(this, "warning", "Недостаточно прав для работы со справочником!");
@@ -217,7 +217,7 @@ QString dir_maindialog::getSlaveIndex(int column)
     return tmpString;
 }
 
-void dir_maindialog::ChangeAdditionalFields(QModelIndex index)
+void dir_maindialog::EditItem(QModelIndex index)
 {
     Q_UNUSED(index);
     s_tqTreeView *SlaveTV = this->findChild<s_tqTreeView *>("SlaveTV");
@@ -230,12 +230,12 @@ void dir_maindialog::ChangeAdditionalFields(QModelIndex index)
         return; // для родителей запрещено иметь дополнительные поля
     QString tmpString = getSlaveIndex(0);
     if (!tmpString.isEmpty())
-        ChangeAdditionalFields(tmpString);
+        EditItem(tmpString);
     else
         ShowErMsg(ER_DIRMAIN+0x44);
 }
 
-void dir_maindialog::ChangeAdditionalFields(QString str)
+void dir_maindialog::EditItem(QString str)
 {
     int res;
     QString tmps = getMainIndex(1);
@@ -260,7 +260,7 @@ void dir_maindialog::ChangeAdditionalFields(QString str)
 void dir_maindialog::AddNew()
 {
     QString newID = tfl.insert(tble+"_полная");
-    ChangeAdditionalFields(newID);
+    EditItem(newID);
 }
 
 void dir_maindialog::DeleteData()
@@ -331,7 +331,7 @@ void dir_maindialog::SystemSlaveContextMenu(QPoint)
     QAction *ChangeDataChild;
     ChangeDataChild = new QAction ("Изменить элемент", this);
     ChangeDataChild->setSeparator(false);
-    connect(ChangeDataChild, SIGNAL(triggered()), this, SLOT(ChangeAdditionalFields()));
+    connect(ChangeDataChild, SIGNAL(triggered()), this, SLOT(EditItem()));
     QAction *AddData = new QAction ("Добавить элемент", this);
     AddData->setSeparator(false);
     connect(AddData, SIGNAL(triggered()), this, SLOT(AddNew()));

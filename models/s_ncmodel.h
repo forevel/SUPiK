@@ -20,6 +20,8 @@ public:
     explicit s_ncmodel(QObject *parent = 0);
     ~s_ncmodel();
 
+    int result;
+
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
     bool setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role);
     QVariant data (const QModelIndex &index, int role) const;
@@ -60,7 +62,7 @@ public:
         return map;
     }
     int setup(QString links);
-    int setupbyid(QString tble, QString id);
+    int setup(QString tble, QString id);
 
 signals:
 
@@ -76,7 +78,6 @@ private:
     QString getEq(QString arg1, QString arg2, int oper, const QModelIndex index, bool byRow) const; // подсчёт выражения "arg1 <oper> arg2"
     float getOperand(QString str, const QModelIndex index, bool byRow) const; // подсчёт арифм. выражения, содержащегося в строке str
     QList<int> maxcolswidth;
-    int result;
 };
 
 #endif // S_2CMODEL_H

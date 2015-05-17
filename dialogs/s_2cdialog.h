@@ -27,7 +27,6 @@ public:
     int setup(QString links, QString id="");
     void sortModel();
     void setTvCurrentText(QString text);
-    void ShowMessage(int ernum);
     bool IsQuarantine;
     int Mode;
     QString tble;
@@ -44,6 +43,7 @@ private:
     QString hdr;
     int constheight;
     void fillModelAdata();
+    void ShowErMsg(int ernum);
 
 private slots:
     void accepted();

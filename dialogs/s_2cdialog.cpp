@@ -5,7 +5,9 @@
 #include "../widgets/s_tqlabel.h"
 #include "../gen/s_sql.h"
 #include "../gen/publicclass.h"
+#include "../gen/s_sql.h"
 
+#include <QSortFilterProxyModel>
 #include <QHBoxLayout>
 #include <QPaintEvent>
 #include <QPainter>
@@ -39,8 +41,6 @@ s_2cdialog::s_2cdialog(QString hdr, QWidget *parent) :
     Mode = MODE_CHOOSE;
     setStyleSheet("QDialog {background-color: rgba(204,204,153);}");
     setAttribute(Qt::WA_DeleteOnClose);
-//    QSizePolicy fixed(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//    setSizePolicy(fixed);
     setupUI(hdr);
 }
 
@@ -87,6 +87,11 @@ void s_2cdialog::setupUI(QString hdr)
 void s_2cdialog::setup(QStringList sl1, QStringList links1, QStringList sl2, QStringList links2)
 {
     s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
+    if (tv == 0)
+    {
+        ShowErMsg(ER_2CDLG+0x01);
+        return;
+    }
     QList<QStringList> sl;
     sl.append(sl1);
     sl.append(sl2);
@@ -102,6 +107,8 @@ void s_2cdialog::setup(QStringList sl1, QStringList links1, QStringList sl2, QSt
     else
         mainmodel->setcolumnlinks(1, links2);
     mainmodel->fillModel(sl);
+    if (mainmodel->result)
+        ShowErMsg(ER_2CDLG+mainmodel->result+0x04); // не выходим, т.к. проблема м.б. с одной из ячеек, которую можно будет поправить
     fillModelAdata();
     tv->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     tv->resizeColumnsToContents();
@@ -115,6 +122,11 @@ void s_2cdialog::setup(QStringList sl1, QStringList links1, QStringList sl2, QSt
 void s_2cdialog::setup(QStringList sl, QStringList links, QString str)
 {
     s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
+    if (tv == 0)
+    {
+        ShowErMsg(ER_2CDLG+0x11);
+        return;
+    }
     QList<QStringList> tmpsl;
     tmpsl.append(sl);
     QList<int> il;
@@ -125,6 +137,8 @@ void s_2cdialog::setup(QStringList sl, QStringList links, QString str)
     else
         mainmodel->setcolumnlinks(0, links);
     mainmodel->fillModel(tmpsl);
+    if (mainmodel->result)
+        ShowErMsg(ER_2CDLG+mainmodel->result+0x14); // не выходим, т.к. проблема м.б. с одной из ячеек, которую можно будет поправить
     fillModelAdata();
  //   QList<QModelIndex> item = tv->model()->match(tv->model()->index(0, 0), Qt::DisplayRole, QVariant::fromValue(str), 1, Qt::MatchExactly);
  //   if (!item.isEmpty())
@@ -138,11 +152,12 @@ void s_2cdialog::setup(QStringList sl, QStringList links, QString str)
 
 int s_2cdialog::setup(QString links, QString id)
 {
-    try
-    {
         s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
         if (tv == 0)
-            throw 0x51;
+        {
+            ShowErMsg(ER_2CDLG+0x21);
+            return;
+        }
         PublicClass::fieldformat ff = pc.getFFfromLinks(links);
         tble = ff.link.at(0); // в слоте accepted() надо знать, с какой таблицей мы работаем
         switch (Mode)
@@ -157,7 +172,7 @@ int s_2cdialog::setup(QString links, QString id)
         }
         case MODE_EDIT:
         {
-            int res = mainmodel->setupbyid(tble, id);
+            int res = mainmodel->setup(tble, id);
             if (res)
                 throw res;
 /*            QList<QStringList> lsl;
@@ -267,12 +282,6 @@ int s_2cdialog::setup(QString links, QString id)
         default:
             break;
         }
-    }
-    catch (int res)
-    {
-        ShowMessage(res);
-        return res;
-    }
     return 0;
 }
 

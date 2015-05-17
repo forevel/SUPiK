@@ -23,7 +23,7 @@ private slots:
     void showDirDialog(QModelIndex idx = QModelIndex());
     void AddDirDialog();
     void EditDirDialog();
-    void ChangeAdditionalFields (QModelIndex index = QModelIndex());
+    void EditItem (QModelIndex index = QModelIndex());
     void DeleteData();
     void AddNew();
 
@@ -50,7 +50,7 @@ private:
     void fillDirTableStructure();
     void clearSlaveFrame();
     void ShowSlaveTree(QString);
-    void ChangeAdditionalFields(QString str);
+    void EditItem(QString str);
     QString getMainIndex(int column);
     QString getSlaveIndex(int column);
     void ShowErMsg(int ermsg);

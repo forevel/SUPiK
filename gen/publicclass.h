@@ -41,7 +41,9 @@ QT_END_NAMESPACE
 #define ER_TFIELD   0x0200 // tablefields
 #define ER_NTMODEL  0x3000 // s_ntmodel
 #define ER_NCMODEL  0x4000 // s_ncmodel
-#define ER_DIRMAIN  0x10000 // dir_maindialog
+#define ER_DIRMAIN  0x100000 // dir_maindialog
+#define ER_2CDLG    0x10000 // 2cdialog
+#define ER_2CTDLG   0x20000 // 2ctdialog
 
 #define DB_ALT      0x00
 #define DB_ENT      0x01

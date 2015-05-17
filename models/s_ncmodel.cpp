@@ -576,7 +576,7 @@ int s_ncmodel::setup(QString tble)
 // процедура заполнения модели значениями headers и по table:tablefields из таблицы tble в sup.tablefields по одному id
 // предназначена для диалога редактирования справочников (s_2cdialog)
 
-int s_ncmodel::setupbyid(QString tble, QString id)
+int s_ncmodel::setup(QString tble, QString id)
 {
     int i;
     ClearModel();

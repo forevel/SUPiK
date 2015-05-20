@@ -42,7 +42,7 @@ void sys_backuprestoredirdialog::SetupUI()
     QVBoxLayout *mainbl = new QVBoxLayout;
     QHBoxLayout *upperLayout = new QHBoxLayout;
     QHBoxLayout *midLayout = new QHBoxLayout;
-    s_tqTableView *mainTV = new s_tqTableView(true);
+    s_tqTableView *mainTV = new s_tqTableView;
     mainTV->setObjectName("mainTV");
     mainTV->verticalHeader()->setVisible(false);
     s_tqPushButton *ImpExpPB = new s_tqPushButton;

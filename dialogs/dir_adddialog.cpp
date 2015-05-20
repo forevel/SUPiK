@@ -440,7 +440,7 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
         if (le == 0)
             throw(0x42);
 //        s_tqTreeView *trv = new s_tqTreeView;
-        s_tqTableView *tbv = new s_tqTableView(true);
+        s_tqTableView *tbv = new s_tqTableView;
         s_ntmodel *trvmodel = new s_ntmodel;
         s_ncmodel *tbvmodel = new s_ncmodel;
         QDialog *dlg = new QDialog;

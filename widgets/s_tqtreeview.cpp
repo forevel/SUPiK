@@ -7,17 +7,15 @@
 s_tqTreeView::s_tqTreeView(QWidget *parent) :
     QTreeView(parent)
 {
-    isTree = true;
     s_tqTreeViewstyle *style = new s_tqTreeViewstyle;
     setAttribute(Qt::WA_TranslucentBackground);
     setStyleSheet("QTreeView {background-color: rgba(0,0,0,0);}");
     setFrameStyle(QFrame::NoFrame);
     setStyle(style);
-    QSizePolicy fix(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    setSizePolicy(fix);
-    datachangedintable = false;
-    if (isTree)
-        connect(this, SIGNAL(clicked(QModelIndex)), this, SLOT(setTVexpanded(QModelIndex)));
+//    QSizePolicy fix(QSizePolicy::Fixed, QSizePolicy::Fixed);
+//    setSizePolicy(fix);
+//    datachangedintable = false;
+    connect(this, SIGNAL(clicked(QModelIndex)), this, SLOT(setTVexpanded(QModelIndex)));
 }
 
 s_tqTreeViewstyle::s_tqTreeViewstyle() : QProxyStyle()
@@ -41,23 +39,23 @@ QVariant s_tqTreeView::getAData()
     return this->adata;
 }
 
-void s_tqTreeView::dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles)
+/*void s_tqTreeView::dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles)
 {
     Q_UNUSED(topLeft);
     Q_UNUSED(bottomRight);
     Q_UNUSED(roles);
-    datachangedintable = true;
+//    datachangedintable = true;
     emit datachanged();
-}
+}*/
 
-void s_tqTreeView::updateTVGeometry()
+/*void s_tqTreeView::updateTVGeometry()
 {
-    datachangedintable = true;
-    update();
-    updateGeometry();
-}
+//    datachangedintable = true;
+//    update();
+//    updateGeometry();
+}*/
 
-QSize s_tqTreeView::minimumSizeHint()
+/*QSize s_tqTreeView::minimumSizeHint()
 {
     if (datachangedintable)
     {
@@ -89,14 +87,14 @@ QSize s_tqTreeView::minimumSizeHint()
     }
     else
         return this->size();
-}
+} */
 
-void s_tqTreeView::paintEvent(QPaintEvent *e)
+/*void s_tqTreeView::paintEvent(QPaintEvent *e)
 {
-    setFixedSize(minimumSizeHint());
+//    setFixedSize(minimumSizeHint());
     QTreeView::paintEvent(e);
     e->accept();
-}
+}*/
 
 void s_tqTreeView::setTVexpanded(QModelIndex index)
 {
@@ -104,23 +102,23 @@ void s_tqTreeView::setTVexpanded(QModelIndex index)
     {
         if (isExpanded(index))
         {
-            shown_rows -= getVisibleChildsCount(static_cast<s_ntmodel *>(model())->getItem(index));
-            recalculateGeometry();
+//            shown_rows -= getVisibleChildsCount(static_cast<s_ntmodel *>(model())->getItem(index));
+//            recalculateGeometry();
             setExpanded(index, false);
         }
         else
         {
-            shown_rows += getVisibleChildsCount(static_cast<s_ntmodel *>(model())->getItem(index));
-            recalculateGeometry();
+//            shown_rows += getVisibleChildsCount(static_cast<s_ntmodel *>(model())->getItem(index));
+//            recalculateGeometry();
             setExpanded(index, true);
         }
     }
-    updateTVGeometry();
+//    updateTVGeometry();
     for (int i = 0; i < header()->count(); i++)
         resizeColumnToContents(i);
 }
 
-int s_tqTreeView::getVisibleChildsCount(s_ntitem *item)
+/*int s_tqTreeView::getVisibleChildsCount(s_ntitem *item)
 {
 // нужно вычислить, сколько всего открытых потомков у узла, до уровня листьев дерева
     int childs_count = item->childCount();
@@ -147,4 +145,4 @@ void s_tqTreeView::recalculateGeometry()
 void s_tqTreeView::setShownRows(int rowcount)
 {
     shown_rows = rowcount;
-}
+} */

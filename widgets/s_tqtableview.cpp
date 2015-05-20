@@ -4,7 +4,7 @@
 #include <QDesktopWidget>
 #include <QDialog>
 
-s_tqTableView::s_tqTableView(bool autoResize, QWidget *parent) :
+s_tqTableView::s_tqTableView(QWidget *parent) :
     QTableView(parent)
 {
     setAttribute(Qt::WA_TranslucentBackground, true);
@@ -12,12 +12,12 @@ s_tqTableView::s_tqTableView(bool autoResize, QWidget *parent) :
     setStyleSheet("QTableView {background-color: rgba(0,0,0,0);}");
     setFrameStyle(QFrame::NoFrame);
     setShowGrid(false);
-    QSizePolicy fix(QSizePolicy::Fixed, QSizePolicy::Fixed);
-    setSizePolicy(fix);
-    datachangedintable = false;
-    this->autoResize=autoResize;
-    if (autoResize)
-        connect(this,SIGNAL(datachanged()), this, SLOT(resizeColumnsToContents()));
+//    QSizePolicy fix(QSizePolicy::Fixed, QSizePolicy::Fixed);
+//    setSizePolicy(fix);
+//    datachangedintable = false;
+//    this->autoResize=autoResize;
+//    if (autoResize)
+    connect(this,SIGNAL(datachanged()), this, SLOT(resizeColumnsToContents()));
 }
 
 void s_tqTableView::setAData(QVariant dat)
@@ -35,13 +35,13 @@ void s_tqTableView::dataChanged(const QModelIndex &topLeft, const QModelIndex &b
     Q_UNUSED(topLeft);
     Q_UNUSED(bottomRight);
     Q_UNUSED(roles);
-    if (autoResize)
+//    if (autoResize)
         resizeColumnsToContents();
-    datachangedintable=true;
+//    datachangedintable=true;
     emit datachanged();
 }
 
-QSize s_tqTableView::minimumSizeHint() const
+/*QSize s_tqTableView::minimumSizeHint() const
 {
     if (datachangedintable)
     {
@@ -70,3 +70,4 @@ void s_tqTableView::paintEvent(QPaintEvent *e)
     e->accept();
     QTableView::paintEvent(e);
 }
+*/

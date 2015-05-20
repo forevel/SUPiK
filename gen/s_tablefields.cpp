@@ -156,6 +156,7 @@ QString s_tablefields::idtov(QString links, QString id)
     case FW_PLAIN:
     case FW_MASKED:
     case FW_EQUAT:
+    case FW_ID:
     {
         outs = id;
         break;
@@ -212,6 +213,11 @@ QString s_tablefields::idtov(QString links, QString id)
         }
         break;
     }
+    default:
+    {
+        outs = id;
+        break;
+    }
     }
     return outs;
 }
@@ -226,7 +232,7 @@ QStringList s_tablefields::idtovl(QString links)
     {
     case FW_ALLINK:
     {
-        QString id = vtoid_(ff.link.at(0), "Наименование", ff.link.at(1)); // взять ИД элемента, по ИД_а которого отбирать список элементов
+        QString id = toid(ff.link.at(0), "Наименование", ff.link.at(1)); // взять ИД элемента, по ИД_а которого отбирать список элементов
         if (result)
         {
             result += 0x51;

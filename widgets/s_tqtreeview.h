@@ -13,11 +13,10 @@ public:
     explicit s_tqTreeView(QWidget *parent = 0);
     QVariant getAData();
     void setAData(QVariant dat);
-    QSize minimumSizeHint();
-    void updateTVGeometry();
-    bool isTree;
+//    QSize minimumSizeHint();
+//    void updateTVGeometry();
 
-    void setShownRows(int);
+//    void setShownRows(int);
 
 signals:
     void datachanged();
@@ -26,16 +25,16 @@ public slots:
     void setTVexpanded(QModelIndex index);
 
 private:
-    void drawBranches(QPainter *painter, const QRect &rect, const QModelIndex &index);
-    void dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles);
+//    void drawBranches(QPainter *painter, const QRect &rect, const QModelIndex &index);
+//    void dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles);
     QVariant adata;
-    int shown_rows;
-    mutable bool datachangedintable;
-    int getVisibleChildsCount(s_ntitem *item);
-    void recalculateGeometry();
+//    int shown_rows;
+//    mutable bool datachangedintable;
+//    int getVisibleChildsCount(s_ntitem *item);
+//    void recalculateGeometry();
 
 protected:
-    void paintEvent(QPaintEvent *e);
+//    void paintEvent(QPaintEvent *e);
 };
 
 class s_tqTreeViewstyle : public QProxyStyle

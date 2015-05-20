@@ -377,8 +377,8 @@ int s_ntmodel::BuildTree(QString id, bool twodb)
     QSqlQuery get_child_from_db1 (sqlc.getdb(catlist.at(0)));
     tmpString = "SELECT `alias`,`id"+catlist.at(1)+"` FROM `"+catlist.at(1)+"` WHERE `idalias`=\""+id+"\" AND `deleted`=0 ORDER BY `id"+catlist.at(1)+"` ASC;";
     get_child_from_db1.exec(tmpString);
-    if (!get_child_from_db1.isActive())
-        return 0x11+ER_NTMODEL;
+//    if (!get_child_from_db1.isActive())
+//        return 0x11+ER_NTMODEL;
 // увеличиваем уровень дерева
     position++;
     if (id == "0") position = 0; // для корневых элементов position д.б. равен нулю

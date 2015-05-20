@@ -6,6 +6,8 @@
 #include <QPoint>
 
 #include "../gen/publicclass.h"
+#include "../models/s_ntmodel.h"
+#include "../models/s_ncmodel.h"
 
 class dir_maindialog : public QDialog
 {
@@ -31,7 +33,9 @@ private:
 //    s_tqTreeView *MainTV, *SlaveTV;
 //    s_ntmodel *MainTreeModel, *SlaveTreeModel;
 //    s_ncmodel *MainTableModel, *SlaveTableModel;
-//    QSortFilterProxyModel *SlaveProxyModel;
+//    s_ntmodel *SlaveTreeModel;
+//    s_ncmodel *MainTreeModel, *SlaveTableModel;
+    //    QSortFilterProxyModel *SlaveProxyModel;
     bool MainTVIsTree, SlaveTVIsTree, IsQuarantine;
 //    s_tqLabel *MainL;
 //    QVBoxLayout *MainLayout;

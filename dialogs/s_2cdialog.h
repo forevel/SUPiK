@@ -18,9 +18,9 @@ public:
     explicit s_2cdialog(QString hdr="", QWidget *parent = 0);
     void setupUI(QString hdr);
     // sl1 - надписи, sl2 - поля для заполнения, links - формат полей sl2
-    void setup(QStringList sl1, QStringList links1, QStringList sl2, QStringList links2);
+//    int setup(QStringList sl1, QStringList links1, QStringList sl2, QStringList links2);
     // sl - нередактируемые поля для списка, links - формат (можно не использовать), str - текущее значение
-    void setup(QStringList sl, QStringList links=QStringList(), QString str="");
+    int setup(QStringList sl, QStringList links=QStringList(), QString str="");
 //    // tble - таблица по tablefields, из которой построить список выбора, links - формат (можно не использовать), str - текущее значение
 //    int setupchoosetable(QString tble, QString id="");
     // id - номер редактируемой строки таблицы db.tble

@@ -414,7 +414,7 @@ QWidget *s_ncdialog::getWidget(int id, QString ftext, QString link, QString defs
     }
     case FT_TABLE:
     {
-        s_tqTableView *tv = new s_tqTableView(true);
+        s_tqTableView *tv = new s_tqTableView;
         s_duniversal *uniDelegate = new s_duniversal;
         tv->setItemDelegate(uniDelegate);
         tv->setEditTriggers(QAbstractItemView::AllEditTriggers);

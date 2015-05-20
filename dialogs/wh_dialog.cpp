@@ -41,7 +41,7 @@ wh_dialog::wh_dialog(int Reason, QString id, QWidget *parent) :
     ml1 = new QHBoxLayout;
     ml2 = new QHBoxLayout;
     firstShow = true;
-    mainTV = new s_tqTableView(true);
+    mainTV = new s_tqTableView;
     this->Reason = Reason;
     needtorefresh = false;
     ReasonTable << "Ввод остатков_полная" << "Приём на склад_полная" << "Приём на склад_полная";

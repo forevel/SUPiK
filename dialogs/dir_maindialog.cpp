@@ -32,8 +32,15 @@ dir_maindialog::dir_maindialog(QWidget *parent) :
 
 void dir_maindialog::SetupUI()
 {
-    QVBoxLayout *MainLayout = new QVBoxLayout;
-    QHBoxLayout *MainFrameLayout = new QHBoxLayout;
+    QVBoxLayout *lyout = new QVBoxLayout;
+    QHBoxLayout *hlyout = new QHBoxLayout;
+    QVBoxLayout *vlyout = new QVBoxLayout;
+    QLabel *lbl = new s_tqLabel("Справочники");
+    QFont font;
+    font.setPointSize(15);
+    lbl->setFont(font);
+    lyout->addWidget(lbl, 0);
+    lyout->setAlignment(lbl, Qt::AlignRight);
     s_tqTreeView *SlaveTV = new s_tqTreeView;
     s_tqTableView *MainTV = new s_tqTableView;
     MainTV->setObjectName("MainTV");
@@ -42,18 +49,17 @@ void dir_maindialog::SetupUI()
     line->setFrameShape(QFrame::VLine);
     line->setFrameShadow(QFrame::Sunken);
     line->setMaximumWidth(2);
-    MainFrameLayout->addWidget(MainTV, 10, Qt::AlignTop | Qt::AlignLeft);
-    MainFrameLayout->addWidget(line, 1, Qt::AlignLeft);
-    MainFrameLayout->addWidget(SlaveTV, 25, Qt::AlignTop | Qt::AlignLeft);
-    QLabel *MainL = new s_tqLabel("Справочники");
-    QFont font;
-    font.setPointSize(15);
-    MainL->setFont(font);
-    MainLayout->addWidget(MainL, 0);
-    MainLayout->setAlignment(MainL, Qt::AlignRight);
-    MainLayout->addLayout (MainFrameLayout);
-    MainLayout->addStretch(100);
-    setLayout(MainLayout);
+    vlyout->addWidget(MainTV);
+//    vlyout->addStretch(100);
+    hlyout->addLayout(vlyout, 10);
+    hlyout->addWidget(line);
+    vlyout = new QVBoxLayout;
+    vlyout->addWidget(SlaveTV);
+//    vlyout->addStretch(100);
+    hlyout->addLayout(vlyout, 25);
+    lyout->addLayout (hlyout);
+//    lyout->addStretch(100);
+    setLayout(lyout);
 }
 
 void dir_maindialog::showEvent(QShowEvent *e)
@@ -88,7 +94,7 @@ void dir_maindialog::setDirTree()
     connect (MainTV, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(mainContextMenu(QPoint)));
     connect (MainTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(showDirDialog(QModelIndex)));
 
-    int res = MainTableModel->setup("2.2..Справочники_сокращ");
+    int res = MainTableModel->setup("Справочники_сокращ");
     if (res)
     {
         ShowErMsg(res+ER_DIRMAIN+0x04);
@@ -96,12 +102,13 @@ void dir_maindialog::setDirTree()
         return;
     }
     MainTV->setModel(MainTableModel);
-    connect(MainTV, SIGNAL(clicked(QModelIndex)), this, SLOT(showDirDialog(QModelIndex)));
+//    connect(MainTV, SIGNAL(clicked(QModelIndex)), this, SLOT(showDirDialog(QModelIndex)));
     MainTV->horizontalHeader()->setVisible(false);
     MainTV->verticalHeader()->setVisible(false);
     s_duniversal *gridItemDelegate = new s_duniversal;
     MainTV->setItemDelegate(gridItemDelegate);
     MainTV->resizeColumnsToContents();
+    MainTV->resizeRowsToContents();
     QApplication::restoreOverrideCursor();
 }
 
@@ -137,7 +144,7 @@ void dir_maindialog::ShowSlaveTree(QString str)
     values = sqlc.getvaluesfromtablebyfield(pc.sup, "dirlist", fields, "dirlist", str);
     if (!sqlc.result)
     {
-        if (values.at(1).toUInt() & pc.access)
+        if (values.at(1).toUInt(0,16) & pc.access)
         {
             s_ntmodel *SlaveTreeModel = new s_ntmodel;
             if (values.at(0).contains("Номенклатура", Qt::CaseSensitive))
@@ -160,7 +167,7 @@ void dir_maindialog::ShowSlaveTree(QString str)
             else
             {
                 SlaveTV->setModel(SlaveTreeModel);
-                SlaveTV->setShownRows(SlaveTV->model()->rowCount());
+//                SlaveTV->setShownRows(SlaveTV->model()->rowCount());
                 SlaveTVIsTree = true;
                 connect(SlaveTV, SIGNAL(expanded(QModelIndex)), SlaveTreeModel, SLOT(addExpandedIndex(QModelIndex)));
                 connect(SlaveTV, SIGNAL(collapsed(QModelIndex)), SlaveTreeModel, SLOT(removeExpandedIndex(QModelIndex)));
@@ -175,7 +182,7 @@ void dir_maindialog::ShowSlaveTree(QString str)
                 SlaveTV->resizeColumnToContents(i);
             SlaveTVAccess = values.at(1).toLongLong(0, 16);
             SlaveTV->setContextMenuPolicy(Qt::CustomContextMenu);
-            SlaveTV->updateTVGeometry();
+//            SlaveTV->updateTVGeometry();
             disconnect(SlaveTV, SIGNAL(customContextMenuRequested(QPoint)), 0, 0);
             connect (SlaveTV, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(SystemSlaveContextMenu(QPoint)));
             disconnect(SlaveTV, SIGNAL(doubleClicked(QModelIndex)), 0, 0);

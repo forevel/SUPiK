@@ -79,7 +79,7 @@ void cmp_compdialog::SetupUI()
     line->setFrameShape(QFrame::VLine);
     line->setFrameShadow(QFrame::Sunken);
     line->setMaximumWidth(2);
-    SlaveTV = new s_tqTableView(true);
+    SlaveTV = new s_tqTableView;
     TreeFrame = new s_tqFrame;
 
     TreeFrameLayout = new QHBoxLayout;

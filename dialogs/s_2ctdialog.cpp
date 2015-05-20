@@ -59,7 +59,7 @@ void s_2ctdialog::setupUI()
     mainLayout->addWidget(mainTV, 100, Qt::AlignLeft);
     mainLayout->addLayout(pbLayout);
     constheight=lbl->minimumSizeHint().height()+pbOk->minimumSizeHint().height();
-    mainTV->updateTVGeometry();
+//    mainTV->updateTVGeometry();
     connect(mainTV, SIGNAL(expanded(QModelIndex)), mainmodel, SLOT(addExpandedIndex(QModelIndex)));
     connect(mainTV, SIGNAL(collapsed(QModelIndex)), mainmodel, SLOT(removeExpandedIndex(QModelIndex)));
     connect(mainTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(accepted(QModelIndex)));

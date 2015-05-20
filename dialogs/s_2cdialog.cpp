@@ -48,7 +48,7 @@ void s_2cdialog::setupUI(QString hdr)
 {
     QVBoxLayout *mainLayout = new QVBoxLayout;
     QHBoxLayout *pbLayout = new QHBoxLayout;
-    s_tqTableView *mainTV = new s_tqTableView(true); // autoResize = true
+    s_tqTableView *mainTV = new s_tqTableView; // autoResize = true
     mainTV->setObjectName("mainTV");
     mainmodel = new s_ncmodel;
     s_duniversal *uniDelegate = new s_duniversal;
@@ -84,14 +84,11 @@ void s_2cdialog::setupUI(QString hdr)
 // значениям в списке sl2. Значения из списка sl1 отображаются как обычные надписи.
 // Замена для s_sqlfieldsdialog
 
-void s_2cdialog::setup(QStringList sl1, QStringList links1, QStringList sl2, QStringList links2)
+/*int s_2cdialog::setup(QStringList sl1, QStringList links1, QStringList sl2, QStringList links2)
 {
     s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
     if (tv == 0)
-    {
-        ShowErMsg(ER_2CDLG+0x01);
-        return;
-    }
+        return(ER_2CDLG+0x01);
     QList<QStringList> sl;
     sl.append(sl1);
     sl.append(sl2);
@@ -113,20 +110,18 @@ void s_2cdialog::setup(QStringList sl1, QStringList links1, QStringList sl2, QSt
     tv->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     tv->resizeColumnsToContents();
     DialogIsNeedToBeResized = true;
-}
+    return 0;
+}*/
 
 // процедура подготавливает диалог из одного столбца, links содержит список
 // вспомогательных полей для каждого из элементов столбца. Подходит для
 // организации списка выбора
 
-void s_2cdialog::setup(QStringList sl, QStringList links, QString str)
+int s_2cdialog::setup(QStringList sl, QStringList links, QString str)
 {
     s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
     if (tv == 0)
-    {
-        ShowErMsg(ER_2CDLG+0x11);
-        return;
-    }
+        return(ER_2CDLG+0x11);
     QList<QStringList> tmpsl;
     tmpsl.append(sl);
     QList<int> il;
@@ -146,6 +141,7 @@ void s_2cdialog::setup(QStringList sl, QStringList links, QString str)
     tv->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     tv->resizeColumnsToContents();
     DialogIsNeedToBeResized = true;
+    return 0;
 }
 
 // процедура подготавливает диалог выбора из столбцов таблицы tble в tablefields
@@ -154,10 +150,7 @@ int s_2cdialog::setup(QString links, QString id)
 {
         s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
         if (tv == 0)
-        {
-            ShowErMsg(ER_2CDLG+0x21);
-            return;
-        }
+            return(ER_2CDLG+0x21);
         PublicClass::fieldformat ff = pc.getFFfromLinks(links);
         tble = ff.link.at(0); // в слоте accepted() надо знать, с какой таблицей мы работаем
         switch (Mode)
@@ -174,7 +167,7 @@ int s_2cdialog::setup(QString links, QString id)
         {
             int res = mainmodel->setup(tble, id);
             if (res)
-                throw res;
+                return(res+0x24+ER_2CDLG);
 /*            QList<QStringList> lsl;
             QStringList fl;
             QStringList headersvl;
@@ -356,7 +349,7 @@ void s_2cdialog::accepted()
             tfl.idtois(tble, headers, values);
             if (tfl.result)
             {
-                ShowMessage(tfl.result);
+                ShowErMsg(tfl.result);
                 return;
             }
             QMessageBox::information(this, "Успешно!", "Записано успешно!");
@@ -365,7 +358,7 @@ void s_2cdialog::accepted()
                 tfl.remove(oldtble, oldid); // при успешной записи в некарантин, из карантина старую надо удалить
                 if (tfl.result)
                 {
-                    ShowMessage(tfl.result);
+                    ShowErMsg(tfl.result);
                     return;
                 }
             }
@@ -461,7 +454,7 @@ void s_2cdialog::fillModelAdata()
     }
 }
 
-void s_2cdialog::ShowMessage(int ernum)
+void s_2cdialog::ShowErMsg(int ernum)
 {
     QMessageBox::warning(this, "warning!", "Ошибка 0x" + QString::number(CD_ERROR + ernum, 16), QMessageBox::Ok, QMessageBox::NoButton);
 }

@@ -64,8 +64,8 @@ QVariant s_ntmodel::data(const QModelIndex &index, int role) const
     else if (role == Qt::FontRole)
     {
         QFont font = item->font(index.column());
-        if (!rowCount(index))
-            font.setItalic(true);  // для простых элементов без потомков шрифт делаем наклонным
+//        if (!rowCount(index))
+//            font.setItalic(true);  // для простых элементов без потомков шрифт делаем наклонным
         return QVariant::fromValue(QFont(font));
     }
     else if ((role == Qt::DecorationRole) && (index.column() == 0))
@@ -383,7 +383,7 @@ int s_ntmodel::BuildTree(QString id, bool twodb)
     position++;
     if (id == "0") position = 0; // для корневых элементов position д.б. равен нулю
 // строим дерево в модели model
-    int set = 2;
+    int set = 4;
     while (get_child_from_db1.next())
     {
         tmpStringList.clear();

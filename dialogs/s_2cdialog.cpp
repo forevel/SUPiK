@@ -62,17 +62,17 @@ void s_2cdialog::setupUI(QString hdr)
     lbl->setFont(font);
     pbLayout->addWidget(pbOk, 0);
     pbLayout->addWidget(pbCancel, 0);
-    pmainmodel = new QSortFilterProxyModel;
-    pmainmodel->setSourceModel(mainmodel);
-    mainTV->setModel(pmainmodel);
+//    pmainmodel = new QSortFilterProxyModel;
+//    pmainmodel->setSourceModel(mainmodel);
+    mainTV->setModel(mainmodel);
     mainTV->setEditTriggers(QAbstractItemView::AllEditTriggers);
     mainTV->verticalHeader()->setVisible(false);
     mainTV->horizontalHeader()->setVisible(false);
     mainTV->setItemDelegate(uniDelegate);
     mainLayout->addWidget(lbl, 0, Qt::AlignRight);
-    mainLayout->addWidget(mainTV, 100, Qt::AlignLeft);
+    mainLayout->addWidget(mainTV, 100);
     mainLayout->addLayout(pbLayout);
-    constheight=lbl->minimumSizeHint().height()+pbOk->minimumSizeHint().height();
+//    constheight=lbl->minimumSizeHint().height()+pbOk->minimumSizeHint().height();
     setLayout(mainLayout);
     connect (pbOk, SIGNAL(clicked()), this, SLOT(accepted()));
     connect (pbCancel, SIGNAL(clicked()), this, SLOT(cancelled()));
@@ -146,18 +146,16 @@ int s_2cdialog::setup(QStringList sl, QStringList links, QString str)
 
 // процедура подготавливает диалог выбора из столбцов таблицы tble в tablefields
 
-int s_2cdialog::setup(QString links, QString id)
+int s_2cdialog::setup(QString tble, QString id)
 {
         s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
         if (tv == 0)
             return(ER_2CDLG+0x21);
-        PublicClass::fieldformat ff = pc.getFFfromLinks(links);
-        tble = ff.link.at(0); // в слоте accepted() надо знать, с какой таблицей мы работаем
         switch (Mode)
         {
         case MODE_CHOOSE:
         {
-            mainmodel->setup(links);
+            mainmodel->setup(tble);
             tv->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
             tv->resizeColumnsToContents();
             DialogIsNeedToBeResized = true;
@@ -320,7 +318,7 @@ void s_2cdialog::paintEvent(QPaintEvent *e)
 {
     QPainter painter(this);
     painter.drawPixmap(rect(), QPixmap(":/res/2cWallPaper.png"));
-    setFixedSize(minimumSizeHint());
+//    setFixedSize(minimumSizeHint());
     e->accept();
 }
 

@@ -36,7 +36,7 @@ QWidget* s_duniversal::createEditor(QWidget *parent, const QStyleOptionViewItem 
     case FD_CHOOSE:
     case FD_CHOOSE_X:
     {
-        combWidget = new s_tqwidget(parent);
+        combWidget = new s_tqWidget(parent);
         combWidget->setStyleSheet("QWidget {background: khaki};");
         QHBoxLayout *ml = new QHBoxLayout;
         s_tqLineEdit *le = new s_tqLineEdit(combWidget);
@@ -57,7 +57,7 @@ QWidget* s_duniversal::createEditor(QWidget *parent, const QStyleOptionViewItem 
     }
     case FD_COMBO:
     {
-        cbWidget = new s_tqwidget(parent);
+        cbWidget = new s_tqWidget(parent);
         cbWidget->setStyleSheet("QWidget {background: khaki};");
         QVBoxLayout *ml = new QVBoxLayout;
         QComboBox *cb;
@@ -183,7 +183,7 @@ void s_duniversal::setModelData(QWidget *editor, QAbstractItemModel *model, cons
     case FD_CHOOSE:
     case FD_CHOOSE_X:
     {
-        s_tqwidget *wdgt = static_cast<s_tqwidget *>(editor);
+        s_tqWidget *wdgt = static_cast<s_tqWidget *>(editor);
         s_tqLineEdit *le = wdgt->findChild<s_tqLineEdit *>("fdcle");
         model->setData(index, le->text(), Qt::EditRole);
         break;

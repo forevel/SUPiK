@@ -7,6 +7,7 @@
 #include "../widgets/s_tqtreeview.h"
 #include "../widgets/s_tqframe.h"
 #include "../widgets/s_tqtableview.h"
+#include "../widgets/s_tqsplitter.h"
 #include "sys_acceptexist.h"
 #include "../models/s_ntmodel.h"
 #include "../models/s_ncmodel.h"
@@ -33,8 +34,6 @@ dir_maindialog::dir_maindialog(QWidget *parent) :
 void dir_maindialog::SetupUI()
 {
     QVBoxLayout *lyout = new QVBoxLayout;
-    QHBoxLayout *hlyout = new QHBoxLayout;
-    QVBoxLayout *vlyout = new QVBoxLayout;
     QLabel *lbl = new s_tqLabel("Справочники");
     QFont font;
     font.setPointSize(15);
@@ -45,21 +44,25 @@ void dir_maindialog::SetupUI()
     s_tqTableView *MainTV = new s_tqTableView;
     MainTV->setObjectName("MainTV");
     SlaveTV->setObjectName("SlaveTV");
-    QFrame *line = new QFrame;
-    line->setFrameShape(QFrame::VLine);
-    line->setFrameShadow(QFrame::Sunken);
-    line->setMaximumWidth(2);
-    vlyout->addWidget(MainTV);
-//    vlyout->addStretch(100);
-    hlyout->addLayout(vlyout, 10);
-    hlyout->addWidget(line);
-    vlyout = new QVBoxLayout;
-    vlyout->addWidget(SlaveTV);
-//    vlyout->addStretch(100);
-    hlyout->addLayout(vlyout, 25);
-    lyout->addLayout (hlyout);
-//    lyout->addStretch(100);
+    s_tqSplitter *spl = new s_tqSplitter;
+    s_tqFrame *left = new s_tqFrame;
+    QVBoxLayout *leftlyout = new QVBoxLayout;
+    leftlyout->addWidget(MainTV);
+    left->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    left->setLineWidth(1);
+    left->setLayout(leftlyout);
+    spl->addWidget(left);
+    s_tqFrame *right = new s_tqFrame;
+    QVBoxLayout *rlyout = new QVBoxLayout;
+    rlyout->addWidget(SlaveTV);
+    right->setLayout(rlyout);
+    right->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    right->setLineWidth(1);
+    spl->addWidget(right);
+    spl->setOrientation(Qt::Horizontal);
+    lyout->addWidget(spl, 90);
     setLayout(lyout);
+//    adjustSize();
 }
 
 void dir_maindialog::showEvent(QShowEvent *e)
@@ -102,7 +105,7 @@ void dir_maindialog::setDirTree()
         return;
     }
     MainTV->setModel(MainTableModel);
-//    connect(MainTV, SIGNAL(clicked(QModelIndex)), this, SLOT(showDirDialog(QModelIndex)));
+    connect(MainTV, SIGNAL(clicked(QModelIndex)), this, SLOT(showDirDialog(QModelIndex)));
     MainTV->horizontalHeader()->setVisible(false);
     MainTV->verticalHeader()->setVisible(false);
     s_duniversal *gridItemDelegate = new s_duniversal;
@@ -194,6 +197,7 @@ void dir_maindialog::ShowSlaveTree(QString str)
     else
         QMessageBox::warning(this, "warning", "Не найдена ссылка на таблицу справочника!", QMessageBox::Ok, QMessageBox::NoButton);
     QApplication::restoreOverrideCursor();
+//    adjustSize();
 }
 
 QString dir_maindialog::getMainIndex(int column)
@@ -258,7 +262,7 @@ void dir_maindialog::EditItem(QString str)
     if (!(res = newdialog->setup(tmps+"_полная", str)))
     {
         newdialog->exec();
-        showDirDialog();
+//        showDirDialog();
     }
     else
         ShowErMsg(ER_DIRMAIN+0x54);

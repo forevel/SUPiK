@@ -4,11 +4,11 @@
 #include <QWidget>
 #include <QVariant>
 
-class s_tqwidget : public QWidget
+class s_tqWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit s_tqwidget(QWidget *parent = 0);
+    explicit s_tqWidget(QWidget *parent = 0);
     QVariant getAData();
     void setAData(QVariant dat);
 signals:

@@ -65,7 +65,8 @@ SOURCES += main.cpp\
     widgets/s_maskedle.cpp \
     gen/s_tablefields.cpp \
     dialogs/sys_acceptexist.cpp \
-    startwindow.cpp
+    startwindow.cpp \
+    widgets/s_tqsplitter.cpp
 
 HEADERS  += startwindow.h \
     supik.h \
@@ -118,7 +119,8 @@ HEADERS  += startwindow.h \
     widgets/s_maskedle.h \
     gen/s_tablefields.h \
     dialogs/sys_acceptexist.h \
-    startwindow.h
+    startwindow.h \
+    widgets/s_tqsplitter.h
 
 RESOURCES += \
     pic.qrc

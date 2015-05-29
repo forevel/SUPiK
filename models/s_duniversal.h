@@ -35,8 +35,8 @@ private slots:
     void commitChanges(QString);
 
 private:
-    mutable s_tqwidget *combWidget;
-    mutable s_tqwidget *cbWidget;
+    mutable s_tqWidget *combWidget;
+    mutable s_tqWidget *cbWidget;
     mutable QString query;
     mutable QString hdr;
     mutable PublicClass::fieldformat ff;

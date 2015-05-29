@@ -164,7 +164,7 @@ Qt::ItemFlags s_ncmodel::flags(const QModelIndex &index) const
 {
     if (!index.isValid())
             return Qt::ItemIsEnabled;
-    return QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
+    return QAbstractItemModel::flags(index) | Qt::ItemIsSelectable; // | Qt::ItemIsEditable;
 }
 
 QModelIndex s_ncmodel::index(int row, int column, const QModelIndex &index) const

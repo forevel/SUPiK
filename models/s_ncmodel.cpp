@@ -26,6 +26,7 @@ s_ncmodel::s_ncmodel(QObject *parent) :
     maindata.clear();
     fieldstoCheck.clear();
     maxcolswidth.clear();
+    isEditable = false;
 }
 
 s_ncmodel::~s_ncmodel()
@@ -77,10 +78,11 @@ QVariant s_ncmodel::data(const QModelIndex &index, int role) const
 // value должен представлять из себя запись вида: <value>.<links>, где links - вспомогательное поле, определяющее
 // порядок работы с полем - подставляемый делегат, ссылку на списки и формат отображения
 
-bool s_ncmodel::setData(const QModelIndex &index, QVariant &value, int role)
+bool s_ncmodel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     QString tmpString;
     PublicClass::fieldformat ff;
+    QVariant vl;
     if (index.isValid())
     {
         if (role == Qt::EditRole)
@@ -89,22 +91,23 @@ bool s_ncmodel::setData(const QModelIndex &index, QVariant &value, int role)
             {
                 tmpString = maindata.at(index.row())->linksdata(index.column());
                 ff = pc.getFFfromLinks(tmpString);
+                vl = value;
                 switch (ff.ftype)
                 {
                 case FW_AUTONUM:
                 {
-                    value = QVariant(index.row()+1);
+                    vl = QVariant(index.row()+1);
                     break;
                 }
                 case FW_NUMBER:
                 {
-                    value = QVariant(ff.link.at(0));
+                    vl = QVariant(ff.link.at(0));
                     break;
                 }
                 case FW_ID:
                 {
                     int num = ff.link.at(0).toInt();
-                    value = QVariant(QString("%1").arg(value.toInt(), num, 10, QChar('0')));
+                    vl = QVariant(QString("%1").arg(vl.toInt(), num, 10, QChar('0')));
                     break;
                 }
                 case FW_EQUAT: // вычисляемое выражение
@@ -112,17 +115,17 @@ bool s_ncmodel::setData(const QModelIndex &index, QVariant &value, int role)
                     int tmpInt = OPER_MAP[ff.link.at(0)];
                     bool byRow = (ff.link.at(1) == "r");
                     tmpString = getEq(ff.link.at(1), ff.link.at(2), tmpInt, index, byRow);
-                    value = QVariant(tmpString);
+                    vl = QVariant(tmpString);
                     break;
                 }
                 default:
                     break;
                 }
-                maindata.at(index.row())->setData(index.column(), value.toString()); // пишем само значение
+                maindata.at(index.row())->setData(index.column(), vl.toString()); // пишем само значение
                 if (index.column() < maxcolswidth.size())
                 {
-                    if (maxcolswidth.at(index.column()) < value.toString().size())
-                        maxcolswidth.replace(index.column(), value.toString().size());
+                    if (maxcolswidth.at(index.column()) < vl.toString().size())
+                        maxcolswidth.replace(index.column(), vl.toString().size());
                 }
                 emit dataChanged(index, index);
                 return true;
@@ -164,6 +167,8 @@ Qt::ItemFlags s_ncmodel::flags(const QModelIndex &index) const
 {
     if (!index.isValid())
             return Qt::ItemIsEnabled;
+    if (isEditable)
+        return QAbstractItemModel::flags(index) | Qt::ItemIsEditable;
     return QAbstractItemModel::flags(index) | Qt::ItemIsSelectable; // | Qt::ItemIsEditable;
 }
 
@@ -340,9 +345,10 @@ void s_ncmodel::fillModel(QList<QStringList> lsl)
                 setData(index(i, j, QModelIndex()), QVariant(""), Qt::EditRole);
             else
             {
-                QString links = data(index(i,j,QModelIndex()),Qt::UserRole).toString(); // берём заранее подготовленное значение links в текущей ячейке. Если не подготовлено,
-                                                                                        // то по умолчанию берётся PLAIN
-                vl = tfl.idtov(links, lsl.at(j).at(i));
+//                QString links = data(index(i,j,QModelIndex()),Qt::UserRole).toString(); // берём заранее подготовленное значение links в текущей ячейке. Если не подготовлено,
+//                                                                                        // то по умолчанию берётся PLAIN
+//                vl = tfl.idtov(links, lsl.at(j).at(i));
+                vl = lsl.at(j).at(i);
                 if ((tfl.result) || (vl.isEmpty()))
                 {
                     result = tfl.result+ER_NCMODEL+0x01;
@@ -595,7 +601,8 @@ int s_ncmodel::setup(QString tble, QString id)
     QStringList tmpsl;
     for (i = 0; i < headers.size(); i++)
     {
-        tmpString = tfl.idtov(links.at(i), id);
+        tmpString = tfl.tov(tble,headers.at(i),id);
+        tmpString = tfl.idtov(links.at(i), tmpString);
         if (!tfl.result)
             tmpsl << tmpString;
     }
@@ -605,6 +612,7 @@ int s_ncmodel::setup(QString tble, QString id)
     QList<int> il;
     il << headers.size() << headers.size();
     prepareModel(il);
+    setcolumnlinks(0, "0.8");
     setcolumnlinks(1, links);
     fillModel(lsl);
     return 0;

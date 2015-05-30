@@ -222,7 +222,7 @@ void dir_adddialog::WriteAndClose()
         dirB = this->findChild<s_tqComboBox *>("dirBelong");
         if (dirB == 0)
             throw(0x14);
-        QString tmpString = sqlc.getvaluefromtablebyfield(sqlc.getdb("sup"), "tablefields", "headers", "tablename", dirAliasLE->text()+"_полная");
+        QString tmpString = sqlc.getvaluefromtablebyfield(sqlc.getdb("sup"), "tablefields", "header", "tablename", dirAliasLE->text()+"_полная");
         if (sqlc.result == 2) // ошибка открытия таблицы
         {
             QMessageBox::warning(this,"warning!","Невозможно открыть БД tablefields!");
@@ -242,7 +242,7 @@ void dir_adddialog::WriteAndClose()
         QStringList cmpfl, cmpvl;
         cmpfl << "tablename" << "tablefields";
         QString tble = dirBelongAliases.value(dirB->currentText());
-        fl << "tablefields" << "table" << "keyfield" << "headers" << "links" << "fieldsorder" << "tablename" << \
+        fl << "tablefields" << "table" << "keyfield" << "header" << "links" << "fieldsorder" << "tablename" << \
               "date" << "deleted" << "idpers";
         for (i = 0; i < sb->value(); i++)
         {
@@ -638,7 +638,7 @@ void dir_adddialog::fillFields()
         s_tqLineEdit *lev = new s_tqLineEdit;
         QList<QStringList> lsl;
         QStringList fl;
-        fl << "table" << "tablefields" << "headers" << "links";
+        fl << "table" << "tablefields" << "header" << "links";
         lsl = sqlc.getmorevaluesfromtablebyfield(pc.sup, "tablefields", fl, "tablename", dir+"_полная", "fieldsorder", true);
         if (sqlc.result)
             throw(0x71);

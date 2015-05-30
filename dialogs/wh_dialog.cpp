@@ -207,7 +207,7 @@ int wh_dialog::SetupUI(QString id)
     mainbl->addLayout(ml2);
 
     // формирование модели и заполнение таблицы
-    QStringList fl = QStringList() << "headers" << "links";
+    QStringList fl = QStringList() << "header" << "links";
     QList<QStringList> lsl;
     lsl = sqlc.getmorevaluesfromtablebyfield(sqlc.getdb("sup"), "tablefields", fl, "tablename", ReasonTable.at(Reason), "fieldsorder", true);
     if (sqlc.result)

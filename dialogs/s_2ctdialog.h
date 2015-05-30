@@ -13,7 +13,7 @@ public:
     explicit s_2ctdialog(QString hdr="", QWidget *parent = 0);
     void setupUI();
     int setup(QString tble);
-    QSize minimumSizeHint();
+//    QSize minimumSizeHint();
     void sortModel();
     void setTvCurrentText(QString text);
 

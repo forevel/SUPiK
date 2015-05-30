@@ -303,14 +303,14 @@ QStringList s_sql::getvaluesfromtablebyfields (QSqlDatabase db, QString tble, QS
     return QStringList();
 }
 
-// процедура возвращает значение по ссылке из поля tablefields таблицы tablefields, для которой table.headers = tablenheaders
+// процедура возвращает значение по ссылке из поля tablefields таблицы tablefields, для которой table.header = tablenheaders
 // значение берётся для id<tablefields.at(1)>=<keyfieldid>
 // ЕСТЬ ОШИБКА В СТРОКЕ 3 - tablenheaders - ЭТО НЕ СПИСОК СТРОК, А ПРОСТО СТРОКА!!!
 
 QString s_sql::getvaluefromtablebytablefields(QString tablenheaders, QString keyfield, QString keyfieldid)
 {
     QString ftext;
-    QStringList cmpfl = QStringList() << "tablename" << "headers";
+    QStringList cmpfl = QStringList() << "tablename" << "header";
     QStringList cmpvl = QStringList() << tablenheaders.at(0) << tablenheaders.at(1);
     ftext = getvaluefromtablebyfields(sqlc.getdb("sup"),"tablefields","table",cmpfl,cmpvl);
     ftext += getvaluefromtablebyfields(sqlc.getdb("sup"),"tablefields","tablefields",cmpfl,cmpvl);
@@ -676,7 +676,7 @@ void s_sql::bytablefieldsinsert(QString tble, QStringList headers, QStringList v
     QList<QStringList> lsl;
     QStringList fl;
     QStringList tmpvl, vl, ls;
-    fl << "table" << "tablefields" << "headers" << "links" << "keyfield";
+    fl << "table" << "tablefields" << "header" << "links" << "keyfield";
     lsl = sqlc.getmorevaluesfromtablebyfield(pc.sup, "tablefields", fl, "tablename", tble, "fieldsorder", true);
     if (result)
         return;
@@ -750,7 +750,7 @@ void s_sql::bytablefieldsinsert(QString tble, QStringList headers, QStringList v
             case FW_ALLINK:
             {
                 QStringList tmpsl = QStringList() << "table" << "tablefields";
-                QStringList cmpfl = QStringList() << "tablename" << "headers";
+                QStringList cmpfl = QStringList() << "tablename" << "header";
                 QStringList cmpvl = QStringList() << ls_splitted.at(3) << ls_splitted.at(4);
                 QStringList tmpfl = getvaluesfromtablebyfields(pc.sup, "tablefields", tmpsl, cmpfl, cmpvl);
                 if (result)
@@ -771,7 +771,7 @@ void s_sql::bytablefieldsinsert(QString tble, QStringList headers, QStringList v
             case FW_MAXLINK:
             {
 /*                QStringList tmpsl = QStringList << "table" << "tablefields" << "links";
-                QStringList cmpfl = QStringList << "tablename" << "headers";
+                QStringList cmpfl = QStringList << "tablename" << "header";
                 QStringList cmpvl = QStringList << ls_splitted.at(3) << ls_splitted.at(4);
                 QStringList tmpfl = getvaluesfromtablebyfields(pc.sup, "tablefields", tmpsl, cmpfl, cmpvl);
                 if (result)

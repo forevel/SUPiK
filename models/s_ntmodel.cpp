@@ -299,7 +299,7 @@ int s_ntmodel::Setup(QString table)
 
     // 1
     int i;
-    QStringList fl = QStringList() << "table" << "tablefields" << "headers";
+    QStringList fl = QStringList() << "table" << "tablefields" << "header";
     vl = sqlc.getmorevaluesfromtablebyfield(sqlc.getdb("sup"), "tablefields", fl, "tablename", table, "fieldsorder", true);
     if (sqlc.result)
         return sqlc.result + 0x10 + ER_NTMODEL; // нет такой таблицы в tablefields

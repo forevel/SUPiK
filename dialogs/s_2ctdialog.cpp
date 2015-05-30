@@ -92,7 +92,7 @@ void s_2ctdialog::paintEvent(QPaintEvent *e)
 {
     QPainter painter(this);
     painter.drawPixmap(rect(), QPixmap(":/res/2cWallPaper.png"));
-    setFixedSize(minimumSizeHint());
+//    setFixedSize(minimumSizeHint());
     e->accept();
 }
 
@@ -127,7 +127,7 @@ void s_2ctdialog::updatedialogsize()
     DialogIsNeedToBeResized = true;
 }
 
-QSize s_2ctdialog::minimumSizeHint()
+/*QSize s_2ctdialog::minimumSizeHint()
 {
     if (DialogIsNeedToBeResized)
     {
@@ -150,7 +150,7 @@ QSize s_2ctdialog::minimumSizeHint()
     }
     else
         return this->size();
-}
+} */
 
 void s_2ctdialog::sortModel()
 {
@@ -160,6 +160,10 @@ void s_2ctdialog::sortModel()
 void s_2ctdialog::setTvCurrentText(QString text)
 {
     s_tqTreeView *tv = this->findChild<s_tqTreeView *>("mainTV");
+    if (tv == 0)
+        return;
+    if (text.isEmpty())
+        return;
     QList<QModelIndex> item = tv->model()->match(tv->model()->index(0, 0), Qt::DisplayRole, QVariant::fromValue(text), 1, Qt::MatchRecursive);
     if (!item.isEmpty())
         tv->setCurrentIndex(item.at(0));

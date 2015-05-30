@@ -547,7 +547,7 @@ void s_ncdialog::setTable(s_ncmodel &model, QString link)
     QString tble = link.split(".").at(1);
     QSqlDatabase qdb = sqlc.getdb(db);
     int i;
-    fl << "tablefields" << "headers" << "links";
+    fl << "tablefields" << "header" << "links";
     lsl = sqlc.getmorevaluesfromtablebyfield(sqlc.getdb("sup"), "tablefields", fl, "table", db+"."+tble, "fieldsorder", true);
     if (sqlc.result)
     {

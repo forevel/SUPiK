@@ -63,7 +63,7 @@ void s_2cdialog::setupUI(QString hdr)
     pbLayout->addWidget(pbOk, 0);
     pbLayout->addWidget(pbCancel, 0);
 //    pmainmodel = new QSortFilterProxyModel;
-//    pmainmodel->setSourceModel(mainmodel);
+  //  pmainmodel->setSourceModel(mainmodel);
     mainTV->setModel(mainmodel);
     mainTV->setEditTriggers(QAbstractItemView::AllEditTriggers);
     mainTV->verticalHeader()->setVisible(false);
@@ -156,6 +156,7 @@ int s_2cdialog::setup(QString tble, QString id)
         case MODE_CHOOSE:
         {
             mainmodel->setup(tble);
+            mainmodel->isEditable = false;
             tv->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
             tv->resizeColumnsToContents();
             DialogIsNeedToBeResized = true;
@@ -164,6 +165,7 @@ int s_2cdialog::setup(QString tble, QString id)
         case MODE_EDIT:
         {
             int res = mainmodel->setup(tble, id);
+            mainmodel->isEditable = true;
             if (res)
                 return(res+0x24+ER_2CDLG);
 /*            QList<QStringList> lsl;
@@ -173,7 +175,7 @@ int s_2cdialog::setup(QString tble, QString id)
             QString keydb, keytble;
             int keyidx = -1;
             int i;
-            fl << "tablefields" << "table" << "headers" << "links" << "keyfield";
+            fl << "tablefields" << "table" << "header" << "links" << "keyfield";
             lsl = sqlc.getmorevaluesfromtablebyfield(pc.sup, "tablefields", fl, "tablename", tble, "fieldsorder", true);
             if (sqlc.result)
             {
@@ -415,7 +417,7 @@ void s_2cdialog::updatedialogsize()
 
 void s_2cdialog::sortModel()
 {
-    pmainmodel->sort(0, Qt::AscendingOrder);
+//    pmainmodel->sort(0, Qt::AscendingOrder);
 }
 
 void s_2cdialog::setTvCurrentText(QString text)

@@ -25,7 +25,7 @@ public:
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
     bool setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role);
     QVariant data (const QModelIndex &index, int role) const;
-    bool setData(const QModelIndex &index, QVariant &value, int role);
+    bool setData(const QModelIndex &index, const QVariant &value, int role);
     Qt::ItemFlags flags(const QModelIndex &index) const;
     QModelIndex index(int row, int column, const QModelIndex &index = QModelIndex()) const;
     int rowCount(const QModelIndex &index = QModelIndex()) const;
@@ -63,6 +63,8 @@ public:
     }
     int setup(QString links);
     int setup(QString tble, QString id);
+
+    bool isEditable;
 
 signals:
 

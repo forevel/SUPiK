@@ -185,7 +185,7 @@ void s_duniversal::setModelData(QWidget *editor, QAbstractItemModel *model, cons
     {
         s_tqWidget *wdgt = static_cast<s_tqWidget *>(editor);
         s_tqLineEdit *le = wdgt->findChild<s_tqLineEdit *>("fdcle");
-        model->setData(index, le->text(), Qt::EditRole);
+        model->setData(index, QVariant(le->text()), Qt::EditRole);
         break;
     }
     case FD_COMBO:
@@ -201,7 +201,7 @@ void s_duniversal::setModelData(QWidget *editor, QAbstractItemModel *model, cons
     case FD_LINEEDIT:
     {
         QLineEdit *le = static_cast<QLineEdit *>(editor);
-        model->setData(index, le->text(), Qt::EditRole);
+        model->setData(index, QVariant(le->text()), Qt::EditRole);
         break;
     }
     case FD_SPIN:
@@ -247,7 +247,8 @@ void s_duniversal::pbclicked()
         else // это таблица
         {
             s_2cdialog *chooseDialog = new s_2cdialog(hdr);
-            int res = chooseDialog->setup(pc.getlinksfromFF(ff));
+            chooseDialog->Mode = MODE_CHOOSE;
+            int res = chooseDialog->setup(ff.link.at(0));
             if (!res)
             {
                 chooseDialog->setTvCurrentText(le->text());
@@ -292,58 +293,45 @@ void s_duniversal::pbclicked()
 
 void s_duniversal::accepted(QString str)
 {
-    try
-    {
-        QString tmpString = str;
-        s_tqLineEdit *le = combWidget->findChild<s_tqLineEdit*>("fdcle");
-        if (le == 0)
-            throw 0x21;
+    //        QString tmpString = str;
+            s_tqLineEdit *le = combWidget->findChild<s_tqLineEdit*>("fdcle");
+            if (le == 0)
+                return;
 
-        switch (ff.ftype)
-        {
-/*        {
-            QSqlDatabase db = sqlc.getdb(ff.link.at(0));
-            if (db.isValid())
-                tmpString = sqlc.getvaluefromtablebyfield(db, ff.link.at(1), ff.link.at(1), "id"+ff.link.at(1), str);
-            break;
-        } */
-        case FW_ALLINK:
-        case FW_LINK:
-        {
-            tmpString = tfl.toid(ff.link.at(0), "Наименование", str);
-            break;
-        }
-        case FW_DLINK: // переписать!!!
-        {
-            QSqlDatabase db = sqlc.getdb(ff.link.at(2));
-            if (db.isValid())
+    /*        switch (ff.ftype)
             {
-                tmpString = sqlc.getvaluefromtablebyfield(db, ff.link.at(3), ff.link.at(3), "id"+ff.link.at(3), str);
-                if (sqlc.result)
-                {
-                    QSqlDatabase db = sqlc.getdb(ff.link.at(0));
-                    if (db.isValid())
-                        tmpString = sqlc.getvaluefromtablebyfield(db, ff.link.at(1), ff.link.at(1), "id"+ff.link.at(1), str);
-                }
+            case FW_ALLINK:
+            case FW_LINK:
+            {
+                tmpString = tfl.toid(ff.link.at(0), "Наименование", str);
+                break;
             }
-            break;
-        }
-        case FW_RIGHTS:
-        {
-            break;
-        }
-        case FW_DATE:
-            break;
-        default:
-            break;
-        }
-        le->setText(tmpString);
-    }
-    catch (int res)
-    {
-        Q_UNUSED(res);
-        return;
-    }
+            case FW_DLINK: // переписать!!!
+            {
+                QSqlDatabase db = sqlc.getdb(ff.link.at(2));
+                if (db.isValid())
+                {
+                    tmpString = sqlc.getvaluefromtablebyfield(db, ff.link.at(3), ff.link.at(3), "id"+ff.link.at(3), str);
+                    if (sqlc.result)
+                    {
+                        QSqlDatabase db = sqlc.getdb(ff.link.at(0));
+                        if (db.isValid())
+                            tmpString = sqlc.getvaluefromtablebyfield(db, ff.link.at(1), ff.link.at(1), "id"+ff.link.at(1), str);
+                    }
+                }
+                break;
+            }
+            case FW_RIGHTS:
+            {
+                break;
+            }
+            case FW_DATE:
+                break;
+            default:
+                break;
+            } */
+            QString tmpString = tfl.idtov(pc.getlinksfromFF(ff),str);
+            le->setText(tmpString);
 }
 
 void s_duniversal::commitChanges(QString str)

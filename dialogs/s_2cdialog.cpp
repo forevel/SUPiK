@@ -151,6 +151,7 @@ int s_2cdialog::setup(QString tble, QString id)
         s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
         if (tv == 0)
             return(ER_2CDLG+0x21);
+        this->tble = tble;
         switch (Mode)
         {
         case MODE_CHOOSE:

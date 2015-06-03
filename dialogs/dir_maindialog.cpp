@@ -34,7 +34,7 @@ dir_maindialog::dir_maindialog(QWidget *parent) :
 void dir_maindialog::SetupUI()
 {
     QVBoxLayout *lyout = new QVBoxLayout;
-    QLabel *lbl = new s_tqLabel("Справочники");
+    s_tqLabel *lbl = new s_tqLabel("Справочники");
     QFont font;
     font.setPointSize(15);
     lbl->setFont(font);

@@ -20,7 +20,6 @@
 
 cmp_compdialog::cmp_compdialog(QWidget *parent) : QDialog(parent)
 {
-//    SlaveTVModel = new s_gSqlQueryModel;
     LibRefModel = new QStringListModel;
     FootRefModel = new QStringListModel;
     CompManufModel = new QStringListModel;
@@ -44,12 +43,6 @@ cmp_compdialog::cmp_compdialog(QWidget *parent) : QDialog(parent)
 
 cmp_compdialog::~cmp_compdialog()
 {
-    delete s_aemodel;
-    delete CompUnitsModel;
-    delete CompManufModel;
-    delete FootRefModel;
-    delete LibRefModel;
-//    delete SlaveTVModel;
 }
 
 void cmp_compdialog::paintEvent(QPaintEvent *event)

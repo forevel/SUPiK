@@ -66,7 +66,8 @@ SOURCES += main.cpp\
     gen/s_tablefields.cpp \
     dialogs/sys_acceptexist.cpp \
     startwindow.cpp \
-    widgets/s_tqsplitter.cpp
+    widgets/s_tqsplitter.cpp \
+    dialogs/cmp_maindialog.cpp
 
 HEADERS  += startwindow.h \
     supik.h \
@@ -120,7 +121,8 @@ HEADERS  += startwindow.h \
     gen/s_tablefields.h \
     dialogs/sys_acceptexist.h \
     startwindow.h \
-    widgets/s_tqsplitter.h
+    widgets/s_tqsplitter.h \
+    dialogs/cmp_maindialog.h
 
 RESOURCES += \
     pic.qrc
@@ -132,12 +134,12 @@ CONFIG += embed_manifest_exe
 INCLUDEPATH += $$PWD/../../Build/libarchive-2.4.12-1-bin/include
 DEPENDPATH += $$PWD/../../Build/libarchive-2.4.12-1-bin/include
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../mysql-5.6.22-winx64/lib/ -llibmysql
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../mysql-5.6.22-winx64/lib/ -llibmysqld
-else:unix: LIBS += -L$$PWD/../../mysql-5.6.22-winx64/lib/ -llibmysql
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../mysql-5.6.23-win32/lib/ -llibmysql
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../mysql-5.6.23-win32/lib/ -llibmysqld
+else:unix: LIBS += -L$$PWD/../../mysql-5.6.23-win32/lib/ -llibmysql
 
-INCLUDEPATH += $$PWD/../../mysql-5.6.22-winx64/include
-DEPENDPATH += $$PWD/../../mysql-5.6.22-winx64/include
+INCLUDEPATH += $$PWD/../../mysql-5.6.23-win32/include
+DEPENDPATH += $$PWD/../../mysql-5.6.23-win32/include
 
 INCLUDEPATH += $$PWD/../xlsxwriter/src/xlsx
 DEPENDPATH += $$PWD/../xlsxwriter/src/xlsx

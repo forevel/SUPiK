@@ -62,7 +62,6 @@ void dir_maindialog::SetupUI()
     spl->setOrientation(Qt::Horizontal);
     lyout->addWidget(spl, 90);
     setLayout(lyout);
-//    adjustSize();
 }
 
 void dir_maindialog::showEvent(QShowEvent *e)
@@ -170,7 +169,6 @@ void dir_maindialog::ShowSlaveTree(QString str)
             else
             {
                 SlaveTV->setModel(SlaveTreeModel);
-//                SlaveTV->setShownRows(SlaveTV->model()->rowCount());
                 SlaveTVIsTree = true;
                 connect(SlaveTV, SIGNAL(expanded(QModelIndex)), SlaveTreeModel, SLOT(addExpandedIndex(QModelIndex)));
                 connect(SlaveTV, SIGNAL(collapsed(QModelIndex)), SlaveTreeModel, SLOT(removeExpandedIndex(QModelIndex)));
@@ -185,7 +183,6 @@ void dir_maindialog::ShowSlaveTree(QString str)
                 SlaveTV->resizeColumnToContents(i);
             SlaveTVAccess = values.at(1).toLongLong(0, 16);
             SlaveTV->setContextMenuPolicy(Qt::CustomContextMenu);
-//            SlaveTV->updateTVGeometry();
             disconnect(SlaveTV, SIGNAL(customContextMenuRequested(QPoint)), 0, 0);
             connect (SlaveTV, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(SystemSlaveContextMenu(QPoint)));
             disconnect(SlaveTV, SIGNAL(doubleClicked(QModelIndex)), 0, 0);
@@ -237,8 +234,12 @@ void dir_maindialog::EditItem(QModelIndex index)
         ShowErMsg(ER_DIRMAIN+0x41);
         return;
     }
-    if ((SlaveTVIsTree) && (SlaveTV->model()->rowCount(SlaveTV->currentIndex()) != 0))
-        return; // для родителей запрещено иметь дополнительные поля
+    if (SlaveTVIsTree)
+    {
+        s_ntmodel *mdl = static_cast<s_ntmodel *>(SlaveTV->model());
+        if (mdl->data(index,Qt::ForegroundRole).value<QColor>() != mdl->colors[0])
+            return; // для родителей запрещено иметь дополнительные поля
+    }
     QString tmpString = getSlaveIndex(0);
     if (!tmpString.isEmpty())
         EditItem(tmpString);
@@ -248,24 +249,25 @@ void dir_maindialog::EditItem(QModelIndex index)
 
 void dir_maindialog::EditItem(QString str)
 {
-    int res;
+//    int res;
     QString tmps = getMainIndex(1);
     if (tmps.isEmpty())
     {
         ShowErMsg(ER_DIRMAIN+0x51);
         return;
     }
-    s_2cdialog *newdialog = new s_2cdialog("Справочники:"+tmps);
-    if (IsQuarantine)
-        newdialog->IsQuarantine = true;
-    newdialog->Mode = MODE_EDIT;
-    if (!(res = newdialog->setup(tmps+"_полная", str)))
-    {
-        newdialog->exec();
-//        showDirDialog();
-    }
+    s_2cdialog *newdialog = new s_2cdialog(tmps+"_полная", str, "Справочники:"+tmps, MODE_EDIT, IsQuarantine);
+//    if (IsQuarantine)
+//        newdialog->IsQuarantine = true;
+//    newdialog->Mode = MODE_EDIT;
+    if (newdialog->result)
+        ShowErMsg(ER_DIRMAIN+newdialog->result+0x54);
     else
-        ShowErMsg(ER_DIRMAIN+0x54);
+        newdialog->exec();
+//    if (!(res = newdialog->setup(tmps+"_полная", str)))
+//        newdialog->exec();
+//    else
+//        ShowErMsg(ER_DIRMAIN+0x54);
 }
 
 void dir_maindialog::AddNew()
@@ -346,16 +348,6 @@ void dir_maindialog::SystemSlaveContextMenu(QPoint)
     QAction *AddData = new QAction ("Добавить элемент", this);
     AddData->setSeparator(false);
     connect(AddData, SIGNAL(triggered()), this, SLOT(AddNew()));
-/*    QAction *AddSubDataChild;
-    AddSubDataChild = new QAction ("Добавить субэлемент", this);
-    AddSubDataChild->setSeparator(false);
-    if (SlaveTreeModel->isTree)
-    {
-        connect(AddSubDataChild, SIGNAL(triggered()), this, SLOT(AddSubDataChild()));
-        AddSubDataChild->setEnabled(true);
-    }
-    else
-        AddSubDataChild->setEnabled(false); */
     QAction *DeleteAction = new QAction("Удалить элемент", this);
     DeleteAction->setSeparator(false);
     connect (DeleteAction, SIGNAL(triggered()), this, SLOT(DeleteData()));
@@ -364,7 +356,6 @@ void dir_maindialog::SystemSlaveContextMenu(QPoint)
     if (SlaveTVAccess & pc.access & 0x2492) // права на изменение
     {
         ContextMenu->addAction(AddData);
-//        ContextMenu->addAction(AddSubDataChild);
         ContextMenu->addAction(ChangeDataChild);
     }
     if (SlaveTVAccess & pc.access & 0x4924) // права на удаление

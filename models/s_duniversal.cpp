@@ -226,11 +226,14 @@ void s_duniversal::pbclicked()
     {
     case FW_ALLINK:
     {
-        s_2cdialog *chooseDialog = new s_2cdialog(hdr);
+        // взять ИД корневого элемента с именем "ff.link.at(1)"
+        QStringList tmpStringList = tfl.htovlc(ff.link.at(0),"ИД","Наименование",ff.link.at(1));
+        if (tfl.result)
+            return;
+        // сформировать список выбора из значений по полю "Наименование", для которых idalias равен результату на пред. этапе
+        tmpStringList = tfl.htovlc(ff.link.at(0), "Наименование", "ИД_а", tmpStringList.at(0));
+        s_2cdialog *chooseDialog = new s_2cdialog(tmpStringList, hdr, QStringList(), le->text());
         connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
-        chooseDialog->setMinimumWidth(500);
-        chooseDialog->setup(pc.getlinksfromFF(ff));
-        chooseDialog->setTvCurrentText(le->text());
         chooseDialog->exec();
         break;
     }
@@ -246,15 +249,11 @@ void s_duniversal::pbclicked()
         }
         else // это таблица
         {
-            s_2cdialog *chooseDialog = new s_2cdialog(hdr);
-            chooseDialog->Mode = MODE_CHOOSE;
-            int res = chooseDialog->setup(ff.link.at(0));
-            if (!res)
+            s_2cdialog *chooseDialog = new s_2cdialog(ff.link.at(0), "", hdr, MODE_CHOOSE);
+            if (!chooseDialog->result)
             {
                 chooseDialog->setTvCurrentText(le->text());
                 connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
-                chooseDialog->setMinimumWidth(500);
-                chooseDialog->sortModel();
                 chooseDialog->exec();
             }
         }

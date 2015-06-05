@@ -30,18 +30,8 @@ private slots:
     void AddNew();
 
 private:
-//    s_tqTreeView *MainTV, *SlaveTV;
-//    s_ntmodel *MainTreeModel, *SlaveTreeModel;
-//    s_ncmodel *MainTableModel, *SlaveTableModel;
-//    s_ntmodel *SlaveTreeModel;
-//    s_ncmodel *MainTreeModel, *SlaveTableModel;
-    //    QSortFilterProxyModel *SlaveProxyModel;
     bool MainTVIsTree, SlaveTVIsTree, IsQuarantine;
-//    s_tqLabel *MainL;
-//    QVBoxLayout *MainLayout;
-//    QHBoxLayout *MainFrameLayout;
     bool firstShow;
-//    s_sqlfieldsdialog *sqldialog;
     QSqlDatabase db;
     QString tble;
     int SlaveTVAccess;

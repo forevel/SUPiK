@@ -38,6 +38,10 @@ public:
     void ClearModel();
     QList<QPersistentModelIndex> expandedIndexes;
 
+    QColor colors[6]; // определение набора цветов шрифта
+    QFont fonts[6]; // определение набора шрифтов
+    QIcon icons[6]; // определение набора иконок
+
 signals:
 
 public slots:
@@ -54,9 +58,6 @@ private:
     QStringList catlist;
     QString slvtble;
     QStringList slvtblefields;
-    QColor colors[6]; // определение набора цветов шрифта
-    QFont fonts[6]; // определение набора шрифтов
-    QIcon icons[6]; // определение набора иконок
 
     int BuildTree (QString id, bool twodb);
     s_ntitem *addTreeCat (QString catlistid);

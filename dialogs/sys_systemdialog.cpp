@@ -501,9 +501,8 @@ void sys_systemdialog::ChangeAdditionalFields()
 
 void sys_systemdialog::ChangeAdditionalFields(QString id)
 {
-    int res;
-    s_2cdialog *newdialog = new s_2cdialog("Структура системы");
-    if (!(res = newdialog->setup("Структура_системы", id)))
+    s_2cdialog *newdialog = new s_2cdialog("Структура_системы", id, "Структура системы");
+    if (!newdialog->result)
     {
         newdialog->setModal(true);
         newdialog->exec();
@@ -511,9 +510,8 @@ void sys_systemdialog::ChangeAdditionalFields(QString id)
     }
     else
     {
-        delete newdialog;
         QMessageBox::information(this,"Ошибка при создании диалога!",\
-                             QString::number(res),\
+                             QString::number(newdialog->result),\
                              QMessageBox::Ok, QMessageBox::NoButton);
     }
 /*    sqldialog = new s_sqlfieldsdialog;

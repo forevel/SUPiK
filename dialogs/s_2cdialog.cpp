@@ -20,43 +20,101 @@
 // Диалог, состоящий из двух столбцов
 // Предназначен для организации списков выбора либо для редактирования полей различных таблиц
 // Списки выбора представляют собой таблицы (не деревья! для деревьев есть s_2ctdialog)
-// Режим задаётся в публичной переменной Mode (MODE_CHOOSE для режима выбора и MODE_EDIT - для режима редактирования)
+// Режим задаётся в Mode (MODE_CHOOSE для режима выбора и MODE_EDIT - для режима редактирования)
 // В режиме выбора пользователь имеет возможность только выбрать из предлагаемой таблицы одно значение (строку), и слот
 // accepted() вернёт в сигнале "datachanged" значение нулевой колонки по выбранной строке
 // В режиме редактирования диалог представляет в первой колонке имена полей, а во второй - значения, причём значения
 // редактируются в зависимости от выбранного делегата. В этом случае слот accepted() осуществляет запись в базу новых значений
 //
-// Принцип работы с диалогом:
-// s_2cdialog *dlg = new s_2cdialog (hdr); // hdr - заголовок диалога в caption
-// dlg.Mode = MODE_CHOOSE; // выбор режима работы
-// dlg.IsQuarantine = true; // режим редактирования карантинных таблиц - особый, для него accepted() должен вызывать специальный обработчик
-// if (!(res = dlg.setup(table, id)))
-//      dlg.exec(); // вызов диалога
+// режим редактирования карантинных таблиц - особый, для него accepted() должен вызывать специальный обработчик
 
-s_2cdialog::s_2cdialog(QString hdr, QWidget *parent) :
+s_2cdialog::s_2cdialog(QString tble, QString id, QString caption, int Mode, bool isQuarantine, QWidget *parent) :
     QDialog(parent)
 {
-    DialogIsNeedToBeResized = false;
-    IsQuarantine = false;
-    Mode = MODE_CHOOSE;
-    setStyleSheet("QDialog {background-color: rgba(204,204,153);}");
-    setAttribute(Qt::WA_DeleteOnClose);
-    setupUI(hdr);
+    mainmodel = new s_ncmodel;
+    this->tble = tble;
+    this->Mode = Mode;
+    this->caption = caption;
+    switch (Mode)
+    {
+    case MODE_CHOOSE:
+    {
+        result = mainmodel->setup(tble);
+        if (result)
+        {
+            result+=ER_2CDLG+0x11;
+            return;
+        }
+        mainmodel->isEditable = false;
+        break;
+    }
+    case MODE_EDIT:
+    {
+        result = mainmodel->setup(tble, id);
+        if (result)
+        {
+            result+=ER_2CDLG+0x14;
+            return;
+        }
+        mainmodel->isEditable = true;
+        fillModelAdata();
+        break;
+    }
+    default:
+    {
+        result=ER_2CDLG+0x17;
+        return;
+    }
+    }
+    this->IsQuarantine = isQuarantine;
+    setupUI();
+    result=0;
 }
 
-void s_2cdialog::setupUI(QString hdr)
+// конструктор подготавливает диалог из одного столбца, links содержит список
+// вспомогательных полей для каждого из элементов столбца. Подходит для
+// организации списка выбора
+
+s_2cdialog::s_2cdialog(QStringList sl, QString caption, QStringList links, QString str, QWidget *parent) : QDialog(parent)
 {
+    this->caption = caption;
+    QList<QStringList> tmpsl;
+    tmpsl.append(sl);
+    QList<int> il;
+    il << sl.size();
+    mainmodel->prepareModel(il);
+    if (links.isEmpty())
+        mainmodel->setcolumnlinks(0, "7.8");
+    else
+        mainmodel->setcolumnlinks(0, links);
+    mainmodel->fillModel(tmpsl);
+    if (mainmodel->result)
+        ShowErMsg(ER_2CDLG+mainmodel->result+0x21); // не выходим, т.к. проблема м.б. с одной из ячеек, которую можно будет поправить
+    fillModelAdata();
+    IsQuarantine = false;
+    Mode = MODE_CHOOSE;
+    setupUI();
+    s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
+    if (tv == 0)
+        return;
+    QList<QModelIndex> item = tv->model()->match(tv->model()->index(0, 0), Qt::DisplayRole, QVariant::fromValue(str), 1, Qt::MatchExactly);
+    if (!item.isEmpty())
+        tv->setCurrentIndex(item.at(0));
+}
+
+void s_2cdialog::setupUI()
+{
+    setStyleSheet("QDialog {background-color: rgba(204,204,153);}");
+    setAttribute(Qt::WA_DeleteOnClose);
     QVBoxLayout *mainLayout = new QVBoxLayout;
     QHBoxLayout *pbLayout = new QHBoxLayout;
     s_tqTableView *mainTV = new s_tqTableView; // autoResize = true
     mainTV->setObjectName("mainTV");
-    mainmodel = new s_ncmodel;
     s_duniversal *uniDelegate = new s_duniversal;
     s_tqPushButton *pbOk = new s_tqPushButton("Ага");
     s_tqPushButton *pbCancel = new s_tqPushButton("Неа");
     s_tqLabel *lbl = new s_tqLabel;
-    lbl->setText(hdr);
-    this->hdr=hdr;
+    lbl->setText(caption);
     QFont font;
     font.setPointSize(10);
     lbl->setFont(font);
@@ -69,15 +127,24 @@ void s_2cdialog::setupUI(QString hdr)
     mainTV->verticalHeader()->setVisible(false);
     mainTV->horizontalHeader()->setVisible(false);
     mainTV->setItemDelegate(uniDelegate);
+    mainTV->resizeColumnsToContents();
+    mainTV->resizeRowsToContents();
+    int wdth = 0;
+    for (int i = 0; i < mainTV->model()->columnCount(); i++)
+        wdth += mainTV->columnWidth(i);
+    mainTV->setMinimumWidth(wdth+10);
+    int hgth = 0;
+    for (int i = 0; i < mainTV->model()->rowCount(); i++)
+        hgth += mainTV->rowHeight(i);
+    mainTV->setMinimumHeight(hgth+10);
     mainLayout->addWidget(lbl, 0, Qt::AlignRight);
-    mainLayout->addWidget(mainTV, 100);
+    mainLayout->addWidget(mainTV);
     mainLayout->addLayout(pbLayout);
-//    constheight=lbl->minimumSizeHint().height()+pbOk->minimumSizeHint().height();
     setLayout(mainLayout);
     connect (pbOk, SIGNAL(clicked()), this, SLOT(accepted()));
     connect (pbCancel, SIGNAL(clicked()), this, SLOT(cancelled()));
     connect(mainTV, SIGNAL(datachanged()), this, SLOT(updatedialogsize()));
-//    connect(mainTV, SIGNAL(datachanged()), this, SLOT(resizemainTV()));
+    connect(mainTV, SIGNAL(datachanged()), this, SLOT(resizemainTV()));
 }
 
 // процедура заполняет модель значениями из двух списков (sl1, sl2). При этом в списке links находятся вспомогательные поля, соответствующие по индексам
@@ -113,215 +180,26 @@ void s_2cdialog::setupUI(QString hdr)
     return 0;
 }*/
 
-// процедура подготавливает диалог из одного столбца, links содержит список
-// вспомогательных полей для каждого из элементов столбца. Подходит для
-// организации списка выбора
-
-int s_2cdialog::setup(QStringList sl, QStringList links, QString str)
-{
-    s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
-    if (tv == 0)
-        return(ER_2CDLG+0x11);
-    QList<QStringList> tmpsl;
-    tmpsl.append(sl);
-    QList<int> il;
-    il << sl.size();
-    mainmodel->prepareModel(il);
-    if (links.isEmpty())
-        mainmodel->setcolumnlinks(0, "7.8");
-    else
-        mainmodel->setcolumnlinks(0, links);
-    mainmodel->fillModel(tmpsl);
-    if (mainmodel->result)
-        ShowErMsg(ER_2CDLG+mainmodel->result+0x14); // не выходим, т.к. проблема м.б. с одной из ячеек, которую можно будет поправить
-    fillModelAdata();
- //   QList<QModelIndex> item = tv->model()->match(tv->model()->index(0, 0), Qt::DisplayRole, QVariant::fromValue(str), 1, Qt::MatchExactly);
- //   if (!item.isEmpty())
- //       tv->setCurrentIndex(item.at(0));
-    tv->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-    tv->resizeColumnsToContents();
-    DialogIsNeedToBeResized = true;
-    return 0;
-}
-
-// процедура подготавливает диалог выбора из столбцов таблицы tble в tablefields
-
-int s_2cdialog::setup(QString tble, QString id)
-{
-        s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
-        if (tv == 0)
-            return(ER_2CDLG+0x21);
-        this->tble = tble;
-        switch (Mode)
-        {
-        case MODE_CHOOSE:
-        {
-            mainmodel->setup(tble);
-            mainmodel->isEditable = false;
-            tv->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-            tv->resizeColumnsToContents();
-            DialogIsNeedToBeResized = true;
-            return 0;
-        }
-        case MODE_EDIT:
-        {
-            int res = mainmodel->setup(tble, id);
-            mainmodel->isEditable = true;
-            if (res)
-                return(res+0x24+ER_2CDLG);
-/*            QList<QStringList> lsl;
-            QStringList fl;
-            QStringList headersvl;
-            QStringList tmpStringlist, overallStringList;
-            QString keydb, keytble;
-            int keyidx = -1;
-            int i;
-            fl << "tablefields" << "table" << "header" << "links" << "keyfield";
-            lsl = sqlc.getmorevaluesfromtablebyfield(pc.sup, "tablefields", fl, "tablename", tble, "fieldsorder", true);
-            if (sqlc.result)
-            {
-                QMessageBox::warning(this, "warning!", "Проблемы с получением значений по таблице "+tble+" из таблицы tablefields");
-                return 1;
-            }
-            QStringList links, headers;
-            fl.clear();
-            links.clear();
-            headers.clear();
-            for (i = 0; i < lsl.size(); i++)
-            {
-                links << lsl.at(i).at(3);
-                headers << lsl.at(i).at(2);
-                if (lsl.at(i).at(4) == "v")
-                {
-                    keydb = lsl.at(i).at(1).split(".").at(0);
-                    keytble = lsl.at(i).at(1).split(".").at(1);
-                    keyidx = i;
-                }
-            }
-            if (keyidx == -1)
-            {
-                QMessageBox::warning(this, "warning!", "Отсутствует ключевое поле по таблице "+tble+" в таблице tablefields");
-                return 4;
-            }
-            if (id != "0") // если требуется изменить элемент
-            {
-                QStringList curfl;
-                overallStringList.clear();
-                headersvl.clear();
-                while (lsl.size() > 0)
-                {
-                    curfl.clear();
-                    QString curtble = lsl.at(0).at(1);
-                    for (i = 0; i < lsl.size(); i++)
-                    {
-                        if (lsl.at(i).at(1) == curtble)
-                        {
-                            curfl << lsl.at(i).at(0); // в curfl находятся только те поля, которые относятся к текущей таблице
-                            lsl.removeAt(i);
-                            headersvl << headers.at(i);
-                            headers.removeAt(i);
-                            i--;
-                        }
-                    }
-                    tmpStringlist = curtble.split(".");
-                    int idx = curfl.indexOf("id"+tmpStringlist.at(1));
-                    if (idx != -1)
-                        curfl.swap(0, idx);
-                    // считываем все данные из таблицы
-                    QSqlQuery get_child_from_db2 (sqlc.getdb(tmpStringlist.at(0)));
-                    QString tmpString = "SELECT ";
-                    for (i = 0; i < curfl.count(); i++)
-                        tmpString += "`" + curfl.at(i) + "`,";
-                    tmpString = tmpString.left(tmpString.size()-1); // убираем запятую
-                    tmpString += " FROM `"+tmpStringlist.at(1)+"` WHERE `id"+keytble+"`=\""+id+"\" AND `deleted`=0 ORDER BY `id"+tmpStringlist.at(1)+"` ASC;";
-                    get_child_from_db2.exec(tmpString);
-
-                    while (get_child_from_db2.next())
-                    {
-                        tmpStringlist.clear();
-                        for (i = 0; i < curfl.size(); i++)
-                            tmpStringlist << get_child_from_db2.value(i).toString();
-                    }
-                    overallStringList.append(tmpStringlist);
-                }
-                if (overallStringList.isEmpty())
-                {
-                    QMessageBox::warning(this, "warning!", "Проблемы с получением значений из таблицы "+tble+" по полю №"+id);
-                    return 3; // проблемы с получением данных по нужному id
-                }
-            }
-            else
-            {
-                for (i = 0; i < lsl.size(); i++)
-                    overallStringList << "";
-                overallStringList.replace(keyidx, QString::number(sqlc.getnextfreeindex(sqlc.getdb(keydb), keytble)));
-            }
-
-            lsl.clear();
-            lsl.append(headersvl);
-            lsl.append(overallStringList);
-            QList<int> il;
-            for (i = 0; i < lsl.size(); i++)
-                il << lsl.at(i).size();
-            mainmodel->prepareModel(il);
-            mainmodel->setcolumnlinks(0, "0.8"); // простые поля для первого столбца
-            mainmodel->setcolumnlinks(1, links); // какие записаны в таблице tablefields поля - для второго столбца
-            mainmodel->fillModel(lsl); */
-            fillModelAdata();
-            tv->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-            tv->resizeColumnsToContents();
-            DialogIsNeedToBeResized = true;
-            return 0;
-        }
-        default:
-            break;
-        }
-    return 0;
-}
-
-// процедура подготавливает диалог заполнения полей таблицы tble по строке id
-
-/*int s_2cdialog::setup(QString tble, QString id)
-{
-
-    s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
-
-
-    // в fl - наименования полей
-    // в ll - ссылки на другие таблицы
-    // в vl - значения полей
-
-        case FT_INDIRECT:
-        {
-            // сначала берём ссылку из текущей таблицы
-            tmpString = tmpString.right(tmpString.size()-1); // убираем точку, получаем имя столбца в текущей таблице
-            int idx = sl.indexOf(tmpString); // позиция столбца, на который ссылается текущий столбец
-            tmpString = ll.at(idx); // получаем ссылку по ссылочному столбцу
-            QString tmpdb = tmpString.mid(3, 3);
-            QString tmptble = tmpString.right(tmpString.size()-7);
-            tmpString = sqlc.getvaluefromtablebyfield(sqlc.getdb(tmpdb), tmptble, sl.at(i).right(sl.at(i).size()-2), "id"+tmptble, vl.at(idx)); // взяли имя таблицы в БД <sl.at(i).right(sl.at(i).size()-2)>
-            fdb.insert(i, sl.at(i).right(sl.at(i).size()-2)); // взяли три буквы БД из наименования столбца (idalt-id=alt)
-            ftble.insert(i, tmpString);
-            break;
-        }
-        int res = addPushButtonWithDialog(vl.at(i), i, *GridLayout);
-
-    return 0;
-} */
-
 void s_2cdialog::resizemainTV()
 {
     s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
+    if (tv == 0)
+        return;
     tv->resizeColumnsToContents();
-//    tv->datachangedintable = true;
-    updatedialogsize();
+    int wdth = 0;
+    for (int i = 0; i < tv->model()->columnCount(); i++)
+        wdth += tv->columnWidth(i);
+    tv->setMinimumWidth(wdth+10);
+    int hgth = 0;
+    for (int i = 0; i < tv->model()->rowCount(); i++)
+        hgth += tv->rowHeight(i);
+    tv->setMinimumHeight(hgth+10);
 }
 
 void s_2cdialog::paintEvent(QPaintEvent *e)
 {
     QPainter painter(this);
     painter.drawPixmap(rect(), QPixmap(":/res/2cWallPaper.png"));
-//    setFixedSize(minimumSizeHint());
     e->accept();
 }
 
@@ -386,47 +264,9 @@ void s_2cdialog::cancelled()
     this->close();
 }
 
-void s_2cdialog::updatedialogsize()
-{
-    DialogIsNeedToBeResized = true;
-}
-
-/*QSize s_2cdialog::minimumSizeHint()
-{
-    if (DialogIsNeedToBeResized)
-    {
-        int curwidth = QApplication::desktop()->screenGeometry(this).width();
-        int curheight = QApplication::desktop()->screenGeometry(this).height();
-        int f2 = 0;
-        s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
-        for (int i = 0; i < tv->horizontalHeader()->count(); i++)
-            f2 += tv->columnWidth(i)+20;
-        if (f2 > curwidth)
-            f2 = curwidth;
-        if (f2 < 300) // диалоги слишком узкие нам не нужны
-            f2 = 300;
-        int f1 = constheight+tv->minimumSizeHint().height();
-        if (f1>curheight)
-            f1 = curheight;
-        DialogIsNeedToBeResized = false;
-//        return QSize(f2, this->size().height());
-        return QSize(f2,f1);
-    }
-    else
-        return this->size();
-} */
-
 void s_2cdialog::sortModel()
 {
 //    pmainmodel->sort(0, Qt::AscendingOrder);
-}
-
-void s_2cdialog::setTvCurrentText(QString text)
-{
-    s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
-    QList<QModelIndex> item = tv->model()->match(tv->model()->index(0, 0), Qt::DisplayRole, QVariant::fromValue(text), 1, Qt::MatchExactly);
-    if (!item.isEmpty())
-        tv->setCurrentIndex(item.at(0));
 }
 
 // незакончено - дописать другие варианты
@@ -446,7 +286,7 @@ void s_2cdialog::fillModelAdata()
         case FW_ALLINK:
         case FW_LINK:
         {
-            mainmodel->setData(mainmodel->index(i,0,QModelIndex()),QVariant(hdr+":"+hdradd),Qt::UserRole+1);
+            mainmodel->setData(mainmodel->index(i,0,QModelIndex()),QVariant(caption+":"+hdradd),Qt::UserRole+1);
             break;
         }
         default:

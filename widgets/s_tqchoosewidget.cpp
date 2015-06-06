@@ -43,7 +43,8 @@ void s_tqChooseWidget::pbclicked()
         if (db.isValid())
         {
             QStringList tmpStringList = sqlc.getvaluesfromtablebycolumn(db, ff.link.at(1), ff.link.at(2));
-            s_2cdialog *chooseDialog = new s_2cdialog(tmpStringList, lestr);
+            s_2cdialog *chooseDialog = new s_2cdialog;
+            chooseDialog->setup(tmpStringList, lestr);
             connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
             if (sqlc.result)
             {
@@ -76,7 +77,8 @@ void s_tqChooseWidget::pbclicked()
                 le->setText("Ошибка! Не найдены данные для списка выбора! Обратитесь к разработчику");
                 return;
             }
-            s_2cdialog *chooseDialog = new s_2cdialog(tmpStringList);
+            s_2cdialog *chooseDialog = new s_2cdialog;
+            chooseDialog->setup(tmpStringList);
             connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
             chooseDialog->exec();
         }
@@ -101,7 +103,8 @@ void s_tqChooseWidget::pbclicked()
             db = sqlc.getdb(ff.link.at(3)); // вторая таблица
             if (db.isValid())
                 tmpStringList.append(sqlc.getvaluesfromtablebycolumn(db, ff.link.at(4), ff.link.at(5)));
-            s_2cdialog *chooseDialog = new s_2cdialog(tmpStringList,lestr);
+            s_2cdialog *chooseDialog = new s_2cdialog;
+            chooseDialog->setup(tmpStringList,lestr);
             connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
             chooseDialog->exec();
         }

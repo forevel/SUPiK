@@ -306,7 +306,8 @@ void wh_dialog::resizeMainTV(QModelIndex index1, QModelIndex index2)
 
 void wh_dialog::chooseConsumer()
 {
-    s_2cdialog *dlg = new s_2cdialog("Контрагенты_сокращ", Consumer, "Выбор контрагента");
+    s_2cdialog *dlg = new s_2cdialog;
+    dlg->setup("Контрагенты_сокращ", MODE_CHOOSE, Consumer, "Выбор контрагента");
     if (dlg->result)
         return;
     connect(dlg, SIGNAL(changeshasbeenMade(QString)), this, SLOT(consumerChoosed(QString)));
@@ -321,7 +322,8 @@ void wh_dialog::consumerChoosed(QString str)
 
 void wh_dialog::chooseSupplier()
 {
-    s_2cdialog *dlg = new s_2cdialog("Контрагенты_сокращ", Supplier, "Выбор контрагента");
+    s_2cdialog *dlg = new s_2cdialog;
+    dlg->setup("Контрагенты_сокращ", MODE_CHOOSE, Supplier, "Выбор контрагента");
     if (dlg->result)
         return;
     connect(dlg, SIGNAL(changeshasbeenMade(QString)), this, SLOT(supplierChoosed(QString)));
@@ -487,7 +489,8 @@ void wh_dialog::acceptandclose()
                 tmpString = sqlc.insertvaluestotable(pc.ent, "nkwh", tmpsl1, tmpsl2);
                 if (sqlc.result)
                     throw 0x2b;
-                s_2cdialog *dlg = new s_2cdialog("Расположение на складе_полн", tmpString);
+                s_2cdialog *dlg = new s_2cdialog;
+                dlg->setup("Расположение на складе_полн", MODE_EDIT, tmpString);
                 dlg->exec();
             }
             else if (sqlc.result > 1) // ошибка

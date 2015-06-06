@@ -80,6 +80,7 @@ private:
     QString getEq(QString arg1, QString arg2, int oper, const QModelIndex index, bool byRow) const; // подсчёт выражения "arg1 <oper> arg2"
     float getOperand(QString str, const QModelIndex index, bool byRow) const; // подсчёт арифм. выражения, содержащегося в строке str
     QList<int> maxcolswidth;
+    int rcount; // количество реально записанных рядов (индекс следующего пустого ряда)
 };
 
 #endif // S_2CMODEL_H

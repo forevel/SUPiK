@@ -447,7 +447,7 @@ QStringList s_tablefields::tablefields(QString tble, QString header)
     QStringList cmpfl = QStringList() << "tablename" << "header";
     QStringList cmpvl = QStringList() << tble << header;
     QStringList sl = sqlc.getvaluesfromtablebyfields(sqlc.getdb("sup"), "tablefields", fl, cmpfl, cmpvl);
-    if (sqlc.result)
+    if ((sqlc.result) || (sl.isEmpty()))
     {
         result = sqlc.result + 0x85 + ER_TFIELD;
         return QStringList();
@@ -459,7 +459,7 @@ QStringList s_tablefields::tablefields(QString tble, QString header)
 QStringList s_tablefields::tableheaders(QString tble)
 {
     QStringList sl = sqlc.getvaluesfromtablebycolumnandfield(sqlc.getdb("sup"), "tablefields", "header", "tablename", tble);
-    if (sqlc.result)
+    if ((sqlc.result) || (sl.isEmpty()))
     {
         result = sqlc.result + 0x89 + ER_TFIELD;
         return QStringList();
@@ -471,7 +471,7 @@ QStringList s_tablefields::tableheaders(QString tble)
 QStringList s_tablefields::tablelinks(QString tble)
 {
     QStringList sl = sqlc.getvaluesfromtablebycolumnandfield(sqlc.getdb("sup"), "tablefields", "links", "tablename", tble);
-    if (sqlc.result)
+    if ((sqlc.result) || (sl.isEmpty()))
     {
         result = sqlc.result + 0x8D + ER_TFIELD;
         return QStringList();

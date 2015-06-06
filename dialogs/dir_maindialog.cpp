@@ -256,12 +256,16 @@ void dir_maindialog::EditItem(QString str)
         ShowErMsg(ER_DIRMAIN+0x51);
         return;
     }
-    s_2cdialog *newdialog = new s_2cdialog(tmps+"_полная", str, "Справочники:"+tmps, MODE_EDIT, IsQuarantine);
+    s_2cdialog *newdialog = new s_2cdialog;
+    newdialog->setup(tmps+"_полная", MODE_EDIT, str, "Справочники:"+tmps, "", IsQuarantine);
 //    if (IsQuarantine)
 //        newdialog->IsQuarantine = true;
 //    newdialog->Mode = MODE_EDIT;
     if (newdialog->result)
+    {
+//        newdialog->close();
         ShowErMsg(ER_DIRMAIN+newdialog->result+0x54);
+    }
     else
         newdialog->exec();
 //    if (!(res = newdialog->setup(tmps+"_полная", str)))
@@ -365,5 +369,5 @@ void dir_maindialog::SystemSlaveContextMenu(QPoint)
 
 void dir_maindialog::ShowErMsg(int ermsg)
 {
-    QMessageBox::warning(this, "warning!", "Ошибка №" + QString::number(ermsg));
+    QMessageBox::warning(this, "warning!", "Ошибка 0x" + QString::number(ermsg,16));
 }

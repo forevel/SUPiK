@@ -27,6 +27,7 @@ s_ncmodel::s_ncmodel(QObject *parent) :
     fieldstoCheck.clear();
     maxcolswidth.clear();
     isEditable = false;
+    rcount = 0;
 }
 
 s_ncmodel::~s_ncmodel()
@@ -236,6 +237,8 @@ bool s_ncmodel::removeRows(int position, int rows, const QModelIndex &index)
         maindata.removeAt(position);
         delete item;
     }
+    if (rcount)
+        rcount--;
     endRemoveRows();
     return true;
 }
@@ -323,6 +326,7 @@ void s_ncmodel::prepareModel(QList<int> sl)
             addRow();
     }
 }
+
 void s_ncmodel::fillModel(QList<QStringList> lsl)
 {
     int i;
@@ -337,12 +341,12 @@ void s_ncmodel::fillModel(QList<QStringList> lsl)
     }
     for (i = 0; i < lsl.at(0).size(); i++)  // цикл по строкам
     {
-        if (i >= rowCount())
+        if (rcount >= rowCount())
             addRow();
         for (j = 0; j < lsl.size(); j++) // цикл по столбцам
         {
             if (i > lsl.at(j).size()) // если строк в текущем столбце меньше, чем текущий номер строки, пишем пустое значение
-                setData(index(i, j, QModelIndex()), QVariant(""), Qt::EditRole);
+                setData(index(rcount, j, QModelIndex()), QVariant(""), Qt::EditRole);
             else
             {
 //                QString links = data(index(i,j,QModelIndex()),Qt::UserRole).toString(); // берём заранее подготовленное значение links в текущей ячейке. Если не подготовлено,
@@ -356,7 +360,7 @@ void s_ncmodel::fillModel(QList<QStringList> lsl)
                 }
                 if (vl.at(0) == '_') // идентификатор составного значения - номер таблицы и само значение
                 {
-                    setData(index(i,j,QModelIndex()),QVariant(vl.at(1)),Qt::UserRole+2); // пишем доп. информацию о номере таблицы для ячейки
+                    setData(index(rcount,j,QModelIndex()),QVariant(vl.at(1)),Qt::UserRole+2); // пишем доп. информацию о номере таблицы для ячейки
                     vl = vl.right(vl.size()-2); // убираем номер таблицы и идентификатор
                 }
                 if (tfl.result)
@@ -364,9 +368,10 @@ void s_ncmodel::fillModel(QList<QStringList> lsl)
                     result = tfl.result+ER_NCMODEL+0x04;
                     continue; // если какая-то проблема с получением данных, пропускаем ячейку
                 }
-                setData(index(i, j, QModelIndex()), QVariant(vl), Qt::EditRole);
+                setData(index(rcount, j, QModelIndex()), QVariant(vl), Qt::EditRole);
             }
         }
+        rcount++;
     }
 }
 
@@ -593,10 +598,14 @@ int s_ncmodel::setup(QString tble, QString id)
     ClearModel();
     QList<QStringList> lsl;
     QStringList headers = tfl.tableheaders(tble);
-    QStringList links = tfl.tablelinks(tble);
-    QString tmpString;
     if (tfl.result)
         return tfl.result+ER_NCMODEL+0x21;
+    QStringList links = tfl.tablelinks(tble);
+    if (tfl.result)
+        return tfl.result+ER_NCMODEL+0x24;
+    QString tmpString;
+    if (tfl.result)
+        return tfl.result+ER_NCMODEL+0x27;
     lsl.append(headers);
     QStringList tmpsl;
     for (i = 0; i < headers.size(); i++)

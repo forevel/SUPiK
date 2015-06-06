@@ -15,16 +15,21 @@ class s_2cdialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit s_2cdialog(QString tble, QString id="", QString caption="", int Mode=MODE_CHOOSE, bool isQuarantine=false, QWidget *parent = 0);
-    // sl - нередактируемые поля для списка, caption - заголовок окна, links - формат (можно не использовать), str - текущее значение
-    explicit s_2cdialog(QStringList sl, QString caption="", QStringList links=QStringList(), QString str="", QWidget *parent=0);
-    void setupUI();
+    explicit s_2cdialog(QWidget *parent = 0);
     // sl1 - надписи, sl2 - поля для заполнения, links - формат полей sl2
     //    int setup(QStringList sl1, QStringList links1, QStringList sl2, QStringList links2);
+    // tble - имя таблицы из tablefields, Mode - список выбора или редактор полей, caption - заголовок в окне, matchtext - текущее значение
+    // (для MODE_CHOOSE), isQuarantine - признак для MODE_EDIT: карантинная база или нет, для спец. обработки слота accepted()
+    void setup(QString tble, int Mode=MODE_CHOOSE, QString id="", QString caption="", QString matchtext="", bool isQuarantine=false);
+    // sl - список строк для выбора, caption - заголовок в окне, links - опционально вид для каждой ячейки, str - текущее выбранное значение
+    void setup(QStringList sl, QString caption="", QStringList links=QStringList(), QString str="");
+    // функция добавления к существующей таблице ещё одной - для FW_DLINK
+    void AddTable(QString tble);
     void sortModel();
+    void SetTvCurrentText(QString str);
     bool IsQuarantine;
     int Mode, result;
-    QString tble,caption;
+    QString caption;
 
 signals:
     void changeshasbeenMade(QString);
@@ -32,12 +37,14 @@ signals:
 public slots:
 
 private:
+    QStringList tble;
     s_ncmodel *mainmodel;
     QSortFilterProxyModel *pmainmodel;
     bool DialogIsNeedToBeResized;
     int constheight;
     void fillModelAdata();
     void ShowErMsg(int ernum);
+    void setupUI();
 
 private slots:
     void accepted();

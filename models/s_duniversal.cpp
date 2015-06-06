@@ -7,6 +7,7 @@
 #include "s_ncmodel.h"
 #include "../dialogs/s_2cdialog.h"
 #include "../dialogs/s_2ctdialog.h"
+#include "../dialogs/s_accessdialog.h"
 #include "../widgets/s_maskedle.h"
 #include "../gen/s_tablefields.h"
 #include <QComboBox>
@@ -232,7 +233,8 @@ void s_duniversal::pbclicked()
             return;
         // сформировать список выбора из значений по полю "Наименование", для которых idalias равен результату на пред. этапе
         tmpStringList = tfl.htovlc(ff.link.at(0), "Наименование", "ИД_а", tmpStringList.at(0));
-        s_2cdialog *chooseDialog = new s_2cdialog(tmpStringList, hdr, QStringList(), le->text());
+        s_2cdialog *chooseDialog = new s_2cdialog;
+        chooseDialog->setup(tmpStringList, hdr, QStringList(), le->text());
         connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
         chooseDialog->exec();
         break;
@@ -249,10 +251,10 @@ void s_duniversal::pbclicked()
         }
         else // это таблица
         {
-            s_2cdialog *chooseDialog = new s_2cdialog(ff.link.at(0), "", hdr, MODE_CHOOSE);
+            s_2cdialog *chooseDialog = new s_2cdialog;
+            chooseDialog->setup(ff.link.at(0), MODE_CHOOSE, "", hdr, le->text());
             if (!chooseDialog->result)
             {
-                chooseDialog->setTvCurrentText(le->text());
                 connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
                 chooseDialog->exec();
             }
@@ -261,11 +263,25 @@ void s_duniversal::pbclicked()
     }
     case FW_DLINK:
     {
+        int count = ff.link.size(); // в поле link - имена таблиц
+        if (count == 0)
+            break;
+        s_2cdialog *dlg = new s_2cdialog;
+        dlg->setup(ff.link.at(0),MODE_CHOOSE,"",hdr);
+        for (int i = 1; i < count; i++)
+            dlg->AddTable(ff.link.at(i));
+        connect(dlg,SIGNAL(changeshasbeenMade(QString)),this,SLOT(accepted(QString)));
+        dlg->SetTvCurrentText(le->text());
+        dlg->exec();
         break;
     }
     case FW_RIGHTS:
     {
         // вызов диалога редактирования прав доступа
+        s_accessdialog *dlg = new s_accessdialog;
+        dlg->SetupUI(le->text().toLongLong(0, 16));
+        connect(dlg, SIGNAL(acceptChanges(long)), this, SLOT(AcceptAccess(long)));
+        dlg->exec();
         break;
     }
     case FW_DATE:
@@ -283,6 +299,10 @@ void s_duniversal::pbclicked()
         calWdgt->show();
         break;
     }
+    case FW_SPECIAL:
+    {
+        break;
+    }
     default:
         break;
     }
@@ -292,45 +312,11 @@ void s_duniversal::pbclicked()
 
 void s_duniversal::accepted(QString str)
 {
-    //        QString tmpString = str;
-            s_tqLineEdit *le = combWidget->findChild<s_tqLineEdit*>("fdcle");
-            if (le == 0)
-                return;
-
-    /*        switch (ff.ftype)
-            {
-            case FW_ALLINK:
-            case FW_LINK:
-            {
-                tmpString = tfl.toid(ff.link.at(0), "Наименование", str);
-                break;
-            }
-            case FW_DLINK: // переписать!!!
-            {
-                QSqlDatabase db = sqlc.getdb(ff.link.at(2));
-                if (db.isValid())
-                {
-                    tmpString = sqlc.getvaluefromtablebyfield(db, ff.link.at(3), ff.link.at(3), "id"+ff.link.at(3), str);
-                    if (sqlc.result)
-                    {
-                        QSqlDatabase db = sqlc.getdb(ff.link.at(0));
-                        if (db.isValid())
-                            tmpString = sqlc.getvaluefromtablebyfield(db, ff.link.at(1), ff.link.at(1), "id"+ff.link.at(1), str);
-                    }
-                }
-                break;
-            }
-            case FW_RIGHTS:
-            {
-                break;
-            }
-            case FW_DATE:
-                break;
-            default:
-                break;
-            } */
-            QString tmpString = tfl.idtov(pc.getlinksfromFF(ff),str);
-            le->setText(tmpString);
+    s_tqLineEdit *le = combWidget->findChild<s_tqLineEdit*>("fdcle");
+    if (le == 0)
+        return;
+    QString tmpString = tfl.idtov(pc.getlinksfromFF(ff),str);
+    le->setText(tmpString);
 }
 
 void s_duniversal::commitChanges(QString str)
@@ -343,6 +329,11 @@ void s_duniversal::commitChanges(QString str)
 void s_duniversal::dateChoosed(QDate dte)
 {
     accepted(dte.toString("dd/MM/yyyy"));
+}
+
+void s_duniversal::AcceptAccess(long tmpl)
+{
+    accepted(QString::number(tmpl, 16));
 }
 
 void s_duniversal::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
@@ -370,14 +361,6 @@ void s_duniversal::paint(QPainter *painter, const QStyleOptionViewItem &option, 
     }
     painter->restore();
 }
-
-/*QSize s_duniversal::sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const {
-QStyleOptionViewItemV4 options = option;
-initStyleOption(&options, index);
-
-QSize size = QStyledItemDelegate::sizeHint(option, index);
-return QSize(size.width(), size.height());
-} */
 
 void s_duniversal::setTableHeader(QString hdr)
 {

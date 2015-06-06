@@ -28,11 +28,16 @@
 //
 // режим редактирования карантинных таблиц - особый, для него accepted() должен вызывать специальный обработчик
 
-s_2cdialog::s_2cdialog(QString tble, QString id, QString caption, int Mode, bool isQuarantine, QWidget *parent) :
+s_2cdialog::s_2cdialog(QWidget *parent) :
     QDialog(parent)
 {
-    mainmodel = new s_ncmodel;
-    this->tble = tble;
+    setupUI();
+}
+
+void s_2cdialog::setup(QString tble, int Mode, QString id, QString caption, QString matchtext, bool isQuarantine)
+{
+    this->tble.clear();
+    this->tble.append(tble);
     this->Mode = Mode;
     this->caption = caption;
     switch (Mode)
@@ -67,7 +72,8 @@ s_2cdialog::s_2cdialog(QString tble, QString id, QString caption, int Mode, bool
     }
     }
     this->IsQuarantine = isQuarantine;
-    setupUI();
+    if (!matchtext.isEmpty())
+        SetTvCurrentText(matchtext);
     result=0;
 }
 
@@ -75,8 +81,10 @@ s_2cdialog::s_2cdialog(QString tble, QString id, QString caption, int Mode, bool
 // вспомогательных полей для каждого из элементов столбца. Подходит для
 // организации списка выбора
 
-s_2cdialog::s_2cdialog(QStringList sl, QString caption, QStringList links, QString str, QWidget *parent) : QDialog(parent)
+void s_2cdialog::setup(QStringList sl, QString caption, QStringList links, QString str)
 {
+    this->tble.clear();
+    mainmodel = new s_ncmodel;
     this->caption = caption;
     QList<QStringList> tmpsl;
     tmpsl.append(sl);
@@ -93,13 +101,7 @@ s_2cdialog::s_2cdialog(QStringList sl, QString caption, QStringList links, QStri
     fillModelAdata();
     IsQuarantine = false;
     Mode = MODE_CHOOSE;
-    setupUI();
-    s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
-    if (tv == 0)
-        return;
-    QList<QModelIndex> item = tv->model()->match(tv->model()->index(0, 0), Qt::DisplayRole, QVariant::fromValue(str), 1, Qt::MatchExactly);
-    if (!item.isEmpty())
-        tv->setCurrentIndex(item.at(0));
+    SetTvCurrentText(str);
 }
 
 void s_2cdialog::setupUI()
@@ -114,6 +116,7 @@ void s_2cdialog::setupUI()
     s_tqPushButton *pbOk = new s_tqPushButton("Ага");
     s_tqPushButton *pbCancel = new s_tqPushButton("Неа");
     s_tqLabel *lbl = new s_tqLabel;
+    mainmodel = new s_ncmodel;
     lbl->setText(caption);
     QFont font;
     font.setPointSize(10);
@@ -129,23 +132,15 @@ void s_2cdialog::setupUI()
     mainTV->setItemDelegate(uniDelegate);
     mainTV->resizeColumnsToContents();
     mainTV->resizeRowsToContents();
-    int wdth = 0;
-    for (int i = 0; i < mainTV->model()->columnCount(); i++)
-        wdth += mainTV->columnWidth(i);
-    mainTV->setMinimumWidth(wdth+10);
-    int hgth = 0;
-    for (int i = 0; i < mainTV->model()->rowCount(); i++)
-        hgth += mainTV->rowHeight(i);
-    mainTV->setMinimumHeight(hgth+10);
     mainLayout->addWidget(lbl, 0, Qt::AlignRight);
     mainLayout->addWidget(mainTV);
     mainLayout->addLayout(pbLayout);
     setLayout(mainLayout);
     connect (pbOk, SIGNAL(clicked()), this, SLOT(accepted()));
     connect (pbCancel, SIGNAL(clicked()), this, SLOT(cancelled()));
-    connect(mainTV, SIGNAL(datachanged()), this, SLOT(updatedialogsize()));
     connect(mainTV, SIGNAL(datachanged()), this, SLOT(resizemainTV()));
 }
+
 
 // процедура заполняет модель значениями из двух списков (sl1, sl2). При этом в списке links находятся вспомогательные поля, соответствующие по индексам
 // значениям в списке sl2. Значения из списка sl1 отображаются как обычные надписи.
@@ -180,6 +175,19 @@ void s_2cdialog::setupUI()
     return 0;
 }*/
 
+void s_2cdialog::AddTable(QString tble)
+{
+    this->tble.append(tble);
+    result = mainmodel->setup(tble);
+    if (result)
+    {
+        result+=ER_2CDLG+0x11;
+        return;
+    }
+    result = 0;
+    return;
+}
+
 void s_2cdialog::resizemainTV()
 {
     s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
@@ -206,57 +214,55 @@ void s_2cdialog::paintEvent(QPaintEvent *e)
 void s_2cdialog::accepted()
 {
     QString tmpString, oldtble, oldid, newid;
+    tmpString.clear();
     int tmph;
-    try
+    if (Mode == MODE_EDIT) // для режима редактирования - запись в базу
     {
-        if (Mode == MODE_EDIT) // для режима редактирования - запись в базу
+        QStringList headers = mainmodel->cvalues(0);
+        QStringList values = mainmodel->cvalues(1);
+        if (IsQuarantine)
         {
-            QStringList headers = mainmodel->cvalues(0);
-            QStringList values = mainmodel->cvalues(1);
-            if (IsQuarantine)
-            {
-                oldtble = tble;
-                tmph = headers.indexOf("ИД");
-                if (tmph != -1)
-                oldid = values.at(tmph);
-                int posq = tble.indexOf(" карантин");
-                if (posq != -1)
-                    tble.remove(posq, 9); // убираем " карантин", т.к. пишем в некарантинную таблицу
-                newid = tfl.insert(tble);
-                values.replace(tmph, newid); // создаём новую запись в некарантинной таблице
-            }
-            tfl.idtois(tble, headers, values);
+            oldtble = tble.at(0);
+            QString newtble = oldtble;
+            tmph = headers.indexOf("ИД");
+            if (tmph != -1)
+            oldid = values.at(tmph);
+            int posq = newtble.indexOf(" карантин");
+            if (posq != -1)
+                newtble.remove(posq, 9); // убираем " карантин", т.к. пишем в некарантинную таблицу
+            newid = tfl.insert(newtble);
+            values.replace(tmph, newid); // создаём новую запись в некарантинной таблице
+            tble.replace(0, newtble); // подготовка к следующему оператору
+        }
+        tfl.idtois(tble.at(0), headers, values);
+        if (tfl.result)
+        {
+            ShowErMsg(ER_2CDLG+0x21+tfl.result);
+            return;
+        }
+        QMessageBox::information(this, "Успешно!", "Записано успешно!");
+        if (IsQuarantine)
+        {
+            tfl.remove(oldtble, oldid); // при успешной записи в некарантин, из карантина старую надо удалить
             if (tfl.result)
             {
-                ShowErMsg(tfl.result);
+                ShowErMsg(ER_2CDLG+0x24+tfl.result);
                 return;
             }
-            QMessageBox::information(this, "Успешно!", "Записано успешно!");
-            if (IsQuarantine)
-            {
-                tfl.remove(oldtble, oldid); // при успешной записи в некарантин, из карантина старую надо удалить
-                if (tfl.result)
-                {
-                    ShowErMsg(tfl.result);
-                    return;
-                }
-            }
         }
-        else // список выбора
-        {
-            s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
-            if (tv == 0)
-                throw 0x21;
-            tmpString = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole).toString();
-        }
-        emit changeshasbeenMade(tmpString);
-        this->close();
     }
-    catch (int res)
+    else // список выбора
     {
-        Q_UNUSED(res);
-        return;
+        s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
+        if (tv == 0)
+        {
+            ShowErMsg(ER_2CDLG+0x27);
+            return;
+        }
+        tmpString = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole).toString();
     }
+    emit changeshasbeenMade(tmpString);
+    this->close();
 }
 
 void s_2cdialog::cancelled()
@@ -298,4 +304,14 @@ void s_2cdialog::fillModelAdata()
 void s_2cdialog::ShowErMsg(int ernum)
 {
     QMessageBox::warning(this, "warning!", "Ошибка 0x" + QString::number(CD_ERROR + ernum, 16), QMessageBox::Ok, QMessageBox::NoButton);
+}
+
+void s_2cdialog::SetTvCurrentText(QString str)
+{
+    s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
+    if (tv == 0)
+        return;
+    QList<QModelIndex> item = tv->model()->match(tv->model()->index(0, 0), Qt::DisplayRole, QVariant::fromValue(str), 1, Qt::MatchExactly);
+    if (!item.isEmpty())
+        tv->setCurrentIndex(item.at(0));
 }

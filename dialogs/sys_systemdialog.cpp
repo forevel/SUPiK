@@ -501,7 +501,8 @@ void sys_systemdialog::ChangeAdditionalFields()
 
 void sys_systemdialog::ChangeAdditionalFields(QString id)
 {
-    s_2cdialog *newdialog = new s_2cdialog("Структура_системы", id, "Структура системы");
+    s_2cdialog *newdialog = new s_2cdialog;
+    newdialog->setup("Структура_системы", MODE_CHOOSE, id, "Структура системы");
     if (!newdialog->result)
     {
         newdialog->setModal(true);

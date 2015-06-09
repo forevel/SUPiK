@@ -347,27 +347,19 @@ void supik::WhIncome()
         QMessageBox::warning(this, "warning!", "Недостаточно прав для продолжения!");
         return;
     }
-/*    int idx = CheckForWidget(reinterpret_cast<QWidget *>(whd), "whs");
-    if (idx != -1)
-    {
-        MainTW->setCurrentIndex(idx);
-        return;
-    }
 
-    whd = new wh_dialog (true, ""); // isIncoming = true
-    whd->setAttribute(Qt::WA_DeleteOnClose);
-
-    int ids = MainTW->addTab(whd, "Приём на склад");
-    MainTW->tabBar()->setTabData(ids, QVariant("whs"));
-    MainTW->tabBar()->setCurrentIndex(ids);
-    MainTW->repaint(); */
-
-    s_ncdialog *whd = new s_ncdialog;
-    whd->setupUI("whincome", ":/res/WhWallpaper.jpg", DT_GENERAL);
+    wh_dialog *whd = new wh_dialog (true, ""); // isIncoming = true
     int ids = MainTW->addTab(whd, "Приём на склад");
     MainTW->tabBar()->setTabData(ids, QVariant(TW_WH));
     MainTW->tabBar()->setCurrentIndex(ids);
     MainTW->repaint();
+
+/*    s_ncdialog *whd = new s_ncdialog;
+    whd->setupUI("whincome", ":/res/WhWallpaper.jpg", DT_GENERAL);
+    int ids = MainTW->addTab(whd, "Приём на склад");
+    MainTW->tabBar()->setTabData(ids, QVariant(TW_WH));
+    MainTW->tabBar()->setCurrentIndex(ids);
+    MainTW->repaint(); */
 }
 
 void supik::WhOutgoing()

@@ -349,24 +349,17 @@ void s_ncmodel::fillModel(QList<QStringList> lsl)
                 setData(index(rcount, j, QModelIndex()), QVariant(""), Qt::EditRole);
             else
             {
-//                QString links = data(index(i,j,QModelIndex()),Qt::UserRole).toString(); // берём заранее подготовленное значение links в текущей ячейке. Если не подготовлено,
-//                                                                                        // то по умолчанию берётся PLAIN
-//                vl = tfl.idtov(links, lsl.at(j).at(i));
+                // значения в lsl уже подготовлены в процедурах setup
                 vl = lsl.at(j).at(i);
-                if ((tfl.result) || (vl.isEmpty()))
+                if (vl.isEmpty())
                 {
-                    result = tfl.result+ER_NCMODEL+0x01;
+                    result = ER_NCMODEL+0x01;
                     continue;
                 }
                 if (vl.at(0) == '_') // идентификатор составного значения - номер таблицы и само значение
                 {
                     setData(index(rcount,j,QModelIndex()),QVariant(vl.at(1)),Qt::UserRole+2); // пишем доп. информацию о номере таблицы для ячейки
                     vl = vl.right(vl.size()-2); // убираем номер таблицы и идентификатор
-                }
-                if (tfl.result)
-                {
-                    result = tfl.result+ER_NCMODEL+0x04;
-                    continue; // если какая-то проблема с получением данных, пропускаем ячейку
                 }
                 setData(index(rcount, j, QModelIndex()), QVariant(vl), Qt::EditRole);
             }

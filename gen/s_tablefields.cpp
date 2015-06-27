@@ -443,7 +443,7 @@ int s_tablefields::remove(QString tble, QString id)
 
 QStringList s_tablefields::tablefields(QString tble, QString header)
 {
-    QStringList fl = QStringList() << "table" << "tablefields";
+    QStringList fl = QStringList() << "table" << "tablefields" << "links";
     QStringList cmpfl = QStringList() << "tablename" << "header";
     QStringList cmpvl = QStringList() << tble << header;
     QStringList sl = sqlc.getvaluesfromtablebyfields(sqlc.getdb("sup"), "tablefields", fl, cmpfl, cmpvl);

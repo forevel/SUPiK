@@ -142,15 +142,15 @@ void dir_maindialog::ShowSlaveTree(QString str)
     else
         IsQuarantine = false;
     QApplication::setOverrideCursor(Qt::WaitCursor);
-    fields << "dirlist" << "access";
+    fields << "dirlist" << "dirparent" << "access";
     values = sqlc.getvaluesfromtablebyfield(pc.sup, "dirlist", fields, "dirlist", str);
     if (!sqlc.result)
     {
-        if (values.at(1).toUInt(0,16) & pc.access)
+        if (values.at(2).toUInt(0,16) & pc.access)
         {
             s_ntmodel *SlaveTreeModel = new s_ntmodel;
-            if (values.at(0).contains("Номенклатура", Qt::CaseSensitive))
-                res = SlaveTreeModel->Setup("Категории_сокращ",values.at(0)+"_сокращ");
+            if (!values.at(1).isEmpty()) // есть родительские категории у справочника
+                res = SlaveTreeModel->Setup(values.at(1)+"_сокращ",values.at(0)+"_сокращ");
             else
                 res = SlaveTreeModel->Setup(values.at(0) + "_сокращ");
             if (res == ER_NTMODEL) // это не дерево

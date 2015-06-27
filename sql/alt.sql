@@ -188,6 +188,34 @@ INSERT INTO `connectors` VALUES (1,'XP-3','\\\\Fserver\\pcad\\Altium\\Libs\\Symb
 UNLOCK TABLES;
 
 --
+-- Table structure for table `description`
+--
+
+DROP TABLE IF EXISTS `description`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `description` (
+  `iddescription` int(11) NOT NULL,
+  `description` varchar(64) DEFAULT NULL,
+  `descriptionfull` varchar(64) DEFAULT NULL,
+  `deleted` varchar(1) NOT NULL DEFAULT '0',
+  `idpers` varchar(45) DEFAULT NULL,
+  `date` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`iddescription`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `description`
+--
+
+LOCK TABLES `description` WRITE;
+/*!40000 ALTER TABLE `description` DISABLE KEYS */;
+INSERT INTO `description` VALUES (1,'capasitors',NULL,'0',NULL,NULL),(2,'connections',NULL,'0',NULL,NULL),(3,'connectors',NULL,'0',NULL,NULL),(4,'diodes',NULL,'0',NULL,NULL),(5,'gdts',NULL,'0',NULL,NULL),(6,'ic_adcdac',NULL,'0',NULL,NULL),(7,'ic_anmixed',NULL,'0',NULL,NULL),(8,'ic_answitch',NULL,'0',NULL,NULL),(9,'ic_interface',NULL,'0',NULL,NULL),(10,'ic_isolator',NULL,'0',NULL,NULL),(11,'ic_microcontroller',NULL,'0',NULL,NULL),(12,'ic_memory',NULL,'0',NULL,NULL),(13,'ic_opamp',NULL,'0',NULL,NULL),(14,'ic_opto',NULL,'0',NULL,NULL),(15,'ic_powermgmt',NULL,'0',NULL,NULL),(16,'ic_protection',NULL,'0',NULL,NULL),(17,'ic_vreference',NULL,'0',NULL,NULL),(18,'inductors',NULL,'0',NULL,NULL),(19,'mechanical',NULL,'0',NULL,NULL),(20,'modules',NULL,'0',NULL,NULL),(21,'opto',NULL,'0',NULL,NULL),(22,'oscillators',NULL,'0',NULL,NULL),(23,'posistors',NULL,'0',NULL,NULL),(24,'power',NULL,'0',NULL,NULL),(25,'qaltium',NULL,'0',NULL,NULL),(26,'resistors',NULL,'0',NULL,NULL),(27,'switches',NULL,'0',NULL,NULL),(28,'symbols',NULL,'0',NULL,NULL),(29,'transform',NULL,'0',NULL,NULL),(30,'transistors',NULL,'0',NULL,NULL),(31,'tvs',NULL,'0',NULL,NULL),(32,'varistors',NULL,'0',NULL,NULL);
+/*!40000 ALTER TABLE `description` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `diodes`
 --
 
@@ -2002,4 +2030,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-06-06 20:16:02
+-- Dump completed on 2015-06-27 14:56:54

@@ -57,7 +57,7 @@ private:
     int position;
     QStringList catlist;
     QString slvtble;
-    QStringList slvtblefields;
+    QStringList slvtblefields, slvtblelinks;
 
     int BuildTree (QString id, bool twodb);
     s_ntitem *addTreeCat (QString catlistid);

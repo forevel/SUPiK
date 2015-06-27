@@ -344,18 +344,23 @@ int s_ntmodel::Setup(QString maintble, QString slvtble)
     QStringList headers = tfl.tableheaders(slvtble);
     if (tfl.result)
         return ER_NTMODEL + tfl.result;
+    if (headers.isEmpty())
+        return ER_NTMODEL+0x10; // нет заголовков в подчинённой таблице
     for (i = 0; i < headers.size(); i++)
     {
         setHeaderData(i, Qt::Horizontal, headers.at(i), Qt::EditRole);
-        tmpsl = tfl.tablefields(slvtble, headers.at(i));
+        tmpsl = tfl.tablefields(slvtble, headers.at(i)); // взяли table,tablefields,links из tablefields для подчинённой таблицы и данного заголовка
         if (tfl.result) // что-то не так с подчинённой таблицей нет такого заголовка
             return tfl.result+ER_NTMODEL;
-        if (tmpsl.size() > 1)
+        if (tmpsl.size() > 2)
+        {
+            slvtblelinks << tmpsl.at(2);
             slvtblefields << tmpsl.at(1);
+        }
         else
             return 0x07+ER_NTMODEL; // нет почему-то в возвращённом результате второго элемента
-        this->slvtble = tmpsl.at(0); // имя таблицы - в переменную (можно было бы один раз, да сто раз tfl вызывать не хочется, так что будет перезаписываться одно и то же
     }
+    this->slvtble = tmpsl.at(0); // имя таблицы - в переменную
     // 4
     int res = BuildTree("0", true);
     if (res)
@@ -425,7 +430,7 @@ int s_ntmodel::addTreeSlvItem(int position, QString id)
     {
         tmpStringlist.clear();
         for (i = 0; i < slvtblefields.size(); i++)
-            tmpStringlist << get_child_from_db2.value(i).toString();
+            tmpStringlist << tfl.idtov(slvtblelinks.at(i), get_child_from_db2.value(i).toString()); // установка элемента дерева в соответствии с links
         tmpStringlist.replace(0,QString("%1").arg(tmpStringlist.value(0).toInt(0), 7, 10, QChar('0')));
         additemtotree(position, tmpStringlist, 0);
     }
@@ -434,12 +439,8 @@ int s_ntmodel::addTreeSlvItem(int position, QString id)
 
 void s_ntmodel::additemtotree(int position, QStringList sl, int set)
 {
-    QColor color;
-    QFont font;
-
-    color = colors[set];
-    font = fonts[set];
-
+    QColor color=colors[set];
+    QFont font=fonts[set];
     if (position > indentations.last()) {
         // The last child of the current parent is now the new parent
         // unless the current parent has no children.
@@ -454,14 +455,12 @@ void s_ntmodel::additemtotree(int position, QStringList sl, int set)
             indentations.pop_back();
         }
     }
-
     s_ntitem *parent = parents.last();
-//    parent->insertChild(parent->childCount(), rootItem->columnCount());
     QModelIndex parentIndex = getIndex(parent);
     addRow(parent->childCount(), set, parentIndex);
     for (int column = 0; column < sl.size(); ++column)
     {
-        setData(index(parent->childCount()-1, column, parentIndex), sl[column], Qt::EditRole);
+        setData(index(parent->childCount()-1, column, parentIndex), sl.at(column), Qt::EditRole);
         setData(index(parent->childCount()-1, column, parentIndex), color, Qt::ForegroundRole);
         setData(index(parent->childCount()-1, column, parentIndex), font, Qt::FontRole);
     }
@@ -473,6 +472,5 @@ void s_ntmodel::ClearModel()
     while (rowCount() > 0)
         removeRows(0, 1);
     endResetModel();
-//    if (columnCount())
-//        removeColumns(0, columnCount());
+
 }

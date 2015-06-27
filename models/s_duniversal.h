@@ -34,6 +34,7 @@ private slots:
     void dateChoosed(QDate);
     void commitChanges(QString);
     void AcceptAccess(long);
+    void AcceptSpecial(QString,QString);
 
 private:
     mutable s_tqWidget *combWidget;

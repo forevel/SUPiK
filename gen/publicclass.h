@@ -44,6 +44,7 @@ QT_END_NAMESPACE
 #define ER_DIRMAIN  0x100000 // dir_maindialog
 #define ER_2CDLG    0x10000 // 2cdialog
 #define ER_2CTDLG   0x20000 // 2ctdialog
+#define ER_2TDLG    0x30000 // 2tdialog
 
 #define DB_ALT      0x00
 #define DB_ENT      0x01

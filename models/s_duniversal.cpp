@@ -7,6 +7,7 @@
 #include "s_ncmodel.h"
 #include "../dialogs/s_2cdialog.h"
 #include "../dialogs/s_2ctdialog.h"
+#include "../dialogs/s_2tdialog.h"
 #include "../dialogs/s_accessdialog.h"
 #include "../widgets/s_maskedle.h"
 #include "../gen/s_tablefields.h"
@@ -301,7 +302,10 @@ void s_duniversal::pbclicked()
     }
     case FW_SPECIAL:
     {
-
+        s_2tdialog *dlg = new s_2tdialog;
+        dlg->Setup(ff.link.at(0)+ff.link.at(1));
+        connect(dlg,SIGNAL(finished(QString,QString)),this,SLOT(AcceptSpecial(QString,QString)));
+        dlg->exec();
         break;
     }
     default:
@@ -318,6 +322,11 @@ void s_duniversal::accepted(QString str)
         return;
     QString tmpString = tfl.idtov(pc.getlinksfromFF(ff),str);
     le->setText(tmpString);
+}
+
+void s_duniversal::AcceptSpecial(QString item1, QString item2)
+{
+
 }
 
 void s_duniversal::commitChanges(QString str)

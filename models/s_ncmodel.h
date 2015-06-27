@@ -61,8 +61,10 @@ public:
         map.insert("d", OP_DIV);
         return map;
     }
-    int setup(QString links);
+    int setup(QString);
     int setup(QString tble, QString id);
+    int setupcolumn(QString tble, QString header);
+    int setupraw(QString db, QString tble, QStringList fl=QStringList()); // загрузка модели из таблицы db.tble базы данных по полям fl без всяких tablefields и links
 
     bool isEditable;
 

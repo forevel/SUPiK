@@ -620,6 +620,48 @@ int s_ncmodel::setup(QString tble, QString id)
     return 0;
 }
 
+int s_ncmodel::setupcolumn(QString tble, QString header)
+{
+    ClearModel();
+    QList<QStringList> lsl;
+    QStringList tmpsl = tfl.htovl(tble, header);
+    if (tfl.result)
+        return (tfl.result+ER_NCMODEL+0x31);
+    lsl.append(tmpsl);
+    addColumn("");
+    QList<int> il;
+    il << tmpsl.size();
+    prepareModel(il);
+    setcolumnlinks(0, "0.8");
+    fillModel(lsl);
+    return 0;
+}
+
+int s_ncmodel::setupraw(QString db, QString tble, QStringList fl)
+{
+    ClearModel();
+    QList<QStringList> lsl;
+    QList<int> il;
+    if (fl.isEmpty())
+    {
+        fl = sqlc.getcolumnsfromtable(sqlc.getdb(db), tble);
+        if (sqlc.result)
+            return (sqlc.result+0x37+ER_NCMODEL);
+    }
+    for (int i = 0; i < fl.size(); i++)
+    {
+        QStringList tmpsl = sqlc.getvaluesfromtablebycolumn(sqlc.getdb(db), tble, fl.at(i));
+        if (sqlc.result)
+            return (sqlc.result+0x34+ER_NCMODEL);
+        lsl.append(tmpsl);
+        addColumn(fl.at(i));
+        il << tmpsl.size();
+        setcolumnlinks(i, "0.8");
+    }
+    fillModel(lsl);
+    return 0;
+}
+
 void s_ncmodel::ClearModel()
 {
     hdr.clear();

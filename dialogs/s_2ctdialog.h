@@ -3,7 +3,6 @@
 
 #include <QDialog>
 #include <QSortFilterProxyModel>
-#include "../gen/s_sql.h"
 #include "../models/s_ntmodel.h"
 
 class s_2ctdialog : public QDialog

@@ -133,11 +133,16 @@ QStringList s_sql::getvaluesfromtablebycolumn(QSqlDatabase db, QString tble, QSt
     QStringList vl;
     QSqlQuery get_fields_from_db (db);
 
-    tmpString = "SELECT `" + column + "` FROM `" + tble + "` WHERE `deleted`=0;";
+    tmpString = "SELECT `" + column + "` FROM `" + tble + "` WHERE `deleted`=0 ORDER BY `id"+tble+"` ASC;";
     get_fields_from_db.exec(tmpString);
     vl.clear();
     while (get_fields_from_db.next())
         vl << get_fields_from_db.value(0).toString();
+    if (vl.isEmpty())
+    {
+        result=1;
+        return QStringList();
+    }
     result=0;
     return vl;
 }

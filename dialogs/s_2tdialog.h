@@ -12,13 +12,13 @@ class s_2tdialog : public QDialog
 public:
     explicit s_2tdialog(QWidget *parent = 0);
     void SetupUI(QString);
-    void Setup(QString links, QString hdr="");
+    void Setup(QStringList links, QString cursel="", QString hdr="");
 
     void SetMainTvCurrentText (QString);
     void SetSlaveTvCurrentText (QString);
 
 signals:
-    void finished (QString, QString);
+    void finished (QString);
 
 protected:
     void paintEvent(QPaintEvent *e);
@@ -28,9 +28,11 @@ private slots:
     void MainItemChoosed(QModelIndex);
     void SlaveItemChoosed(QModelIndex);
     void cancelled();
+    void resizemainTV();
+    void resizeslaveTV();
 
 private:
-    QString tblename, tablefield;
+    QString tblename, tblefield, tablefield;
 
     void ShowErMsg(int);
 };

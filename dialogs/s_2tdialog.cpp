@@ -6,6 +6,7 @@
 #include <QPainter>
 #include <QPaintEvent>
 #include <QMessageBox>
+#include <QDesktopWidget>
 #include "s_2tdialog.h"
 #include "../widgets/s_tqtableview.h"
 #include "../widgets/s_tqpushbutton.h"
@@ -36,6 +37,10 @@ void s_2tdialog::SetupUI(QString hdr)
     s_tqTableView *MainTV = new s_tqTableView;
     MainTV->setObjectName("MainTV");
     SlaveTV->setObjectName("SlaveTV");
+    connect (MainTV, SIGNAL(clicked(QModelIndex)), this, SLOT(MainItemChoosed(QModelIndex)));
+    connect(MainTV, SIGNAL(datachanged()), this, SLOT(resizemainTV()));
+    connect (SlaveTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(SlaveItemChoosed(QModelIndex)));
+    connect(SlaveTV,SIGNAL(datachanged()),this,SLOT(resizeslaveTV()));
     s_tqSplitter *spl = new s_tqSplitter;
     s_tqFrame *left = new s_tqFrame;
     QVBoxLayout *leftlyout = new QVBoxLayout;
@@ -64,7 +69,7 @@ void s_2tdialog::SetupUI(QString hdr)
     setLayout(lyout);
 }
 
-void s_2tdialog::Setup(QString links, QString hdr)
+void s_2tdialog::Setup(QStringList links, QString cursel, QString hdr)
 {
     SetupUI(hdr);
     s_ncmodel *mainmodel = new s_ncmodel;
@@ -75,16 +80,17 @@ void s_2tdialog::Setup(QString links, QString hdr)
         return;
     }
     QApplication::setOverrideCursor(Qt::WaitCursor);
-    connect (MainTV, SIGNAL(clicked(QModelIndex)), this, SLOT(MainItemChoosed(QModelIndex)));
     int res = mainmodel->setupcolumn(links.at(0), links.at(1));
     if (res)
     {
+        QApplication::restoreOverrideCursor();
         ShowErMsg(ER_2TDLG+res+0x04);
         return;
     }
     QStringList tmpsl = tfl.tablefields(links.at(0),links.at(1));
-    tblename = links.at(0);
-    tablefield = tmpsl.at(1); // сохраняем имя колонки для последующего использования
+    tblename = links.at(0); // имя таблицы на русском (Компоненты_описание_сокращ)
+    tblefield = links.at(1); // имя поля на русском (Описание)
+    tablefield = tmpsl.at(1); // сохраняем имя колонки для последующего использования (descriptionfull)
     MainTV->setModel(mainmodel);
     MainTV->horizontalHeader()->setVisible(false);
     MainTV->verticalHeader()->setVisible(false);
@@ -92,6 +98,20 @@ void s_2tdialog::Setup(QString links, QString hdr)
     MainTV->setItemDelegate(gridItemDelegate);
     MainTV->resizeColumnsToContents();
     MainTV->resizeRowsToContents();
+
+    if ((!cursel.isEmpty()) && (cursel.contains('.')))
+    {
+        QStringList curselsl = cursel.split('.');
+        QStringList tmpsl = tfl.htovlc(tblename, tblefield, "ИД", curselsl.at(0)); // берём из главной таблицы данные, для которого ИД=текущему элементу
+        if (tfl.result)
+        {
+            ShowErMsg(ER_2TDLG+tfl.result);
+            return;
+        }
+        SetMainTvCurrentText(tmpsl.at(0)); // устанавливаем текущий элемент главной таблицы в соответствии с переданной строкой
+        MainItemChoosed(QModelIndex()); // принудительно вызываем слот вывода подчинённой таблицы по текущему элементу главной
+        SetSlaveTvCurrentText(curselsl.at(1));
+    }
     QApplication::restoreOverrideCursor();
 }
 
@@ -134,20 +154,20 @@ void s_2tdialog::MainItemChoosed(QModelIndex idx)
         return;
     }
     QApplication::setOverrideCursor(Qt::WaitCursor);
-    connect (SlaveTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(SlaveItemChoosed(QModelIndex)));
     int res = slavemodel->setupraw(db, sltble);
     if (res)
     {
+        QApplication::restoreOverrideCursor();
         ShowErMsg(ER_2TDLG+res+0x1D);
         return;
     }
     SlaveTV->setModel(slavemodel);
-    MainTV->horizontalHeader()->setVisible(true);
-    MainTV->verticalHeader()->setVisible(false);
+    SlaveTV->horizontalHeader()->setVisible(true);
+    SlaveTV->verticalHeader()->setVisible(false);
     s_duniversal *gridItemDelegate = new s_duniversal;
-    MainTV->setItemDelegate(gridItemDelegate);
-    MainTV->resizeColumnsToContents();
-    MainTV->resizeRowsToContents();
+    SlaveTV->setItemDelegate(gridItemDelegate);
+    SlaveTV->resizeColumnsToContents();
+    SlaveTV->resizeRowsToContents();
     QApplication::restoreOverrideCursor();
 }
 
@@ -168,13 +188,56 @@ void s_2tdialog::SlaveItemChoosed(QModelIndex idx)
         return;
     }
     QString tmpString2 = SlaveTV->model()->index(SlaveTV->currentIndex().row(), 0, QModelIndex()).data(Qt::DisplayRole).toString();
-    emit finished(tmpString,tmpString2);
+
+    QStringList tmpsl = tfl.htovlc(tblename, "ИД", tblefield, tmpString); // берём из главной таблицы данные столбца "ИД", для которого описание=текущему элементу главной таблицы
+    if (tfl.result)
+    {
+        ShowErMsg(ER_2TDLG+tfl.result);
+        return;
+    }
+    emit finished(tmpsl.at(0)+"."+tmpString2);
     this->close();
 }
 
-/*void s_2tdialog::SetMainTvCurrentText(QString text)
+void s_2tdialog::resizemainTV()
 {
-    s_tqTreeView *tv = this->findChild<s_tqTreeView *>("mainTV");
+    s_tqTableView *tv = this->findChild<s_tqTableView *>("MainTV");
+    if (tv == 0)
+        return;
+    tv->resizeColumnsToContents();
+    int wdth = 0;
+    for (int i = 0; i < tv->model()->columnCount(); i++)
+        wdth += tv->columnWidth(i);
+    tv->setMinimumWidth(wdth+10);
+    int hgth = 0;
+    for (int i = 0; i < tv->model()->rowCount(); i++)
+        hgth += tv->rowHeight(i);
+    int tmpi = QApplication::desktop()->availableGeometry().height()-150; // -150 - чтобы высота диалога не выходила за пределы видимой части экрана
+    hgth = (hgth > tmpi) ? tmpi : hgth;
+    tv->setMinimumHeight(hgth+10);
+}
+
+void s_2tdialog::resizeslaveTV()
+{
+    s_tqTableView *tv = this->findChild<s_tqTableView *>("SlaveTV");
+    if (tv == 0)
+        return;
+    tv->resizeColumnsToContents();
+    int wdth = 0;
+    for (int i = 0; i < tv->model()->columnCount(); i++)
+        wdth += tv->columnWidth(i);
+    tv->setMinimumWidth(wdth+10);
+    int hgth = 0;
+    for (int i = 0; i < tv->model()->rowCount(); i++)
+        hgth += tv->rowHeight(i);
+    int tmpi = QApplication::desktop()->availableGeometry().height()-150; // -150 - чтобы высота диалога не выходила за пределы видимой части экрана
+    hgth = (hgth > tmpi) ? tmpi : hgth;
+    tv->setMinimumHeight(hgth+10);
+}
+
+void s_2tdialog::SetMainTvCurrentText(QString text)
+{
+    s_tqTableView *tv = this->findChild<s_tqTableView *>("MainTV");
     if (tv == 0)
         return;
     if (text.isEmpty())
@@ -186,7 +249,7 @@ void s_2tdialog::SlaveItemChoosed(QModelIndex idx)
 
 void s_2tdialog::SetSlaveTvCurrentText(QString text)
 {
-    s_tqTreeView *tv = this->findChild<s_tqTreeView *>("mainTV");
+    s_tqTableView *tv = this->findChild<s_tqTableView *>("SlaveTV");
     if (tv == 0)
         return;
     if (text.isEmpty())
@@ -194,7 +257,7 @@ void s_2tdialog::SetSlaveTvCurrentText(QString text)
     QList<QModelIndex> item = tv->model()->match(tv->model()->index(0, 0), Qt::DisplayRole, QVariant::fromValue(text), 1, Qt::MatchRecursive);
     if (!item.isEmpty())
         tv->setCurrentIndex(item.at(0));
-} */
+}
 
 void s_2tdialog::accepted()
 {

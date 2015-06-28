@@ -295,6 +295,7 @@ QString s_tablefields::vtoid(QString links, QString value)
     case FW_MASKED:
     case FW_EQUAT:
     case FW_ID:
+    case FW_SPECIAL:
     {
         outs = value;
         break;

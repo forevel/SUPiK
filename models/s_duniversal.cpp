@@ -303,8 +303,9 @@ void s_duniversal::pbclicked()
     case FW_SPECIAL:
     {
         s_2tdialog *dlg = new s_2tdialog;
-        dlg->Setup(ff.link.at(0)+ff.link.at(1));
-        connect(dlg,SIGNAL(finished(QString,QString)),this,SLOT(AcceptSpecial(QString,QString)));
+        QStringList tmpsl = QStringList() << ff.link.at(0) << ff.link.at(1);
+        dlg->Setup(tmpsl, le->text());
+        connect(dlg,SIGNAL(finished(QString)),this,SLOT(accepted(QString)));
         dlg->exec();
         break;
     }
@@ -322,11 +323,6 @@ void s_duniversal::accepted(QString str)
         return;
     QString tmpString = tfl.idtov(pc.getlinksfromFF(ff),str);
     le->setText(tmpString);
-}
-
-void s_duniversal::AcceptSpecial(QString item1, QString item2)
-{
-
 }
 
 void s_duniversal::commitChanges(QString str)

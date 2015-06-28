@@ -88,7 +88,7 @@ void dir_maindialog::setDirTree()
     s_tqTableView *MainTV = this->findChild<s_tqTableView *>("MainTV");
     if (MainTV == 0)
     {
-        ShowErMsg(ER_DIRMAIN+0x01);
+        emit error(ER_DIRMAIN+0x01);
         return;
     }
     QApplication::setOverrideCursor(Qt::WaitCursor);
@@ -99,7 +99,7 @@ void dir_maindialog::setDirTree()
     int res = MainTableModel->setup("Справочники_сокращ");
     if (res)
     {
-        ShowErMsg(res+ER_DIRMAIN+0x04);
+        emit error(res+ER_DIRMAIN+0x04);
         QApplication::restoreOverrideCursor();
         return;
     }
@@ -131,7 +131,7 @@ void dir_maindialog::ShowSlaveTree(QString str)
     s_tqTreeView *SlaveTV = this->findChild<s_tqTreeView *>("SlaveTV");
     if (SlaveTV == 0)
     {
-        ShowErMsg(ER_DIRMAIN+0x11);
+        emit error(ER_DIRMAIN+0x11);
         return;
     }
     QStringList fields, values;
@@ -159,7 +159,7 @@ void dir_maindialog::ShowSlaveTree(QString str)
                 int res = SlaveTableModel->setup(values.at(0) + "_сокращ");
                 if (res)
                 {
-                    ShowErMsg(res+0x14+ER_DIRMAIN);
+                    emit error(res+0x14+ER_DIRMAIN);
                     QApplication::restoreOverrideCursor();
                     return;
                 }
@@ -202,7 +202,7 @@ QString dir_maindialog::getMainIndex(int column)
     s_tqTableView *MainTV = this->findChild<s_tqTableView *>("MainTV");
     if (MainTV == 0)
     {
-        ShowErMsg(ER_DIRMAIN+0x31);
+        emit error(ER_DIRMAIN+0x31);
         return QString();
     }
     QString tmpString = MainTV->model()->index(MainTV->currentIndex().row(), column, QModelIndex()).data(Qt::DisplayRole).toString();
@@ -216,7 +216,7 @@ QString dir_maindialog::getSlaveIndex(int column)
     s_tqTreeView *SlaveTV = this->findChild<s_tqTreeView *>("SlaveTV");
     if (SlaveTV == 0)
     {
-        ShowErMsg(ER_DIRMAIN+0x41);
+        emit error(ER_DIRMAIN+0x41);
         return QString();
     }
     QString tmpString = SlaveTV->model()->index(SlaveTV->currentIndex().row(), column, SlaveTV->model()->parent(SlaveTV->currentIndex())).data(Qt::DisplayRole).toString();
@@ -231,7 +231,7 @@ void dir_maindialog::EditItem(QModelIndex index)
     s_tqTreeView *SlaveTV = this->findChild<s_tqTreeView *>("SlaveTV");
     if (SlaveTV == 0)
     {
-        ShowErMsg(ER_DIRMAIN+0x41);
+        emit error(ER_DIRMAIN+0x41);
         return;
     }
     if (SlaveTVIsTree)
@@ -244,7 +244,7 @@ void dir_maindialog::EditItem(QModelIndex index)
     if (!tmpString.isEmpty())
         EditItem(tmpString);
     else
-        ShowErMsg(ER_DIRMAIN+0x44);
+        emit error(ER_DIRMAIN+0x44);
 }
 
 void dir_maindialog::EditItem(QString str)
@@ -253,7 +253,7 @@ void dir_maindialog::EditItem(QString str)
     QString tmps = getMainIndex(1);
     if (tmps.isEmpty())
     {
-        ShowErMsg(ER_DIRMAIN+0x51);
+        emit error(ER_DIRMAIN+0x51);
         return;
     }
     s_2cdialog *newdialog = new s_2cdialog;
@@ -264,14 +264,14 @@ void dir_maindialog::EditItem(QString str)
     if (newdialog->result)
     {
 //        newdialog->close();
-        ShowErMsg(ER_DIRMAIN+newdialog->result+0x54);
+        emit error(ER_DIRMAIN+newdialog->result+0x54);
     }
     else
         newdialog->exec();
 //    if (!(res = newdialog->setup(tmps+"_полная", str)))
 //        newdialog->exec();
 //    else
-//        ShowErMsg(ER_DIRMAIN+0x54);
+//        emit error(ER_DIRMAIN+0x54);
 }
 
 void dir_maindialog::AddNew()
@@ -365,9 +365,4 @@ void dir_maindialog::SystemSlaveContextMenu(QPoint)
     if (SlaveTVAccess & pc.access & 0x4924) // права на удаление
         ContextMenu->addAction(DeleteAction);
     ContextMenu->exec(QCursor::pos()); // если есть права на удаление, на изменение тоже должны быть
-}
-
-void dir_maindialog::ShowErMsg(int ermsg)
-{
-    QMessageBox::warning(this, "warning!", "Ошибка 0x" + QString::number(ermsg,16));
 }

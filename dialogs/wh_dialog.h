@@ -37,6 +37,7 @@ public:
     explicit wh_dialog(int Reason, QString id, QWidget *parent = 0);
 
 signals:
+    void error(int);
 
 public slots:
 
@@ -62,7 +63,6 @@ private:
     int fillFlow(QString id);
     int fillNullFlow();
     void updateDialog();
-    void ShowMessage(int ernum);
     QStringList getTableNFields (QString tablename, QString headers);
 
 private slots:

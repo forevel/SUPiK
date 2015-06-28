@@ -31,7 +31,7 @@ wh_dialog::wh_dialog(int Reason, QString id, QWidget *parent) :
     setAttribute(Qt::WA_DeleteOnClose);
     if (Reason > R_SIZE)
     {
-        ShowMessage(0x01);
+        emit error(ER_WH+0x01);
         this->close();
     }
     mainmodel = new s_ncmodel;
@@ -49,7 +49,7 @@ wh_dialog::wh_dialog(int Reason, QString id, QWidget *parent) :
     FlowFields.clear();
     if (res = SetupUI(id))
     {
-        ShowMessage(res);
+        emit error(ER_WH+res);
         this->close();
     }
 }
@@ -502,7 +502,7 @@ void wh_dialog::acceptandclose()
     }
     catch (int res)
     {
-        ShowMessage(res);
+        emit error(res);
     }
 }
 
@@ -682,22 +682,6 @@ void wh_dialog::CBChanged(QWidget *wdgt)
                                                               cb->currentText());
         mainmodel->setData(mainmodel->index(mainTV->currentIndex().row(), tmpInt, QModelIndex()), QVariant(tmpString), Qt::EditRole);
     }
-}
-
-void wh_dialog::ShowMessage(int ernum)
-{
-    QMessageBox::warning(this, "warning!", "Ошибка WHD 0x" + QString::number(ernum, 16), QMessageBox::Ok, QMessageBox::NoButton);
-    // 1 - ошибка считывания полей flowfields
-    // 2 - ошибка получения столбцов из таблицы documents
-    // 11 - не найден документ с заданным ИД
-    // 12 - не найден поставщик в справочнике контрагентов при заполнении ордера
-    // 13 - не найден получатель в справочнике контрагентов при заполнении ордера
-    // 14 - не найдено основание в справочнике оснований
-    // 15 - не найден создавший ордер в справочнике персонала
-    // 16 - проблема с получением данных из таблицы flow
-    // 17 - ошибка получения данных по таблице flowfields по типу 4 (FW_ALLINK)
-    // 18 - ошибка получения данных по таблице flowfields по типу 3 (FW_DLINK)
-    // 19 - не найдено расположение элемента на складе
 }
 
 // процедура возвращает tmpfl.at(0)=<db>.<tble> и tmpfl.at(1)=<column>

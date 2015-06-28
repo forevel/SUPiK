@@ -256,8 +256,7 @@ void supik::SysStructEdit()
     }
 
     sys_systemdialog *qsyda = new sys_systemdialog;
-    qsyda->setAttribute(Qt::WA_DeleteOnClose);
-
+    connect(qsyda,SIGNAL(error(int)),this,SLOT(ShowErMsg(int)));
     int ids = MainTW->addTab(qsyda, "Редактор системных параметров");
     MainTW->tabBar()->setTabData(ids, QVariant(TW_SYSST));
     MainTW->tabBar()->setCurrentIndex(ids);
@@ -305,7 +304,7 @@ void supik::Directories()
     }
 
     dir_maindialog *dird = new dir_maindialog;
-    dird->setAttribute(Qt::WA_DeleteOnClose);
+    connect(dird,SIGNAL(error(int)),this,SLOT(ShowErMsg(int)));
 
     int ids = MainTW->addTab(dird, "Справочники");
     MainTW->tabBar()->setTabData(ids, QVariant(TW_DIR));
@@ -349,6 +348,7 @@ void supik::WhIncome()
     }
 
     wh_dialog *whd = new wh_dialog (true, ""); // isIncoming = true
+    connect(whd,SIGNAL(error(int)),this,SLOT(ShowErMsg(int)));
     int ids = MainTW->addTab(whd, "Приём на склад");
     MainTW->tabBar()->setTabData(ids, QVariant(TW_WH));
     MainTW->tabBar()->setCurrentIndex(ids);
@@ -374,7 +374,7 @@ void supik::WhOutgoing()
     }
 
     whd = new wh_dialog (false, ""); // isIncoming = false
-    whd->setAttribute(Qt::WA_DeleteOnClose);
+    connect(whd,SIGNAL(error(int)),this,SLOT(ShowErMsg(int)));
 
     int ids = MainTW->addTab(whd, "Выдача со склада");
     MainTW->tabBar()->setTabData(ids, QVariant(TW_WH));

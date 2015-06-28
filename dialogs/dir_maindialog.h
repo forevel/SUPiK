@@ -16,6 +16,7 @@ public:
     explicit dir_maindialog(QWidget *parent = 0);
 
 signals:
+    void error(int);
 
 public slots:
 
@@ -47,7 +48,6 @@ private:
     void EditItem(QString str);
     QString getMainIndex(int column);
     QString getSlaveIndex(int column);
-    void ShowErMsg(int ermsg);
 
 protected:
     void showEvent(QShowEvent *e);

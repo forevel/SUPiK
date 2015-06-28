@@ -118,6 +118,12 @@ void s_tqTreeView::setTVexpanded(QModelIndex index)
         resizeColumnToContents(i);
 }
 
+void s_tqTreeView::ResizeColumnsToContents()
+{
+    for (int i = 0; i < header()->count(); i++)
+        resizeColumnToContents(i);
+}
+
 /*int s_tqTreeView::getVisibleChildsCount(s_ntitem *item)
 {
 // нужно вычислить, сколько всего открытых потомков у узла, до уровня листьев дерева

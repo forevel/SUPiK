@@ -18,6 +18,8 @@ public:
 
 //    void setShownRows(int);
 
+    void ResizeColumnsToContents();
+
 signals:
     void datachanged();
 

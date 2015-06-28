@@ -20,9 +20,10 @@
 #include <QCursor>
 #include <QMessageBox>
 #include <QInputDialog>
+#include <QModelIndex>
 
 sys_systemdialog::sys_systemdialog(QWidget *parent) :
-    QWidget(parent)
+    QDialog(parent)
 {
     SetupUI();
     SetSysTree();
@@ -94,14 +95,14 @@ void sys_systemdialog::SetSysTree()
     }
     MainTV->setContextMenuPolicy(Qt::CustomContextMenu);
     connect (MainTV, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(SystemContextMenu(QPoint)));
-    connect (MainTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(SetSlaveTV(QModelIndex)));
+    connect(MainTV,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(SetSlaveTV(QModelIndex)));
 
     s_ntmodel *mainmodel = new s_ntmodel;
     mainmodel->Setup("Системное меню_сокращ");
     MainTV->setModel(mainmodel);
     connect(MainTV, SIGNAL(expanded(QModelIndex)), mainmodel, SLOT(addExpandedIndex(QModelIndex)));
     connect(MainTV, SIGNAL(collapsed(QModelIndex)), mainmodel, SLOT(removeExpandedIndex(QModelIndex)));
-    connect(MainTV, SIGNAL(clicked(QModelIndex)), this, SLOT(SetSlaveTV(QModelIndex)));
+    connect(MainTV,SIGNAL(clicked(QModelIndex)),this,SLOT(SetSlaveTV(QModelIndex)));
     MainTV->header()->setVisible(false);
     MainTV->setIndentation(2);
     MainTV->setAnimated(false);
@@ -175,9 +176,9 @@ void sys_systemdialog::ShowTableContentDialog()
 
 }
 
-void sys_systemdialog::SetSlaveTV(QModelIndex idx)
+void sys_systemdialog::SetSlaveTV(QModelIndex index)
 {
-    Q_UNUSED(idx);
+    Q_UNUSED(index);
     SetSlaveTV();
 }
 
@@ -459,7 +460,7 @@ void sys_systemdialog::DeleteChildFromTree()
     SetSlaveTV(); */
 }
 
-void sys_systemdialog::ChangeAdditionalFields(QModelIndex index)
+void sys_systemdialog::ChangeAdditionalFields(QModelIndex idx)
 {
     s_tqTreeView *SlaveTV = this->findChild<s_tqTreeView *>("SlaveTV");
     if (SlaveTV == 0)
@@ -470,7 +471,7 @@ void sys_systemdialog::ChangeAdditionalFields(QModelIndex index)
     if (SlaveTV->model()->rowCount(SlaveTV->currentIndex()) != 0); // для родителей запрещено иметь дополнительные поля
     else
     {
-        SlaveTV->setCurrentIndex(index);
+        SlaveTV->setCurrentIndex(idx);
         ChangeAdditionalFields();
     }
 }

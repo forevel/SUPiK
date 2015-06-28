@@ -1,11 +1,12 @@
 #ifndef SYS_SYSTEMDIALOG_H
 #define SYS_SYSTEMDIALOG_H
 
-#include <QWidget>
+#include <QDialog>
 #include <QPainter>
 #include <QPaintEvent>
+#include <QModelIndex>
 
-class sys_systemdialog : public QWidget
+class sys_systemdialog : public QDialog
 {
     Q_OBJECT
 public:
@@ -37,14 +38,14 @@ protected:
 private slots:
     void SystemContextMenu (QPoint);
     void SystemSlaveContextMenu (QPoint);
-    void SetSlaveTV(QModelIndex);
     void ShowTableContentDialog ();
+    void SetSlaveTV(QModelIndex index);
     void SetSlaveTV();
     void AddChildToTree ();
     void AddRootToTree ();
     void DeleteChildFromTree ();
     void ChangeAdditionalFields ();
-    void ChangeAdditionalFields (QModelIndex index);
+    void ChangeAdditionalFields (QModelIndex idx);
     void ChangeChildName ();
 };
 

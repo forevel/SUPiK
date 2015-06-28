@@ -56,6 +56,7 @@ private slots:
     void updateprobsnumberintabtext();
     void periodic1s();
     void periodicxm();
+    void ShowErMsg(int);
 };
 
 #endif // SUPIK_H

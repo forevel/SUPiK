@@ -510,3 +510,8 @@ void supik::updateprobsnumberintabtext()
     if (idx != -1)
         MainTW->tabBar()->setTabText(idx, "Сообщения: "+QString::number(pc.allprobs.size()));
 }
+
+void supik::ShowErMsg(int ernum)
+{
+    QMessageBox::warning(this, "warning!", "Ошибка 0x" + QString::number(ernum), QMessageBox::Ok, QMessageBox::NoButton);
+}

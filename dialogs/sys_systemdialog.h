@@ -18,35 +18,25 @@ signals:
 public slots:
 
 private:
-    QStringList AdditionalFields;
-    QString tble, als;
-    bool FirstShow, SlaveTVIsTree;
+    QHash <QString, void (sys_systemdialog::*)()> pf;
 
     void SetupUI();
     void SetSysTree();
     void SetMainTree();
-    void ShowSlaveTree(QString);
     QString getMainIndex(int column);
-    QString getSlaveIndex(int column);
     void AddToTree (QString);
     void ChangeAdditionalFields (QString id);
 
+    // функции пунктов меню системы
+    void MainMenuEditor();
+    void SystemMenuEditor();
+
 protected:
     void paintEvent(QPaintEvent *event);
-    void showEvent(QShowEvent *event);
 
 private slots:
-    void SystemContextMenu (QPoint);
-    void SystemSlaveContextMenu (QPoint);
-    void ShowTableContentDialog ();
-    void SetSlaveTV(QModelIndex index);
-    void SetSlaveTV();
-    void AddChildToTree ();
-    void AddRootToTree ();
-    void DeleteChildFromTree ();
-    void ChangeAdditionalFields ();
-    void ChangeAdditionalFields (QModelIndex idx);
-    void ChangeChildName ();
+    void SetSlave(QModelIndex);
+    void SetSlave();
 };
 
 #endif // SYS_SYSTEMDIALOG_H

@@ -24,6 +24,7 @@
 dir_maindialog::dir_maindialog(QWidget *parent) :
     QDialog(parent)
 {
+    setAttribute(Qt::WA_DeleteOnClose);
     firstShow = true;
     MainTVIsTree = false;
     SlaveTVIsTree = false;

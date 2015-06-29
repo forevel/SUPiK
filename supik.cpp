@@ -85,7 +85,7 @@ void supik::SetSupikMenuBar()
     QSqlQuery get_mainmenu (pc.sup);
     QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
     tmpString="SELECT `idmainmenu`,`alias`,`access`,`tooltip`,`method` FROM `mainmenu` WHERE " \
-                      "`idalias`=0 AND `idmainmenu`>2 ORDER BY `idmainmenu` ASC;";
+                      "`idalias`=0 AND `deleted`=0 ORDER BY `idmainmenu` ASC;";
     get_mainmenu.exec(tmpString);
     while (get_mainmenu.next())
     {
@@ -138,7 +138,7 @@ QMenu *supik::AddChildToMenu(int id)
     QSqlQuery get_child_mainmenu (pc.sup);
 
     get_child_mainmenu.exec("SELECT `idmainmenu`,`alias`,`access`,`tooltip`,`method` FROM `mainmenu` WHERE "
-                            "`idalias`=" + QString::number(id, 10) + " AND `idmainmenu`>2 ORDER BY `idmainmenu` ASC;");
+                            "`idalias`=" + QString::number(id, 10) + " AND `deleted`=0 ORDER BY `idmainmenu` ASC;");
 
     while (get_child_mainmenu.next())
     {
@@ -513,5 +513,5 @@ void supik::updateprobsnumberintabtext()
 
 void supik::ShowErMsg(int ernum)
 {
-    QMessageBox::warning(this, "warning!", "Ошибка 0x" + QString::number(ernum), QMessageBox::Ok, QMessageBox::NoButton);
+    QMessageBox::warning(this, "warning!", "Ошибка 0x" + QString::number(ernum,16), QMessageBox::Ok, QMessageBox::NoButton);
 }

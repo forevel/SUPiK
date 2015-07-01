@@ -16,51 +16,36 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `modules`
+-- Table structure for table `devices`
 --
 
-DROP TABLE IF EXISTS `modules`;
+DROP TABLE IF EXISTS `devices`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `modules` (
-  `idmodules` int(11) NOT NULL,
-  `PartNumber` varchar(45) DEFAULT NULL,
-  `Manufacturer` varchar(45) DEFAULT NULL,
-  PRIMARY KEY (`idmodules`)
+CREATE TABLE `devices` (
+  `iddev` int(11) NOT NULL AUTO_INCREMENT,
+  `idsp` varchar(45) DEFAULT NULL,
+  `idmanuf` varchar(45) DEFAULT NULL,
+  `pn` varchar(45) NOT NULL,
+  `isobsolete` varchar(45) DEFAULT NULL,
+  `description` varchar(64) DEFAULT NULL,
+  `notes` varchar(45) DEFAULT NULL,
+  `url` varchar(255) DEFAULT NULL,
+  `idpers` varchar(45) DEFAULT NULL,
+  `deleted` tinyint(1) DEFAULT '0',
+  `date` datetime DEFAULT NULL,
+  PRIMARY KEY (`iddev`),
+  UNIQUE KEY `iddev_UNIQUE` (`iddev`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `modules`
+-- Dumping data for table `devices`
 --
 
-LOCK TABLES `modules` WRITE;
-/*!40000 ALTER TABLE `modules` DISABLE KEYS */;
-/*!40000 ALTER TABLE `modules` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `pcbs`
---
-
-DROP TABLE IF EXISTS `pcbs`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `pcbs` (
-  `idpcbs` int(11) NOT NULL,
-  `PartNumber` varchar(45) DEFAULT NULL,
-  `Manufacturer` varchar(45) DEFAULT NULL,
-  PRIMARY KEY (`idpcbs`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `pcbs`
---
-
-LOCK TABLES `pcbs` WRITE;
-/*!40000 ALTER TABLE `pcbs` DISABLE KEYS */;
-/*!40000 ALTER TABLE `pcbs` ENABLE KEYS */;
+LOCK TABLES `devices` WRITE;
+/*!40000 ALTER TABLE `devices` DISABLE KEYS */;
+/*!40000 ALTER TABLE `devices` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -116,33 +101,6 @@ LOCK TABLES `spec` WRITE;
 /*!40000 ALTER TABLE `spec` DISABLE KEYS */;
 /*!40000 ALTER TABLE `spec` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `specification`
---
-
-DROP TABLE IF EXISTS `specification`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `specification` (
-  `idspecification` int(11) NOT NULL,
-  `specification` varchar(45) DEFAULT NULL,
-  `idpers` varchar(45) DEFAULT NULL,
-  `deleted` tinyint(1) DEFAULT '0',
-  `date` varchar(45) DEFAULT NULL,
-  PRIMARY KEY (`idspecification`),
-  UNIQUE KEY `idsp_UNIQUE` (`idspecification`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `specification`
---
-
-LOCK TABLES `specification` WRITE;
-/*!40000 ALTER TABLE `specification` DISABLE KEYS */;
-/*!40000 ALTER TABLE `specification` ENABLE KEYS */;
-UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -153,4 +111,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-06-28 13:20:51
+-- Dump completed on 2015-07-01 16:23:26

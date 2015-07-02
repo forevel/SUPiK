@@ -10,6 +10,7 @@
 #include <QSizePolicy>
 #include <QFileDialog>
 #include <QHeaderView>
+#include <QComboBox>
 #include "../widgets/s_tqcalendarwidget.h"
 
 #include "wh_dialog.h"
@@ -21,7 +22,6 @@
 #include "../gen/s_sql.h"
 #include "../models/s_duniversal.h"
 #include "s_tablefilterdialog.h"
-#include "s_sqlfieldsdialog.h"
 #include "s_2cdialog.h"
 
 wh_dialog::wh_dialog(int Reason, QString id, QWidget *parent) :

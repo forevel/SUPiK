@@ -31,6 +31,7 @@ private:
     QString tble, als;
 
     QString GetIndex(int);
+    void UpdateTree();
 };
 
 #endif // SYSMENUEDITOR_H

@@ -14,6 +14,7 @@ public:
 
 signals:
     void error(int);
+    void closeslvdlg();
 
 public slots:
 

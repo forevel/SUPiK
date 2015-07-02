@@ -17,16 +17,24 @@ SysmenuEditor::SysmenuEditor(QWidget *parent) :
     QDialog(parent)
 {
     setAttribute(Qt::WA_DeleteOnClose);
+    setAttribute(Qt::WA_TranslucentBackground);
 }
 
 void SysmenuEditor::SetupUI(QString tble) // tble - имя таблицы, из которой брать дерево для редактирования
 {
+    this->tble = tble;
     QVBoxLayout *lyout = new QVBoxLayout;
     s_tqTreeView *tv = new s_tqTreeView;
     tv->setObjectName("tv");
     QApplication::setOverrideCursor(Qt::WaitCursor);
     s_ntmodel *treemodel = new s_ntmodel;
     int res = treemodel->Setup(tble + "_сокращ");
+    if (res)
+    {
+        QApplication::restoreOverrideCursor();
+        emit error(res+ER_SYSMENU);
+        return;
+    }
     tv->setModel(treemodel);
     connect(tv, SIGNAL(expanded(QModelIndex)), treemodel, SLOT(addExpandedIndex(QModelIndex)));
     connect(tv, SIGNAL(collapsed(QModelIndex)), treemodel, SLOT(removeExpandedIndex(QModelIndex)));
@@ -47,6 +55,7 @@ void SysmenuEditor::SetupUI(QString tble) // tble - имя таблицы, из 
 
 void SysmenuEditor::Context(QPoint pt)
 {
+    Q_UNUSED(pt);
     QAction *AddChild = new QAction("Добавить субэлемент", this);
     AddChild->setSeparator(0);
     connect (AddChild, SIGNAL(triggered()), this, SLOT(AddChild()));
@@ -99,31 +108,18 @@ void SysmenuEditor::ChangeFields()
 {
     QString tmps = GetIndex(0); // взять ИД элемента
     s_2cdialog *newdialog = new s_2cdialog;
-    newdialog->setup("Структура_системы", MODE_CHOOSE, tmps, "Структура системы");
+    newdialog->setup(tble+"_полн", MODE_EDIT, tmps, tble);
     if (!newdialog->result)
     {
         newdialog->setModal(true);
         newdialog->exec();
-//        SetSlaveTV();
+        UpdateTree();
     }
     else
     {
         emit error(ER_SYSMENU+0x61);
         return;
     }
-/*    sqldialog = new s_sqlfieldsdialog;
-    if (!(res = sqldialog->SetupUI(db, tble, id, "Структура системы"))) // берём ИД текущего элемента
-    {
-        sqldialog->exec();
-        SetSlaveTV();
-    }
-    else
-    {
-        delete sqldialog;
-        QMessageBox::information(this,"Ошибка при создании диалога!",\
-                             QString::number(res),\
-                             QMessageBox::Ok, QMessageBox::NoButton);
-    } */
 }
 
 void SysmenuEditor::Delete()
@@ -248,4 +244,21 @@ QString SysmenuEditor::GetIndex(int column)
     QString tmpString = index.data(Qt::DisplayRole).toString();
         tmpString = QString::number(tmpString.toInt(0));
     return tmpString;
+}
+
+void SysmenuEditor::UpdateTree()
+{
+    s_tqTreeView *tv = this->findChild<s_tqTreeView *>("tv");
+    if (tv == 0)
+    {
+        emit error(ER_SYSMENU+0xB1);
+        return;
+    }
+    s_ntmodel *mdl = dynamic_cast<s_ntmodel *>(tv->model());
+    int res = mdl->Setup(tble + "_сокращ");
+    if (res)
+    {
+        emit error(res+ER_SYSMENU);
+        return;
+    }
 }

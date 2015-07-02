@@ -49,6 +49,54 @@ LOCK TABLES `devices` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `modules`
+--
+
+DROP TABLE IF EXISTS `modules`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `modules` (
+  `idmodules` int(11) NOT NULL,
+  `PartNumber` varchar(45) DEFAULT NULL,
+  `Manufacturer` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`idmodules`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `modules`
+--
+
+LOCK TABLES `modules` WRITE;
+/*!40000 ALTER TABLE `modules` DISABLE KEYS */;
+/*!40000 ALTER TABLE `modules` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `pcbs`
+--
+
+DROP TABLE IF EXISTS `pcbs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `pcbs` (
+  `idpcbs` int(11) NOT NULL,
+  `PartNumber` varchar(45) DEFAULT NULL,
+  `Manufacturer` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`idpcbs`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `pcbs`
+--
+
+LOCK TABLES `pcbs` WRITE;
+/*!40000 ALTER TABLE `pcbs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `pcbs` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `sp`
 --
 
@@ -101,6 +149,33 @@ LOCK TABLES `spec` WRITE;
 /*!40000 ALTER TABLE `spec` DISABLE KEYS */;
 /*!40000 ALTER TABLE `spec` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `specification`
+--
+
+DROP TABLE IF EXISTS `specification`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `specification` (
+  `idspecification` int(11) NOT NULL,
+  `specification` varchar(45) DEFAULT NULL,
+  `idpers` varchar(45) DEFAULT NULL,
+  `deleted` tinyint(1) DEFAULT '0',
+  `date` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`idspecification`),
+  UNIQUE KEY `idsp_UNIQUE` (`idspecification`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `specification`
+--
+
+LOCK TABLES `specification` WRITE;
+/*!40000 ALTER TABLE `specification` DISABLE KEYS */;
+/*!40000 ALTER TABLE `specification` ENABLE KEYS */;
+UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -111,4 +186,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-07-01 16:23:26
+-- Dump completed on 2015-07-02 14:44:18

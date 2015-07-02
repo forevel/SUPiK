@@ -11,7 +11,7 @@ class s_2ctdialog : public QDialog
 public:
     explicit s_2ctdialog(QString hdr="", QWidget *parent = 0);
     void setupUI();
-    int setup(QString tble);
+    int setup(QString tble, bool RootNeeded=false);
 //    QSize minimumSizeHint();
     void sortModel();
     void setTvCurrentText(QString text);
@@ -27,10 +27,12 @@ private:
     bool DialogIsNeedToBeResized;
     QString hdr;
     int constheight;
+    bool RootNeeded;
 
 private slots:
     void accepted();
     void accepted(QModelIndex idx);
+    void Root();
     void cancelled();
     void resizemainTV(QModelIndex, QModelIndex);
     void updatedialogsize();

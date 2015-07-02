@@ -215,6 +215,39 @@ INSERT INTO `currency` VALUES (1,'Наименование','Код валюты
 UNLOCK TABLES;
 
 --
+-- Table structure for table `devices`
+--
+
+DROP TABLE IF EXISTS `devices`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `devices` (
+  `iddev` int(11) NOT NULL AUTO_INCREMENT,
+  `idsp` varchar(45) DEFAULT NULL,
+  `idmanuf` varchar(45) DEFAULT NULL,
+  `pn` varchar(45) NOT NULL,
+  `isobsolete` varchar(45) DEFAULT NULL,
+  `description` varchar(64) DEFAULT NULL,
+  `notes` varchar(45) DEFAULT NULL,
+  `url` varchar(255) DEFAULT NULL,
+  `idpers` varchar(45) DEFAULT NULL,
+  `deleted` tinyint(1) DEFAULT '0',
+  `date` datetime DEFAULT NULL,
+  PRIMARY KEY (`iddev`),
+  UNIQUE KEY `iddev_UNIQUE` (`iddev`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `devices`
+--
+
+LOCK TABLES `devices` WRITE;
+/*!40000 ALTER TABLE `devices` DISABLE KEYS */;
+/*!40000 ALTER TABLE `devices` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `documents`
 --
 
@@ -739,4 +772,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-07-01 16:23:25
+-- Dump completed on 2015-07-02 14:44:17

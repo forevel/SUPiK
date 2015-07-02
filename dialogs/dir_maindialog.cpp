@@ -11,7 +11,6 @@
 #include "sys_acceptexist.h"
 #include "../models/s_ntmodel.h"
 #include "../models/s_ncmodel.h"
-#include "s_sqlfieldsdialog.h"
 
 #include <QApplication>
 #include <QPainter>

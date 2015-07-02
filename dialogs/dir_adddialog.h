@@ -38,7 +38,7 @@ private slots:
     void CancelAndClose();
     void WarningAndClose(int res);
     void setAccessRights();
-    void acceptAccess(long);
+    void acceptAccess(QString);
     void FPBPressed(s_tqPushButton *ptr);
     void CBPressed(QString str, s_tqComboBox *ptr);
     void updateFLE(QString str);

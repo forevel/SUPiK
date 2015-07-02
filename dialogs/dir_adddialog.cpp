@@ -72,13 +72,13 @@ void dir_adddialog::setupUI()
     QStringListModel *tmpSLM = new QStringListModel;
     QStringList tmpSL;
     tmpSL << "Основной";
-    if (pc.access & (ALT_WR | SYS_WR)) // САПРовские права
+    if (pc.access & (ACC_ALT_WR | ACC_SYS_WR)) // САПРовские права
         tmpSL << "Altium" << "Schemagee" << "Solidworks" << "Устройства" << "Конструктивы";
-    if (pc.access & (TB_WR | SYS_WR)) // ГИ права
+    if (pc.access & (ACC_TB_WR | ACC_SYS_WR)) // ГИ права
         tmpSL << "ОТ и ТБ";
-    if (pc.access & (SADM_WR | SYS_WR)) // Сисадминские права
+    if (pc.access & (ACC_SADM_WR | ACC_SYS_WR)) // Сисадминские права
         tmpSL << "СисАдмин";
-    if (pc.access & SYS_WR)
+    if (pc.access & ACC_SYS_WR)
         tmpSL << "Системный";
     dirBelongAliases.clear();
     dirBelongAliases.insert("Основной","ent");
@@ -97,7 +97,7 @@ void dir_adddialog::setupUI()
     s_tqLineEdit *dirAccessLE = new s_tqLineEdit;
     dirAccessLE->setObjectName("dirAccess");
     s_tqPushButton *dirAccessPB = new s_tqPushButton("...");
-    if (pc.access & SYS_WR) // если есть права на изменение системных вещей
+    if (pc.access & ACC_SYS_WR) // если есть права на изменение системных вещей
         dirAccessPB->setEnabled(true);
     else
         dirAccessPB->setEnabled(false);
@@ -385,19 +385,19 @@ void dir_adddialog::setAccessRights()
     s_accessdialog *accessdialog = new s_accessdialog;
     s_tqLineEdit *le = new s_tqLineEdit;
     le = this->findChild<s_tqLineEdit *>("dirAccess");
-    accessdialog->SetupUI(le->text().toLongLong(0, 16));
-    connect(accessdialog, SIGNAL(acceptChanges(long)), this, SLOT(acceptAccess(long)));
+    accessdialog->SetupUI(le->text());
+    connect(accessdialog, SIGNAL(acceptChanges(QString)), this, SLOT(acceptAccess(QString)));
     accessdialog->exec();
 }
 
 // обработка подтверждения в диалоге accessrights
 
-void dir_adddialog::acceptAccess(long rights)
+void dir_adddialog::acceptAccess(QString rights)
 {
     isSomethingChanged = true;
     s_tqLineEdit *le = new s_tqLineEdit;
     le = this->findChild<s_tqLineEdit *>("dirAccess");
-    le->setText(QString::number(rights, 16));
+    le->setText(rights);
 }
 
 void dir_adddialog::addLineToDlg(QList<QWidget *> wl, QGridLayout &lyt, int row)

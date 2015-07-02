@@ -597,8 +597,6 @@ int s_ncmodel::setup(QString tble, QString id)
     if (tfl.result)
         return tfl.result+ER_NCMODEL+0x24;
     QString tmpString;
-    if (tfl.result)
-        return tfl.result+ER_NCMODEL+0x27;
     lsl.append(headers);
     QStringList tmpsl;
     for (i = 0; i < headers.size(); i++)
@@ -607,6 +605,8 @@ int s_ncmodel::setup(QString tble, QString id)
         tmpString = tfl.idtov(links.at(i), tmpString);
         if (!tfl.result)
             tmpsl << tmpString;
+        else
+            tmpsl << "";
     }
     lsl.append(tmpsl);
     addColumn("");

@@ -56,7 +56,7 @@ QStringList s_tablefields::htovlc(QString tble, QString header, QString cheader,
     QString db = sl.at(0).split(".").at(0);
     tble = sl.at(0).split(".").at(1);
     QStringList tmpsl = sqlc.getvaluesfromtablebycolumnandfield(sqlc.getdb(db), tble, sl.at(1), cl.at(1), value);
-    if (sqlc.result)
+    if ((sqlc.result) || tmpsl.isEmpty())
     {
         result = sqlc.result + 0x1A + ER_TFIELD;
         return QStringList();
@@ -132,6 +132,11 @@ QString s_tablefields::idtov(QString links, QString id)
     {
     case FW_ALLINK:
     {
+        if (!id.toInt()) // корневой элемент
+        {
+            outs = "<Корневой элемент>";
+            break;
+        }
         outs = tov(ff.link.at(0), "Наименование", id);
         if (result)
         {
@@ -186,13 +191,13 @@ QString s_tablefields::idtov(QString links, QString id)
             return 0x4D + ER_TFIELD;
         outs.clear();
         int j = 0;
-        while (tmpui)
+        while ((tmpui) && (j < ACC_NUM))
         {
             switch (j%3)
             {
             case 0:
             {
-                outs.insert(0, (tmpui & 0x0001) ? "у" : ".");
+                outs.insert(0, (tmpui & 0x0001) ? "ч" : ".");
                 break;
             }
             case 1:
@@ -202,7 +207,7 @@ QString s_tablefields::idtov(QString links, QString id)
             }
             case 2:
             {
-                outs.insert(0, (tmpui & 0x0001) ? "ч" : ".");
+                outs.insert(0, (tmpui & 0x0001) ? "у" : ".");
                 break;
             }
             default:
@@ -265,6 +270,7 @@ QStringList s_tablefields::idtovl(QString links)
 }
 
 // перевод имени в его ИД через строку links в таблице tablefields (поиск в таблице по имени его ИД)
+// links = 2.9, value = "ч..ч..чузчузч"
 
 QString s_tablefields::vtoid(QString links, QString value)
 {
@@ -280,7 +286,10 @@ QString s_tablefields::vtoid(QString links, QString value)
     {
     case FW_ALLINK:
     {
-        outs = toid(ff.link.at(0), "Наименование", value);
+        if (value == "<Корневой элемент>")
+            outs = "0";
+        else
+            outs = toid(ff.link.at(0), "Наименование", value);
         break;
     }
     case FW_LINK:
@@ -315,6 +324,53 @@ QString s_tablefields::vtoid(QString links, QString value)
         else
             tmpi = 0;
         outs = toid(ff.link.at(tmpi*2), ff.link.at(tmpi*2+1), value);
+        break;
+    }
+    case FW_RIGHTS:
+    {
+        quint32 outui=0, tmpui = 0x0001;
+        int j = 0;
+        while ((!value.isEmpty()) && (j < ACC_NUM)) // пока в строке есть что-нибудь и находимся в пределах битовой ширины прав
+        {
+            switch (j%3)
+            {
+            case 0:
+            {
+                int tmpi = value.size()-1;
+                QChar tmpc = value.at(tmpi);
+                if (tmpc == QChar(1095)) // "ч"
+                    outui |= tmpui;
+                break;
+            }
+            case 1:
+            {
+                int tmpi = value.size()-1;
+                QChar tmpc = value.at(tmpi);
+                if (tmpc == QChar(1079)) // "з"
+                    outui |= tmpui;
+                break;
+            }
+            case 2:
+            {
+                int tmpi = value.size()-1;
+                QChar tmpc = value.at(tmpi);
+                if (tmpc == QChar(1091)) // "у"
+                    outui |= tmpui;
+                break;
+            }
+            default:
+                break;
+            }
+            value.chop(1);
+            j++;
+            tmpui <<= 1;
+        }
+        outs = QString::number(outui, 16).toUpper();
+        break;
+    }
+    default:
+    {
+        result = ER_TFIELD + 0x5D;
         break;
     }
     }

@@ -7,6 +7,7 @@ wh_func::wh_func()
 
 void wh_func::HowManyComponentsDoesWeHave(int idnk)
 {
+    Q_UNUSED(idnk);
     db = sqlc.getdb("ent");
     tble = "flow";
 

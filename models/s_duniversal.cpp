@@ -228,15 +228,10 @@ void s_duniversal::pbclicked()
     {
     case FW_ALLINK:
     {
-        // взять ИД корневого элемента с именем "ff.link.at(1)"
-        QStringList tmpStringList = tfl.htovlc(ff.link.at(0),"ИД","Наименование",ff.link.at(1));
-        if (tfl.result)
-            return;
-        // сформировать список выбора из значений по полю "Наименование", для которых idalias равен результату на пред. этапе
-        tmpStringList = tfl.htovlc(ff.link.at(0), "Наименование", "ИД_а", tmpStringList.at(0));
-        s_2cdialog *chooseDialog = new s_2cdialog;
-        chooseDialog->setup(tmpStringList, hdr, QStringList(), le->text());
+        s_2ctdialog *chooseDialog = new s_2ctdialog(hdr);
+        chooseDialog->setup(ff.link.at(0), true); // диалог с "корневой кнопкой"
         connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
+        chooseDialog->setTvCurrentText(le->text());
         chooseDialog->exec();
         break;
     }
@@ -280,8 +275,8 @@ void s_duniversal::pbclicked()
     {
         // вызов диалога редактирования прав доступа
         s_accessdialog *dlg = new s_accessdialog;
-        dlg->SetupUI(le->text().toLongLong(0, 16));
-        connect(dlg, SIGNAL(acceptChanges(long)), this, SLOT(AcceptAccess(long)));
+        dlg->SetupUI(le->text());
+        connect(dlg, SIGNAL(acceptChanges(QString)), this, SLOT(accepted(QString)));
         dlg->exec();
         break;
     }

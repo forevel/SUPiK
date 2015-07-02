@@ -99,7 +99,10 @@ void supik::SetSupikMenuBar()
                 tmpAction = new QAction(this);
                 tmpAction->setText(get_mainmenu.value(1).toString());
                 connect (tmpAction, SIGNAL(triggered()), this, SLOT(ExecuteSub()));
-                tmpAction->setData(get_mainmenu.value(4).toString());
+                tmpString = sqlc.getvaluefromtablebyfield(sqlc.getdb("sup"),"mainmenumethods","mainmenumethods","idmainmenumethods",get_mainmenu.value(4).toString());
+                if (!sqlc.result)
+                    tmpAction->setData(tmpString);
+//                tmpAction->setData(get_mainmenu.value(4).toString());
                 tmpAction->setStatusTip(get_mainmenu.value(3).toString());
                 if (tmpAction->text() == "Внимание!")
                 {
@@ -161,12 +164,16 @@ QMenu *supik::AddChildToMenu(int id)
                 tmpString = get_child_mainmenu.value(3).toString();
                 if (tmpString != "")
                     action->setStatusTip(tmpString);
-                tmpString = get_child_mainmenu.value(4).toString();
-                if (tmpString != "")
+                tmpString = sqlc.getvaluefromtablebyfield(sqlc.getdb("sup"),"mainmenumethods","mainmenumethods","idmainmenumethods",get_child_mainmenu.value(4).toString());
+                if (!sqlc.result)
                 {
-                    connect (action, SIGNAL(triggered()), this, SLOT(ExecuteSub()));
-                    action->setData(tmpString);
+                    if (tmpString != "")
+                    {
+                        connect (action, SIGNAL(triggered()), this, SLOT(ExecuteSub()));
+                        action->setData(tmpString);
+                    }
                 }
+//                tmpString = get_child_mainmenu.value(4).toString();
                 tmpMenu->addAction(action);
             }
         }
@@ -182,8 +189,8 @@ void supik::ExecuteSub()
 
     if (tmpString == "")
         return;
-
-    (this->*pf[tmpString])();
+    if (pf.keys().contains(tmpString))
+        (this->*pf[tmpString])();
 }
 
 int supik::CheckForWidget(int tmpi)
@@ -270,7 +277,7 @@ void supik::Components()
     S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
     if (MainTW == 0)
         return;
-    if (!(pc.access & (SYS_FULL | ALT_FULL)))
+    if (!(pc.access & (ACC_SYS_FULL | ACC_ALT_FULL)))
     {
         QMessageBox::warning(this, "warning!", "Недостаточно прав для продолжения!");
         return;
@@ -341,7 +348,7 @@ void supik::WhIncome()
     S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
     if (MainTW == 0)
         return;
-    if (!(pc.access & (SYS_FULL | WH_FULL)))
+    if (!(pc.access & (ACC_SYS_FULL | ACC_WH_FULL)))
     {
         QMessageBox::warning(this, "warning!", "Недостаточно прав для продолжения!");
         return;

@@ -144,7 +144,6 @@ void s_2cdialog::setupUI()
 
 // процедура заполняет модель значениями из двух списков (sl1, sl2). При этом в списке links находятся вспомогательные поля, соответствующие по индексам
 // значениям в списке sl2. Значения из списка sl1 отображаются как обычные надписи.
-// Замена для s_sqlfieldsdialog
 
 /*int s_2cdialog::setup(QStringList sl1, QStringList links1, QStringList sl2, QStringList links2)
 {

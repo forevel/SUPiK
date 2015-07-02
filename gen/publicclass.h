@@ -59,21 +59,22 @@ QT_END_NAMESPACE
 
 #define MAX_DBS     50
 
-#define SYS_RO      0x0001
-#define SYS_WR      0x0002
-#define SYS_FULL    0x0007
-#define WH_RO       0x0008
-#define WH_WR       0x0010
-#define WH_FULL     0x0038
-#define ALT_RO      0x0040
-#define ALT_WR      0x0080
-#define ALT_FULL    0x01C0
-#define TB_RO       0x0200
-#define TB_WR       0x0400
-#define TB_FULL     0x0E00
-#define SADM_RO     0x1000
-#define SADM_WR     0x2000
-#define SADM_FULL   0x7000
+#define ACC_SYS_RO      0x0001
+#define ACC_SYS_WR      0x0002
+#define ACC_SYS_FULL    0x0007
+#define ACC_WH_RO       0x0008
+#define ACC_WH_WR       0x0010
+#define ACC_WH_FULL     0x0038
+#define ACC_ALT_RO      0x0040
+#define ACC_ALT_WR      0x0080
+#define ACC_ALT_FULL    0x01C0
+#define ACC_TB_RO       0x0200
+#define ACC_TB_WR       0x0400
+#define ACC_TB_FULL     0x0E00
+#define ACC_SADM_RO     0x1000
+#define ACC_SADM_WR     0x2000
+#define ACC_SADM_FULL   0x7000
+#define ACC_NUM         15
 
 // определение проблем
 #define PR_Q    0x01 // есть новые элементы на карантине

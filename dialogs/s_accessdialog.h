@@ -13,10 +13,10 @@ class s_accessdialog : public QDialog
     Q_OBJECT
 public:
     explicit s_accessdialog(QWidget *parent = 0);
-    void SetupUI(long rights);
+    void SetupUI(QString rights);
 
 signals:
-    void acceptChanges(long);
+    void acceptChanges(QString);
 
 public slots:
 

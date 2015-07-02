@@ -9,11 +9,13 @@
 #include "../widgets/s_tqframe.h"
 #include "../widgets/s_tqlabel.h"
 #include "../widgets/s_tqsplitter.h"
+#include "../widgets/s_tqstackedwidget.h"
 #include "sysdlg/sysmenueditor.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QApplication>
+#include <QDesktopWidget>
 #include <QFont>
 #include <QHeaderView>
 #include <QModelIndex>
@@ -47,10 +49,14 @@ void sys_systemdialog::SetupUI()
     lyout->addWidget(lbl, 0);
     lyout->setAlignment(lbl, Qt::AlignRight);
     s_tqTreeView *MainTV = new s_tqTreeView;
-    QStackedWidget *wdgt = new QStackedWidget;
+    s_tqStackedWidget *wdgt = new s_tqStackedWidget;
     MainTV->setObjectName("MainTV");
     wdgt->setObjectName("sw");
     s_tqSplitter *spl = new s_tqSplitter;
+    spl->setObjectName("spl");
+    QList<int> il;
+    int tmpi = this->geometry().width() / 2 - 150;
+    il << tmpi << tmpi;
     s_tqFrame *left = new s_tqFrame;
     QVBoxLayout *leftlyout = new QVBoxLayout;
     leftlyout->addWidget(MainTV);
@@ -66,6 +72,7 @@ void sys_systemdialog::SetupUI()
     right->setLineWidth(1);
     spl->addWidget(right);
     spl->setOrientation(Qt::Horizontal);
+    spl->setSizes(il);
     lyout->addWidget(spl, 90);
     setLayout(lyout);
 }
@@ -111,6 +118,7 @@ void sys_systemdialog::SetSlave(QModelIndex index)
 
 void sys_systemdialog::SetSlave()
 {
+    emit closeslvdlg();
     s_tqTreeView *MainTV = this->findChild<s_tqTreeView *>("MainTV");
     if (MainTV == 0)
     {
@@ -121,17 +129,24 @@ void sys_systemdialog::SetSlave()
     else
     {
         QString tmpString = getMainIndex(1);
-        QStringList tmpsl = tfl.htovlc("Системное меню_полн","Подчинённая таблица","Наименование",tmpString); // получить наименование таблицы, по которой строить подчинённое дерево/таблицу
-        tmpString = tmpsl.at(0);
+        QStringList tmpsl = tfl.htovlc("Системное меню_полн","Вызываемая функция","Наименование",tmpString); // получить имя вызываемой функции
         if (tfl.result)
         {
             emit error(ER_SYS+tfl.result);
             return;
         }
+        tmpString = tmpsl.at(0);
+        tmpString = sqlc.getvaluefromtablebyfield(sqlc.getdb("sup"),"sysmenumethods","sysmenumethods","idsysmenumethods",tmpString);
+        if (sqlc.result)
+        {
+            emit error(ER_SYS+sqlc.result);
+            return;
+        }
         if (tmpString == "")
             return;
 
-        (this->*pf[tmpString])();
+        if (pf.keys().contains(tmpString))
+            (this->*pf[tmpString])();
     }
 
 
@@ -259,7 +274,7 @@ QString sys_systemdialog::getMainIndex(int column)
 
 void sys_systemdialog::MainMenuEditor()
 {
-    QStackedWidget *wdgt = this->findChild<QStackedWidget *>("sw");
+    s_tqStackedWidget *wdgt = this->findChild<s_tqStackedWidget *>("sw");
     if (wdgt == 0)
     {
         emit error(ER_SYS+0xA1);
@@ -267,14 +282,19 @@ void sys_systemdialog::MainMenuEditor()
     }
     SysmenuEditor *dlg = new SysmenuEditor;
     connect(dlg,SIGNAL(error(int)),this,SIGNAL(error(int)));
+    connect(this,SIGNAL(closeslvdlg()),dlg,SLOT(close()));
     dlg->SetupUI("Главное меню");
     wdgt->addWidget(dlg);
     wdgt->repaint();
+    s_tqSplitter *spl = this->findChild<s_tqSplitter *>("spl");
+    if (spl == 0)
+        return;
+    spl->adjustSize();
 }
 
 void sys_systemdialog::SystemMenuEditor()
 {
-    QStackedWidget *wdgt = this->findChild<QStackedWidget *>("sw");
+    s_tqStackedWidget *wdgt = this->findChild<s_tqStackedWidget *>("sw");
     if (wdgt == 0)
     {
         emit error(ER_SYS+0xA1);

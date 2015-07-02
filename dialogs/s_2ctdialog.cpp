@@ -57,6 +57,10 @@ void s_2ctdialog::setupUI()
     connect(mainmodel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(resizemainTV(QModelIndex,QModelIndex)));
     mainLayout->addWidget(lbl, 0, Qt::AlignRight);
     mainLayout->addWidget(mainTV, 100, Qt::AlignLeft);
+    s_tqPushButton *rootpb = new s_tqPushButton("Корневой");
+    connect(rootpb,SIGNAL(clicked()),this,SLOT(Root()));
+    if (RootNeeded)
+        mainLayout->addWidget(rootpb);
     mainLayout->addLayout(pbLayout);
     constheight=lbl->minimumSizeHint().height()+pbOk->minimumSizeHint().height();
 //    mainTV->updateTVGeometry();
@@ -68,10 +72,11 @@ void s_2ctdialog::setupUI()
 
 // процедура подготавливает дерево выбора tble по таблице tablefields
 
-int s_2ctdialog::setup(QString tble)
+int s_2ctdialog::setup(QString tble, bool RootNeeded)
 {
     mainmodel = new s_ntmodel;
     mainmodel->Setup(tble);
+    this->RootNeeded = RootNeeded;
     setupUI();
     resizemainTV(QModelIndex(),QModelIndex());
     DialogIsNeedToBeResized = true;
@@ -114,6 +119,12 @@ void s_2ctdialog::accepted()
     QModelIndex index = mainmodel->index(curIndex.row(), 0, parIndex); // 0-я колонка - это всегда должен быть ИД, по нему потом выбираются значения из таблиц
     QString tmpString = index.data(Qt::DisplayRole).toString();
     emit changeshasbeenMade(tmpString);
+    this->close();
+}
+
+void s_2ctdialog::Root() // нажали кнопку "Корневой элемент"
+{
+    emit changeshasbeenMade("0");
     this->close();
 }
 

@@ -107,7 +107,7 @@ void PublicClass::DBCheck()
     // сначала проверим справочники на пустые поля (alias, idalias, <idtble>, <tble>, idpers, date, deleted)
     QStringList databases, tables;
     databases = db.keys();
-    if (access & SYS_FULL)
+    if (access & ACC_SYS_FULL)
     {
         for (i = 0; i < databases.size(); i++)
         {
@@ -194,7 +194,7 @@ void PublicClass::DBCheck()
     // затем проверим справочники на наличие дублирующихся элементов (по основному полю - alias либо <tble>)
     // затем проверим правильность полей date (дата не позднее текущей)
     }
-    if (access & WH_FULL)
+    if (access & ACC_WH_FULL)
     {
     // затем проверим наличие элементов номенклатуры, у которых не задана группа
     }
@@ -213,7 +213,7 @@ void PublicClass::addmessage(QStringList &sl, QString mes)
 
 void PublicClass::minutetest()
 {
-    if (pc.access & ALT_FULL)
+    if (pc.access & ACC_ALT_FULL)
     {
         if (notify & PR_Q); // если признак уже висит, то не надо его и менять
         else
@@ -245,15 +245,15 @@ void PublicClass::minutetest()
 void PublicClass::fillallprob()
 {
     pc.allprobs.clear();
-    if (pc.access & SYS_RO)
+    if (pc.access & ACC_SYS_RO)
         pc.allprobs.append(pc.sysMessages);
-    if (pc.access & WH_RO)
+    if (pc.access & ACC_WH_RO)
         pc.allprobs.append(pc.whMessages);
-    if (pc.access & ALT_RO)
+    if (pc.access & ACC_ALT_RO)
         pc.allprobs.append(pc.altMessages);
-    if (pc.access & TB_RO)
+    if (pc.access & ACC_TB_RO)
         pc.allprobs.append(pc.giMessages);
-    if (pc.access & SADM_RO)
+    if (pc.access & ACC_SADM_RO)
         pc.allprobs.append(pc.sadmMessages);
 }
 

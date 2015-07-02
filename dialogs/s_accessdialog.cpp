@@ -4,6 +4,7 @@
 #include "../widgets/s_tqcheckbox.h"
 #include "../widgets/s_tqpushbutton.h"
 #include "../widgets/s_tqlabel.h"
+#include "../gen/s_tablefields.h"
 
 s_accessdialog::s_accessdialog(QWidget *parent) :
     QDialog(parent)
@@ -14,16 +15,14 @@ s_accessdialog::s_accessdialog(QWidget *parent) :
     setAttribute(Qt::WA_DeleteOnClose);
 }
 
-void s_accessdialog::SetupUI(long rights)
+void s_accessdialog::SetupUI(QString rights)
 {
     int i, j, k;
-    long one = 0x0001;
     QStringList msg, lblm;
     msg.clear();
     lblm.clear();
     msg << "Системные" << "По складу" << "САПР" << "ТБ" << "Сисадмин";
     lblm << "Чтение" << "Изменение" << "Удаление";
-//    s_tqCheckBox *cb[15];
     s_tqLabel *MainL = new s_tqLabel;
     MainL->setText("Настройка прав доступа");
     QFont font, fontB;
@@ -55,9 +54,19 @@ void s_accessdialog::SetupUI(long rights)
         {
             s_tqCheckBox *cb = new s_tqCheckBox;
             cb->setText(lblm[j]);
-            cb->setChecked(rights&one);
+            if (rights.isEmpty())
+                cb->setChecked(false);
+            else if ((rights.at(rights.size()-1)) == '.')
+            {
+                cb->setChecked(false);
+                rights.chop(1);
+            }
+            else
+            {
+                cb->setChecked(true);
+                rights.chop(1);
+            }
             CheckBoxLayout->addWidget(cb, i+1, j, 1, 1, Qt::AlignLeft);
-            one <<= 1;
         }
         k++;
     }
@@ -67,12 +76,6 @@ void s_accessdialog::SetupUI(long rights)
     connect (pbOK, SIGNAL(clicked()), this, SLOT(OkPressed()));
     MainLayout->addWidget(pbOK, 0, Qt::AlignCenter);
     setLayout(MainLayout);
-//    s_tqCheckBox *cbsd = new s_tqCheckBox;
-//    cbsd->setChecked(rights&0x0004);
-//    s_tqCheckBox *cbsm = new s_tqCheckBox;
-//    cbsm->setChecked(rights&0x0002);
-//    s_tqCheckBox *cbsr = new s_tqCheckBox;
-//    cbsr->setChecked(rights&0x0001);
 }
 
 void s_accessdialog::OkPressed()
@@ -89,6 +92,6 @@ void s_accessdialog::OkPressed()
             one <<= 1;
         }
     }
-    emit acceptChanges(res);
+    emit acceptChanges(QString::number(res,16));
     this->close();
 }

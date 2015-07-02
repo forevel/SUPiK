@@ -16,13 +16,14 @@ public:
     QString vtoid (QString links, QString value); // взять один ИД по ссылке и значению
     QString idtov (QString links, QString id); // взять одно значение по ссылке и ид
     QStringList idtovl (QString links); // взять все значения по ссылке в зависимости от типа
-    int idtois (QString tble, QStringList header, QStringList values);
+    void idtois (QString tble, QStringList header, QStringList values);
     QString insert(QString tble);
-    int remove(QString tble, QString id); // "удаление" элемента из таблицы
+    void remove(QString tble, QString id); // "удаление" элемента из таблицы
     QStringList tablefields (QString tble, QString header);
     QStringList tableheaders (QString tble);
     QStringList tablelinks (QString tble);
     bool tableistree (QString tble);
+    QStringList valuesbyfield(QString tble, QStringList fl, QString cmpfield, QString cmpvalue);
 
     int result;
 };

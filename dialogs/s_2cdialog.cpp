@@ -28,18 +28,19 @@
 //
 // режим редактирования карантинных таблиц - особый, для него accepted() должен вызывать специальный обработчик
 
-s_2cdialog::s_2cdialog(QWidget *parent) :
+s_2cdialog::s_2cdialog(QString caption, QWidget *parent) :
     QDialog(parent)
 {
+    this->caption = caption;
+    setAttribute(Qt::WA_DeleteOnClose);
     setupUI();
 }
 
-void s_2cdialog::setup(QString tble, int Mode, QString id, QString caption, QString matchtext, bool isQuarantine)
+void s_2cdialog::setup(QString tble, int Mode, QString id, QString matchtext, bool isQuarantine)
 {
     this->tble.clear();
     this->tble.append(tble);
     this->Mode = Mode;
-    this->caption = caption;
     switch (Mode)
     {
     case MODE_CHOOSE:
@@ -81,11 +82,10 @@ void s_2cdialog::setup(QString tble, int Mode, QString id, QString caption, QStr
 // вспомогательных полей для каждого из элементов столбца. Подходит для
 // организации списка выбора
 
-void s_2cdialog::setup(QStringList sl, QString caption, QStringList links, QString str)
+void s_2cdialog::setup(QStringList sl, QStringList links, QString str)
 {
     this->tble.clear();
     mainmodel = new s_ncmodel;
-    this->caption = caption;
     QList<QStringList> tmpsl;
     tmpsl.append(sl);
     QList<int> il;
@@ -107,7 +107,6 @@ void s_2cdialog::setup(QStringList sl, QString caption, QStringList links, QStri
 void s_2cdialog::setupUI()
 {
     setStyleSheet("QDialog {background-color: rgba(204,204,153);}");
-    setAttribute(Qt::WA_DeleteOnClose);
     QVBoxLayout *mainLayout = new QVBoxLayout;
     QHBoxLayout *pbLayout = new QHBoxLayout;
     s_tqTableView *mainTV = new s_tqTableView; // autoResize = true

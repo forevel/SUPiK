@@ -247,8 +247,8 @@ void s_duniversal::pbclicked()
         }
         else // это таблица
         {
-            s_2cdialog *chooseDialog = new s_2cdialog;
-            chooseDialog->setup(ff.link.at(0), MODE_CHOOSE, "", hdr, le->text());
+            s_2cdialog *chooseDialog = new s_2cdialog(hdr);
+            chooseDialog->setup(ff.link.at(0), MODE_CHOOSE, "", le->text());
             if (!chooseDialog->result)
             {
                 connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
@@ -262,8 +262,8 @@ void s_duniversal::pbclicked()
         int count = ff.link.size(); // в поле link - имена таблиц
         if (count == 0)
             break;
-        s_2cdialog *dlg = new s_2cdialog;
-        dlg->setup(ff.link.at(0),MODE_CHOOSE,"",hdr);
+        s_2cdialog *dlg = new s_2cdialog(hdr);
+        dlg->setup(ff.link.at(0),MODE_CHOOSE,"");
         for (int i = 1; i < count; i++)
             dlg->AddTable(ff.link.at(i));
         connect(dlg,SIGNAL(changeshasbeenMade(QString)),this,SLOT(accepted(QString)));

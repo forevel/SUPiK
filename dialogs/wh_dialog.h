@@ -37,7 +37,7 @@ public:
     explicit wh_dialog(int Reason, QString id, QWidget *parent = 0);
 
 signals:
-    void error(int);
+    void error(int,int);
 
 public slots:
 

@@ -38,16 +38,16 @@ QT_END_NAMESPACE
 #define TW_ADM      0x10A // сисадминистрирование
 
 // Коды ошибок
-#define ER_TFIELD   0x0200 // tablefields
-#define ER_NTMODEL  0x3000 // s_ntmodel
-#define ER_NCMODEL  0x4000 // s_ncmodel
-#define ER_DIRMAIN  0x1000000 // dir_maindialog
-#define ER_SYS      0x2000000 // sys_systemdialog
-#define ER_SYSMENU  0x100000 // sysmenueditor
 #define ER_WH       0x3000000 // wh_dialog
-#define ER_2CDLG    0x10000 // 2cdialog
-#define ER_2CTDLG   0x20000 // 2ctdialog
+#define ER_SYS      0x2000000 // sys_systemdialog
+#define ER_DIRMAIN  0x1000000 // dir_maindialog
+#define ER_SYSMENU  0x100000 // sysmenueditor
 #define ER_2TDLG    0x30000 // 2tdialog
+#define ER_2CTDLG   0x20000 // 2ctdialog
+#define ER_2CDLG    0x10000 // 2cdialog
+#define ER_NCMODEL  0x4000 // s_ncmodel
+#define ER_NTMODEL  0x3000 // s_ntmodel
+#define ER_TFIELD   0x200 // tablefields
 
 #define DB_ALT      0x00
 #define DB_ENT      0x01

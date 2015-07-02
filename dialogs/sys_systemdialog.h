@@ -13,7 +13,7 @@ public:
     explicit sys_systemdialog(QWidget *parent = 0);
 
 signals:
-    void error(int);
+    void error(int,int);
     void closeslvdlg();
 
 public slots:

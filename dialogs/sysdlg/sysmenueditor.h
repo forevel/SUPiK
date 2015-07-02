@@ -14,11 +14,12 @@ public:
     void SetupUI(QString tble);
 
 signals:
-    void error(int);
+    void error(int,int);
 
 private slots:
     void ChangeFields(QModelIndex);
     void ChangeFields();
+    void ChangeFields(QString);
     void Context(QPoint);
     void AddChild();
     void AddRoot();

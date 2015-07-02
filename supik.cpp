@@ -33,6 +33,7 @@ supik::supik()
     pf["WhOutgoing"] = &supik::WhOutgoing;
     pf["WhSearch"] = &supik::WhSearch;
     pf["Quarantine"] = &supik::Quarantine;
+    pf["SysDirectories"] = &supik::SysDirectories;
 }
 
 void supik::showEvent(QShowEvent *event)
@@ -263,7 +264,7 @@ void supik::SysStructEdit()
     }
 
     sys_systemdialog *qsyda = new sys_systemdialog;
-    connect(qsyda,SIGNAL(error(int)),this,SLOT(ShowErMsg(int)));
+    connect(qsyda,SIGNAL(error(int,int)),this,SLOT(ShowErMsg(int,int)));
     int ids = MainTW->addTab(qsyda, "Редактор системных параметров");
     MainTW->tabBar()->setTabData(ids, QVariant(TW_SYSST));
     MainTW->tabBar()->setCurrentIndex(ids);
@@ -310,10 +311,31 @@ void supik::Directories()
         return;
     }
 
-    dir_maindialog *dird = new dir_maindialog;
-    connect(dird,SIGNAL(error(int)),this,SLOT(ShowErMsg(int)));
+    dir_maindialog *dird = new dir_maindialog("Справочники");
+    connect(dird,SIGNAL(error(int,int)),this,SLOT(ShowErMsg(int,int)));
 
     int ids = MainTW->addTab(dird, "Справочники");
+    MainTW->tabBar()->setTabData(ids, QVariant(TW_DIR));
+    MainTW->tabBar()->setCurrentIndex(ids);
+    MainTW->repaint();
+}
+
+void supik::SysDirectories()
+{
+    S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
+    if (MainTW == 0)
+        return;
+    int idx = CheckForWidget(TW_DIR);
+    if (idx != -1)
+    {
+        MainTW->setCurrentIndex(idx);
+        return;
+    }
+
+    dir_maindialog *dird = new dir_maindialog("Справочники системные");
+    connect(dird,SIGNAL(error(int,int)),this,SLOT(ShowErMsg(int,int)));
+
+    int ids = MainTW->addTab(dird, "Справочники системные");
     MainTW->tabBar()->setTabData(ids, QVariant(TW_DIR));
     MainTW->tabBar()->setCurrentIndex(ids);
     MainTW->repaint();
@@ -355,7 +377,7 @@ void supik::WhIncome()
     }
 
     wh_dialog *whd = new wh_dialog (true, ""); // isIncoming = true
-    connect(whd,SIGNAL(error(int)),this,SLOT(ShowErMsg(int)));
+    connect(whd,SIGNAL(error(int,int)),this,SLOT(ShowErMsg(int,int)));
     int ids = MainTW->addTab(whd, "Приём на склад");
     MainTW->tabBar()->setTabData(ids, QVariant(TW_WH));
     MainTW->tabBar()->setCurrentIndex(ids);
@@ -381,7 +403,7 @@ void supik::WhOutgoing()
     }
 
     whd = new wh_dialog (false, ""); // isIncoming = false
-    connect(whd,SIGNAL(error(int)),this,SLOT(ShowErMsg(int)));
+    connect(whd,SIGNAL(error(int,int)),this,SLOT(ShowErMsg(int,int)));
 
     int ids = MainTW->addTab(whd, "Выдача со склада");
     MainTW->tabBar()->setTabData(ids, QVariant(TW_WH));
@@ -518,7 +540,7 @@ void supik::updateprobsnumberintabtext()
         MainTW->tabBar()->setTabText(idx, "Сообщения: "+QString::number(pc.allprobs.size()));
 }
 
-void supik::ShowErMsg(int ernum)
+void supik::ShowErMsg(int ernum, int subernum)
 {
-    QMessageBox::warning(this, "warning!", "Ошибка 0x" + QString::number(ernum,16), QMessageBox::Ok, QMessageBox::NoButton);
+    QMessageBox::warning(this, "warning!", "Ошибка 0x" + QString::number(ernum,16) + "." + QString::number(subernum,16), QMessageBox::Ok, QMessageBox::NoButton);
 }

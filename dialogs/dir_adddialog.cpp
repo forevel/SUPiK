@@ -222,7 +222,7 @@ void dir_adddialog::WriteAndClose()
         dirB = this->findChild<s_tqComboBox *>("dirBelong");
         if (dirB == 0)
             throw(0x14);
-        QString tmpString = sqlc.getvaluefromtablebyfield(sqlc.getdb("sup"), "tablefields", "header", "tablename", dirAliasLE->text()+"_полная");
+        QString tmpString = sqlc.getvaluefromtablebyfield(sqlc.getdb("sup"), "tablefields", "header", "tablename", dirAliasLE->text()+"_полн");
         if (sqlc.result == 2) // ошибка открытия таблицы
         {
             QMessageBox::warning(this,"warning!","Невозможно открыть БД tablefields!");
@@ -254,8 +254,8 @@ void dir_adddialog::WriteAndClose()
             tmpString = (lename->text() == "ИД") ? "v" : "";
             vl << lefield->text() << tble+"."+dirNameLE->text() << tmpString << lename->text() << levalue->text();
             tmpString = QString("%1").arg(i, 2, 10, QChar('0'));
-            vl << tmpString << dirAliasLE->text()+"_полная" << pc.DateTime << "0" << QString::number(pc.idPers);
-            cmpvl << dirAliasLE->text()+"_полная" << lefield->text();
+            vl << tmpString << dirAliasLE->text()+"_полн" << pc.DateTime << "0" << QString::number(pc.idPers);
+            cmpvl << dirAliasLE->text()+"_полн" << lefield->text();
             QString id = sqlc.getvaluefromtablebyfields(sqlc.getdb("sup"), "tablefields", "idtablefields", cmpfl, cmpvl);
             if (sqlc.result == 1) // нет такой записи
                 sqlc.insertvaluestotable(sqlc.getdb("sup"), "tablefields", fl, vl);
@@ -639,7 +639,7 @@ void dir_adddialog::fillFields()
         QList<QStringList> lsl;
         QStringList fl;
         fl << "table" << "tablefields" << "header" << "links";
-        lsl = sqlc.getmorevaluesfromtablebyfield(pc.sup, "tablefields", fl, "tablename", dir+"_полная", "fieldsorder", true);
+        lsl = sqlc.getmorevaluesfromtablebyfield(pc.sup, "tablefields", fl, "tablename", dir+"_полн", "fieldsorder", true);
         if (sqlc.result)
             throw(0x71);
         if (lsl.size() == 0)

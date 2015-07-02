@@ -85,7 +85,7 @@ void sys_systemdialog::SetSysTree()
     s_tqTreeView *MainTV = this->findChild<s_tqTreeView *>("MainTV");
     if (MainTV == 0)
     {
-        emit error(ER_SYS+0x01);
+        emit error(ER_SYS,0x01);
         return;
     }
     MainTV->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -122,7 +122,7 @@ void sys_systemdialog::SetSlave()
     s_tqTreeView *MainTV = this->findChild<s_tqTreeView *>("MainTV");
     if (MainTV == 0)
     {
-        emit error(ER_SYS+0x21);
+        emit error(ER_SYS,0x11);
         return;
     }
     if (MainTV->model()->rowCount(MainTV->currentIndex()) != 0); // ветви, имеющие потомков, не имеют своего дочернего дерева
@@ -132,14 +132,14 @@ void sys_systemdialog::SetSlave()
         QStringList tmpsl = tfl.htovlc("Системное меню_полн","Вызываемая функция","Наименование",tmpString); // получить имя вызываемой функции
         if (tfl.result)
         {
-            emit error(ER_SYS+tfl.result);
+            emit error(ER_SYS+tfl.result,0x12);
             return;
         }
         tmpString = tmpsl.at(0);
         tmpString = sqlc.getvaluefromtablebyfield(sqlc.getdb("sup"),"sysmenumethods","sysmenumethods","idsysmenumethods",tmpString);
         if (sqlc.result)
         {
-            emit error(ER_SYS+sqlc.result);
+            emit error(ER_SYS+sqlc.result,0x13);
             return;
         }
         if (tmpString == "")
@@ -263,7 +263,7 @@ QString sys_systemdialog::getMainIndex(int column)
     s_tqTreeView *MainTV = this->findChild<s_tqTreeView *>("MainTV");
     if (MainTV == 0)
     {
-        emit error(ER_DIRMAIN+0x81);
+        emit error(ER_DIRMAIN,0x21);
         return QString();
     }
     QString tmpString = MainTV->model()->index(MainTV->currentIndex().row(), column, MainTV->model()->parent(MainTV->currentIndex())).data(Qt::DisplayRole).toString();
@@ -277,19 +277,15 @@ void sys_systemdialog::MainMenuEditor()
     s_tqStackedWidget *wdgt = this->findChild<s_tqStackedWidget *>("sw");
     if (wdgt == 0)
     {
-        emit error(ER_SYS+0xA1);
+        emit error(ER_SYS,0x31);
         return;
     }
     SysmenuEditor *dlg = new SysmenuEditor;
-    connect(dlg,SIGNAL(error(int)),this,SIGNAL(error(int)));
+    connect(dlg,SIGNAL(error(int,int)),this,SIGNAL(error(int,int)));
     connect(this,SIGNAL(closeslvdlg()),dlg,SLOT(close()));
     dlg->SetupUI("Главное меню");
     wdgt->addWidget(dlg);
     wdgt->repaint();
-    s_tqSplitter *spl = this->findChild<s_tqSplitter *>("spl");
-    if (spl == 0)
-        return;
-    spl->adjustSize();
 }
 
 void sys_systemdialog::SystemMenuEditor()
@@ -297,11 +293,12 @@ void sys_systemdialog::SystemMenuEditor()
     s_tqStackedWidget *wdgt = this->findChild<s_tqStackedWidget *>("sw");
     if (wdgt == 0)
     {
-        emit error(ER_SYS+0xA1);
+        emit error(ER_SYS,0x41);
         return;
     }
     SysmenuEditor *dlg = new SysmenuEditor;
-    connect(dlg,SIGNAL(error(int)),this,SIGNAL(error(int)));
+    connect(dlg,SIGNAL(error(int,int)),this,SIGNAL(error(int,int)));
+    connect(this,SIGNAL(closeslvdlg()),dlg,SLOT(close()));
     dlg->SetupUI("Системное меню");
     wdgt->addWidget(dlg);
     wdgt->repaint();

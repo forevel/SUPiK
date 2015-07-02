@@ -4,6 +4,7 @@
 #include <QMenu>
 #include <QInputDialog>
 #include <QVBoxLayout>
+#include <QMessageBox>
 #include "sysmenueditor.h"
 #include "../../widgets/s_tqtreeview.h"
 #include "../../models/s_ncmodel.h"
@@ -32,7 +33,7 @@ void SysmenuEditor::SetupUI(QString tble) // tble - имя таблицы, из 
     if (res)
     {
         QApplication::restoreOverrideCursor();
-        emit error(res+ER_SYSMENU);
+        emit error(res+ER_SYSMENU,0x01);
         return;
     }
     tv->setModel(treemodel);
@@ -93,22 +94,26 @@ void SysmenuEditor::ChangeFields(QModelIndex idx)
     s_tqTreeView *tv = this->findChild<s_tqTreeView *>("tv");
     if (tv == 0)
     {
-        emit error(ER_SYSMENU+0x51);
+        emit error(ER_SYSMENU,0x11);
         return;
     }
     if (tv->model()->rowCount(tv->currentIndex()) != 0); // для родителей запрещено иметь дополнительные поля
     else
     {
         tv->setCurrentIndex(idx);
-        ChangeFields();
+        ChangeFields(GetIndex(0));
     }
 }
 
 void SysmenuEditor::ChangeFields()
 {
-    QString tmps = GetIndex(0); // взять ИД элемента
-    s_2cdialog *newdialog = new s_2cdialog;
-    newdialog->setup(tble+"_полн", MODE_EDIT, tmps, tble);
+    ChangeFields(GetIndex(0)); // взять ИД элемента
+}
+
+void SysmenuEditor::ChangeFields(QString str)
+{
+    s_2cdialog *newdialog = new s_2cdialog(tble);
+    newdialog->setup(tble+"_полн", MODE_EDIT, str);
     if (!newdialog->result)
     {
         newdialog->setModal(true);
@@ -117,57 +122,58 @@ void SysmenuEditor::ChangeFields()
     }
     else
     {
-        emit error(ER_SYSMENU+0x61);
+        emit error(ER_SYSMENU,0x21);
         return;
     }
 }
 
 void SysmenuEditor::Delete()
 {
-    QString tmpString;
-    QStringList tmpList;
-
-    tmpString = GetIndex(0);
-
-/*    QSqlQuery delete_classes (db);
-    QSqlQuery get_children (db);
-    get_children.exec("SELECT `id" + tble + "` FROM `" + tble + "` WHERE `idalias`=" + tmpString + ";");
-
-    if (get_children.size() > 0)
+    QString tmpString = GetIndex(0);
+    QStringList sl = tfl.tablefields(tble, "ИД"); // возьмём реальное имя таблицы из tablefields. sl(0) - <table>, sl(1) - <tablefields>, sl(2) - <links>
+    if (tfl.result)
+    {
+        emit error(ER_SYSMENU+tfl.result,0x31);
+        return;
+    }
+    QString tmpdb = sl.at(0).split(".").at(0);
+    QString tmptble = sl.at(0).split(".").at(1);
+    sl = QStringList() << "id"+tmptble;
+    sl = sqlc.getvaluesfromtablebyfield(sqlc.getdb(tmpdb), tmptble, sl, "idalias", tmpString);
+    if (!sqlc.result) // есть записи с данным idalias
     {
         if (QMessageBox::question(this, "Вы уверены?", \
                                   "Категория содержит подкатегории.\nВы уверены, что хотите удалить её?", \
                                   QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes)
         {
-            delete_classes.exec("DELETE FROM `" + tble + "` WHERE `idalias`=" + tmpString + ";");
-            if (delete_classes.isActive())
+            tfl.remove(tble, tmpString);
+            if (tfl.result)
             {
-                QMessageBox::information(this,"Warning!",\
-                                     "Удалено успешно",\
-                                     QMessageBox::Ok, QMessageBox::NoButton);
+                emit error(ER_SYSMENU,0x32);
+                return;
             }
-            else
+            sqlc.deletefromdb(sqlc.getdb(tmpdb), tmptble, "idalias", tmpString);
+            if (sqlc.result)
             {
-                QMessageBox::information(this,"Ошибка при удалении!",\
-                                     delete_classes.lastError().text(),\
-                                     QMessageBox::Ok, QMessageBox::NoButton);
+                emit error(ER_SYSMENU,0x33);
+                return;
             }
+            QMessageBox::information(this, "Успешно!", "Записано успешно!");
         }
-    }
-    delete_classes.exec("DELETE FROM `" + tble + "` WHERE `id" + tble + "`=" + tmpString + ";");
-    if (delete_classes.isActive())
-    {
-        QMessageBox::information(this,"Warning!",\
-                             "Удалено успешно",\
-                             QMessageBox::Ok, QMessageBox::NoButton);
     }
     else
     {
-        QMessageBox::information(this,"Ошибка при удалении!",\
-                             delete_classes.lastError().text(),\
-                             QMessageBox::Ok, QMessageBox::NoButton);
+        if (QMessageBox::question(this, "Вы уверены?", \
+                                  "Вы уверены?", \
+                                  QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes)
+        {
+            tfl.remove(tble, tmpString);
+            if (tfl.result)
+                emit error(ER_SYSMENU,0x34);
+        }
+        QMessageBox::information(this, "Успешно!", "Записано успешно!");
     }
-    SetSlaveTV(); */
+    UpdateTree();
 }
 
 void SysmenuEditor::AddChild()
@@ -191,15 +197,21 @@ void SysmenuEditor::AddToTree(QString str)
     str = QString::number(str.toInt(0));
 
     QStringList fields, values;
-    fields << "alias" << "idalias" << "access";
+    fields << "Наименование" << "ИД_а" << "Права доступа";
     values << NewClass << str << "0007";
-/*    QString newID = sqlc.insertvaluestotable(db, tble, fields, values);
-
-    if (!sqlc.result) ChangeAdditionalFields(newID);
+    QString newID = tfl.insert(tble+"_полн");
+    if (tfl.result)
+    {
+        emit error(ER_SYSMENU+tfl.result, 0x41);
+        return;
+    }
+    fields.insert(0,"ИД");
+    values.insert(0,newID);
+    tfl.idtois(tble+"_полн",fields,values);
+    if (!tfl.result)
+        ChangeFields(newID);
     else
-        QMessageBox::warning (this, "Ошибка при записи!", QString::number(sqlc.result), \
-                              QMessageBox::Ok, QMessageBox::NoButton);
-*/
+        emit error(ER_SYSMENU+tfl.result,0x42);
 }
 
 void SysmenuEditor::ChangeName()
@@ -207,28 +219,32 @@ void SysmenuEditor::ChangeName()
     QString tmpString, tmpValue;
     bool ok;
 
-    tmpString = GetIndex(0);
+    tmpString = GetIndex(1);
 
     tmpValue = QInputDialog::getText(this, "Изменение наименования",
                                       "Введите новое наименование",
                                       QLineEdit::Normal,
                                       tmpString, &ok);
-/*    if (ok && !tmpValue.isEmpty())
+    if (ok && !tmpValue.isEmpty())
     {
-        QSqlQuery update_class (db);
-        tmpString = "UPDATE `" + tble + "` SET `alias` = \"" + tmpString + "\" WHERE `alias` = \"" + tmpValue + "\";";
-        update_class.exec(tmpString);
-
-        if (update_class.isActive())
+        tmpString = tfl.toid(tble, "Наименование", tmpString);
+        if (tfl.result)
         {
-            QMessageBox::warning (this, "Успешно", "Изменение проведено!", \
-                                  QMessageBox::Ok, QMessageBox::NoButton);
+            emit error(ER_SYSMENU+tfl.result,0x51);
+            return;
         }
-        else
-            QMessageBox::warning (this, "Ошибка при записи!", update_class.lastError().text(), \
-                                  QMessageBox::Ok, QMessageBox::NoButton);
+        QStringList fl = QStringList() << "Наименование" << "ИД";
+        QStringList vl = QStringList() << tmpValue << tmpString;
+        tfl.idtois(tble,fl,vl);
+        if (tfl.result)
+        {
+            emit error(ER_SYSMENU+tfl.result,0x52);
+            return;
+        }
+        QMessageBox::warning (this, "Успешно", "Изменение проведено!", \
+                              QMessageBox::Ok, QMessageBox::NoButton);
     }
-    SetSlaveTV(); */
+    UpdateTree();
 }
 
 QString SysmenuEditor::GetIndex(int column)
@@ -236,7 +252,7 @@ QString SysmenuEditor::GetIndex(int column)
     s_tqTreeView *tv = this->findChild<s_tqTreeView *>("tv");
     if (tv == 0)
     {
-        emit error(ER_SYSMENU+0xA1);
+        emit error(ER_SYSMENU,0x51);
         return QString();
     }
     QModelIndex index = tv->model()->index(tv->currentIndex().row(), column, tv->model()->parent(tv->currentIndex()));
@@ -251,14 +267,14 @@ void SysmenuEditor::UpdateTree()
     s_tqTreeView *tv = this->findChild<s_tqTreeView *>("tv");
     if (tv == 0)
     {
-        emit error(ER_SYSMENU+0xB1);
+        emit error(ER_SYSMENU,0x61);
         return;
     }
     s_ntmodel *mdl = dynamic_cast<s_ntmodel *>(tv->model());
     int res = mdl->Setup(tble + "_сокращ");
     if (res)
     {
-        emit error(res+ER_SYSMENU);
+        emit error(res+ER_SYSMENU,0x62);
         return;
     }
 }

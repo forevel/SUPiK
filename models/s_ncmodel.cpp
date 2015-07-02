@@ -664,8 +664,14 @@ int s_ncmodel::setupraw(QString db, QString tble, QStringList fl)
 
 void s_ncmodel::ClearModel()
 {
+    beginResetModel();
+    while (rowCount() > 0)
+        removeRows(0, 1);
     hdr.clear();
     maindata.clear();
     fieldstoCheck.clear();
     maxcolswidth.clear();
+    isEditable = false;
+    rcount = 0;
+    endResetModel();
 }

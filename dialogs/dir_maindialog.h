@@ -13,10 +13,10 @@ class dir_maindialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit dir_maindialog(QWidget *parent = 0);
+    explicit dir_maindialog(QString tble, QWidget *parent = 0);
 
 signals:
-    void error(int);
+    void error(int,int);
 
 public slots:
 
@@ -34,8 +34,10 @@ private:
     bool MainTVIsTree, SlaveTVIsTree, IsQuarantine;
     bool firstShow;
     QSqlDatabase db;
-    QString tble;
+    QString tble,slvtble;
     int SlaveTVAccess;
+    s_ntmodel *SlaveTreeModel;
+    s_ncmodel *MainTableModel, *SlaveTableModel;
     quint32 result;
 
     void SetupUI();

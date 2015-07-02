@@ -47,6 +47,7 @@ private:
     void WhOutgoing();
     void WhSearch();
     void Quarantine();
+    void SysDirectories();
 
     void showEvent(QShowEvent *event);
 
@@ -56,7 +57,7 @@ private slots:
     void updateprobsnumberintabtext();
     void periodic1s();
     void periodicxm();
-    void ShowErMsg(int);
+    void ShowErMsg(int, int);
 };
 
 #endif // SUPIK_H

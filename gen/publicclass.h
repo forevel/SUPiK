@@ -27,17 +27,19 @@ QT_END_NAMESPACE
 // диалоговые окна в СУПиКе
 #define TW_SET      0x100 // настройки (Settings)
 #define TW_SYSST    0x101 // SysStructEdit - редактор структуры системы
-#define TW_COMP     0x102 // редактор компонентов
-#define TW_DIR      0x103 // справочники
-#define TW_PROB     0x104 // диалог событий
-#define TW_WH       0x105 // склады
-#define TW_SYSBU    0x106 // резервное копирование
-#define TW_SYSRS    0x107 // восстановление
-#define TW_QUAR     0x108 // работа с карантином
-#define TW_DOC      0x109 // редактор документов
-#define TW_ADM      0x10A // сисадминистрирование
+#define TW_SYSBU    0x102 // резервное копирование
+#define TW_SYSRS    0x103 // восстановление
+#define TW_SYSDIR   0x104 // системные справочники
+#define TW_COMP     0x105 // редактор компонентов
+#define TW_DIR      0x106 // справочники
+#define TW_PROB     0x107 // диалог событий
+#define TW_WH       0x108 // склады
+#define TW_QUAR     0x109 // работа с карантином
+#define TW_DOC      0x10A // редактор документов
+#define TW_ADM      0x10B // сисадминистрирование
 
 // Коды ошибок
+#define ER_DIRADD   0x4000000 // dir_adddialog
 #define ER_WH       0x3000000 // wh_dialog
 #define ER_SYS      0x2000000 // sys_systemdialog
 #define ER_DIRMAIN  0x1000000 // dir_maindialog

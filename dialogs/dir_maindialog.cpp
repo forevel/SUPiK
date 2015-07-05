@@ -187,6 +187,7 @@ void dir_maindialog::ShowSlaveTree(QString str)
                 SlaveTV->setVisible(false);
                 SlaveTbV->horizontalHeader()->setDefaultAlignment(Qt::AlignCenter);
                 SlaveTbV->horizontalHeader()->setVisible(true);
+                SlaveTbV->verticalHeader()->setVisible(false);
                 SlaveTbV->resizeColumnsToContents();
                 SlaveTbV->resizeRowsToContents();
             }
@@ -202,7 +203,7 @@ void dir_maindialog::ShowSlaveTree(QString str)
                 for (i = 0; i < SlaveTV->header()->count(); i++)
                     SlaveTV->resizeColumnToContents(i);
             }
-            SlaveTVAccess = values.at(1).toLongLong(0, 16);
+            SlaveTVAccess = values.at(2).toLongLong(0, 16);
         }
         else
             QMessageBox::warning(this, "warning", "Недостаточно прав для работы со справочником!");
@@ -323,19 +324,16 @@ void dir_maindialog::DeleteData()
 
 void dir_maindialog::AddDirDialog()
 {
-    dir_adddialog *AddDialog = new dir_adddialog(false); // no update
-    if (AddDialog->result)
-    {
-        delete AddDialog;
-        return;
-    }
+    dir_adddialog *AddDialog = new dir_adddialog(false, tble); // no update. В tble передаётся тип справочника ("Справочники", "Справочники системные" и т.д.)
+    connect(AddDialog,SIGNAL(error(int,int)),this,SIGNAL(error(int,int)));
     AddDialog->exec();
 }
 
 void dir_maindialog::EditDirDialog()
 {
     QString tmpString = getMainIndex(1);
-    dir_adddialog *EditDialog = new dir_adddialog(true, tmpString);
+    dir_adddialog *EditDialog = new dir_adddialog(true, tble, tmpString); // В tble передаётся тип справочника ("Справочники", "Справочники системные" и т.д.)
+    connect(EditDialog,SIGNAL(error(int,int)),this,SIGNAL(error(int,int)));
     EditDialog->exec();
 }
 

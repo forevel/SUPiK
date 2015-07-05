@@ -623,8 +623,8 @@ void s_ncdialog::Search()
 
 void s_ncdialog::dir_Add()
 {
-    dir_adddialog *AddDialog = new dir_adddialog(false); // no update
-    AddDialog->exec();
+/*    dir_adddialog *AddDialog = new dir_adddialog(false); // no update
+    AddDialog->exec(); */
 }
 
 void s_ncdialog::dir_Edit()

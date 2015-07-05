@@ -14,14 +14,17 @@ s_sql::s_sql()
 QSqlDatabase s_sql::getdb(QString dbname)
 {
     QSqlDatabase tmpdb;
-    if (dbname == "sup") tmpdb = pc.sup;
+    if (pc.db.keys().contains(dbname))
+        tmpdb = pc.db[dbname];
+/*    if (dbname == "sup") tmpdb = pc.sup;
     else if (dbname == "ent") tmpdb = pc.ent;
     else if (dbname == "alt") tmpdb = pc.alt;
     else if (dbname == "dev") tmpdb = pc.dev;
     else if (dbname == "sch") tmpdb = pc.sch;
     else if (dbname == "sol") tmpdb = pc.sol;
-    else if (dbname == "con") tmpdb = pc.con;
-    else return QSqlDatabase();
+    else if (dbname == "con") tmpdb = pc.con; */
+    else
+        return QSqlDatabase();
     return tmpdb;
 }
 

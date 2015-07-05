@@ -325,7 +325,7 @@ void supik::SysDirectories()
     S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
     if (MainTW == 0)
         return;
-    int idx = CheckForWidget(TW_DIR);
+    int idx = CheckForWidget(TW_SYSDIR);
     if (idx != -1)
     {
         MainTW->setCurrentIndex(idx);
@@ -336,7 +336,7 @@ void supik::SysDirectories()
     connect(dird,SIGNAL(error(int,int)),this,SLOT(ShowErMsg(int,int)));
 
     int ids = MainTW->addTab(dird, "Справочники системные");
-    MainTW->tabBar()->setTabData(ids, QVariant(TW_DIR));
+    MainTW->tabBar()->setTabData(ids, QVariant(TW_SYSDIR));
     MainTW->tabBar()->setCurrentIndex(ids);
     MainTW->repaint();
 }

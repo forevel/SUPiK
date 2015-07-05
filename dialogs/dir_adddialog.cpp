@@ -9,30 +9,29 @@
 #include <QMessageBox>
 #include <QInputDialog>
 #include <QHeaderView>
-#include "../models/s_duniversal.h"
-#include "../gen/publicclass.h"
 #include "../widgets/s_tqlabel.h"
 #include "../widgets/s_tqcheckbox.h"
 #include "../widgets/s_tqspinbox.h"
+#include "../widgets/s_tqtreeview.h"
+#include "../widgets/s_tqtableview.h"
 #include "s_accessdialog.h"
 #include "../gen/s_sql.h"
-#include "s_tablefilterdialog.h"
-#include "s_acceptdialog.h"
-#include "../widgets/s_tqtreeview.h"
+#include "../gen/publicclass.h"
+#include "../gen/s_tablefields.h"
 #include "../models/s_ntmodel.h"
-#include "../widgets/s_tqtableview.h"
 #include "../models/s_ncmodel.h"
+#include "../models/s_duniversal.h"
 
-dir_adddialog::dir_adddialog(bool update, QString dir, QWidget *parent) :
-    QDialog(parent)
+dir_adddialog::dir_adddialog(bool update, QString dirtype, QString dir, QWidget *parent) :
+    QDialog(parent) // dirtype - имя таблицы из tablefields, где искать информацию о справочнике (dirlist, dirsyslist и т.д.)
 {
-    result = 0;
     idx = 0;
-    setMinimumWidth(300);
+//    setMinimumWidth(300);
     setStyleSheet("QDialog {background-color: rgba(255,255,153);}");
     setAttribute(Qt::WA_DeleteOnClose);
     isSomethingChanged = false;
     this->dir = dir;
+    this->dirtype = dirtype;
     upd = update;
     setupUI();
 }
@@ -66,6 +65,7 @@ void dir_adddialog::setupUI()
     dirFieldNumSB->setValue(1);
     dirFieldNumSB->setMinimum(1);
     dirFieldNumSB->setMaximum(FSIZE);
+    dirFieldNumSB->setDecimals(0);
     s_tqLabel *dirBelongL = new s_tqLabel("Тип справочника");
     s_tqComboBox *dirBelongCB = new s_tqComboBox;
     dirBelongCB->setObjectName("dirBelong");
@@ -180,16 +180,11 @@ void dir_adddialog::setupUI()
     setMinimumWidth(width()+50);
     if (upd)
         fillFields();
-    int res = updateTWFields(dirFieldNumSB->value());
-    if (res)
-    {
-        result = 1;
-        return;
-    }
+    updateTWFields(dirFieldNumSB->value());
     connect(dirAccessPB, SIGNAL(clicked()), this, SLOT(setAccessRights()));
     connect(WriteAndClosePB, SIGNAL(clicked()), this, SLOT(WriteAndClose()));
     connect(CancelAndClosePB, SIGNAL(clicked()), this, SLOT(CancelAndClose()));
-    connect(dirFieldNumSB, SIGNAL(valueChanged(int)), this, SLOT(updateTWFields(int)));
+    connect(dirFieldNumSB, SIGNAL(valueChanged(double)), this, SLOT(updateTWFields(double)));
 }
 
 void dir_adddialog::CancelAndClose()
@@ -199,184 +194,234 @@ void dir_adddialog::CancelAndClose()
 
 void dir_adddialog::WriteAndClose()
 {
-    try
+    int i;
+    s_tqLineEdit *lefield = new s_tqLineEdit;
+    s_tqLineEdit *levalue = new s_tqLineEdit;
+    s_tqLineEdit *lename = new s_tqLineEdit;
+    s_tqLineEdit *dirNameLE = new s_tqLineEdit;
+    s_tqLineEdit *dirAliasLE = new s_tqLineEdit;
+    s_tqLineEdit *dirAccessLE = new s_tqLineEdit;
+    s_tqComboBox *dirB = new s_tqComboBox;
+    s_tqSpinBox *sb = new s_tqSpinBox;
+    dirNameLE = this->findChild<s_tqLineEdit *>("dirName");
+    if (dirNameLE == 0)
     {
-        int i;
-        s_tqLineEdit *lefield = new s_tqLineEdit;
-        s_tqLineEdit *levalue = new s_tqLineEdit;
-        s_tqLineEdit *lename = new s_tqLineEdit;
-        s_tqLineEdit *dirNameLE = new s_tqLineEdit;
-        s_tqLineEdit *dirAliasLE = new s_tqLineEdit;
-        s_tqLineEdit *dirAccessLE = new s_tqLineEdit;
-        s_tqComboBox *dirB = new s_tqComboBox;
-        s_tqSpinBox *sb = new s_tqSpinBox;
-        dirNameLE = this->findChild<s_tqLineEdit *>("dirName");
-        if (dirNameLE == 0)
-            throw(0x11);
-        dirAliasLE = this->findChild<s_tqLineEdit *>("dirAlias");
-        if (dirAliasLE == 0)
-            throw(0x12);
-        dirAccessLE = this->findChild<s_tqLineEdit *>("dirAccess");
-        if (dirAccessLE == 0)
-            throw(0x13);
-        dirB = this->findChild<s_tqComboBox *>("dirBelong");
-        if (dirB == 0)
-            throw(0x14);
-        QString tmpString = sqlc.getvaluefromtablebyfield(sqlc.getdb("sup"), "tablefields", "header", "tablename", dirAliasLE->text()+"_полн");
-        if (sqlc.result == 2) // ошибка открытия таблицы
+        emit error(ER_DIRADD,0x11);
+        return;
+    }
+    dirAliasLE = this->findChild<s_tqLineEdit *>("dirAlias");
+    if (dirAliasLE == 0)
+    {
+        emit error(ER_DIRADD,0x12);
+        return;
+    }
+    dirAccessLE = this->findChild<s_tqLineEdit *>("dirAccess");
+    if (dirAccessLE == 0)
+    {
+        emit error(ER_DIRADD,0x13);
+        return;
+    }
+    dirB = this->findChild<s_tqComboBox *>("dirBelong");
+    if (dirB == 0)
+    {
+        emit error(ER_DIRADD,0x14);
+        return;
+    }
+    QString tmpString = sqlc.getvaluefromtablebyfield(sqlc.getdb("sup"), "tablefields", "header", "tablename", dirAliasLE->text()+"_полн");
+    if (sqlc.result == 2) // ошибка открытия таблицы
+    {
+        emit error(ER_DIRADD,0x15);
+        return;
+    }
+    else if (!sqlc.result) // есть запись про таблицу
+    {
+        if (QMessageBox::question(this, "Данные справочника существуют", "Перезаписать?", QMessageBox::Yes|QMessageBox::No,\
+                              QMessageBox::No) == QMessageBox::No)
+            return;
+    }
+    sb = this->findChild<s_tqSpinBox *>("dirFieldNum");
+    if (sb == 0)
+    {
+        emit error(ER_DIRADD,0x16);
+        return;
+    }
+    QSqlDatabase db = sqlc.getdb("sup");
+    QStringList fl, vl;
+    QStringList cmpfl, cmpvl;
+    cmpfl << "tablename" << "tablefields";
+    QString tble = dirBelongAliases.value(dirB->currentText());
+    fl << "tablefields" << "table" << "keyfield" << "header" << "links" << "fieldsorder" << "tablename" << \
+          "date" << "deleted" << "idpers";
+    for (i = 0; i < sb->value(); i++)
+    {
+        levalue = this->findChild<s_tqLineEdit *>("value"+QString::number(i)+"LE");
+        lename = this->findChild<s_tqLineEdit *>("name"+QString::number(i)+"LE");
+        lefield = this->findChild<s_tqLineEdit *>("field"+QString::number(i)+"LE");
+        vl.clear();
+        cmpvl.clear();
+        tmpString = (lename->text() == "ИД") ? "v" : "";
+        vl << lefield->text() << tble+"."+dirNameLE->text() << tmpString << lename->text() << levalue->text();
+        tmpString = QString("%1").arg(i, 2, 10, QChar('0'));
+        vl << tmpString << dirAliasLE->text()+"_полн" << pc.DateTime << "0" << QString::number(pc.idPers);
+        cmpvl << dirAliasLE->text()+"_полн" << lefield->text();
+        QString id = sqlc.getvaluefromtablebyfields(sqlc.getdb("sup"), "tablefields", "idtablefields", cmpfl, cmpvl);
+        if (sqlc.result == 1) // нет такой записи
+            sqlc.insertvaluestotable(sqlc.getdb("sup"), "tablefields", fl, vl);
+        else
+            sqlc.updatevaluesintable(sqlc.getdb("sup"), "tablefields", fl, vl, "idtablefields", id);
+        if (sqlc.result)
         {
-            QMessageBox::warning(this,"warning!","Невозможно открыть БД tablefields!");
+            emit error(ER_DIRADD+sqlc.result,0x17);
             return;
         }
-        else if (!sqlc.result) // есть запись про таблицу
-        {
-            if (QMessageBox::question(this, "Данные справочника существуют", "Перезаписать?", QMessageBox::Yes|QMessageBox::No,\
-                                  QMessageBox::No) == QMessageBox::No)
-                return;
-        }
-        sb = this->findChild<s_tqSpinBox *>("dirFieldNum");
-        if (sb == 0)
-            throw(0x15);
-        QSqlDatabase db = sqlc.getdb("sup");
-        QStringList fl, vl;
-        QStringList cmpfl, cmpvl;
-        cmpfl << "tablename" << "tablefields";
-        QString tble = dirBelongAliases.value(dirB->currentText());
-        fl << "tablefields" << "table" << "keyfield" << "header" << "links" << "fieldsorder" << "tablename" << \
-              "date" << "deleted" << "idpers";
-        for (i = 0; i < sb->value(); i++)
-        {
-            levalue = this->findChild<s_tqLineEdit *>("value"+QString::number(i)+"LE");
-            lename = this->findChild<s_tqLineEdit *>("name"+QString::number(i)+"LE");
-            lefield = this->findChild<s_tqLineEdit *>("field"+QString::number(i)+"LE");
-            vl.clear();
-            cmpvl.clear();
-            tmpString = (lename->text() == "ИД") ? "v" : "";
-            vl << lefield->text() << tble+"."+dirNameLE->text() << tmpString << lename->text() << levalue->text();
-            tmpString = QString("%1").arg(i, 2, 10, QChar('0'));
-            vl << tmpString << dirAliasLE->text()+"_полн" << pc.DateTime << "0" << QString::number(pc.idPers);
-            cmpvl << dirAliasLE->text()+"_полн" << lefield->text();
-            QString id = sqlc.getvaluefromtablebyfields(sqlc.getdb("sup"), "tablefields", "idtablefields", cmpfl, cmpvl);
-            if (sqlc.result == 1) // нет такой записи
-                sqlc.insertvaluestotable(sqlc.getdb("sup"), "tablefields", fl, vl);
-            else
-                sqlc.updatevaluesintable(sqlc.getdb("sup"), "tablefields", fl, vl, "idtablefields", id);
-            if (sqlc.result)
-                throw(0x17);
-        }
-        tble = "dirlist";
-        fl.clear();
-        vl.clear();
-        fl << "dirlist" << "access" << "deleted";
-        vl << dirAliasLE->text() << dirAccessLE->text() << "0";
-        tmpString = sqlc.getvaluefromtablebyfield(db, tble, "dirlist", "dirlist", dirAliasLE->text());
-        if (tmpString.isEmpty())
-        {
-            tmpString = sqlc.insertvaluestotable(db, tble, fl, vl);
-            if (sqlc.result)
-            {
-                QMessageBox::warning(this, "warning!", "Ошибка обновления каталога справочников");
-                return;
-            }
-        }
-        else
-        {
-            tmpString = sqlc.updatevaluesintable(db, tble, fl, vl, "dirlist", dirAliasLE->text());
-            if (sqlc.result)
-            {
-                QMessageBox::warning(this, "warning!", "Ошибка обновления каталога справочников");
-                return;
-            }
-        }
-        s_acceptdialog *dlg = new s_acceptdialog;
-        dlg->setupUI("Ура!","Записано успешно!");
-        connect(dlg,SIGNAL(destroyed()), this, SLOT(close()));
-        dlg->exec();
     }
-    catch (int res)
+    tble = "dirlist";
+    fl.clear();
+    vl.clear();
+    fl << "dirlist" << "access" << "deleted";
+    vl << dirAliasLE->text() << dirAccessLE->text() << "0";
+    tmpString = sqlc.getvaluefromtablebyfield(db, tble, "dirlist", "dirlist", dirAliasLE->text());
+    if (tmpString.isEmpty())
     {
-        WarningAndClose(res);
+        tmpString = sqlc.insertvaluestotable(db, tble, fl, vl);
+        if (sqlc.result)
+        {
+            emit error(ER_DIRADD+sqlc.result,0x18);
+            return;
+        }
     }
+    else
+    {
+        tmpString = sqlc.updatevaluesintable(db, tble, fl, vl, "dirlist", dirAliasLE->text());
+        if (sqlc.result)
+        {
+            emit error(ER_DIRADD+sqlc.result,0x19);
+            return;
+        }
+    }
+    QDialog *dlg = new QDialog;
+    QVBoxLayout *lyout = new QVBoxLayout;
+    s_tqPushButton *pb = new s_tqPushButton("Ага");
+    connect(pb,SIGNAL(clicked()),this,SLOT(close()));
+    s_tqLabel *lbl = new s_tqLabel("Записано успешно!");
+    lyout->addWidget(lbl);
+    lyout->addWidget(pb);
+    dlg->setLayout(lyout);
+    dlg->exec();
 }
 
-int dir_adddialog::updateTWFields(int fn)
+void dir_adddialog::updateTWFields(double dfn)
 {
-    try
+    s_tqLabel *ll = new s_tqLabel;
+    s_tqLineEdit *le = new s_tqLineEdit;
+    s_tqPushButton *pb = new s_tqPushButton;
+    int i = 0;
+    int fn = static_cast<int>(dfn);
+    while (i < fn)
     {
-        s_tqLabel *ll = new s_tqLabel;
-        s_tqLineEdit *le = new s_tqLineEdit;
-        s_tqPushButton *pb = new s_tqPushButton;
-        int i = 0;
-        while (i < fn)
+        ll = this->findChild<s_tqLabel *>("hdr"+QString::number(i)+"L");
+        if (ll == 0)
         {
-            ll = this->findChild<s_tqLabel *>("hdr"+QString::number(i)+"L");
-            if (ll == 0)
-                throw (0x21);
-            ll->setVisible(true);
-            ll = this->findChild<s_tqLabel *>("body"+QString::number(i)+"L1");
-            if (ll == 0)
-                throw(0x22);
-            ll->setVisible(true);
-            ll = this->findChild<s_tqLabel *>("body"+QString::number(i)+"L2");
-            if (ll == 0)
-                throw(0x23);
-            ll->setVisible(true);
-            le = this->findChild<s_tqLineEdit *>("field"+QString::number(i)+"LE");
-            if (le == 0)
-                throw(0x24);
-            le->setVisible(true);
-            le = this->findChild<s_tqLineEdit *>("name"+QString::number(i)+"LE");
-            if (le == 0)
-                throw(0x25);
-            le->setVisible(true);
-            le = this->findChild<s_tqLineEdit *>("value"+QString::number(i)+"LE");
-            if (le == 0)
-                throw(0x26);
-            le->setVisible(true);
-            pb = this->findChild<s_tqPushButton *>("valueconst"+QString::number(i)+"PB");
-            if (pb == 0)
-                throw(0x28);
-            pb->setVisible(true);
-            i++;
+            emit error(ER_DIRADD,0x21);
+            return;
         }
-        while (i < FSIZE)
+        ll->setVisible(true);
+        ll = this->findChild<s_tqLabel *>("body"+QString::number(i)+"L1");
+        if (ll == 0)
         {
-            ll = this->findChild<s_tqLabel *>("hdr"+QString::number(i)+"L");
-            if (ll == 0)
-                throw(0x29);
-            ll->setVisible(false);
-            ll = this->findChild<s_tqLabel *>("body"+QString::number(i)+"L1");
-            if (ll == 0)
-                throw(0x2a);
-            ll->setVisible(false);
-            ll = this->findChild<s_tqLabel *>("body"+QString::number(i)+"L2");
-            if (ll == 0)
-                throw(0x2b);
-            ll->setVisible(false);
-            le = this->findChild<s_tqLineEdit *>("field"+QString::number(i)+"LE");
-            if (le == 0)
-                throw(0x2c);
-            le->setVisible(false);
-            le = this->findChild<s_tqLineEdit *>("value"+QString::number(i)+"LE");
-            if (le == 0)
-                throw(0x2d);
-            le->setVisible(false);
-            le = this->findChild<s_tqLineEdit *>("name"+QString::number(i)+"LE");
-            if (le == 0)
-                throw(0x2e);
-            le->setVisible(false);
-            pb = this->findChild<s_tqPushButton *>("valueconst"+QString::number(i)+"PB");
-            if (pb == 0)
-                throw(0x2f);
-            pb->setVisible(false);
-            i++;
+            emit error(ER_DIRADD,0x22);
+            return;
         }
-        return 0;
+        ll->setVisible(true);
+        ll = this->findChild<s_tqLabel *>("body"+QString::number(i)+"L2");
+        if (ll == 0)
+        {
+            emit error(ER_DIRADD,0x23);
+            return;
+        }
+        ll->setVisible(true);
+        le = this->findChild<s_tqLineEdit *>("field"+QString::number(i)+"LE");
+        if (le == 0)
+        {
+            emit error(ER_DIRADD,0x24);
+            return;
+        }
+        le->setVisible(true);
+        le = this->findChild<s_tqLineEdit *>("name"+QString::number(i)+"LE");
+        if (le == 0)
+        {
+            emit error(ER_DIRADD,0x25);
+            return;
+        }
+        le->setVisible(true);
+        le = this->findChild<s_tqLineEdit *>("value"+QString::number(i)+"LE");
+        if (le == 0)
+        {
+            emit error(ER_DIRADD,0x26);
+            return;
+        }
+        le->setVisible(true);
+        pb = this->findChild<s_tqPushButton *>("valueconst"+QString::number(i)+"PB");
+        if (pb == 0)
+        {
+            emit error(ER_DIRADD,0x27);
+            return;
+        }
+        pb->setVisible(true);
+        i++;
     }
-    catch (int res)
+    while (i < FSIZE)
     {
-        WarningAndClose(res);
-        return res;
+        ll = this->findChild<s_tqLabel *>("hdr"+QString::number(i)+"L");
+        if (ll == 0)
+        {
+            emit error(ER_DIRADD,0x28);
+            return;
+        }
+        ll->setVisible(false);
+        ll = this->findChild<s_tqLabel *>("body"+QString::number(i)+"L1");
+        if (ll == 0)
+        {
+            emit error(ER_DIRADD,0x29);
+            return;
+        }
+        ll->setVisible(false);
+        ll = this->findChild<s_tqLabel *>("body"+QString::number(i)+"L2");
+        if (ll == 0)
+        {
+            emit error(ER_DIRADD,0x2A);
+            return;
+        }
+        ll->setVisible(false);
+        le = this->findChild<s_tqLineEdit *>("field"+QString::number(i)+"LE");
+        if (le == 0)
+        {
+            emit error(ER_DIRADD,0x2B);
+            return;
+        }
+        le->setVisible(false);
+        le = this->findChild<s_tqLineEdit *>("value"+QString::number(i)+"LE");
+        if (le == 0)
+        {
+            emit error(ER_DIRADD,0x2C);
+            return;
+        }
+        le->setVisible(false);
+        le = this->findChild<s_tqLineEdit *>("name"+QString::number(i)+"LE");
+        if (le == 0)
+        {
+            emit error(ER_DIRADD,0x2D);
+            return;
+        }
+        le->setVisible(false);
+        pb = this->findChild<s_tqPushButton *>("valueconst"+QString::number(i)+"PB");
+        if (pb == 0)
+        {
+            emit error(ER_DIRADD,0x2E);
+            return;
+        }
+        pb->setVisible(false);
+        i++;
     }
 }
 
@@ -410,139 +455,165 @@ void dir_adddialog::addLineToDlg(QList<QWidget *> wl, QGridLayout &lyt, int row)
 
 void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
 {
-    try
+    idx = ptr->getAData().toInt(0);
+    s_tqSpinBox *sb = new s_tqSpinBox;
+    sb = this->findChild<s_tqSpinBox *>("dirFieldNum");
+    if (sb == 0)
     {
-        //int i;
-        idx = ptr->getAData().toInt(0);
-        s_tqSpinBox *sb = new s_tqSpinBox;
-        sb = this->findChild<s_tqSpinBox *>("dirFieldNum");
-        if (sb == 0)
-            throw(0x41);
-        s_tqLabel *lbl1 = new s_tqLabel ("Тип поля");
-        s_tqLabel *lbl2 = new s_tqLabel ("Тип ссылки");
-        s_tqComboBox *cb = new s_tqComboBox;
-        QList<QStringList> lsl;
-        QStringListModel *cbmodel = new QStringListModel;
-        QStringList tmpStringList;
-        tmpStringList << "Предопределённое поле" << "Простое поле" << "Ссылка" << "Права доступа";
-        cbmodel->setStringList(tmpStringList);
-        cb->setModel(cbmodel);
-        adjustFieldSize(cb, 25);
-        s_tqComboBox *ltypecb = new s_tqComboBox;
-        QStringListModel *ltypecbmodel = new QStringListModel;
-        tmpStringList.clear();
-        tmpStringList << "Ссылка на поле" << "Ссылка на справочник" << "Ссылка на таблицу" << "Ссылка на БД" << "Косвенная ссылка";
-        ltypecbmodel->setStringList(tmpStringList);
-        ltypecb->setModel(ltypecbmodel);
-        adjustFieldSize(ltypecb, 30);
-        s_tqLineEdit *le = new s_tqLineEdit;
-        le = this->findChild<s_tqLineEdit *>("value"+QString::number(idx)+"LE");
-        if (le == 0)
-            throw(0x42);
-//        s_tqTreeView *trv = new s_tqTreeView;
-        s_tqTableView *tbv = new s_tqTableView;
-        s_ntmodel *trvmodel = new s_ntmodel;
-        s_ncmodel *tbvmodel = new s_ncmodel;
-        QDialog *dlg = new QDialog;
-        QVBoxLayout *lyout = new QVBoxLayout;
-        lyout->addWidget(lbl1, 0, Qt::AlignLeft);
-        lyout->addWidget(cb, 0, Qt::AlignLeft);
-        lyout->addWidget(lbl2, 0, Qt::AlignLeft);
-        lyout->addWidget(ltypecb, 0, Qt::AlignLeft);
-        PublicClass::fieldformat ff;
-        ff = pc.getFFfromLinks(le->text());
-        switch (ff.delegate)
+        emit error(ER_DIRADD,0x41);
+        return;
+    }
+    s_tqLabel *lbl1 = new s_tqLabel ("Тип поля");
+    s_tqLabel *lbl2 = new s_tqLabel ("Тип ссылки");
+    s_tqComboBox *cb = new s_tqComboBox;
+    QList<QStringList> lsl;
+    QStringListModel *cbmodel = new QStringListModel;
+    QStringList tmpStringList; // делегаты
+    tmpStringList << "Простое поле" << "Поле ввода" << "Поле выбора" << "Выпадающий список" << "Неактивное поле" <<  \
+                     "Счётчик" << "Поле выбора с вводом" << "Поле с рамкой";
+    cbmodel->setStringList(tmpStringList);
+    cb->setModel(cbmodel);
+    connect(cb,SIGNAL(currentIndexChanged(int)),this,SLOT(DTypeCBIndexChanged(int)));
+    adjustFieldSize(cb, 25);
+    s_tqComboBox *ltypecb = new s_tqComboBox;
+    QStringListModel *ltypecbmodel = new QStringListModel;
+    tmpStringList.clear();
+    tmpStringList << "Ссылка на поле" << "Ссылка на справочник" << "Ссылка на таблицу" << "Ссылка на БД" << "Косвенная ссылка";
+    ltypecbmodel->setStringList(tmpStringList);
+    ltypecb->setModel(ltypecbmodel);
+    ltypecb->setObjectName("ltypecb");
+
+    adjustFieldSize(ltypecb, 30);
+    s_tqLineEdit *le = new s_tqLineEdit;
+    le = this->findChild<s_tqLineEdit *>("value"+QString::number(idx)+"LE");
+    if (le == 0)
+    {
+        emit error(ER_DIRADD,0x42);
+        return;
+    }
+    s_tqTableView *tbv = new s_tqTableView;
+    s_ncmodel *tbvmodel = new s_ncmodel;
+    QDialog *dlg = new QDialog;
+    QVBoxLayout *lyout = new QVBoxLayout;
+    lyout->addWidget(lbl1, 0, Qt::AlignLeft);
+    lyout->addWidget(cb, 0, Qt::AlignLeft);
+    lyout->addWidget(lbl2, 0, Qt::AlignLeft);
+    lyout->addWidget(ltypecb, 0, Qt::AlignLeft);
+    PublicClass::fieldformat ff;
+    ltype = le->text();
+    ff = pc.getFFfromLinks(ltype);
+    cb->setCurrentIndex(ff.delegate);
+    ltypecb->setCurrentIndex(ff.ftype);
+
+/*    case FD_CHOOSE:
+    {
+        cb->setCurrentIndex(2);
+        switch (ff.ftype)
         {
-        case FD_LINEEDIT:
+        case FW_LINK:
         {
-            cb->setCurrentIndex(1);
-            ltypecb->setVisible(false);
-            break;
-        }
-        case FD_DISABLED:
-        {
-            cb->setCurrentIndex(0);
-            ltypecb->setVisible(false);
-            break;
-        }
-        case FD_CHOOSE:
-        {
-            cb->setCurrentIndex(2);
-            switch (ff.ftype)
+            if (trvmodel->Setup(false, ff.link.at(0)) == 11) // если не дерево
             {
-            case FW_LINK:
-            {
-                if (trvmodel->Setup(false, ff.link.at(0)) == 11) // если не дерево
-                {
-                    tmpStringList.clear();
+                tmpStringList.clear();
 
 // КАЖЕТСЯ, ЗДЕСЬ ЕСТЬ ОШИБКА
-                    lsl = sqlc.searchintablefieldlike(sqlc.getdb("sup"), "tablefields", QStringList("tablename"), "tablename", "^.*_сокращ$");
-                    QStringList sl;
-                    sl = lsl.at(0);
-                    while (sl.size() > 0)
-                    {
-                        tmpStringList << sl.at(0);
-                        sl.removeAll(tmpStringList.last());
-                    }
-                    lsl.clear();
-                    lsl.append(tmpStringList);
-                    tbvmodel->fillModel(lsl);
-                    s_duniversal *uniDelegate = new s_duniversal;
-                    tbv->setEditTriggers(QAbstractItemView::AllEditTriggers);
-                    tbv->verticalHeader()->setVisible(false);
-                    tbv->horizontalHeader()->setVisible(false);
-                    tbv->setItemDelegate(uniDelegate);
-                    tbvmodel->setcolumnlinks(0, "7.8");
-                    tbv->setModel(tbvmodel);
-                    tbv->resizeColumnsToContents();
-                    tbv->resizeRowsToContents();
-                    lyout->addWidget(tbv);
+                lsl = sqlc.searchintablefieldlike(sqlc.getdb("sup"), "tablefields", QStringList("tablename"), "tablename", "^.*_сокращ$");
+                QStringList sl;
+                sl = lsl.at(0);
+                while (sl.size() > 0)
+                {
+                    tmpStringList << sl.at(0);
+                    sl.removeAll(tmpStringList.last());
                 }
+                lsl.clear();
+                lsl.append(tmpStringList);
+                tbvmodel->fillModel(lsl);
+                s_duniversal *uniDelegate = new s_duniversal;
+                tbv->setEditTriggers(QAbstractItemView::AllEditTriggers);
+                tbv->verticalHeader()->setVisible(false);
+                tbv->horizontalHeader()->setVisible(false);
+                tbv->setItemDelegate(uniDelegate);
+                tbvmodel->setcolumnlinks(0, "7.8");
+                tbv->setModel(tbvmodel);
+                tbv->resizeColumnsToContents();
+                tbv->resizeRowsToContents();
+                lyout->addWidget(tbv);
             }
+        }
 /*            sqlc.prepareslsfortree(sl1, sl2);
-            if (sl1.isEmpty())
-                throw(0x44);
-            s_tablefilterdialog *tabledialog = new s_tablefilterdialog;
-            QString tmpString = le->text().split(".").last();
-            tabledialog->SetupUI(sl1, sl2, tmpString);
-            connect(tabledialog, SIGNAL(accepted(QString)), this, SLOT(updateFLE(QString)));
-            tabledialog->exec(); */
-            break;
-            }
-        }
-/*        case 2: // права доступа
-        {
-            s_accessdialog *accessdialog = new s_accessdialog;
-            accessdialog->SetupUI(le->text().toLongLong(0, 16));
-            connect(accessdialog, SIGNAL(acceptChanges(long)), this, SLOT(updateALE(long)));
-            accessdialog->exec();
-            break;
-        }
-        case 3: // косвенная ссылка
-        {
-            QSqlDatabase db = sqlc.getdb(dir.left(3));
-            if (!db.isValid())
-                throw(0x45);
-            QString tble = dir.right(dir.size()-4);
-            QStringList fl = sqlc.getcolumnsfromtable(db, tble);
-            s_tablefilterdialog *tabledialog = new s_tablefilterdialog;
-            QString tmpString = le->text().split(".").last();
-            tabledialog->SetupUI(fl, tmpString);
-            connect(tabledialog, SIGNAL(accepted(QString)), this, SLOT(updateFLE(QString)));
-            tabledialog->exec();
-            break;
-        } */
-        default:
-            break;
-        }
-        dlg->setLayout(lyout);
-        dlg->exec();
-//        updateTWFields(sb->value());
+        if (sl1.isEmpty())
+            throw(0x44);
+        s_tablefilterdialog *tabledialog = new s_tablefilterdialog;
+        QString tmpString = le->text().split(".").last();
+        tabledialog->SetupUI(sl1, sl2, tmpString);
+        connect(tabledialog, SIGNAL(accepted(QString)), this, SLOT(updateFLE(QString)));
+        tabledialog->exec(); */
+        break;
+/*        }
     }
-    catch (int res)
+/*        case 2: // права доступа
     {
-        WarningAndClose(res);
+        s_accessdialog *accessdialog = new s_accessdialog;
+        accessdialog->SetupUI(le->text().toLongLong(0, 16));
+        connect(accessdialog, SIGNAL(acceptChanges(long)), this, SLOT(updateALE(long)));
+        accessdialog->exec();
+        break;
+    }
+    case 3: // косвенная ссылка
+    {
+        QSqlDatabase db = sqlc.getdb(dir.left(3));
+        if (!db.isValid())
+            throw(0x45);
+        QString tble = dir.right(dir.size()-4);
+        QStringList fl = sqlc.getcolumnsfromtable(db, tble);
+        s_tablefilterdialog *tabledialog = new s_tablefilterdialog;
+        QString tmpString = le->text().split(".").last();
+        tabledialog->SetupUI(fl, tmpString);
+        connect(tabledialog, SIGNAL(accepted(QString)), this, SLOT(updateFLE(QString)));
+        tabledialog->exec();
+        break;
+    } */
+//    default:
+//        break;
+//    }
+    dlg->setLayout(lyout);
+    dlg->exec();
+//        updateTWFields(sb->value());
+}
+
+// установка типа поля по выбранному типу делегата и изменение строки ltype
+
+void dir_adddialog::DTypeCBIndexChanged(int FD)
+{
+    cb = this->findChild<s_tqComboBox *>("ltypecb");
+    if (cb == 0)
+    {
+        emit error(ER_DIRADD+0x01,0x41);
+        return;
+    }
+    switch (FD)
+    {
+    case FD_SIMPLE:
+    case FD_DISABLED:
+    case FD_SIMGRID:
+    {
+        break;
+    }
+    case FD_LINEEDIT:
+    {
+        break;
+    }
+    case FD_CHOOSE:
+    case FD_CHOOSE_X:
+    {
+        break;
+    }
+    case FD_COMBO:
+    {
+        break;
+    }
+    default:
+        break;
     }
 }
 
@@ -555,7 +626,10 @@ void dir_adddialog::CBPressed(QString str, s_tqComboBox *ptr)
     s_tqLineEdit *le = new s_tqLineEdit;
     le = this->findChild<s_tqLineEdit *>("value"+ptr->getAData().toString()+"LE");
     if (pb == 0)
-        WarningAndClose(51);
+    {
+        emit error(ER_DIRADD,0x51);
+        return;
+    }
     if (ptr->currentIndex() == 0)
     {
         le->setEnabled(true);
@@ -576,46 +650,45 @@ void dir_adddialog::adjustFieldSize(QWidget *wdgt, int widthInChar)
 
 void dir_adddialog::updateFLE(QString str)
 {
-    try
+    isSomethingChanged = true;
+    int i, j;
+    s_tqLineEdit *le = new s_tqLineEdit;
+    le = this->findChild<s_tqLineEdit *>("value"+QString::number(idx)+"LE");
+    s_tqComboBox *cb = new s_tqComboBox;
+    cb = this->findChild<s_tqComboBox *>("ltype"+QString::number(idx)+"CB");
+    if (cb == 0)
     {
-        isSomethingChanged = true;
-        int i, j;
-        s_tqLineEdit *le = new s_tqLineEdit;
-        le = this->findChild<s_tqLineEdit *>("value"+QString::number(idx)+"LE");
-        s_tqComboBox *cb = new s_tqComboBox;
-        cb = this->findChild<s_tqComboBox *>("ltype"+QString::number(idx)+"CB");
-        if (cb == 0)
-            throw(0x61);
-        if (le == 0)
-            throw(0x62);
-        switch (cb->currentIndex())
-        {
-        case 1:
-        {
-            i = sl2.indexOf(str);
-            if (i != -1)
-            {
-                j = 0;
-                while (i > 0)
-                {
-                    if (sl2.at(i--) == "")
-                        j++;
-                }
-                le->setText("pc."+sl1.at(j).left(3)+"."+str); // компонуем имя таблицы в формат <имя_БД>.<имя_таблицы>
-            }
-            break;
-        }
-        case 3:
-        {
-            le->setText("."+str);
-        }
-        default:
-            break;
-        }
+        emit error(ER_DIRADD,0x61);
+        return;
     }
-    catch (int res)
+    if (le == 0)
     {
-        WarningAndClose(res);
+        emit error(ER_DIRADD,0x62);
+        return;
+    }
+    switch (cb->currentIndex())
+    {
+    case 1:
+    {
+        i = sl2.indexOf(str);
+        if (i != -1)
+        {
+            j = 0;
+            while (i > 0)
+            {
+                if (sl2.at(i--) == "")
+                    j++;
+            }
+            le->setText("pc."+sl1.at(j).left(3)+"."+str); // компонуем имя таблицы в формат <имя_БД>.<имя_таблицы>
+        }
+        break;
+    }
+    case 3:
+    {
+        le->setText("."+str);
+    }
+    default:
+        break;
     }
 }
 
@@ -625,111 +698,133 @@ void dir_adddialog::updateALE(long rights)
     s_tqLineEdit *le = new s_tqLineEdit;
     le = this->findChild<s_tqLineEdit *>("value"+QString::number(idx)+"LE");
     if (le == 0)
-        WarningAndClose(71);
+    {
+        emit error(ER_DIRADD,0x71);
+        return;
+    }
     le->setText(QString::number(rights, 16));
 }
 
 void dir_adddialog::fillFields()
 {
-    try
+    s_tqLineEdit *lef = new s_tqLineEdit;
+    s_tqLineEdit *len = new s_tqLineEdit;
+    s_tqLineEdit *lev = new s_tqLineEdit;
+    QList<QStringList> lsl;
+    QStringList fl;
+    fl << "table" << "tablefields" << "header" << "links";
+    lsl = sqlc.getmorevaluesfromtablebyfield(pc.sup, "tablefields", fl, "tablename", dir+"_полн", "fieldsorder", true);
+    if (sqlc.result)
     {
-        s_tqLineEdit *lef = new s_tqLineEdit;
-        s_tqLineEdit *len = new s_tqLineEdit;
-        s_tqLineEdit *lev = new s_tqLineEdit;
-        QList<QStringList> lsl;
-        QStringList fl;
-        fl << "table" << "tablefields" << "header" << "links";
-        lsl = sqlc.getmorevaluesfromtablebyfield(pc.sup, "tablefields", fl, "tablename", dir+"_полн", "fieldsorder", true);
-        if (sqlc.result)
-            throw(0x71);
-        if (lsl.size() == 0)
-            throw(0x72);
-        s_tqLineEdit *dirNameLE = new s_tqLineEdit;
-        dirNameLE = this->findChild<s_tqLineEdit *>("dirName");
-        if (dirNameLE == 0)
-            throw(0x73);
-        s_tqLineEdit *dirAliasLE = new s_tqLineEdit;
-        dirAliasLE = this->findChild<s_tqLineEdit *>("dirAlias");
-        if (dirAliasLE == 0)
-            throw(0x74);
-        s_tqComboBox *dirBelongCB = new s_tqComboBox;
-        dirBelongCB = this->findChild<s_tqComboBox *>("dirBelong");
-        if (dirBelongCB == 0)
-            throw(0x75);
-        s_tqLineEdit *dirAccessLE = new s_tqLineEdit;
-        dirAccessLE = this->findChild<s_tqLineEdit *>("dirAccess");
-        if (dirAccessLE == 0)
-            throw(0x76);
-        s_tqSpinBox *sb = new s_tqSpinBox;
-        sb = this->findChild<s_tqSpinBox *>("dirFieldNum");
-        if (sb == 0)
-            throw(0x77);
-        dirAliasLE->setText(dir);
-        dirNameLE->setText(lsl.at(0).at(0).split(".").at(1));
-        QString tmpString = dirBelongAliases.key(lsl.at(0).at(0).split(".").at(0));
-        if (tmpString.isEmpty())
-            throw(0x78);
-        dirBelongCB->setCurrentText(tmpString);
-        tmpString = sqlc.getvaluefromtablebyfield(sqlc.getdb("sup"),"dirlist","access","dirlist",dir);
-        if (tmpString.isEmpty())
-            throw(0x79);
-        dirAccessLE->setText(tmpString);
-        sb->setValue(lsl.size());
-        for (int i = 0; i < lsl.size(); i++)
+        emit error(ER_DIRADD,0x81);
+        return;
+    }
+    if (lsl.size() == 0)
+    {
+        emit error(ER_DIRADD,0x82);
+        return;
+    }
+    s_tqLineEdit *dirNameLE = new s_tqLineEdit;
+    dirNameLE = this->findChild<s_tqLineEdit *>("dirName");
+    if (dirNameLE == 0)
+    {
+        emit error(ER_DIRADD,0x83);
+        return;
+    }
+    s_tqLineEdit *dirAliasLE = new s_tqLineEdit;
+    dirAliasLE = this->findChild<s_tqLineEdit *>("dirAlias");
+    if (dirAliasLE == 0)
+    {
+        emit error(ER_DIRADD,0x84);
+        return;
+    }
+    s_tqComboBox *dirBelongCB = new s_tqComboBox;
+    dirBelongCB = this->findChild<s_tqComboBox *>("dirBelong");
+    if (dirBelongCB == 0)
+    {
+        emit error(ER_DIRADD,0x85);
+        return;
+    }
+    s_tqLineEdit *dirAccessLE = new s_tqLineEdit;
+    dirAccessLE = this->findChild<s_tqLineEdit *>("dirAccess");
+    if (dirAccessLE == 0)
+    {
+        emit error(ER_DIRADD,0x86);
+        return;
+    }
+    s_tqSpinBox *sb = new s_tqSpinBox;
+    sb = this->findChild<s_tqSpinBox *>("dirFieldNum");
+    if (sb == 0)
+    {
+        emit error(ER_DIRADD,0x87);
+        return;
+    }
+    dirAliasLE->setText(dir);
+    dirNameLE->setText(lsl.at(0).at(0).split(".").at(1)); // берём имя таблицы по полю ИД
+    QString tmpString = dirBelongAliases.key(lsl.at(0).at(0).split(".").at(0));
+    if (tmpString.isEmpty())
+    {
+        emit error(ER_DIRADD,0x88);
+        return;
+    }
+    dirBelongCB->setCurrentText(tmpString);
+    QStringList fields = QStringList() << "Права доступа";
+    QStringList values = tfl.valuesbyfield(dirtype+"_полн",fields,"Наименование",dir);
+    if (tfl.result)
+    {
+        emit error(ER_DIRADD+0x01,0x88);
+        return;
+    }
+    dirAccessLE->setText(values.at(0));
+    sb->setValue(lsl.size());
+    for (int i = 0; i < lsl.size(); i++)
+    {
+        if (i > 16)
+            break;
+        lef = this->findChild<s_tqLineEdit *>("field"+QString::number(i)+"LE"); // имя поля
+        if (lef == 0)
         {
-            if (i > 16)
-                break;
-            lef = this->findChild<s_tqLineEdit *>("field"+QString::number(i)+"LE"); // имя поля
-            if (lef == 0)
-                throw(0x7b);
-            lev = this->findChild<s_tqLineEdit *>("value"+QString::number(i)+"LE"); // строка 1
-            if (lev == 0)
-                throw(0x7c);
-            len = this->findChild<s_tqLineEdit *>("name"+QString::number(i)+"LE"); // строка 2
-            if (len == 0)
-                throw(0x7d);
-            lef->setText(lsl.at(i).at(1));
-            len->setText(lsl.at(i).at(2));
-            lev->setText(lsl.at(i).at(3));
+            emit error(ER_DIRADD,0x8A);
+            return;
         }
+        lev = this->findChild<s_tqLineEdit *>("value"+QString::number(i)+"LE"); // строка 1
+        if (lev == 0)
+        {
+            emit error(ER_DIRADD,0x8B);
+            return;
+        }
+        len = this->findChild<s_tqLineEdit *>("name"+QString::number(i)+"LE"); // строка 2
+        if (len == 0)
+        {
+            emit error(ER_DIRADD,0x8C);
+            return;
+        }
+        lef->setText(lsl.at(i).at(1));
+        len->setText(lsl.at(i).at(2));
+        lev->setText(lsl.at(i).at(3));
     }
-    catch (int res)
-    {
-        WarningAndClose(res);
-    }
-}
-
-void dir_adddialog::WarningAndClose(int res)
-{
-    int ernum = module_number + res;
-    s_acceptdialog *dlg = new s_acceptdialog;
-    dlg->setupUI("warning!","Ошибка №"+QString::number(ernum, 16));
-    connect(dlg,SIGNAL(destroyed()), this, SLOT(close()));
-    dlg->exec();
-    this->close();
 }
 
 void dir_adddialog::transliteFieldName(QString str, s_tqLineEdit *ptr)
 {
-    try
+    isSomethingChanged = true;
+    Q_UNUSED(str);
+    s_tqLineEdit *le = new s_tqLineEdit;
+    le = this->findChild<s_tqLineEdit *>("name"+ptr->getAData().toString()+"LE");
+    s_tqLineEdit *le2 = new s_tqLineEdit;
+    le2 = this->findChild<s_tqLineEdit *>("value"+ptr->getAData().toString()+"LE");
+    if (le == 0)
     {
-        isSomethingChanged = true;
-        Q_UNUSED(str);
-        s_tqLineEdit *le = new s_tqLineEdit;
-        le = this->findChild<s_tqLineEdit *>("name"+ptr->getAData().toString()+"LE");
-        s_tqLineEdit *le2 = new s_tqLineEdit;
-        le2 = this->findChild<s_tqLineEdit *>("value"+ptr->getAData().toString()+"LE");
-        if (le == 0)
-            throw(0xa1);
-        if (le2 == 0)
-            throw(0xa2);
-        if (le2->text().isEmpty())
-            le2->setText(pc.getTranslit(le->text()));
+        emit error(ER_DIRADD,0x91);
+        return;
     }
-    catch (int res)
+    if (le2 == 0)
     {
-        WarningAndClose(res);
+        emit error(ER_DIRADD,0x92);
+        return;
     }
+    if (le2->text().isEmpty())
+        le2->setText(pc.getTranslit(le->text()));
 }
 
 void dir_adddialog::transliteDirName()
@@ -738,12 +833,18 @@ void dir_adddialog::transliteDirName()
     s_tqLineEdit *dirAliasLE = new s_tqLineEdit;
     dirNameLE = this->findChild<s_tqLineEdit *>("dirName");
     if (dirNameLE == 0)
-        WarningAndClose(91);
+    {
+        emit error(ER_DIRADD,0xA1);
+        return;
+    }
     if (dirNameLE->text().isEmpty())
     {
         dirAliasLE = this->findChild<s_tqLineEdit *>("dirAlias");
         if (dirAliasLE == 0)
-            WarningAndClose(92);
+        {
+            emit error(ER_DIRADD,0xA2);
+            return;
+        }
         QString tmpString = pc.getTranslit(dirAliasLE->text());
         dirNameLE->setText(tmpString);
     }

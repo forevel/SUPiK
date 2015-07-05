@@ -16,7 +16,7 @@ PublicClass::PublicClass()
 {
     LandP = new QSettings ("EvelSoft","Supik");
     TabColors[TW_PROB] = QColor(153, 153, 153); // GENERAL
-    TabColors[TW_SYSBU] = TabColors[TW_SYSRS] = TabColors[TW_SYSST] = QColor(194, 194, 194); // SYSTEM
+    TabColors[TW_SYSBU] = TabColors[TW_SYSRS] = TabColors[TW_SYSST] = TabColors[TW_SYSDIR] = QColor(194, 194, 194); // SYSTEM
     TabColors[TW_SET] = QColor(255, 204, 204); // SETTINGS
     TabColors[TW_COMP] = QColor(153, 204, 153); // COMPONENTS
     TabColors[TW_DIR] = QColor(255, 255, 153); // DIRECTORY

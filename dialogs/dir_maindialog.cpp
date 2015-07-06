@@ -8,7 +8,6 @@
 #include "../widgets/s_tqframe.h"
 #include "../widgets/s_tqtableview.h"
 #include "../widgets/s_tqsplitter.h"
-#include "sys_acceptexist.h"
 #include "../models/s_ntmodel.h"
 #include "../models/s_ncmodel.h"
 

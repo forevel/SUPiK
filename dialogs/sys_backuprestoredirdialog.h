@@ -4,7 +4,7 @@
 #define MAX_COL_NUM 20
 #include <QDialog>
 #include <QStringListModel>
-#include "../models/s_whitemmodel.h"
+#include "../models/s_ncmodel.h"
 #include "../widgets/s_tqtableview.h"
 
 class sys_backuprestoredirdialog : public QDialog
@@ -18,7 +18,7 @@ signals:
 public slots:
 
 private:
-    s_whitemmodel *mainmodel;
+    s_ncmodel *mainmodel;
     QStringListModel *dirM, *fM;
     void SetupUI();
     void updateView();

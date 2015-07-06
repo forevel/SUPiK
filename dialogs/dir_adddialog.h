@@ -18,6 +18,7 @@ public:
 
 signals:
     void error(int,int);
+    void closelinkdialog();
 
 public slots:
 
@@ -48,6 +49,7 @@ private slots:
     void transliteFieldName(QString str, s_tqLineEdit *ptr);
     void DTypeCBIndexChanged(int);
     void LTypeCBIndexChanged(int);
+    void ConstructLink();
 };
 
 #endif // DIR_ADDDIALOG_H

@@ -476,13 +476,8 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
     connect(cb,SIGNAL(currentIndexChanged(int)),this,SLOT(DTypeCBIndexChanged(int)));
     adjustFieldSize(cb, 25);
     s_tqComboBox *ltypecb = new s_tqComboBox;
-    QStringListModel *ltypecbmodel = new QStringListModel;
-    tmpStringList.clear();
-    tmpStringList << "Ссылка на поле" << "Ссылка на справочник" << "Ссылка на таблицу" << "Ссылка на БД" << "Косвенная ссылка";
-    ltypecbmodel->setStringList(tmpStringList);
-    ltypecb->setModel(ltypecbmodel);
     ltypecb->setObjectName("ltypecb");
-
+    connect(ltypecb,SIGNAL(currentIndexChanged(int)),this,SLOT(LTypeCBIndexChanged(int)));
     adjustFieldSize(ltypecb, 30);
     s_tqLineEdit *le = new s_tqLineEdit;
     le = this->findChild<s_tqLineEdit *>("value"+QString::number(idx)+"LE");
@@ -493,17 +488,26 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
     }
     s_tqTableView *tbv = new s_tqTableView;
     s_ncmodel *tbvmodel = new s_ncmodel;
-    QDialog *dlg = new QDialog;
+    QDialog *dlg = new QDialog(this);
     QVBoxLayout *lyout = new QVBoxLayout;
     lyout->addWidget(lbl1, 0, Qt::AlignLeft);
     lyout->addWidget(cb, 0, Qt::AlignLeft);
     lyout->addWidget(lbl2, 0, Qt::AlignLeft);
     lyout->addWidget(ltypecb, 0, Qt::AlignLeft);
-    PublicClass::fieldformat ff;
-    ltype = le->text();
-    ff = pc.getFFfromLinks(ltype);
-    cb->setCurrentIndex(ff.delegate);
-    ltypecb->setCurrentIndex(ff.ftype);
+
+    s_tqLabel *lbl = new s_tqLabel("Число");
+    lbl->setObjectName("fw1l");
+    lbl->setVisible(false);
+    lyout->addWidget(lbl);
+    sb = new s_tqSpinBox;
+    sb->setObjectName("fw1sb");
+    sb->setVisible(false);
+    sb->setDecimals(0);
+    sb->setSingleStep(1);
+    sb->setMaximum(999999);
+    sb->setMinimum(0);
+    lyout->addWidget(sb);
+
 
 /*    case FD_CHOOSE:
     {
@@ -548,7 +552,7 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
         tabledialog->SetupUI(sl1, sl2, tmpString);
         connect(tabledialog, SIGNAL(accepted(QString)), this, SLOT(updateFLE(QString)));
         tabledialog->exec(); */
-        break;
+//        break;
 /*        }
     }
 /*        case 2: // права доступа
@@ -576,16 +580,32 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
 //    default:
 //        break;
 //    }
+    lyout->setSizeConstraint(QLayout::SetFixedSize);
+    s_tqPushButton *pb = new s_tqPushButton("Ага");
+    connect(pb,SIGNAL(clicked()),this,SLOT(ConstructLink()));
+    lyout->addWidget(pb);
+    pb = new s_tqPushButton("Неа");
+    connect(pb,SIGNAL(clicked()),dlg,SLOT(close()));
+    lyout->addWidget(pb);
+    connect(this,SIGNAL(closelinkdialog()),dlg,SLOT(close()));
     dlg->setLayout(lyout);
+
+    PublicClass::fieldformat ff;
+    ltype = le->text();
+    ff = pc.getFFfromLinks(ltype);
+    cb->setCurrentIndex(ff.delegate);
+    ltypecb->setCurrentIndex(ff.ftype);
     dlg->exec();
 //        updateTWFields(sb->value());
 }
 
-// установка типа поля по выбранному типу делегата и изменение строки ltype
+// установка типа поля по выбранному типу делегата
 
 void dir_adddialog::DTypeCBIndexChanged(int FD)
 {
-    cb = this->findChild<s_tqComboBox *>("ltypecb");
+    QStringListModel *ltypecbmodel = new QStringListModel;
+    s_tqComboBox *cb = this->findChild<s_tqComboBox *>("ltypecb");
+    QStringList tmpStringList;
     if (cb == 0)
     {
         emit error(ER_DIRADD+0x01,0x41);
@@ -597,25 +617,79 @@ void dir_adddialog::DTypeCBIndexChanged(int FD)
     case FD_DISABLED:
     case FD_SIMGRID:
     {
+        tmpStringList << "0.Автонумерация" << "1.Фиксированное значение" << "5.Значение с макс. ИД" << "7.Вычисляемое поле" << "8.Простое поле" << "19.Автодополнение нулями";
         break;
     }
     case FD_LINEEDIT:
     {
+        tmpStringList << "6.Форматированное поле" << "8.Простое поле";
         break;
     }
     case FD_CHOOSE:
     case FD_CHOOSE_X:
     {
+        tmpStringList << "2.Простая ссылка" << "3.Ссылка на несколько таблиц" << "4.Ссылка на дочерние элементы" \
+                      << "9.Права доступа" << "10.Выбор таблицы" \
+                      << "11.Специальная ссылка" << "12.Ссылка на методы" << "13.Вызов диалога редактирования строки" << "14.Конструктор ссылок" << "15.Ссылка на файл" \
+                      << "16.Ссылка на каталог" << "17.Ссылка на элемент внутри файла" << "18.Выбор даты";
         break;
     }
     case FD_COMBO:
     {
+        tmpStringList << "2.Простая ссылка" << "4.Ссылка на дочерние элементы" \
+                      << "10.Выбор таблицы" \
+                      << "12.Ссылка на методы";
+        break;
+    }
+    case FD_SPIN:
+    {
+        tmpStringList << "8.Простое поле";
+        break;
+    }
+    default:
+        break;
+    }
+    ltypecbmodel->setStringList(tmpStringList);
+    cb->setModel(ltypecbmodel);
+}
+
+// отображение дополнительных элементов диалога при выборе типа ссылки
+
+void dir_adddialog::LTypeCBIndexChanged(int FW)
+{
+    s_tqLabel *lbl = this->findChild<s_tqLabel *>("fw1l");
+    if (lbl == 0)
+    {
+        emit error(ER_DIRADD,0x51);
+        return;
+    }
+    s_tqSpinBox *sb = this->findChild<s_tqSpinBox *>("fw1sb");
+    if (sb == 0)
+    {
+        emit error(ER_DIRADD,0x52);
+        return;
+    }
+
+    lbl->setVisible(false);
+    sb->setVisible(false);
+    switch (FW)
+    {
+    case FW_AUTONUM:
+    {
+        break;
+    }
+    case FW_NUMBER:
+    {
+        lbl->setVisible(true);
+        sb->setVisible(true);
         break;
     }
     default:
         break;
     }
 }
+
+// активация кнопки конструктора при выборе элемента типа "ссылка"
 
 void dir_adddialog::CBPressed(QString str, s_tqComboBox *ptr)
 {
@@ -640,6 +714,13 @@ void dir_adddialog::CBPressed(QString str, s_tqComboBox *ptr)
         le->setEnabled(true);
         pb->setEnabled(true);
     }
+}
+
+// сборка строки ссылки из элементов выбора и выход из диалога конструктора
+
+void dir_adddialog::ConstructLink()
+{
+    emit closelinkdialog();
 }
 
 void dir_adddialog::adjustFieldSize(QWidget *wdgt, int widthInChar)

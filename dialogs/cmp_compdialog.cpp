@@ -1,18 +1,59 @@
 #include "cmp_compdialog.h"
-#include "sys_acceptexist.h"
-#include <QTextCodec>
 #include <QStringListModel>
 #include <QComboBox>
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
+#include <QHeaderView>
 #include <QMessageBox>
 #include <QFile>
 #include <QFileDialog>
-#include <QTableView>
 #include <QPainter>
 #include <QPaintEvent>
-#include <QSizePolicy>
+#include <QApplication>
+#include "../models/s_duniversal.h"
+#include "../widgets/s_tqgroupbox.h"
+#include "../widgets/s_tqlabel.h"
+#include "../widgets/s_tqlineedit.h"
+#include "../widgets/s_tqcombobox.h"
+#include "../widgets/s_tqpushbutton.h"
+#include "../widgets/s_tqcheckbox.h"
+#include "../widgets/s_tqtreeview.h"
+#include "../widgets/s_tqtableview.h"
+#include "../widgets/s_tqframe.h"
+#include "../widgets/s_tqsplitter.h"
+#include "../widgets/s_colortabwidget.h"
+#include "../gen/publicclass.h"
+
+ChooseWidget::ChooseWidget(QString lbltext, QObject *parent) : QWidget (parent)
+{
+    s_tqLineEdit *le = new s_tqLineEdit;
+    s_tqLabel *lbl = new s_tqLabel(lbltext);
+    QHBoxLayout *lyout = new QHBoxLayout;
+    s_tqPushButton *pb = new s_tqPushButton("...");
+    connect(pb,SIGNAL(clicked()),this,SLOT(pbclicked()));
+    lyout->addWidget(lbl);
+    lyout->addWidget(le);
+    lyout->addWidget(pb);
+    setLayout(lyout);
+}
+
+ChooseWidget::~ChooseWidget()
+{
+
+}
+
+void ChooseWidget::pbclicked()
+{
+    PublicClass::fieldformat ff;
+    ff = PublicClass::getFFfromLinks(Links);
+    switch (ff.delegate)
+}
+
+void ChooseWidget::SetLinks(QString links)
+{
+    Links = links;
+}
 
 // --------------------------------------
 // Конструктор
@@ -20,11 +61,6 @@
 
 cmp_compdialog::cmp_compdialog(QWidget *parent) : QDialog(parent)
 {
-    LibRefModel = new QStringListModel;
-    FootRefModel = new QStringListModel;
-    CompManufModel = new QStringListModel;
-    CompUnitsModel = new QStringListModel;
-    s_aemodel = new QStringListModel;
     SomethingChanged = false;
     RevNotes = 0;
     curUnit = 0;
@@ -57,40 +93,54 @@ void cmp_compdialog::paintEvent(QPaintEvent *event)
 
 void cmp_compdialog::SetupUI()
 {
-    QFont fontB, font15;
+    QVBoxLayout *lyout = new QVBoxLayout;
+    s_tqLabel *lbl = new s_tqLabel("Компоненты Altium");
+    QFont font;
+    font.setPointSize(15);
+    lbl->setFont(font);
+    lyout->addWidget(lbl, 0);
+    lyout->setAlignment(lbl, Qt::AlignRight);
+    s_tqTreeView *MainTV = new s_tqTreeView;
+    s_duniversal *gridItemDelegate = new s_duniversal;
+    MainTV->setItemDelegate(gridItemDelegate);
+    MainTV->header()->setVisible(false);
+    MainTV->setIndentation(2);
 
-    font15.setPointSize(15);
-    fontB.setBold(true);
 
-    MainTW = new s_tqTreeWidget;
-    MainTW->header()->setVisible(false);
-    MainTW->setColumnCount(2);
-    MainTW->setIndentation(20);
-    MainTW->setContextMenuPolicy(Qt::CustomContextMenu);
-    MainTW->hideColumn(1);
-    s_tqFrame *line = new s_tqFrame;
-    line->setFrameShape(QFrame::VLine);
-    line->setFrameShadow(QFrame::Sunken);
-    line->setMaximumWidth(2);
-    SlaveTV = new s_tqTableView;
-    TreeFrame = new s_tqFrame;
+    s_tqSplitter *spl = new s_tqSplitter;
+    s_tqFrame *left = new s_tqFrame;
+    QVBoxLayout *leftlyout = new QVBoxLayout;
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    leftlyout->addWidget(MainTV);
+    left->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    left->setLineWidth(1);
+    left->setLayout(leftlyout);
+    spl->addWidget(left);
+    s_tqFrame *right = new s_tqFrame;
+    QVBoxLayout *rlyout = new QVBoxLayout;
+    S_ColorTabWidget *ctw = new S_ColorTabWidget;
+    rlyout->addWidget(ctw);
+    right->setFrameStyle(QFrame::Panel | QFrame::Sunken);
+    right->setLineWidth(1);
+    spl->addWidget(right);
+    spl->setOrientation(Qt::Horizontal);
+    lyout->addWidget(spl, 90);
+    setLayout(lyout);
 
-    TreeFrameLayout = new QHBoxLayout;
-    TreeFrameLayout->addWidget(MainTW, 10);
-    TreeFrameLayout->addWidget(line);
-    TreeFrameLayout->addWidget(SlaveTV, 30);
-    TreeFrame->setLayout(TreeFrameLayout);
-    MainLayout = new QGridLayout;
-    MainLayout->addWidget(TreeFrame);
-    setLayout(MainLayout);
+    s_tqWidget *cp1 = new s_tqWidget;
+    s_tqWidget *cp2 = new s_tqWidget;
+    s_tqWidget *cp3 = new s_tqWidget;
+    ctw->addTab(cp1, "Текстовые");
+    ctw->addTab(cp2, "Основные");
+    ctw->addTab(cp3, "Дополнительные");
 
-    CompGB = new s_tqGroupBox;
-    CompGB->setTitle("Компонент");
-    ManufL = new s_tqLabel("Производитель");
-    ManufL->setFont(fontB);
-    ManufCB = new s_tqComboBox;
-    ManufCB->setMaxVisibleItems(7);
-    ManufCB->setInsertPolicy(QComboBox::InsertAtBottom);
+
+    s_tqGroupBox *gb = new s_tqGroupBox;
+    gb->setTitle("Компонент");
+    s_tqLabel *lbl = new s_tqLabel("Производитель");
+    s_tqWidget *wdgt = new s_tqWidget;
+    cb->setMaxVisibleItems(7);
+    cb->setInsertPolicy(QComboBox::InsertAtBottom);
     PartNumberL = new s_tqLabel("Наименование");
     PartNumberL->setFont(fontB);
     PartNumberLE = new s_tqLineEdit;

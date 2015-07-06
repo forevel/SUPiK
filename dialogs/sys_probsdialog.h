@@ -5,7 +5,7 @@
 #include <QPoint>
 #include <QStringListModel>
 
-#include "../models/s_aitemmodel.h"
+#include "../models/s_ncmodel.h"
 
 class sys_probsdialog : public QDialog
 {
@@ -25,7 +25,7 @@ private:
     void diredit(QString tble);
 
     QStringListModel *slmodel;
-    s_aitemmodel *mainmodel;
+    s_ncmodel *mainmodel;
     QString field;
     QString tble;
     QSqlDatabase db;

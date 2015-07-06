@@ -150,7 +150,7 @@ void sys_probsdialog::updatemainTV()
     QList<QStringList> tmpsl;
     tmpsl.clear();
     tmpsl.append(pc.allprobs);
-    mainmodel = new s_aitemmodel(tmpsl, setlist);
+//    mainmodel = new s_ncmodel(tmpsl, setlist);
     mainmodel->isEditable = false;
     tv->setModel(mainmodel);
     tv->resizeColumnsToContents();

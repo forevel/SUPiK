@@ -1,11 +1,25 @@
-#include "s_tqchoosewidget.h"
 #include <QHBoxLayout>
+#include <QComboBox>
+#include <QStringListModel>
+#include "s_tqchoosewidget.h"
 #include "s_tqlineedit.h"
 #include "s_tqpushbutton.h"
-#include "../gen/s_sql.h"
-#include "../dialogs/s_ncdialog.h"
-#include "../dialogs/s_2cdialog.h"
 #include "s_tqcalendarwidget.h"
+#include "s_tqspinbox.h"
+#include "s_maskedle.h"
+#include "../gen/s_sql.h"
+#include "../gen/s_tablefields.h"
+#include "../dialogs/s_2cdialog.h"
+#include "../dialogs/s_2ctdialog.h"
+#include "../dialogs/s_2tdialog.h"
+#include "../dialogs/s_accessdialog.h"
+
+// универсальный класс для организации списков выбора из таблиц БД СУПиК
+// правила его использования:
+// 1. Создать экземпляр класса
+// 2. Вызвать setup(QString links,QString hdr="") для установки типа диалогов и ссылок, а также заголовка вызываемого по кнопке диалога (для делегатов FD_CHOOSE) (подробнее о links см. РП)
+// 3. Установить связь между сигналом choosed(QVariant) (выбор сделан) и требуемым слотом
+// 4. Вызвать метод hide или присвоить данный виджет соответствующему свойству editor (в делегатах)
 
 s_tqChooseWidget::s_tqChooseWidget(QWidget *parent) :
     QWidget(parent)
@@ -13,116 +27,164 @@ s_tqChooseWidget::s_tqChooseWidget(QWidget *parent) :
     ff.ftype = -1; // проверка на то, вызывали ли перед работой с виджетом функцию getlinks
     setAttribute(Qt::WA_TranslucentBackground);
     setAttribute(Qt::WA_DeleteOnClose);
-    QHBoxLayout *ml = new QHBoxLayout;
-    s_tqLineEdit *le = new s_tqLineEdit;
-    s_tqPushButton *pb = new s_tqPushButton("...");
-    le->setEnabled(false);
-    le->setObjectName("cwle");
-    pb->setObjectName("cwpb");
-    ml->addWidget(le, 80);
-    ml->addWidget(pb,0);
-    connect(pb, SIGNAL(clicked()), this, SLOT(pbclicked()));
-    ml->setContentsMargins(0, 0, 0, 0);
+}
+
+void s_tqChooseWidget::Setup(QString links, QString hdr)
+{
+    ff = pc.getFFfromLinks(links);
+    this->hdr = hdr;
+
+    setStyleSheet("QWidget {background: khaki};");
+    QVBoxLayout *ml = new QVBoxLayout;
+    switch (ff.delegate)
+    {
+    case FD_CHOOSE:
+    case FD_CHOOSE_X:
+    {
+        QHBoxLayout *ml2 = new QHBoxLayout;
+        s_tqLineEdit *le = new s_tqLineEdit;
+        s_tqPushButton *pb = new s_tqPushButton("...");
+        le->setObjectName("fdcle");
+        if (ff.delegate == FD_CHOOSE)
+            le->setEnabled(false);
+        else
+            le->setEnabled(true);
+        pb->setObjectName("fdcpb");
+        ml->addWidget(le, 80);
+        ml->addWidget(pb,0);
+        connect(pb, SIGNAL(clicked()), this, SLOT(pbclicked()));
+        ml2->setContentsMargins(0, 0, 0, 0);
+        ml->addLayout(ml2);
+        break;
+    }
+    case FD_COMBO:
+    {
+        QComboBox *cb;
+        cb = new QComboBox;
+        cb->setStyleSheet("QComboBox {background: khaki};");
+        cb->setObjectName("fdccb");
+        QStringListModel *tmpModel = new QStringListModel;
+        QStringList tmpsl;
+        tmpsl = tfl.idtovl(links);
+        if (tfl.result)
+            tmpsl.clear();
+        tmpModel->setStringList(tmpsl);
+        cb->setModel(tmpModel);
+        ml->addWidget(cb);
+        break;
+    }
+    case FD_LINEEDIT:
+    {
+        if (ff.ftype == FW_MASKED)
+        {
+            QString tmpString = "";
+            for (int i = 0; i < ff.link.size(); i++)
+                tmpString += ff.link.at(i)+"."; // возвращение строке regexp первоначального вида, "побитого" при getFFfromlinks
+            tmpString = tmpString.left(tmpString.size()-1);
+            s_MaskedLineEdit *le = new s_MaskedLineEdit(tmpString);
+            le->setObjectName("lele");
+            ml->addWidget(le);
+        }
+        else
+        {
+            s_tqLineEdit *le = new s_tqLineEdit;
+            le->setObjectName("lele");
+            ml->addWidget(le);
+        }
+        break;
+    }
+    case FD_SIMGRID:
+    case FD_SIMPLE:
+    case FD_DISABLED:
+        break;
+    case FD_SPIN:
+    {
+        int tmpInt = ff.link.at(0).count("n", Qt::CaseSensitive);
+        QString tmpString;
+        tmpString.fill('9', tmpInt);
+        int tmpInt2 = ff.link.at(0).count("d", Qt::CaseSensitive);
+        QString tmpString2;
+        tmpString2.fill('9', tmpInt2);
+        tmpString += "." + tmpString2;
+        s_tqSpinBox *sb = new s_tqSpinBox;
+        sb->setStyleSheet("QSpinBox {background: khaki};");
+        sb->setObjectName("fdcsb");
+        sb->setMinimum(0);
+        sb->setDecimals(tmpInt2);
+        sb->setMaximum(tmpString.toDouble());
+        ml->addWidget(sb);
+        break;
+    }
+    default:
+        break;
+    }
     setLayout(ml);
 }
 
 void s_tqChooseWidget::pbclicked()
 {
-    s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("cwle");
-    QString lestr = le->text();
-    if (ff.ftype == -1)
-    {
-        le->setText("Ошибка! Отсутствует вызов заполнения links! Обратитесь к разработчику");
+    s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fdcle");
+    if (le == 0)
         return;
+    switch (ff.ftype)
+    {
+    case FW_ALLINK:
+    {
+        s_2ctdialog *chooseDialog = new s_2ctdialog(hdr);
+        chooseDialog->setup(ff.link.at(0), true); // диалог с "корневой кнопкой"
+        connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
+        chooseDialog->setTvCurrentText(le->text());
+        chooseDialog->exec();
+        break;
     }
-    switch (ff.delegate)
+    case FW_LINK:
     {
-    case L_LINK:
-    {
-        QSqlDatabase db = sqlc.getdb(ff.link.at(0));
-        if (db.isValid())
+        if (tfl.tableistree(ff.link.at(0))) // это дерево
         {
-            QStringList tmpStringList = sqlc.getvaluesfromtablebycolumn(db, ff.link.at(1), ff.link.at(2));
-            s_2cdialog *chooseDialog = new s_2cdialog("");
-            chooseDialog->setup(tmpStringList, QStringList(), lestr);
+            s_2ctdialog *chooseDialog = new s_2ctdialog(hdr);
+            chooseDialog->setup(ff.link.at(0));
             connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
-            if (sqlc.result)
-            {
-                le->setText("Ошибка! Не найдены данные для списка выбора! Обратитесь к разработчику");
-                return;
-            }
+            chooseDialog->setTvCurrentText(le->text());
             chooseDialog->exec();
         }
-        else
+        else // это таблица
         {
-            le->setText("Ошибка! Некорректная ссылка на БД ("+ff.link.at(0)+")!");
-            return;
+            s_2cdialog *chooseDialog = new s_2cdialog(hdr);
+            chooseDialog->setup(ff.link.at(0), MODE_CHOOSE, "", le->text());
+            if (!chooseDialog->result)
+            {
+                connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
+                chooseDialog->exec();
+            }
         }
         break;
     }
-    case L_ALINK:
+    case FW_DLINK:
     {
-        QSqlDatabase db = sqlc.getdb(ff.link.at(0));
-        if (db.isValid())
-        {
-            QString id = sqlc.getvaluefromtablebyfield(db, ff.link.at(1), "id"+ff.link.at(1), "alias", ff.link.at(2));
-            if (sqlc.result)
-            {
-                le->setText("Ошибка! Не найдены данные для списка выбора! Обратитесь к разработчику");
-                return;
-            }
-            QStringList tmpStringList = sqlc.getvaluesfromtablebycolumnandfield(db, ff.link.at(1), "alias", "idalias", id);
-            if (sqlc.result)
-            {
-                le->setText("Ошибка! Не найдены данные для списка выбора! Обратитесь к разработчику");
-                return;
-            }
-            s_2cdialog *chooseDialog = new s_2cdialog("");
-            chooseDialog->setup(tmpStringList);
-            connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
-            chooseDialog->exec();
-        }
-        else
-        {
-            le->setText("Ошибка! Некорректная ссылка на БД ("+ff.link.at(0)+")!");
-            return;
-        }
+        int count = ff.link.size(); // в поле link - имена таблиц
+        if (count == 0)
+            break;
+        s_2cdialog *dlg = new s_2cdialog(hdr);
+        dlg->setup(ff.link.at(0),MODE_CHOOSE,"");
+        for (int i = 1; i < count; i++)
+            dlg->AddTable(ff.link.at(i));
+        connect(dlg,SIGNAL(changeshasbeenMade(QString)),this,SLOT(accepted(QString)));
+        dlg->SetTvCurrentText(le->text());
+        dlg->exec();
         break;
     }
-    case L_DLINK:
-    {
-        QSqlDatabase db = sqlc.getdb(ff.link.at(0));
-        if (db.isValid())
-        {
-            QStringList tmpStringList = sqlc.getvaluesfromtablebycolumn(db, ff.link.at(1), ff.link.at(2));
-            if (sqlc.result)
-            {
-                le->setText("Ошибка! Не найдены данные для списка выбора! Обратитесь к разработчику");
-                return;
-            }
-            db = sqlc.getdb(ff.link.at(3)); // вторая таблица
-            if (db.isValid())
-                tmpStringList.append(sqlc.getvaluesfromtablebycolumn(db, ff.link.at(4), ff.link.at(5)));
-            s_2cdialog *chooseDialog = new s_2cdialog("");
-            chooseDialog->setup(tmpStringList,QStringList(),lestr);
-            connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
-            chooseDialog->exec();
-        }
-        else
-        {
-            le->setText("Ошибка! Некорректная ссылка на БД ("+ff.link.at(0)+")!");
-            return;
-        }
-        break;
-    }
-    case L_RIGHTS:
+    case FW_RIGHTS:
     {
         // вызов диалога редактирования прав доступа
+        s_accessdialog *dlg = new s_accessdialog;
+        dlg->SetupUI(le->text());
+        connect(dlg, SIGNAL(acceptChanges(QString)), this, SLOT(accepted(QString)));
+        dlg->exec();
         break;
     }
-    case L_DATE:
+    case FW_DATE:
     {
-        s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("cwle");
+        s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fdcle");
         QDate dte;
         dte = QDate::fromString(le->text(), "dd/MM/yyyy");
         s_tqCalendarWidget *calWdgt = new s_tqCalendarWidget;
@@ -135,92 +197,123 @@ void s_tqChooseWidget::pbclicked()
         calWdgt->show();
         break;
     }
+    case FW_SPECIAL:
+    {
+        s_2tdialog *dlg = new s_2tdialog;
+        QStringList tmpsl = QStringList() << ff.link.at(0) << ff.link.at(1);
+        dlg->Setup(tmpsl, le->text());
+        connect(dlg,SIGNAL(finished(QString)),this,SLOT(accepted(QString)));
+        dlg->exec();
+        break;
+    }
     default:
         break;
     }
+
 }
 
 void s_tqChooseWidget::accepted(QString str)
 {
-    QString tmpString = str;
-    s_tqLineEdit *le = this->findChild<s_tqLineEdit*>("cwle");
+    s_tqLineEdit *le = this->findChild<s_tqLineEdit*>("fdcle");
+    if (le == 0)
+        return;
+    QString tmpString = tfl.idtov(pc.getlinksfromFF(ff),str);
+    le->setText(tmpString);
+}
+
+void s_tqChooseWidget::SetData(QVariant data)
+{
     switch (ff.delegate)
     {
-    case L_ALINK:
+    case FD_CHOOSE:
+    case FD_CHOOSE_X:
     {
-        QSqlDatabase db = sqlc.getdb(ff.link.at(0));
-        if (db.isValid())
-            tmpString = sqlc.getvaluefromtablebyfield(db, ff.link.at(1), ff.link.at(1), "id"+ff.link.at(1), str);
+        s_tqLineEdit *le = this->findChild<s_tqLineEdit*>("fdcle");
+        if (le != 0)
+            le->setText(data.toString());
         break;
     }
-    case L_DLINK:
+    case FD_COMBO:
     {
-        QSqlDatabase db = sqlc.getdb(ff.link.at(2));
-        if (db.isValid())
-        {
-            tmpString = sqlc.getvaluefromtablebyfield(db, ff.link.at(3), ff.link.at(3), "id"+ff.link.at(3), str);
-            if (sqlc.result)
-            {
-                QSqlDatabase db = sqlc.getdb(ff.link.at(0));
-                if (db.isValid())
-                    tmpString = sqlc.getvaluefromtablebyfield(db, ff.link.at(1), ff.link.at(1), "id"+ff.link.at(1), str);
-            }
-        }
+        QComboBox *cb = this->findChild<QComboBox *>("fdccb");
+        if (cb != 0)
+            cb->setCurrentText(data.toString());
         break;
     }
-    case L_RIGHTS:
+    case FD_SIMGRID:
+    case FD_SIMPLE:
+    case FD_DISABLED:
+        break;
+    case FD_LINEEDIT:
     {
+        QLineEdit *le;
+        if (ff.ftype == FW_MASKED)
+            le = this->findChild<s_MaskedLineEdit *>("lele");
+        else
+            le = this->findChild<s_tqLineEdit *>("lele");
+        if (le != 0)
+            le->setText(data.toString());
         break;
     }
-    case L_DATE:
+    case FD_SPIN:
+    {
+        s_tqSpinBox *sb = this->findChild<s_tqSpinBox *>("fdcsb");
+        if (sb != 0)
+            sb->setValue(data.toDouble());
         break;
+    }
     default:
         break;
     }
-    le->setText(tmpString);
-    emit datachanged();
 }
 
-void s_tqChooseWidget::setlinks(QString links)
+QVariant s_tqChooseWidget::Data()
 {
-    ff = getFFfromLinks(links);
+    switch (ff.delegate)
+    {
+    case FD_CHOOSE:
+    case FD_CHOOSE_X:
+    {
+        s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fdcle");
+        if (le != 0)
+            return QVariant(le->text());
+        break;
+    }
+    case FD_COMBO:
+    {
+        QComboBox *cb = this->findChild<QComboBox *>("fdccb");
+        if (cb != 0)
+            return QVariant(cb->currentText());
+        break;
+    }
+    case FD_SIMGRID:
+    case FD_DISABLED:
+    case FD_SIMPLE:
+        break;
+    case FD_LINEEDIT:
+    {
+        QLineEdit *le;
+        if (ff.ftype == FW_MASKED)
+            le = this->findChild<s_MaskedLineEdit *>("lele");
+        else
+            le = this->findChild<s_tqLineEdit *>("lele");
+        if (le != 0)
+            return QVariant(le->text());
+        break;
+    }
+    case FD_SPIN:
+    {
+        s_tqSpinBox *sb = this->findChild<s_tqSpinBox *>("fdcsb");
+        if (sb != 0)
+            return QVariant(sb->value());
+        break;
+    }
+    default:
+        break;
+    }
+    return QVariant();
 }
 
-void s_tqChooseWidget::setdata(QString data)
-{
-    s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("cwle");
-    le->setText(data);
-}
-
-s_tqChooseWidget::fieldformat s_tqChooseWidget::getFFfromLinks(QString links)
-{
-    QStringList tmpsl = links.split(".");
-    fieldformat ff;
-    ff.ftype = 8;
-    ff.delegate = 4;
-    ff.dependson = -1;
-    ff.link.clear();
-    if (!tmpsl.size())
-        return ff;
-    ff.ftype = tmpsl.at(0).toInt();
-    tmpsl.removeAt(0);
-    if (!tmpsl.size())
-        return ff;
-    ff.delegate = tmpsl.at(0).toInt();
-    tmpsl.removeAt(0);
-    if (!tmpsl.size())
-        return ff;
-    bool ok;
-    ff.dependson = tmpsl.at(0).toInt(&ok, 10);
-    if (!ok)
-        ff.dependson = -1;
-    tmpsl.removeAt(0);
-    if (!tmpsl.size())
-        return ff;
-    for (int i = 0; i < tmpsl.size(); i++)
-        ff.link << tmpsl.at(i);
-    return ff;
-}
 
 void s_tqChooseWidget::dateChoosed(QDate dte)
 {

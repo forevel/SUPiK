@@ -23,54 +23,29 @@
 #include "../widgets/s_tqframe.h"
 #include "../widgets/s_tqsplitter.h"
 #include "../widgets/s_colortabwidget.h"
+#include "../widgets/s_tqwidget.h"
 #include "../gen/publicclass.h"
-
-ChooseWidget::ChooseWidget(QString lbltext, QObject *parent) : QWidget (parent)
-{
-    s_tqLineEdit *le = new s_tqLineEdit;
-    s_tqLabel *lbl = new s_tqLabel(lbltext);
-    QHBoxLayout *lyout = new QHBoxLayout;
-    s_tqPushButton *pb = new s_tqPushButton("...");
-    connect(pb,SIGNAL(clicked()),this,SLOT(pbclicked()));
-    lyout->addWidget(lbl);
-    lyout->addWidget(le);
-    lyout->addWidget(pb);
-    setLayout(lyout);
-}
-
-ChooseWidget::~ChooseWidget()
-{
-
-}
-
-void ChooseWidget::pbclicked()
-{
-    PublicClass::fieldformat ff;
-    ff = PublicClass::getFFfromLinks(Links);
-    switch (ff.delegate)
-}
-
-void ChooseWidget::SetLinks(QString links)
-{
-    Links = links;
-}
+#include "../gen/s_tablefields.h"
 
 // --------------------------------------
 // Конструктор
 // --------------------------------------
 
-cmp_compdialog::cmp_compdialog(QWidget *parent) : QDialog(parent)
+cmp_compdialog::cmp_compdialog(int type, QWidget *parent) : QDialog(parent)
 {
+    setAttribute(Qt::WA_DeleteOnClose);
+    QStringList sl = QStringList() << "" << "А" << "З" << "Э" << "К" << "У";
+    QStringList dbsl = QStringList() << "" << "alt" << "sch" << "sol" << "con" << "dev";
+    if (type > sl.size())
+        return;
+    CompDb = dbsl.at(type); // БД компонентов
+    CompLetter = sl.at(type); // буква типа компонентов
+    CompType = type;
     SomethingChanged = false;
     RevNotes = 0;
     curUnit = 0;
 
     SetupUI();
-//    connect (ManufCB, SIGNAL(currentIndexChanged(QString)), this, SLOT(SetSomethingChanged()));
-//    connect (PartNumberLE, SIGNAL(textChanged(QString)), this, SLOT(SetSomethingChanged()));
-//    connect (Par1LE, SIGNAL(textChanged(QString)), this, SLOT(SetSomethingChanged()));
-//    connect (isNeedToAccAccuracyInNameCB, SIGNAL(clicked()), this, SLOT(VoltageOrAccuracyAccIsChecked()));
-//    connect (isNeedToAccVoltageInNameCB, SIGNAL(clicked()), this, SLOT(VoltageOrAccuracyAccIsChecked()));
 }
 
 // --------------------------------------
@@ -93,24 +68,35 @@ void cmp_compdialog::paintEvent(QPaintEvent *event)
 
 void cmp_compdialog::SetupUI()
 {
+    QApplication::setOverrideCursor(Qt::WaitCursor);
     QVBoxLayout *lyout = new QVBoxLayout;
-    s_tqLabel *lbl = new s_tqLabel("Компоненты Altium");
+    s_tqLabel *lbl = new s_tqLabel("Компоненты");
     QFont font;
     font.setPointSize(15);
     lbl->setFont(font);
     lyout->addWidget(lbl, 0);
     lyout->setAlignment(lbl, Qt::AlignRight);
-    s_tqTreeView *MainTV = new s_tqTreeView;
+    s_tqTableView *MainTV = new s_tqTableView;
     s_duniversal *gridItemDelegate = new s_duniversal;
     MainTV->setItemDelegate(gridItemDelegate);
-    MainTV->header()->setVisible(false);
-    MainTV->setIndentation(2);
-
-
+    MainTV->setObjectName("mtv");
+    MainTV->horizontalHeader()->setVisible(false);
+    MainTV->verticalHeader()->setVisible(false);
+    s_ncmodel *mainmodel = new s_ncmodel;
+    mainmodel->setup(CompLetter+"Компоненты_описание_сокращ");
+    if (mainmodel->result)
+    {
+        emit error(ER_COMP+mainmodel->result,0x01);
+        QApplication::restoreOverrideCursor();
+        return;
+    }
+    MainTV->setModel(mainmodel);
+    MainTV->resizeColumnsToContents();
+    MainTV->resizeRowsToContents();
+    connect(MainTV,SIGNAL(clicked(QModelIndex)),this,SLOT(MainItemChoosed(QModelIndex)));
     s_tqSplitter *spl = new s_tqSplitter;
     s_tqFrame *left = new s_tqFrame;
     QVBoxLayout *leftlyout = new QVBoxLayout;
-    QApplication::setOverrideCursor(Qt::WaitCursor);
     leftlyout->addWidget(MainTV);
     left->setFrameStyle(QFrame::Panel | QFrame::Sunken);
     left->setLineWidth(1);
@@ -118,15 +104,77 @@ void cmp_compdialog::SetupUI()
     spl->addWidget(left);
     s_tqFrame *right = new s_tqFrame;
     QVBoxLayout *rlyout = new QVBoxLayout;
-    S_ColorTabWidget *ctw = new S_ColorTabWidget;
-    rlyout->addWidget(ctw);
+    s_tqTableView *SlaveTV = new s_tqTableView;
+    slavemodel = new s_ncmodel;
+    SlaveTV->setModel(slavemodel);
+    SlaveTV->setObjectName("stv");
+    SlaveTV->horizontalHeader()->setVisible(false);
+    SlaveTV->verticalHeader()->setVisible(false);
+    SlaveTV->setItemDelegate(gridItemDelegate);
+    connect(SlaveTV,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(SlaveItemChoosed(QModelIndex)));
+    rlyout->addWidget(SlaveTV);
     right->setFrameStyle(QFrame::Panel | QFrame::Sunken);
     right->setLineWidth(1);
+    right->setLayout(rlyout);
     spl->addWidget(right);
     spl->setOrientation(Qt::Horizontal);
     lyout->addWidget(spl, 90);
     setLayout(lyout);
+    QApplication::restoreOverrideCursor();
+}
 
+void cmp_compdialog::MainItemChoosed(QModelIndex idx)
+{
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    s_tqTableView *tv = this->findChild<s_tqTableView *>("mtv");
+    if (tv == 0)
+    {
+        emit error(ER_COMP, 0x11);
+        return;
+    }
+    QString tmps = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole).toString();
+    QStringList fl = QStringList() << "Наименование";
+    tmps = QString::number(tmps.toInt()); // убираем старшие незначащие нули
+    QStringList sl = tfl.valuesbyfield(CompLetter+"Компоненты_описание_полн",fl,"ИД",tmps); // взяли имя таблицы в БД, описание которой выбрали в главной таблице
+    if (tfl.result)
+    {
+        emit error(ER_COMP+tfl.result, 0x12);
+        return;
+    }
+    // теперь надо вытащить в slavemodel все компоненты из выбранной таблицы
+    fl = QStringList() << "id" << "PartNumber" << "Manufacturer";
+    slavemodel->setupraw(CompDb,sl.at(0),fl,"id"); // строим таблицу с сортировкой по ИД
+    if (slavemodel->result)
+        emit error(ER_COMP+slavemodel->result, 0x13);
+    tv = this->findChild<s_tqTableView *>("stv");
+    if (tv == 0)
+    {
+        emit error(ER_COMP, 0x14);
+        return;
+    }
+    tv->resizeColumnsToContents();
+    tv->resizeRowsToContents();
+    QApplication::restoreOverrideCursor();
+}
+
+void cmp_compdialog::test()
+{
+    emit error (0,0);
+}
+
+void cmp_compdialog::SlaveItemChoosed(QModelIndex idx)
+{
+    QDialog *dlg = new QDialog(this);
+    switch(CompType)
+    {
+    case CMP_ALTIUM:
+    {
+        break;
+    }
+    default:
+        break;
+    }
+/*
     s_tqWidget *cp1 = new s_tqWidget;
     s_tqWidget *cp2 = new s_tqWidget;
     s_tqWidget *cp3 = new s_tqWidget;
@@ -137,11 +185,9 @@ void cmp_compdialog::SetupUI()
 
     s_tqGroupBox *gb = new s_tqGroupBox;
     gb->setTitle("Компонент");
-    s_tqLabel *lbl = new s_tqLabel("Производитель");
+    lbl = new s_tqLabel("Производитель");
     s_tqWidget *wdgt = new s_tqWidget;
-    cb->setMaxVisibleItems(7);
-    cb->setInsertPolicy(QComboBox::InsertAtBottom);
-    PartNumberL = new s_tqLabel("Наименование");
+/*    PartNumberL = new s_tqLabel("Наименование");
     PartNumberL->setFont(fontB);
     PartNumberLE = new s_tqLineEdit;
     AddManufPB = new s_tqPushButton(QString("Добавить"));
@@ -412,7 +458,13 @@ void cmp_compdialog::SetupUI()
     QWidget::setTabOrder(DeletePB, AcceptAndClosePB);
     QWidget::setTabOrder(AcceptAndClosePB, DeclinePB); */
 
-    CompLayout = new QVBoxLayout;
+    //    connect (ManufCB, SIGNAL(currentIndexChanged(QString)), this, SLOT(SetSomethingChanged()));
+    //    connect (PartNumberLE, SIGNAL(textChanged(QString)), this, SLOT(SetSomethingChanged()));
+    //    connect (Par1LE, SIGNAL(textChanged(QString)), this, SLOT(SetSomethingChanged()));
+    //    connect (isNeedToAccAccuracyInNameCB, SIGNAL(clicked()), this, SLOT(VoltageOrAccuracyAccIsChecked()));
+    //    connect (isNeedToAccVoltageInNameCB, SIGNAL(clicked()), this, SLOT(VoltageOrAccuracyAccIsChecked()));
+
+/*    CompLayout = new QVBoxLayout;
     LeftLayout = new QVBoxLayout;
     RightLayout = new QVBoxLayout;
     CenterLayout = new QHBoxLayout;
@@ -425,7 +477,7 @@ void cmp_compdialog::SetupUI()
     CompLayout->addWidget(PE3GB, 100);
     CompFrame = new s_tqFrame;
     CompFrame->setLayout(CompLayout);
-
+*/
 //    TreeFrame->setVisible(false);
 //    MainLayout->replaceWidget(TreeFrame, CompFrame, Qt::FindDirectChildrenOnly);
 
@@ -437,21 +489,21 @@ void cmp_compdialog::SetupUI()
 
 void cmp_compdialog::AddNewItem()
 {
-    GetNextId();
+/*    GetNextId();
     SectionLE->setText(pc.dbs[pc.dbs_index].alias);
     FillNullDialog();
     Action=INSERT;
     RevNotes = 1;
     idCompLE->setText(QString::number(pc.idRecord));
-    SomethingChanged = false;
+    SomethingChanged = false; */
 }
 
 void cmp_compdialog::GetNextId()
 {
-    QSqlQuery get_next_id = QSqlQuery(pc.alt);
+/*    QSqlQuery get_next_id = QSqlQuery(pc.alt);
     get_next_id.exec("SELECT MAX(id) FROM " + pc.dbs[pc.dbs_index].dbs + ";");
     get_next_id.next();
-    pc.idRecord = get_next_id.value(0).toInt(0) + 1;
+    pc.idRecord = get_next_id.value(0).toInt(0) + 1; */
 }
 
 // --------------------------------------
@@ -460,7 +512,7 @@ void cmp_compdialog::GetNextId()
 
 void cmp_compdialog::FillNullDialog()
 {
-    QStringList tmpList;
+/*    QStringList tmpList;
     QString tmpString;
     int i = 0;
 
@@ -494,7 +546,7 @@ void cmp_compdialog::FillNullDialog()
 
     FootRefModel->setStringList(GetListFromFile(tmpString, pc.footfind));
     FootPrintCB->setModel(FootRefModel);
-    FootPrintCB->setCurrentIndex(0);
+    FootPrintCB->setCurrentIndex(0); */
 }
 
 // --------------------------------------
@@ -503,7 +555,7 @@ void cmp_compdialog::FillNullDialog()
 
 void cmp_compdialog::FillDialog (QString PartNumber)
 {
-    QSqlQuery get_data_from_db(pc.alt);
+/*    QSqlQuery get_data_from_db(pc.alt);
 
     QString tmpString = "SELECT `id`, `Library Ref`, `Footprint Ref`,"\
             "`Sim Description`,`Sim File`,`Sim Model Name`,`Sim Parameters`,"\
@@ -620,7 +672,7 @@ void cmp_compdialog::FillDialog (QString PartNumber)
 
     PartNumberLE->setText(get_data_from_db.value(8).toString());
 
-    SomethingChanged = false;
+    SomethingChanged = false;*/
 }
 
 // --------------------------------------
@@ -629,7 +681,7 @@ void cmp_compdialog::FillDialog (QString PartNumber)
 
 void cmp_compdialog::ClearDialog ()
 {
-    LibRefCB->setCurrentIndex(-1);
+/*    LibRefCB->setCurrentIndex(-1);
     FootPrintCB->setCurrentIndex(-1);
 
     pc.CompModelData.MDescLE = ""; // 0.4b
@@ -656,7 +708,7 @@ void cmp_compdialog::ClearDialog ()
     PENotesLE->setText("");
     isSMDCB->setChecked(false);
     UnitsCB->clear();
-    Par3LE->setText("");
+    Par3LE->setText("");*/
 }
 
 // --------------------------------------
@@ -665,7 +717,7 @@ void cmp_compdialog::ClearDialog ()
 
 QStringList cmp_compdialog::GetListFromFile (QString filename, QByteArray &StringToFind)
 {
-    QStringList tmpList;
+/*    QStringList tmpList;
     QString tmpString;
     char *tmpChar;
     int filepos = 0;
@@ -707,7 +759,8 @@ QStringList cmp_compdialog::GetListFromFile (QString filename, QByteArray &Strin
         tmpList << tmpString;
     }
     file.close();
-    return tmpList;
+    return tmpList;*/
+    return QStringList();
 }
 
 // --------------------------------------
@@ -725,7 +778,7 @@ void cmp_compdialog::DeclinePBClicked()
 
 void cmp_compdialog::AcceptAndClosePBClicked()
 {
-    if (SomethingChanged && (Action == UPDATE))
+/*    if (SomethingChanged && (Action == UPDATE))
     {
         QMessageBox tmpMB;
         tmpMB.setText("Изменить текущую запись или создать новую?");
@@ -745,7 +798,7 @@ void cmp_compdialog::AcceptAndClosePBClicked()
             return;
     }
     if (CheckAndAdd())
-        this->close();
+        this->close();*/
 }
 
 void cmp_compdialog::SetSomethingChanged ()
@@ -759,7 +812,7 @@ void cmp_compdialog::SetSomethingChanged ()
 
 bool cmp_compdialog::CheckAndAdd()
 {
-    QString tmpString;
+/*    QString tmpString;
     QStringList tmpList;
 
     if (PartNumberLE->text().isEmpty())
@@ -895,7 +948,7 @@ bool cmp_compdialog::CheckAndAdd()
                 + MNameCB->currentText() + "\",`Sim Parameters`=\"" \
                 + MParLE->text() + "\",`Manufacturer`=\"" \ */
 // 0.4b {{{
-                + pc.CompModelData.MDescLE + "\",`Sim File`=\"" \
+/*                + pc.CompModelData.MDescLE + "\",`Sim File`=\"" \
                 + pc.CompModelData.MFileLE + "\",`Sim Model Name`=\"" \
                 + pc.CompModelData.MNameCB + "\",`Sim Parameters`=\"" \
                 + pc.CompModelData.MParLE + "\",`Manufacturer`=\"" \
@@ -964,7 +1017,7 @@ bool cmp_compdialog::CheckAndAdd()
                     return false;
                 }
 
-/*//                qa_AddNkDialog.ManufCB->setCurrentText(ManufCB->currentText());
+/*                qa_AddNkDialog.ManufCB->setCurrentText(ManufCB->currentText());
 //                qa_AddNkDialog.PartNumberLE->setText(PartNumberLE->text());
 //                qa_AddNkDialog.idSectLE->setText(idCompLE->text());
 //                qa_AddNkDialog.idSldwLE->setText("0");
@@ -978,7 +1031,7 @@ bool cmp_compdialog::CheckAndAdd()
 //                }
 
 //                qa_AddNkDialog.exec(); */
-            }
+  /*          }
         }
         return true;
     }
@@ -988,7 +1041,8 @@ bool cmp_compdialog::CheckAndAdd()
                              insert_comp.lastError().text(),\
                              QMessageBox::Ok, QMessageBox::NoButton);
         return false;
-    }
+    }*/
+    return true;
 }
 
 
@@ -998,11 +1052,11 @@ bool cmp_compdialog::CheckAndAdd()
 
 void cmp_compdialog::DSheetPBClicked()
 {
-    QString DSheedbs = QFileDialog::getOpenFileName(this, \
+/*    QString DSheedbs = QFileDialog::getOpenFileName(this, \
                                       "Выберите файл описания", \
                                       pc.PathToLibs + "//DSheet//",
                                       "PDF Files (*.pdf)");
-    DSheetLE->setText(DSheedbs);
+    DSheetLE->setText(DSheedbs);*/
 }
 
 void cmp_compdialog::AddManufPBClicked()
@@ -1014,7 +1068,7 @@ void cmp_compdialog::AddManufPBClicked()
 
 void cmp_compdialog::UpdateManufCombobox ()
 {
-    QStringList tmpList;
+/*    QStringList tmpList;
     tmpList.clear();
     QSqlQuery mw_ent_get_manuf (pc.ent);
 // 0.4b    mw_ent_get_manuf.exec("SELECT manuf FROM manuf;");
@@ -1026,12 +1080,12 @@ void cmp_compdialog::UpdateManufCombobox ()
     CompManufModel->setStringList(tmpList);
     CompManufModel->sort(0, Qt::AscendingOrder); // 0.4b
     ManufCB->setModel(CompManufModel);
-    ManufCB->setCurrentText(pc.InterchangeString);
+    ManufCB->setCurrentText(pc.InterchangeString);*/
 }
 
 void cmp_compdialog::ManufCBIndexChanged(const QString &arg1)
 {
-    if (arg1 == "НКП")
+/*    if (arg1 == "НКП")
     {
         isNeedToAccAccuracyInNameCB->setEnabled(true);
         isNeedToAccVoltageInNameCB->setEnabled(true);
@@ -1051,12 +1105,12 @@ void cmp_compdialog::ManufCBIndexChanged(const QString &arg1)
         PartNumberLE->setEnabled(true);
         PEDescLE->setEnabled(true);
         DisconnectPartNumber();
-    }
+    }*/
 }
 
 void cmp_compdialog::SetParNames()
 {
-    QSqlQuery get_parnames(pc.sup);
+/*    QSqlQuery get_parnames(pc.sup);*/
 
 }
 
@@ -1079,7 +1133,7 @@ void cmp_compdialog::UpdateUnitsCombobox()
 
 bool cmp_compdialog::ConnectPartNumber()
 {
-    handle1 = connect(PrefixLE, SIGNAL(textChanged(QString)), this, SLOT(UpdatePartNumber()));
+/*    handle1 = connect(PrefixLE, SIGNAL(textChanged(QString)), this, SLOT(UpdatePartNumber()));
     handle2 = connect(Par1LE, SIGNAL(textChanged(QString)), this, SLOT(UpdatePartNumber()));
     handle3 = connect(AccuracyLE, SIGNAL(textChanged(QString)), this, SLOT(UpdatePartNumber()));
     handle4 = connect(TypeLE, SIGNAL(textChanged(QString)), this, SLOT(UpdatePartNumber()));
@@ -1087,12 +1141,13 @@ bool cmp_compdialog::ConnectPartNumber()
     handle6 = connect(Par2LE, SIGNAL(textChanged(QString)), this, SLOT(UpdatePartNumber()));
     handle7 = connect(UnitsCB, SIGNAL(currentTextChanged(QString)) , this, SLOT(UpdatePartNumber()));
     bool result = handle1 && handle2 && handle3 && handle4 && handle5 && handle6 && handle7;
-    return result;
+    return result;*/
+    return true;
 }
 
 void cmp_compdialog::UpdatePartNumber()
 {
-    QString tmpString;
+/*    QString tmpString;
     if (SectionLE->text() == "Конденсаторы")
     {
         tmpString = PrefixLE->text() + " Конд. " + Par1LE->text() + " " + UnitsCB->currentText() + ",";
@@ -1114,12 +1169,12 @@ void cmp_compdialog::UpdatePartNumber()
     else
         tmpString = PrefixLE->text();
     PartNumberLE->setText(tmpString);
-    PEDescLE->setText(tmpString);
+    PEDescLE->setText(tmpString);*/
 }
 
 bool cmp_compdialog::DisconnectPartNumber()
 {
-    if (handle1)
+/*    if (handle1)
         if (!disconnect(handle1)) return false;
     if (handle2)
         if (!disconnect(handle2)) return false;
@@ -1133,12 +1188,13 @@ bool cmp_compdialog::DisconnectPartNumber()
         if (!disconnect(handle6)) return false;
     if (handle7) // 0.4
         if (!disconnect(handle7)) return false; // 0.4
+    return true;*/
     return true;
 }
 
 void cmp_compdialog::DeletePBClicked()
 {
-    QString tmpString;
+/*    QString tmpString;
     if (pc.access & 0x07)
     {
 //        qtdd.ManufLE->setText(ManufCB->currentText());
@@ -1172,13 +1228,13 @@ void cmp_compdialog::DeletePBClicked()
                              "Недостаточно привилегий для выполнения действия!",\
                              QMessageBox::Ok, QMessageBox::NoButton);
     }
-    this->close();
+    this->close();*/
 }
 
 void cmp_compdialog::VoltageOrAccuracyAccIsChecked()
 {
-    if (ManufCB->currentText() == "НКП")
-        UpdatePartNumber();
+ /*   if (ManufCB->currentText() == "НКП")
+        UpdatePartNumber();*/
 }
 
 void cmp_compdialog::ModelParPBClicked()

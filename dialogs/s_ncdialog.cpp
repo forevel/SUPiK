@@ -349,8 +349,7 @@ QWidget *s_ncdialog::getWidget(int id, QString ftext, QString link, QString defs
             for (int i = 3; i < links.size(); i++)
                 dlink += "."+links.at(i);
         }
-        cw->setdata(ftext);
-        cw->setlinks(dlink);
+        cw->Setup(dlink,ftext);
         connect(cw, SIGNAL(datachanged()), this, SLOT(somethingchanged()));
         return cw;
         break;
@@ -376,12 +375,12 @@ QWidget *s_ncdialog::getWidget(int id, QString ftext, QString link, QString defs
             case L_ALINK:
             {
                 if (links.size()<5) return 0;
-                tmpStringList = sqlc.getvaluesfromtablebycolumn(db, links.at(3), links.at(4));
+                tmpStringList = sqlc.getvaluesfromtablebycolumn(db, links.at(3), links.at(4), "id"+links.at(3), true);
                 break;
             }
             case L_SMETHOD:
             {
-                tmpStringList = sqlc.getvaluesfromtablebycolumn(sqlc.getdb("sup"), "dialogmethods", "dialogmethods");
+                tmpStringList = sqlc.getvaluesfromtablebycolumn(sqlc.getdb("sup"), "dialogmethods", "dialogmethods", "iddialogmethods",true);
                 break;
             }
             default:
@@ -541,7 +540,7 @@ void s_ncdialog::somethingchanged(QModelIndex index)
 
 void s_ncdialog::setTable(s_ncmodel &model, QString link)
 {
-    QList<QStringList> lsl;
+/*    QList<QStringList> lsl;
     QStringList fl;
     QString db = link.split(".").at(0);
     QString tble = link.split(".").at(1);
@@ -584,7 +583,7 @@ void s_ncdialog::setTable(s_ncmodel &model, QString link)
     lsl.insert(0, headers);
     model.fillModel(lsl);
     for (i = 0; i < model.rowCount(); i++)
-        model.setrowlinks(i, links); // простые поля для первого столбца
+        model.setrowlinks(i, links); // простые поля для первого столбца */
 }
 
 // собственные методы

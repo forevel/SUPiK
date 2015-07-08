@@ -83,7 +83,7 @@ void s_2tdialog::Setup(QStringList links, QString cursel, QString hdr)
     s_tqTableView *MainTV = this->findChild<s_tqTableView *>("MainTV");
     if (MainTV == 0)
     {
-        ShowErMsg(ER_2TDLG+0x01);
+        emit error(ER_2TDLG,0x01);
         return;
     }
     QApplication::setOverrideCursor(Qt::WaitCursor);
@@ -91,11 +91,11 @@ void s_2tdialog::Setup(QStringList links, QString cursel, QString hdr)
     if (res)
     {
         QApplication::restoreOverrideCursor();
-        ShowErMsg(ER_2TDLG+res+0x04);
+        emit error(ER_2TDLG+res,0x02);
         return;
     }
     QStringList tmpsl = tfl.tablefields(links.at(0),links.at(1));
-    tblename = links.at(0); // имя таблицы на русском (Компоненты_описание_сокращ)
+    tblename = links.at(0)+"_полн"; // имя таблицы на русском (Компоненты_описание_полн)
     tblefield = links.at(1); // имя поля на русском (Описание)
     tablefield = tmpsl.at(1); // сохраняем имя колонки для последующего использования (descriptionfull)
     MainTV->setModel(mainmodel);
@@ -112,7 +112,7 @@ void s_2tdialog::Setup(QStringList links, QString cursel, QString hdr)
         QStringList tmpsl = tfl.htovlc(tblename, tblefield, "ИД", curselsl.at(0)); // берём из главной таблицы данные, для которого ИД=текущему элементу
         if (tfl.result)
         {
-            ShowErMsg(ER_2TDLG+tfl.result);
+            emit error(ER_2TDLG+tfl.result,0x03);
             return;
         }
         SetMainTvCurrentText(tmpsl.at(0)); // устанавливаем текущий элемент главной таблицы в соответствии с переданной строкой
@@ -135,14 +135,14 @@ void s_2tdialog::MainItemChoosed(QModelIndex idx)
     s_tqTableView *MainTV = this->findChild<s_tqTableView *>("MainTV");
     if (MainTV == 0)
     {
-        ShowErMsg(ER_2TDLG+0x11);
+        emit error(ER_2TDLG,0x11);
         return;
     }
     QString tmpString = MainTV->model()->index(MainTV->currentIndex().row(), 0, QModelIndex()).data(Qt::DisplayRole).toString();
     QStringList tmpsl = tfl.tablefields(tblename, "Наименование"); // берём из главной таблицы данные столбца "Наименование", т.к. в нём содержатся названия таблиц, из которых брать элементы подчинённой таблицы
     if (tfl.result)
     {
-        ShowErMsg(ER_2TDLG+0x14+tfl.result);
+        emit error(ER_2TDLG+tfl.result,0x12);
         return;
     }
     QString db = tmpsl.at(0).split(".").at(0); // table = <db>.<tble>
@@ -150,14 +150,14 @@ void s_2tdialog::MainItemChoosed(QModelIndex idx)
     QString sltble = sqlc.getvaluefromtablebyfield(sqlc.getdb(db),mntble,tmpsl.at(1),tablefield,tmpString); // берём из главной таблицы значение по полю "Наименование", для которого сохранённое tablefield равен текущему элементу таблицы
     if (sqlc.result)
     {
-        ShowErMsg(ER_2TDLG+0x17+sqlc.result);
+        emit error(ER_2TDLG+sqlc.result,0x13);
         return;
     }
     s_ncmodel *slavemodel = new s_ncmodel;
     s_tqTableView *SlaveTV = this->findChild<s_tqTableView *>("SlaveTV");
     if (SlaveTV == 0)
     {
-        ShowErMsg(ER_2TDLG+0x1A);
+        emit error(ER_2TDLG,0x14);
         return;
     }
     QApplication::setOverrideCursor(Qt::WaitCursor);
@@ -165,7 +165,7 @@ void s_2tdialog::MainItemChoosed(QModelIndex idx)
     if (res)
     {
         QApplication::restoreOverrideCursor();
-        ShowErMsg(ER_2TDLG+res+0x1D);
+        emit error(ER_2TDLG+res,0x15);
         return;
     }
     SlaveTV->setModel(slavemodel);
@@ -184,14 +184,14 @@ void s_2tdialog::SlaveItemChoosed(QModelIndex idx)
     s_tqTableView *MainTV = this->findChild<s_tqTableView *>("MainTV");
     if (MainTV == 0)
     {
-        ShowErMsg(ER_2TDLG+0x21);
+        emit error(ER_2TDLG,0x21);
         return;
     }
     QString tmpString = MainTV->model()->index(MainTV->currentIndex().row(), 0, QModelIndex()).data(Qt::DisplayRole).toString();
     s_tqTableView *SlaveTV = this->findChild<s_tqTableView *>("SlaveTV");
     if (SlaveTV == 0)
     {
-        ShowErMsg(ER_2TDLG+0x24);
+        emit error(ER_2TDLG,0x22);
         return;
     }
     QString tmpString2 = SlaveTV->model()->index(SlaveTV->currentIndex().row(), 0, QModelIndex()).data(Qt::DisplayRole).toString();
@@ -199,7 +199,7 @@ void s_2tdialog::SlaveItemChoosed(QModelIndex idx)
     QStringList tmpsl = tfl.htovlc(tblename, "ИД", tblefield, tmpString); // берём из главной таблицы данные столбца "ИД", для которого описание=текущему элементу главной таблицы
     if (tfl.result)
     {
-        ShowErMsg(ER_2TDLG+tfl.result);
+        emit error(ER_2TDLG+tfl.result,0x23);
         return;
     }
     emit finished(tmpsl.at(0)+"."+tmpString2);
@@ -274,9 +274,4 @@ void s_2tdialog::accepted()
 void s_2tdialog::cancelled()
 {
     this->close();
-}
-
-void s_2tdialog::ShowErMsg(int ermsg)
-{
-    QMessageBox::warning(this, "warning!", "Ошибка 0x" + QString::number(ermsg,16));
 }

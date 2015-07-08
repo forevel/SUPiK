@@ -91,8 +91,8 @@ bool s_ncmodel::setData(const QModelIndex &index, const QVariant &value, int rol
             if (index.column() < hdr.size())
             {
                 tmpString = maindata.at(index.row())->linksdata(index.column());
-                ff = pc.getFFfromLinks(tmpString);
                 vl = value;
+                ff = pc.getFFfromLinks(tmpString);
                 switch (ff.ftype)
                 {
                 case FW_AUTONUM:
@@ -128,7 +128,6 @@ bool s_ncmodel::setData(const QModelIndex &index, const QVariant &value, int rol
                     if (maxcolswidth.at(index.column()) < vl.toString().size())
                         maxcolswidth.replace(index.column(), vl.toString().size());
                 }
-                emit dataChanged(index, index);
                 return true;
             }
         }
@@ -327,30 +326,29 @@ void s_ncmodel::prepareModel(QList<int> sl)
     }
 }
 
-void s_ncmodel::fillModel(QList<QStringList> lsl)
+void s_ncmodel::fillModel()
 {
     int i;
     int j;
-    PublicClass::fieldformat ff;
     QString vl;
     result = 0;
-    if (lsl.size()>hdr.size()) // в переданном списке больше колонок, чем в модели
+    if (DataToWrite.size()>hdr.size()) // в переданном списке больше колонок, чем в модели
     {
-        for (i = hdr.size(); i < lsl.size(); i++)
+        for (i = hdr.size(); i < DataToWrite.size(); i++)
             addColumn("");
     }
-    for (i = 0; i < lsl.at(0).size(); i++)  // цикл по строкам
+    for (i = 0; i < DataToWrite.at(0).size(); i++)  // цикл по строкам
     {
         if (rcount >= rowCount())
             addRow();
-        for (j = 0; j < lsl.size(); j++) // цикл по столбцам
+        for (j = 0; j < DataToWrite.size(); j++) // цикл по столбцам
         {
-            if (i > lsl.at(j).size()) // если строк в текущем столбце меньше, чем текущий номер строки, пишем пустое значение
+            if (i > DataToWrite.at(j).size()) // если строк в текущем столбце меньше, чем текущий номер строки, пишем пустое значение
                 setData(index(rcount, j, QModelIndex()), QVariant(""), Qt::EditRole);
             else
             {
-                // значения в lsl уже подготовлены в процедурах setup
-                vl = lsl.at(j).at(i);
+                // значения в DataToWrite уже подготовлены в процедурах setup
+                vl = DataToWrite.at(j).at(i);
                 if (vl.isEmpty())
                 {
                     result = ER_NCMODEL+0x01;
@@ -559,26 +557,26 @@ QString s_ncmodel::getCellType(int row, int column)
 int s_ncmodel::setup(QString tble)
 {
     int i;
-    QList<QStringList> lsl;
+    DataToWrite.clear();
     ClearModel();
     QStringList headers, links;
-    lsl = tfl.tbvll(tble);
+    DataToWrite = tfl.tbvll(tble);
     if (tfl.result)
         return (tfl.result+ER_NCMODEL+0x11);
-    // в lsl.at(1) содержатся links, в lsl.at(0) - заголовки
-    headers = lsl.at(0);
-    links = lsl.at(1);
-    lsl.removeAt(0);
-    lsl.removeAt(0);
+    // в DataToWrite.at(1) содержатся links, в DataToWrite.at(0) - заголовки
+    headers = DataToWrite.at(0);
+    links = DataToWrite.at(1);
+    DataToWrite.removeAt(0);
+    DataToWrite.removeAt(0);
     for (i = 0; i < headers.size(); i++)
         addColumn(headers.at(i));
     QList<int> il;
-    for (i = 0; i < lsl.size(); i++)
-        il << lsl.at(i).size();
+    for (i = 0; i < DataToWrite.size(); i++)
+        il << DataToWrite.at(i).size();
     prepareModel(il);
     for (i = 0; i < links.size(); i++)
         setcolumnlinks(i, links.at(i));
-    fillModel(lsl);
+    fillModel();
     return 0;
 }
 
@@ -589,7 +587,7 @@ int s_ncmodel::setup(QString tble, QString id)
 {
     int i;
     ClearModel();
-    QList<QStringList> lsl;
+    DataToWrite.clear();
     QStringList headers = tfl.tableheaders(tble);
     if (tfl.result)
         return tfl.result+ER_NCMODEL+0x21;
@@ -597,7 +595,7 @@ int s_ncmodel::setup(QString tble, QString id)
     if (tfl.result)
         return tfl.result+ER_NCMODEL+0x24;
     QString tmpString;
-    lsl.append(headers);
+    DataToWrite.append(headers);
     QStringList tmpsl;
     for (i = 0; i < headers.size(); i++)
     {
@@ -608,7 +606,7 @@ int s_ncmodel::setup(QString tble, QString id)
         else
             tmpsl << "";
     }
-    lsl.append(tmpsl);
+    DataToWrite.append(tmpsl);
     addColumn("");
     addColumn("");
     QList<int> il;
@@ -616,31 +614,33 @@ int s_ncmodel::setup(QString tble, QString id)
     prepareModel(il);
     setcolumnlinks(0, "0.8");
     setcolumnlinks(1, links);
-    fillModel(lsl);
+    fillModel();
     return 0;
 }
 
 int s_ncmodel::setupcolumn(QString tble, QString header)
 {
     ClearModel();
-    QList<QStringList> lsl;
+    DataToWrite.clear();
     QStringList tmpsl = tfl.htovl(tble, header);
     if (tfl.result)
         return (tfl.result+ER_NCMODEL+0x31);
-    lsl.append(tmpsl);
+    DataToWrite.append(tmpsl);
     addColumn("");
     QList<int> il;
     il << tmpsl.size();
     prepareModel(il);
     setcolumnlinks(0, "0.8");
-    fillModel(lsl);
+    fillModel();
     return 0;
 }
 
-int s_ncmodel::setupraw(QString db, QString tble, QStringList fl)
+int s_ncmodel::setupraw(QString db, QString tble, QStringList fl, QString orderfield)
 {
+    result = 0;
     ClearModel();
-    QList<QStringList> lsl;
+//    QList<QStringList> lsl;
+    DataToWrite.clear();
     QList<int> il;
     if (fl.isEmpty())
     {
@@ -650,15 +650,15 @@ int s_ncmodel::setupraw(QString db, QString tble, QStringList fl)
     }
     for (int i = 0; i < fl.size(); i++)
     {
-        QStringList tmpsl = sqlc.getvaluesfromtablebycolumn(sqlc.getdb(db), tble, fl.at(i));
+        QStringList tmpsl = sqlc.getvaluesfromtablebycolumn(sqlc.getdb(db), tble, fl.at(i),orderfield,true);
         if (sqlc.result)
             return (sqlc.result+0x34+ER_NCMODEL);
-        lsl.append(tmpsl);
+        DataToWrite.append(tmpsl);
         addColumn(fl.at(i));
         il << tmpsl.size();
         setcolumnlinks(i, "0.8");
     }
-    fillModel(lsl);
+    fillModel();
     return 0;
 }
 

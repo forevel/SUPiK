@@ -227,7 +227,7 @@ void sys_backuprestoredirdialog::CancelPBPressed()
 
 void sys_backuprestoredirdialog::LoadFilePBPressed()
 {
-    s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("loadFileLE");
+/*    s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("loadFileLE");
     if (!isImport)
     {
         filename = QFileDialog::getSaveFileName(this,"Открыть файл","","Excel files (*.xlsx)");
@@ -239,7 +239,7 @@ void sys_backuprestoredirdialog::LoadFilePBPressed()
     QXlsx::Document xlsx(filename.toUtf8());
     QString tmpString, readString;
     if (mainmodel == (void*)0) delete mainmodel;
-    mainmodel = new s_whitemmodel;
+    mainmodel = new s_ncmodel;
 
     int i = 1;
     int j = 10; // 'A'
@@ -294,7 +294,7 @@ void sys_backuprestoredirdialog::LoadFilePBPressed()
     {
         s_tqComboBox *cb = this->findChild<s_tqComboBox *>("fieldcb"+QString::number(i));
         cb->setModel(fM);
-    }
+    } */
 }
 
 void sys_backuprestoredirdialog::DirChoosed(QString str)

@@ -22,7 +22,7 @@ public:
     // (для MODE_CHOOSE), isQuarantine - признак для MODE_EDIT: карантинная база или нет, для спец. обработки слота accepted()
     void setup(QString tble, int Mode=MODE_CHOOSE, QString id="", QString matchtext="", bool isQuarantine=false);
     // sl - список строк для выбора, links - опционально вид для каждой ячейки, str - текущее выбранное значение
-    void setup(QStringList sl, QStringList links=QStringList(), QString str="");
+//    void setup(QStringList sl, QStringList links=QStringList(), QString str="");
     // функция добавления к существующей таблице ещё одной - для FW_DLINK
     void AddTable(QString tble);
     void sortModel();

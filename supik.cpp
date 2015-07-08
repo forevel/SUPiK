@@ -290,8 +290,8 @@ void supik::Components()
         return;
     }
 
-    cmp_compdialog *qccda = new cmp_compdialog;
-    qccda->setAttribute(Qt::WA_DeleteOnClose);
+    cmp_compdialog *qccda = new cmp_compdialog(CMP_ALTIUM);
+    connect(qccda,SIGNAL(error(int,int)),this,SLOT(ShowErMsg(int,int)));
 
     int ids = MainTW->addTab(qccda, "Компоненты");
     MainTW->tabBar()->setTabData(ids, QVariant(TW_COMP));

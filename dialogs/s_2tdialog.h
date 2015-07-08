@@ -19,6 +19,7 @@ public:
 
 signals:
     void finished (QString);
+    void error(int,int);
 
 protected:
     void paintEvent(QPaintEvent *e);
@@ -33,8 +34,6 @@ private slots:
 
 private:
     QString tblename, tblefield, tablefield;
-
-    void ShowErMsg(int);
 };
 
 #endif // S_2TDIALOG_H

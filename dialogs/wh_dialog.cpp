@@ -21,7 +21,6 @@
 #include "../gen/publicclass.h"
 #include "../gen/s_sql.h"
 #include "../models/s_duniversal.h"
-#include "s_tablefilterdialog.h"
 #include "s_2cdialog.h"
 
 wh_dialog::wh_dialog(int Reason, QString id, QWidget *parent) :

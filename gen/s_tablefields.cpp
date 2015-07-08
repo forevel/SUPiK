@@ -26,7 +26,7 @@ QStringList s_tablefields::htovl(QString tble, QString header)
         return QStringList();
     QString db = sl.at(0).split(".").at(0); // table = <db>.<tble>
     tble = sl.at(0).split(".").at(1);
-    QStringList tmpsl = sqlc.getvaluesfromtablebycolumn(sqlc.getdb(db), tble, sl.at(1));
+    QStringList tmpsl = sqlc.getvaluesfromtablebycolumn(sqlc.getdb(db), tble, sl.at(1),"id"+tble,true);
     if (sqlc.result)
     {
         result = sqlc.result + 0x03 + ER_TFIELD;

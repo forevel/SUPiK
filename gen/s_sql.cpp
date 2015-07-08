@@ -130,13 +130,22 @@ QStringList s_sql::getvaluesfromtablebyfield(QSqlDatabase db, QString tble, QStr
 
 // процедура берёт из таблицы все значения по столбцу column для всех строк
 
-QStringList s_sql::getvaluesfromtablebycolumn(QSqlDatabase db, QString tble, QString column)
+QStringList s_sql::getvaluesfromtablebycolumn(QSqlDatabase db, QString tble, QString column, QString orderby, bool asc)
 {
     QString tmpString;
     QStringList vl;
     QSqlQuery get_fields_from_db (db);
 
-    tmpString = "SELECT `" + column + "` FROM `" + tble + "` WHERE `deleted`=0 ORDER BY `id"+tble+"` ASC;";
+    tmpString = "SELECT `" + column + "` FROM `" + tble + "` WHERE `deleted`=0";
+    if (!orderby.isEmpty())
+    {
+        tmpString += " ORDER BY `"+orderby+"` ";
+        if (asc)
+            tmpString += "ASC";
+        else
+            tmpString += "DESC";
+    }
+    tmpString += ";";
     get_fields_from_db.exec(tmpString);
     vl.clear();
     while (get_fields_from_db.next())
@@ -160,18 +169,13 @@ QList<QStringList> s_sql::getvaluesfromtablebycolumns(QSqlDatabase db, QString t
     QSqlQuery get_fields_from_db (db);
     int i;
 
-    tmpString = "SELECT ";
     for (i = 0; i < columns.size(); i++)
-        tmpString += "`" + columns.at(i) + "`,";
-    tmpString = tmpString.left(tmpString.size()-1); // удаляем последнюю запятую
-    tmpString += " FROM `" + tble + "` WHERE `deleted`=0;";
-    get_fields_from_db.exec(tmpString);
-    vl.clear();
-    while (get_fields_from_db.next())
     {
+        tmpString = "SELECT `" + columns.at(i) + "` FROM `" + tble + "` WHERE `deleted`=0;";
+        get_fields_from_db.exec(tmpString);
         tmpStringList.clear();
-        for (i = 0; i < columns.size(); i++)
-            tmpStringList.append(get_fields_from_db.value(i).toString());
+        while (get_fields_from_db.next())
+            tmpStringList.append(get_fields_from_db.value(0).toString());
         vl.append(tmpStringList);
     }
     if (vl.isEmpty())

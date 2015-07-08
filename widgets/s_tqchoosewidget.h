@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QDate>
 #include <QVariant>
+#include "../gen/publicclass.h"
 
 class s_tqChooseWidget : public QWidget
 {
@@ -11,26 +12,22 @@ class s_tqChooseWidget : public QWidget
 public:
     explicit s_tqChooseWidget(QWidget *parent = 0);
 
-    void setlinks (QString links);
-    void setdata (QString data);
+    void Setup(QString links, QString hdr="");
+    void SetData (QVariant data);
+    QVariant Data();
     QVariant getAData();
     void setAData(QVariant dat);
 
+    int result;
 signals:
-    void datachanged();
+    void choosed(QVariant);
+
 public slots:
 
 private:
     QVariant adata;
-    typedef struct
-    {
-        int ftype;
-        int delegate;
-        int dependson;
-        QStringList link;
-    } fieldformat;
-    s_tqChooseWidget::fieldformat ff;
-    s_tqChooseWidget::fieldformat getFFfromLinks (QString links);
+    QString hdr;
+    PublicClass::fieldformat ff;
 
 private slots:
     void pbclicked();

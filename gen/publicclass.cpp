@@ -218,19 +218,19 @@ void PublicClass::minutetest()
         if (notify & PR_Q); // если признак уже висит, то не надо его и менять
         else
         {
-            QStringList vl = sqlc.getvaluesfromtablebycolumn(sqlc.getdb("ent"), "qnk", "idqnk");
+            QStringList vl = sqlc.getvaluesfromtablebycolumn(sqlc.getdb("ent"), "qnk", "idqnk","idqnk",true);
             if (!vl.isEmpty())
             {
                 notify |= PR_Q;
                 addmessage(altMessages, "Добавлены новые элементы в БД номенклатуры");
             }
-            vl = sqlc.getvaluesfromtablebycolumn(sqlc.getdb("ent"), "qaltium", "idqaltium");
+            vl = sqlc.getvaluesfromtablebycolumn(sqlc.getdb("ent"), "qaltium", "idqaltium","idqaltium",true);
             if (!vl.isEmpty())
             {
                 notify |= PR_Q;
                 addmessage(altMessages, "Добавлены новые элементы в БД Altium");
             }
-            vl = sqlc.getvaluesfromtablebycolumn(sqlc.getdb("ent"), "qschemagee", "idqschemagee");
+            vl = sqlc.getvaluesfromtablebycolumn(sqlc.getdb("ent"), "qschemagee", "idqschemagee","idschemagee",true);
             if (!vl.isEmpty())
             {
                 notify |= PR_Q;

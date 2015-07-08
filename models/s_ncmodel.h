@@ -45,7 +45,7 @@ public:
     QString getCellType(int row, int column);
     void setRowAttr(int fcset=0, int icon=-1);
     void ClearModel();
-    void fillModel(QList<QStringList> sl);
+    void fillModel();
     QStringList cvalues(int column); // выдать значения по столбцу column в выходной QStringList
     QStringList rvalues(int row); // выдать значения по строке row в выходной QStringList
     QString value(int row, int column); // взять значение по строке row и столбцу column
@@ -61,20 +61,21 @@ public:
         map.insert("d", OP_DIV);
         return map;
     }
-    int setup(QString);
+    int setup(QString tble);
     int setup(QString tble, QString id);
     int setupcolumn(QString tble, QString header);
-    int setupraw(QString db, QString tble, QStringList fl=QStringList()); // загрузка модели из таблицы db.tble базы данных по полям fl без всяких tablefields и links
+    int setupraw(QString db, QString tble, QStringList fl=QStringList(),QString orderfield=""); // загрузка модели из таблицы db.tble базы данных по полям fl без всяких tablefields и links
 
     bool isEditable;
 
 signals:
-
+    void test();
 public slots:
 
 private:
     QList<s_ncitem *> maindata;
     QList<int> fieldstoCheck;
+    QList<QStringList> DataToWrite;
     QStringList hdr;
     QColor colors[6]; // определение набора цветов шрифта
     QFont fonts[6]; // определение набора шрифтов

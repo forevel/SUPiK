@@ -81,7 +81,7 @@ void s_2cdialog::setup(QString tble, int Mode, QString id, QString matchtext, bo
 // конструктор подготавливает диалог из одного столбца, links содержит список
 // вспомогательных полей для каждого из элементов столбца. Подходит для
 // организации списка выбора
-
+/*
 void s_2cdialog::setup(QStringList sl, QStringList links, QString str)
 {
     this->tble.clear();
@@ -103,7 +103,7 @@ void s_2cdialog::setup(QStringList sl, QStringList links, QString str)
     Mode = MODE_CHOOSE;
     SetTvCurrentText(str);
 }
-
+*/
 void s_2cdialog::setupUI()
 {
     setStyleSheet("QDialog {background-color: rgba(204,204,153);}");

@@ -82,6 +82,7 @@ void s_ncdialog::setupUI(QString dialog, QString wallpaper, int dialogtype, QStr
     s_tqTableView *mainTV = new s_tqTableView;
     mainTV->setObjectName("mainTV");
     s_duniversal *uniDelegate = new s_duniversal;
+    connect(uniDelegate,SIGNAL(error(int,int)),this,SIGNAL(error(int,int)));
     mainTV->setItemDelegate(uniDelegate);
     mainTV->setEditTriggers(QAbstractItemView::AllEditTriggers);
     mainTV->verticalHeader()->setVisible(false);
@@ -350,6 +351,7 @@ QWidget *s_ncdialog::getWidget(int id, QString ftext, QString link, QString defs
                 dlink += "."+links.at(i);
         }
         cw->Setup(dlink,ftext);
+        connect(cw,SIGNAL(error(int,int)),this,SIGNAL(error(int,int)));
         connect(cw, SIGNAL(datachanged()), this, SLOT(somethingchanged()));
         return cw;
         break;
@@ -415,6 +417,7 @@ QWidget *s_ncdialog::getWidget(int id, QString ftext, QString link, QString defs
     {
         s_tqTableView *tv = new s_tqTableView;
         s_duniversal *uniDelegate = new s_duniversal;
+        connect(uniDelegate,SIGNAL(error(int,int)),this,SIGNAL(error(int,int)));
         tv->setItemDelegate(uniDelegate);
         tv->setEditTriggers(QAbstractItemView::AllEditTriggers);
         tv->verticalHeader()->setVisible(false);

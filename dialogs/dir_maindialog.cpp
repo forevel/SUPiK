@@ -67,6 +67,7 @@ void dir_maindialog::SetupUI()
     MainTV->horizontalHeader()->setVisible(false);
     MainTV->verticalHeader()->setVisible(false);
     s_duniversal *gridItemDelegate = new s_duniversal;
+    connect(gridItemDelegate,SIGNAL(error(int,int)),this,SIGNAL(error(int,int)));
     MainTV->setItemDelegate(gridItemDelegate);
     SlaveTbV->setItemDelegate(gridItemDelegate);
     SlaveTV->setItemDelegate(gridItemDelegate);

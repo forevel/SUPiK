@@ -385,6 +385,7 @@ void supik::WhIncome()
 
 /*    s_ncdialog *whd = new s_ncdialog;
     whd->setupUI("whincome", ":/res/WhWallpaper.jpg", DT_GENERAL);
+    connect(whd,SIGNAL(error(int,int)),this,SLOT(ShowErMsg(int,int)));
     int ids = MainTW->addTab(whd, "Приём на склад");
     MainTW->tabBar()->setTabData(ids, QVariant(TW_WH));
     MainTW->tabBar()->setCurrentIndex(ids);

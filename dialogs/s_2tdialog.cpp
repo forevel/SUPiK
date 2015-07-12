@@ -102,6 +102,7 @@ void s_2tdialog::Setup(QStringList links, QString cursel, QString hdr)
     MainTV->horizontalHeader()->setVisible(false);
     MainTV->verticalHeader()->setVisible(false);
     s_duniversal *gridItemDelegate = new s_duniversal;
+    connect(gridItemDelegate,SIGNAL(error(int,int)),this,SIGNAL(error(int,int)));
     MainTV->setItemDelegate(gridItemDelegate);
     MainTV->resizeColumnsToContents();
     MainTV->resizeRowsToContents();
@@ -172,6 +173,7 @@ void s_2tdialog::MainItemChoosed(QModelIndex idx)
     SlaveTV->horizontalHeader()->setVisible(true);
     SlaveTV->verticalHeader()->setVisible(false);
     s_duniversal *gridItemDelegate = new s_duniversal;
+    connect(gridItemDelegate,SIGNAL(error(int,int)),this,SIGNAL(error(int,int)));
     SlaveTV->setItemDelegate(gridItemDelegate);
     SlaveTV->resizeColumnsToContents();
     SlaveTV->resizeRowsToContents();

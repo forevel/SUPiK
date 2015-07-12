@@ -186,6 +186,7 @@ int wh_dialog::SetupUI(QString id)
     chooseReasonPB->setText("...");
     connect(chooseReasonPB, SIGNAL(clicked()), this, SLOT(chooseReason()));
     s_duniversal *universalDelegate = new s_duniversal;
+    connect(universalDelegate,SIGNAL(error(int,int)),this,SIGNAL(error(int,int)));
     connect(universalDelegate, SIGNAL(commitData(QWidget*)), this, SLOT(CBChanged(QWidget*)));
     bl2->addWidget(docNumL, 0, 0, Qt::AlignLeft);
     bl2->addWidget(docNumLE, 0, 1);

@@ -28,7 +28,6 @@ public:
     void FillNullDialog ();
     void FillDialog (QString);
     void ClearDialog ();
-    void AddNewItem();
 
 signals:
     void error(int,int);
@@ -40,8 +39,11 @@ public slots:
     void SetSomethingChanged ();
 
 private slots:
+    void emiterror(int,int);
     void MainItemChoosed(QModelIndex);
     void SlaveItemChoosed(QModelIndex);
+    void AddNewItem();
+
     void UpdatePartNumber ();
     void DeclinePBClicked();
     void AcceptAndClosePBClicked();
@@ -55,12 +57,12 @@ protected:
     void paintEvent(QPaintEvent *);
 
 private:
-    int RevNotes;
-    int curUnit;
+//    int RevNotes;
+//    int curUnit;
     QString PathString;
     QMetaObject::Connection handle1, handle2, handle3, handle4, handle5, handle6, handle7; // 6 = 0.34-ah, 7 = 0.4
     QString CompLetter, CompDb;
-    int CompType;
+    int CompType, CompTble;
     s_ncmodel *slavemodel;
 
     QStringList GetListFromFile (QString, QByteArray &);

@@ -33,6 +33,7 @@ void s_2ctdialog::setupUI()
     s_tqTreeView *mainTV = new s_tqTreeView;
     mainTV->setObjectName("mainTV");
     s_duniversal *uniDelegate = new s_duniversal;
+    connect(uniDelegate,SIGNAL(error(int,int)),this,SIGNAL(error(int,int)));
     s_tqPushButton *pbOk = new s_tqPushButton("Ага");
     s_tqPushButton *pbCancel = new s_tqPushButton("Неа");
     s_tqLabel *lbl = new s_tqLabel;

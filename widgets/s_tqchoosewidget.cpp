@@ -131,6 +131,7 @@ void s_tqChooseWidget::pbclicked()
     case FW_ALLINK:
     {
         s_2ctdialog *chooseDialog = new s_2ctdialog(hdr);
+        connect(chooseDialog,SIGNAL(error(int,int)),this,SIGNAL(error(int,int)));
         chooseDialog->setup(ff.link.at(0), true); // диалог с "корневой кнопкой"
         connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
         chooseDialog->setTvCurrentText(le->text());
@@ -142,6 +143,7 @@ void s_tqChooseWidget::pbclicked()
         if (tfl.tableistree(ff.link.at(0))) // это дерево
         {
             s_2ctdialog *chooseDialog = new s_2ctdialog(hdr);
+            connect(chooseDialog,SIGNAL(error(int,int)),this,SIGNAL(error(int,int)));
             chooseDialog->setup(ff.link.at(0));
             connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
             chooseDialog->setTvCurrentText(le->text());
@@ -202,6 +204,7 @@ void s_tqChooseWidget::pbclicked()
         s_2tdialog *dlg = new s_2tdialog;
         QStringList tmpsl = QStringList() << ff.link.at(0) << ff.link.at(1);
         dlg->Setup(tmpsl, le->text());
+        connect(dlg,SIGNAL(error(int,int)),this,SIGNAL(error(int,int)));
         connect(dlg,SIGNAL(finished(QString)),this,SLOT(accepted(QString)));
         dlg->exec();
         break;

@@ -33,6 +33,7 @@ public:
 
 signals:
     void changeshasbeenMade(QString);
+    void error(int,int);
 
 public slots:
 
@@ -43,7 +44,6 @@ private:
     bool DialogIsNeedToBeResized;
     int constheight;
     void fillModelAdata();
-    void ShowErMsg(int ernum);
     void setupUI();
 
 private slots:

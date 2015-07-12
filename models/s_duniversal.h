@@ -14,6 +14,7 @@ public:
     virtual void paint (QPainter *painter, const QStyleOptionViewItem& option, const QModelIndex& index ) const;
 
 signals:
+    void error(int,int);
 
 public slots:
 

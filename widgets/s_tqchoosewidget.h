@@ -21,6 +21,7 @@ public:
     int result;
 signals:
     void choosed(QVariant);
+    void error(int,int);
 
 public slots:
 

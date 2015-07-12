@@ -45,6 +45,7 @@ QT_END_NAMESPACE
 #define ER_SYS      0x2000000 // sys_systemdialog
 #define ER_DIRMAIN  0x1000000 // dir_maindialog
 #define ER_CHWDG    0xF00000 // s_tqchoosewidget
+#define ER_CMPMAIN  0x200000 // cmp_maindialog
 #define ER_SYSMENU  0x100000 // sysmenueditor
 #define ER_2TDLG    0x30000 // 2tdialog
 #define ER_2CTDLG   0x20000 // 2ctdialog

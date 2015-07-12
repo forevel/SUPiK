@@ -18,6 +18,7 @@ public:
 
 signals:
     void changeshasbeenMade(QString);
+    void error(int,int);
 
 public slots:
 

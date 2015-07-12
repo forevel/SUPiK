@@ -101,6 +101,7 @@ void sys_systemdialog::SetSysTree()
     MainTV->setIndentation(2);
     MainTV->setAnimated(false);
     s_duniversal *gridItemDelegate = new s_duniversal;
+    connect(gridItemDelegate,SIGNAL(error(int,int)),this,SIGNAL(error(int,int)));
     MainTV->setItemDelegate(gridItemDelegate);
     MainTV->ResizeColumnsToContents();
     QApplication::restoreOverrideCursor();

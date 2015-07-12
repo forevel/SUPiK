@@ -16,6 +16,7 @@ QWidget* s_duniversal::createEditor(QWidget *parent, const QStyleOptionViewItem 
     QString hdr=index.data(Qt::UserRole+1).toString(); // в UserRole+1 должна содержаться aData, в которой находится подзаголовок диалога редактирования, вызываемого по кнопке в делегате
     s_tqChooseWidget *wdgt = new s_tqChooseWidget;
     wdgt->Setup(links,hdr);
+    connect(wdgt,SIGNAL(error(int,int)),this,SIGNAL(error(int,int)));
     return wdgt;
 }
 

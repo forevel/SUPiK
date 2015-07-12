@@ -112,6 +112,7 @@ void s_2cdialog::setupUI()
     s_tqTableView *mainTV = new s_tqTableView; // autoResize = true
     mainTV->setObjectName("mainTV");
     s_duniversal *uniDelegate = new s_duniversal;
+    connect(uniDelegate,SIGNAL(error(int,int)),this,SIGNAL(error(int,int)));
     s_tqPushButton *pbOk = new s_tqPushButton("Ага");
     s_tqPushButton *pbCancel = new s_tqPushButton("Неа");
     s_tqLabel *lbl = new s_tqLabel;
@@ -237,7 +238,7 @@ void s_2cdialog::accepted()
         tfl.idtois(tble.at(0), headers, values);
         if (tfl.result)
         {
-            ShowErMsg(ER_2CDLG+0x21+tfl.result);
+            emit error(ER_2CDLG+tfl.result,0x21);
             return;
         }
         QMessageBox::information(this, "Успешно!", "Записано успешно!");
@@ -246,7 +247,7 @@ void s_2cdialog::accepted()
             tfl.remove(oldtble, oldid); // при успешной записи в некарантин, из карантина старую надо удалить
             if (tfl.result)
             {
-                ShowErMsg(ER_2CDLG+0x24+tfl.result);
+                emit error(ER_2CDLG+tfl.result,0x22);
                 return;
             }
         }
@@ -256,7 +257,7 @@ void s_2cdialog::accepted()
         s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
         if (tv == 0)
         {
-            ShowErMsg(ER_2CDLG+0x27);
+            emit error(ER_2CDLG,0x23);
             return;
         }
         tmpString = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole).toString();
@@ -299,11 +300,6 @@ void s_2cdialog::fillModelAdata()
             break;
         }
     }
-}
-
-void s_2cdialog::ShowErMsg(int ernum)
-{
-    QMessageBox::warning(this, "warning!", "Ошибка 0x" + QString::number(CD_ERROR + ernum, 16), QMessageBox::Ok, QMessageBox::NoButton);
 }
 
 void s_2cdialog::SetTvCurrentText(QString str)

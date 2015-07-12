@@ -58,6 +58,7 @@ public:
     void setupUI(QString dialog, QString wallpaper, int dialogtype, QString id="0");
 
 signals:
+    void error(int,int);
 
 public slots:
 

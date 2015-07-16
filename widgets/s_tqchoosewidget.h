@@ -10,7 +10,7 @@ class s_tqChooseWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit s_tqChooseWidget(QWidget *parent = 0);
+    explicit s_tqChooseWidget(bool Transparent=false, QWidget *parent = 0);
 
     void Setup(QString links, QString hdr="");
     void SetData (QVariant data);
@@ -29,6 +29,8 @@ private:
     QVariant adata;
     QString hdr;
     PublicClass::fieldformat ff;
+    bool Transparent;
+    QWidget *parent;
 
 private slots:
     void pbclicked();

@@ -55,8 +55,8 @@ void PublicClass::InitiatePublicClass()
 //    Date = QDate::currentDate().toString("dd/MM/yyyy");
     DateTime = QDateTime::currentDateTime().toString("dd/MM/yyyy hh:mm:ss");
     SQLPath = LandP->value("settings/SQLPath","localhost").toString();
-    PathToLibs = LandP->value("settings/pathtolibs","//FSERVER//PCAD//Altium//Libs//").toString();
-    PathToSup = LandP->value("settings/pathtosup","//NS//SUPiK").toString();
+    PathToLibs = LandP->value("settings/pathtolibs","////FSERVER//PCAD//Altium//Libs//").toString();
+    PathToSup = LandP->value("settings/pathtosup","////NS//SUPiK").toString();
     timerperiod = LandP->value("settings/timerperiod","1").toInt();
     openBD(alt, "ALT", "altium", "supik", "sysupik");
     openBD(con, "CON", "constructives", "supik", "sysupik");

@@ -14,6 +14,7 @@
 #include <QPaintEvent>
 #include <QMessageBox>
 #include <QDesktopWidget>
+#include <QFileSystemModel>
 #include "s_2tdialog.h"
 #include "../widgets/s_tqtableview.h"
 #include "../widgets/s_tqpushbutton.h"
@@ -22,7 +23,9 @@
 #include "../widgets/s_tqframe.h"
 #include "../gen/s_sql.h"
 #include "../gen/publicclass.h"
+#include "../gen/s_tablefields.h"
 #include "../models/s_ncmodel.h"
+#include "../models/s_ntmodel.h"
 #include "../models/s_duniversal.h"
 
 s_2tdialog::s_2tdialog(QWidget *parent) :
@@ -87,11 +90,11 @@ void s_2tdialog::Setup(QStringList links, QString cursel, QString hdr)
         return;
     }
     QApplication::setOverrideCursor(Qt::WaitCursor);
-    int res = mainmodel->setupcolumn(links.at(0), links.at(1));
-    if (res)
+    mainmodel->setupcolumn(links.at(0), links.at(1));
+    if (mainmodel->result)
     {
         QApplication::restoreOverrideCursor();
-        emit error(ER_2TDLG+res,0x02);
+        emit error(ER_2TDLG+mainmodel->result,0x02);
         return;
     }
     QStringList tmpsl = tfl.tablefields(links.at(0),links.at(1));
@@ -162,11 +165,11 @@ void s_2tdialog::MainItemChoosed(QModelIndex idx)
         return;
     }
     QApplication::setOverrideCursor(Qt::WaitCursor);
-    int res = slavemodel->setupraw(db, sltble);
-    if (res)
+    slavemodel->setupraw(db, sltble);
+    if (slavemodel->result)
     {
         QApplication::restoreOverrideCursor();
-        emit error(ER_2TDLG+res,0x15);
+        emit error(ER_2TDLG+slavemodel->result,0x15);
         return;
     }
     SlaveTV->setModel(slavemodel);

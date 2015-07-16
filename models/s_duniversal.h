@@ -2,6 +2,7 @@
 #define S_DUNIVERSAL_H
 
 #include <QStyledItemDelegate>
+#include "../gen/publicclass.h"
 
 class s_duniversal : public QStyledItemDelegate
 {
@@ -23,6 +24,7 @@ protected:
 private slots:
 
 private:
+    mutable PublicClass::fieldformat ff;
 };
 
 #endif // S_DUNIVERSAL_H

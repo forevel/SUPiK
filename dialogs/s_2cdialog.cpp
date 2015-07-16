@@ -5,13 +5,14 @@
 #include "../widgets/s_tqlabel.h"
 #include "../gen/s_sql.h"
 #include "../gen/publicclass.h"
-#include "../gen/s_sql.h"
+#include "../gen/s_tablefields.h"
 
 #include <QSortFilterProxyModel>
 #include <QHBoxLayout>
 #include <QPaintEvent>
 #include <QPainter>
 #include <QPixmap>
+#include <QFile>
 #include <QHeaderView>
 #include <QMessageBox>
 #include <QApplication>
@@ -45,10 +46,11 @@ void s_2cdialog::setup(QString tble, int Mode, QString id, QString matchtext, bo
     {
     case MODE_CHOOSE:
     {
-        result = mainmodel->setup(tble);
-        if (result)
+        mainmodel->setup(tble);
+        if (mainmodel->result)
         {
-            result+=ER_2CDLG+0x11;
+            emit error(ER_2CDLG+mainmodel->result,0x11);
+            result=1;
             return;
         }
         mainmodel->isEditable = false;
@@ -56,10 +58,11 @@ void s_2cdialog::setup(QString tble, int Mode, QString id, QString matchtext, bo
     }
     case MODE_EDIT:
     {
-        result = mainmodel->setup(tble, id);
-        if (result)
+        mainmodel->setup(tble, id);
+        if (mainmodel->result)
         {
-            result+=ER_2CDLG+0x14;
+            emit error(ER_2CDLG+mainmodel->result,0x12);
+            result=1;
             return;
         }
         mainmodel->isEditable = true;
@@ -68,42 +71,78 @@ void s_2cdialog::setup(QString tble, int Mode, QString id, QString matchtext, bo
     }
     default:
     {
-        result=ER_2CDLG+0x17;
+        emit error(ER_2CDLG,0x13);
+        result=1;
         return;
     }
     }
     this->IsQuarantine = isQuarantine;
     if (!matchtext.isEmpty())
         SetTvCurrentText(matchtext);
-    result=0;
+    result = 0;
 }
 
-// конструктор подготавливает диалог из одного столбца, links содержит список
-// вспомогательных полей для каждого из элементов столбца. Подходит для
-// организации списка выбора
-/*
-void s_2cdialog::setup(QStringList sl, QStringList links, QString str)
+void s_2cdialog::SetupFile(QString Filename, QString StringToFind, QString str)
 {
-    this->tble.clear();
-    mainmodel = new s_ncmodel;
+    QStringList tmpList;
+    QString tmpString;
+    char *tmpChar;
+    int filepos = 0;
+
+    tmpList.clear();
+    QFile file;
+    file.setFileName(Filename);
+    if (!file.open(QIODevice::ReadOnly))
+    {
+        emit error(ER_2CDLG,0x21);
+        return;
+    }
+
+    QByteArray ba = file.readAll();
+    while ((filepos = ba.indexOf(StringToFind, filepos)) != -1)
+    {
+        tmpChar = ba.data();
+        tmpChar += filepos;
+        while (*tmpChar)
+        {
+            if (tmpChar[0] == '=')
+            {
+                tmpChar++;
+                filepos++;
+                tmpString = "";
+                while ((tmpChar[0]) && (tmpChar[0] != '|'))
+                {
+                    tmpString += QString::fromLocal8Bit(tmpChar,1);
+                    tmpChar++;
+                    filepos++;
+                }
+                break;
+            }
+            tmpChar++;
+            filepos++;
+        }
+        tmpList << tmpString;
+    }
+    file.close();
+    Mode = MODE_CHOOSE;
     QList<QStringList> tmpsl;
-    tmpsl.append(sl);
+    tmpsl.append(tmpList);
     QList<int> il;
-    il << sl.size();
+    il << tmpList.size();
     mainmodel->prepareModel(il);
-    if (links.isEmpty())
-        mainmodel->setcolumnlinks(0, "7.8");
-    else
-        mainmodel->setcolumnlinks(0, links);
-    mainmodel->fillModel(tmpsl);
+    mainmodel->setcolumnlinks(0, "7.8");
+    mainmodel->setDataToWrite(tmpsl);
+    mainmodel->fillModel();
     if (mainmodel->result)
-        ShowErMsg(ER_2CDLG+mainmodel->result+0x21); // не выходим, т.к. проблема м.б. с одной из ячеек, которую можно будет поправить
+    {
+        emit error(ER_2CDLG+mainmodel->result,0x22);
+        return;
+    }
     fillModelAdata();
     IsQuarantine = false;
-    Mode = MODE_CHOOSE;
     SetTvCurrentText(str);
 }
-*/
+
 void s_2cdialog::setupUI()
 {
     setStyleSheet("QDialog {background-color: rgba(204,204,153);}");
@@ -125,6 +164,7 @@ void s_2cdialog::setupUI()
     pbLayout->addWidget(pbCancel, 0);
 //    pmainmodel = new QSortFilterProxyModel;
   //  pmainmodel->setSourceModel(mainmodel);
+    connect(mainmodel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(resizemainTV(QModelIndex,QModelIndex)));
     mainTV->setModel(mainmodel);
     mainTV->setEditTriggers(QAbstractItemView::AllEditTriggers);
     mainTV->verticalHeader()->setVisible(false);
@@ -136,9 +176,9 @@ void s_2cdialog::setupUI()
     mainLayout->addWidget(mainTV);
     mainLayout->addLayout(pbLayout);
     setLayout(mainLayout);
+    connect (mainTV,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(accepted(QModelIndex)));
     connect (pbOk, SIGNAL(clicked()), this, SLOT(accepted()));
     connect (pbCancel, SIGNAL(clicked()), this, SLOT(cancelled()));
-    connect(mainTV, SIGNAL(datachanged()), this, SLOT(resizemainTV()));
 }
 
 
@@ -177,17 +217,17 @@ void s_2cdialog::setupUI()
 void s_2cdialog::AddTable(QString tble)
 {
     this->tble.append(tble);
-    result = mainmodel->setup(tble);
-    if (result)
+    mainmodel->setup(tble);
+    if (mainmodel->result)
     {
-        result+=ER_2CDLG+0x11;
+        result=ER_2CDLG+0x11+mainmodel->result;
         return;
     }
     result = 0;
     return;
 }
 
-void s_2cdialog::resizemainTV()
+void s_2cdialog::resizemainTV(QModelIndex, QModelIndex)
 {
     s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
     if (tv == 0)
@@ -210,6 +250,13 @@ void s_2cdialog::paintEvent(QPaintEvent *e)
     QPainter painter(this);
     painter.drawPixmap(rect(), QPixmap(":/res/2cWallPaper.png"));
     e->accept();
+}
+
+void s_2cdialog::accepted(QModelIndex idx)
+{
+    Q_UNUSED(idx);
+    if (Mode == MODE_CHOOSE)
+        accepted();
 }
 
 void s_2cdialog::accepted()
@@ -238,7 +285,7 @@ void s_2cdialog::accepted()
         tfl.idtois(tble.at(0), headers, values);
         if (tfl.result)
         {
-            emit error(ER_2CDLG+tfl.result,0x21);
+            emit error(ER_2CDLG+tfl.result,0x31);
             return;
         }
         QMessageBox::information(this, "Успешно!", "Записано успешно!");
@@ -247,7 +294,7 @@ void s_2cdialog::accepted()
             tfl.remove(oldtble, oldid); // при успешной записи в некарантин, из карантина старую надо удалить
             if (tfl.result)
             {
-                emit error(ER_2CDLG+tfl.result,0x22);
+                emit error(ER_2CDLG+tfl.result,0x32);
                 return;
             }
         }

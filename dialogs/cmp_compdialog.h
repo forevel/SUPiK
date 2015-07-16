@@ -65,7 +65,6 @@ private:
     int CompType, CompTble;
     s_ncmodel *slavemodel;
 
-    QStringList GetListFromFile (QString, QByteArray &);
     bool CheckAndAdd();
     bool isModified();
     bool ConnectPartNumber();

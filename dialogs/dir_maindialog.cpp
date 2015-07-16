@@ -1,13 +1,15 @@
 #include "dir_maindialog.h"
 #include "dir_adddialog.h"
-#include "../gen/s_sql.h"
 #include "s_2cdialog.h"
-#include "../models/s_duniversal.h"
+#include "../gen/s_sql.h"
+#include "../gen/s_tablefields.h"
+#include "../gen/publicclass.h"
 #include "../widgets/s_tqlabel.h"
 #include "../widgets/s_tqtreeview.h"
 #include "../widgets/s_tqframe.h"
 #include "../widgets/s_tqtableview.h"
 #include "../widgets/s_tqsplitter.h"
+#include "../models/s_duniversal.h"
 #include "../models/s_ntmodel.h"
 #include "../models/s_ncmodel.h"
 
@@ -56,10 +58,10 @@ void dir_maindialog::SetupUI()
     QVBoxLayout *leftlyout = new QVBoxLayout;
 
     QApplication::setOverrideCursor(Qt::WaitCursor);
-    int res = MainTableModel->setup(tble+"_сокращ");
-    if (res)
+    MainTableModel->setup(tble+"_сокращ");
+    if (MainTableModel->result)
     {
-        emit error(res+ER_DIRMAIN,0x02);
+        emit error(MainTableModel->result+ER_DIRMAIN,0x02);
         QApplication::restoreOverrideCursor();
         return;
     }
@@ -175,10 +177,10 @@ void dir_maindialog::ShowSlaveTree(QString str)
                 res = SlaveTreeModel->Setup(values.at(0) + "_сокращ");
             if (res == ER_NTMODEL) // это не дерево
             {
-                int res = SlaveTableModel->setup(values.at(0) + "_сокращ");
-                if (res)
+                SlaveTableModel->setup(values.at(0) + "_сокращ");
+                if (SlaveTableModel->result)
                 {
-                    emit error(res+ER_DIRMAIN,0x12);
+                    emit error(SlaveTableModel->result+ER_DIRMAIN,0x12);
                     QApplication::restoreOverrideCursor();
                     return;
                 }

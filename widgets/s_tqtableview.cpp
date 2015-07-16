@@ -12,7 +12,6 @@ s_tqTableView::s_tqTableView(QWidget *parent) :
     setShowGrid(false);
     horizontalScrollBar()->setStyleSheet("QScrollBar {background-color: rgba(0,0,0,0);}");
     verticalScrollBar()->setStyleSheet("QScrollBar {background-color: rgba(0,0,0,0);}");
-    connect(this,SIGNAL(datachanged()), this, SLOT(resizeColumnsToContents()));
 }
 
 void s_tqTableView::setAData(QVariant dat)
@@ -25,11 +24,7 @@ QVariant s_tqTableView::getAData()
     return this->adata;
 }
 
-void s_tqTableView::dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles)
+void s_tqTableView::dataChanged()
 {
-    Q_UNUSED(topLeft);
-    Q_UNUSED(bottomRight);
-    Q_UNUSED(roles);
-        resizeColumnsToContents();
-    emit datachanged();
+    resizeColumnsToContents();
 }

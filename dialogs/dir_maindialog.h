@@ -5,7 +5,6 @@
 #include <QModelIndex>
 #include <QPoint>
 
-#include "../gen/publicclass.h"
 #include "../models/s_ntmodel.h"
 #include "../models/s_ncmodel.h"
 

@@ -10,11 +10,13 @@ s_duniversal::s_duniversal(QObject *parent) :
 
 QWidget* s_duniversal::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-    Q_UNUSED(parent);
     Q_UNUSED(option);
     QString links = index.data(Qt::UserRole).toString();
+    ff = pc.getFFfromLinks(links);
+    if ((ff.delegate == FD_DISABLED) || (ff.delegate == FD_SIMPLE) || (ff.delegate == FD_SIMGRID))
+        return 0;
     QString hdr=index.data(Qt::UserRole+1).toString(); // в UserRole+1 должна содержаться aData, в которой находится подзаголовок диалога редактирования, вызываемого по кнопке в делегате
-    s_tqChooseWidget *wdgt = new s_tqChooseWidget;
+    s_tqChooseWidget *wdgt = new s_tqChooseWidget(false,parent);
     wdgt->Setup(links,hdr);
     connect(wdgt,SIGNAL(error(int,int)),this,SIGNAL(error(int,int)));
     return wdgt;
@@ -22,12 +24,16 @@ QWidget* s_duniversal::createEditor(QWidget *parent, const QStyleOptionViewItem 
 
 void s_duniversal::setEditorData(QWidget *editor, const QModelIndex &index) const
 {
+    if ((ff.delegate == FD_DISABLED) || (ff.delegate == FD_SIMPLE) || (ff.delegate == FD_SIMGRID))
+        return;
     s_tqChooseWidget *wdgt = static_cast<s_tqChooseWidget *>(editor);
     wdgt->SetData(index.data(Qt::EditRole));
 }
 
 void s_duniversal::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const
 {
+    if ((ff.delegate == FD_DISABLED) || (ff.delegate == FD_SIMPLE) || (ff.delegate == FD_SIMGRID))
+        return;
     s_tqChooseWidget *wdgt = static_cast<s_tqChooseWidget *>(editor);
     model->setData(index,wdgt->Data(),Qt::EditRole);
 }

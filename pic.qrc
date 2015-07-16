@@ -41,5 +41,6 @@
         <file>res/SUPiK.ico</file>
         <file>res/Sys2Wallpaper.png</file>
         <file>res/SysWallpaper.png</file>
+        <file>res/WPAltium.png</file>
     </qresource>
 </RCC>

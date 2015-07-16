@@ -12,10 +12,9 @@ public:
     void setAData(QVariant dat);
 
 signals:
-    void datachanged();
 
-public slots:
-    void dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight, const QVector<int> &roles);
+protected slots:
+    void dataChanged();
 
 private:
     QVariant adata;

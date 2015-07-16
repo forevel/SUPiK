@@ -14,6 +14,7 @@
 #include "widgets/s_colortabwidget.h"
 #include "gen/publicclass.h"
 #include "gen/publiclang.h"
+#include "gen/s_sql.h"
 
 supik::supik()
 {

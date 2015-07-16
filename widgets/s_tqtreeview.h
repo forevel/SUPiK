@@ -4,7 +4,6 @@
 #include <QTreeView>
 #include <QProxyStyle>
 #include <QPaintEvent>
-#include "../models/s_ntmodel.h"
 
 class s_tqTreeView : public QTreeView
 {

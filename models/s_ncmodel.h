@@ -2,16 +2,14 @@
 #define S_2CMODEL_H
 
 #include <QAbstractTableModel>
+#include <QByteArray>
 #include <QColor>
 #include <QFont>
 #include <QIcon>
 
 
-#include <QAbstractItemModel>
-#include <QStringList>
 #include "s_ncitem.h"
 #include "../gen/publicclass.h"
-#include "../gen/s_tablefields.h"
 
 class s_ncmodel : public QAbstractTableModel
 {
@@ -61,15 +59,17 @@ public:
         map.insert("d", OP_DIV);
         return map;
     }
-    int setup(QString tble);
-    int setup(QString tble, QString id);
-    int setupcolumn(QString tble, QString header);
+    void setup(QString tble);
+    void setup(QString tble, QString id);
+    void setupcolumn(QString tble, QString header);
+    void setDataToWrite(QList<QStringList> sl);
     int setupraw(QString db, QString tble, QStringList fl=QStringList(),QString orderfield=""); // загрузка модели из таблицы db.tble базы данных по полям fl без всяких tablefields и links
 
     bool isEditable;
 
 signals:
     void test();
+
 public slots:
 
 private:

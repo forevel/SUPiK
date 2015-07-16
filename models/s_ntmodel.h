@@ -2,8 +2,8 @@
 #define S_NTMODEL_H
 
 #include <QAbstractItemModel>
-#include <QSqlDatabase>
-#include <QStringList>
+//#include <QSqlDatabase>
+//#include <QStringList>
 #include <QColor>
 #include <QFont>
 #include <QIcon>

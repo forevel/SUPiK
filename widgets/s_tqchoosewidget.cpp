@@ -1,12 +1,13 @@
 #include <QHBoxLayout>
-#include <QComboBox>
 #include <QStringListModel>
 #include "s_tqchoosewidget.h"
 #include "s_tqlineedit.h"
 #include "s_tqpushbutton.h"
 #include "s_tqcalendarwidget.h"
 #include "s_tqspinbox.h"
+#include "s_tqcombobox.h"
 #include "s_maskedle.h"
+#include "s_tqlabel.h"
 #include "../gen/s_sql.h"
 #include "../gen/s_tablefields.h"
 #include "../dialogs/s_2cdialog.h"
@@ -21,11 +22,11 @@
 // 3. Установить связь между сигналом choosed(QVariant) (выбор сделан) и требуемым слотом
 // 4. Вызвать метод hide или присвоить данный виджет соответствующему свойству editor (в делегатах)
 
-s_tqChooseWidget::s_tqChooseWidget(QWidget *parent) :
+s_tqChooseWidget::s_tqChooseWidget(bool Transparent, QWidget *parent) :
     QWidget(parent)
 {
+    this->Transparent = Transparent;
     ff.ftype = -1; // проверка на то, вызывали ли перед работой с виджетом функцию getlinks
-    setAttribute(Qt::WA_TranslucentBackground);
     setAttribute(Qt::WA_DeleteOnClose);
 }
 
@@ -34,14 +35,21 @@ void s_tqChooseWidget::Setup(QString links, QString hdr)
     ff = pc.getFFfromLinks(links);
     this->hdr = hdr;
 
-    setStyleSheet("QWidget {background: khaki};");
     QVBoxLayout *ml = new QVBoxLayout;
+    ml->setContentsMargins(0, 0, 0, 0);
+    QWidget *wdgt = new QWidget;
+    if (Transparent)
+        wdgt->setStyleSheet("QWidget {background-color: rgba(0,0,0,0);}");
+    else
+        wdgt->setStyleSheet("QWidget {background: khaki};");
+    wdgt->setContentsMargins(0,0,0,0);
+    QHBoxLayout *ml2 = new QHBoxLayout;
+    ml2->setContentsMargins(0,0,0,0);
     switch (ff.delegate)
     {
     case FD_CHOOSE:
     case FD_CHOOSE_X:
     {
-        QHBoxLayout *ml2 = new QHBoxLayout;
         s_tqLineEdit *le = new s_tqLineEdit;
         s_tqPushButton *pb = new s_tqPushButton("...");
         le->setObjectName("fdcle");
@@ -50,17 +58,14 @@ void s_tqChooseWidget::Setup(QString links, QString hdr)
         else
             le->setEnabled(true);
         pb->setObjectName("fdcpb");
-        ml->addWidget(le, 80);
-        ml->addWidget(pb,0);
         connect(pb, SIGNAL(clicked()), this, SLOT(pbclicked()));
-        ml2->setContentsMargins(0, 0, 0, 0);
-        ml->addLayout(ml2);
+        ml2->addWidget(le, 80);
+        ml2->addWidget(pb, 1);
         break;
     }
     case FD_COMBO:
     {
-        QComboBox *cb;
-        cb = new QComboBox;
+        s_tqComboBox *cb = new s_tqComboBox;
         cb->setStyleSheet("QComboBox {background: khaki};");
         cb->setObjectName("fdccb");
         QStringListModel *tmpModel = new QStringListModel;
@@ -70,7 +75,7 @@ void s_tqChooseWidget::Setup(QString links, QString hdr)
             tmpsl.clear();
         tmpModel->setStringList(tmpsl);
         cb->setModel(tmpModel);
-        ml->addWidget(cb);
+        ml2->addWidget(cb);
         break;
     }
     case FD_LINEEDIT:
@@ -83,20 +88,16 @@ void s_tqChooseWidget::Setup(QString links, QString hdr)
             tmpString = tmpString.left(tmpString.size()-1);
             s_MaskedLineEdit *le = new s_MaskedLineEdit(tmpString);
             le->setObjectName("lele");
-            ml->addWidget(le);
+            ml2->addWidget(le);
         }
         else
         {
             s_tqLineEdit *le = new s_tqLineEdit;
             le->setObjectName("lele");
-            ml->addWidget(le);
+            ml2->addWidget(le);
         }
         break;
     }
-    case FD_SIMGRID:
-    case FD_SIMPLE:
-    case FD_DISABLED:
-        break;
     case FD_SPIN:
     {
         int tmpInt = ff.link.at(0).count("n", Qt::CaseSensitive);
@@ -112,12 +113,14 @@ void s_tqChooseWidget::Setup(QString links, QString hdr)
         sb->setMinimum(0);
         sb->setDecimals(tmpInt2);
         sb->setMaximum(tmpString.toDouble());
-        ml->addWidget(sb);
+        ml2->addWidget(sb);
         break;
     }
     default:
         break;
     }
+    wdgt->setLayout(ml2);
+    ml->addWidget(wdgt);
     setLayout(ml);
 }
 
@@ -209,6 +212,15 @@ void s_tqChooseWidget::pbclicked()
         dlg->exec();
         break;
     }
+    case FW_FLLINK:
+    {
+        s_2cdialog *dlg = new s_2cdialog("");
+        dlg->SetupFile(ff.link.at(0)+"."+ff.link.at(1),ff.link.at(2),le->text()); // ff.link.at(0) - имя файла, (1) - расширение, (2) - StringToFind
+        connect(dlg,SIGNAL(error(int,int)),this,SIGNAL(error(int,int)));
+        connect(dlg,SIGNAL(changeshasbeenMade(QString)),this,SLOT(accepted(QString)));
+        dlg->exec();
+        break;
+    }
     default:
         break;
     }
@@ -238,24 +250,30 @@ void s_tqChooseWidget::SetData(QVariant data)
     }
     case FD_COMBO:
     {
-        QComboBox *cb = this->findChild<QComboBox *>("fdccb");
+        s_tqComboBox *cb = this->findChild<s_tqComboBox *>("fdccb");
         if (cb != 0)
             cb->setCurrentText(data.toString());
         break;
     }
-    case FD_SIMGRID:
-    case FD_SIMPLE:
-    case FD_DISABLED:
-        break;
     case FD_LINEEDIT:
     {
-        QLineEdit *le;
-        if (ff.ftype == FW_MASKED)
-            le = this->findChild<s_MaskedLineEdit *>("lele");
-        else
-            le = this->findChild<s_tqLineEdit *>("lele");
-        if (le != 0)
-            le->setText(data.toString());
+        switch(ff.ftype)
+        {
+        case FW_MASKED:
+        {
+            s_MaskedLineEdit *le = this->findChild<s_MaskedLineEdit *>("lele");
+            if (le != 0)
+                le->setText(data.toString());
+            break;
+        }
+        default:
+        {
+            s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("lele");
+            if (le != 0)
+                le->setText(data.toString());
+            break;
+        }
+        }
         break;
     }
     case FD_SPIN:
@@ -284,24 +302,30 @@ QVariant s_tqChooseWidget::Data()
     }
     case FD_COMBO:
     {
-        QComboBox *cb = this->findChild<QComboBox *>("fdccb");
+        s_tqComboBox *cb = this->findChild<s_tqComboBox *>("fdccb");
         if (cb != 0)
             return QVariant(cb->currentText());
         break;
     }
-    case FD_SIMGRID:
-    case FD_DISABLED:
-    case FD_SIMPLE:
-        break;
     case FD_LINEEDIT:
     {
-        QLineEdit *le;
-        if (ff.ftype == FW_MASKED)
-            le = this->findChild<s_MaskedLineEdit *>("lele");
-        else
-            le = this->findChild<s_tqLineEdit *>("lele");
-        if (le != 0)
-            return QVariant(le->text());
+        switch(ff.ftype)
+        {
+        case FW_MASKED:
+        {
+            s_MaskedLineEdit *le = this->findChild<s_MaskedLineEdit *>("lele");
+            if (le != 0)
+                return QVariant(le->text());
+            break;
+        }
+        default:
+        {
+            s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("lele");
+            if (le != 0)
+                return QVariant(le->text());
+            break;
+        }
+        }
         break;
     }
     case FD_SPIN:

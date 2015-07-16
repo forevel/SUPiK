@@ -52,7 +52,7 @@ void sys_probsdialog::mainTVcontextmenu(QPoint)
 
 void sys_probsdialog::removeProb(QModelIndex index)
 {
-    s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
+/*    s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
     QStringList probchunks;
     probchunks = tv->model()->data(index, Qt::DisplayRole).toString().split(" "); // делим сообщение на части, используя разделитель - пробел
     if (probchunks.at(0) == "Невозможно")
@@ -115,19 +115,19 @@ void sys_probsdialog::removeProb(QModelIndex index)
             tble = "qaltium";
         else if (tble == "Schemagee")
             tble = "qschemagee";
-    }
+    } */
 }
 
 void sys_probsdialog::removeProb()
 {
-    s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
+/*    s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
     QModelIndex index = tv->currentIndex();
-    removeProb(index);
+    removeProb(index);*/
 }
 
 void sys_probsdialog::updatemainTV()
 {
-    int i;
+/*    int i;
     s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
     if (mainmodel == (void*)0) delete mainmodel;
     QList<int> setlist;
@@ -153,12 +153,12 @@ void sys_probsdialog::updatemainTV()
 //    mainmodel = new s_ncmodel(tmpsl, setlist);
     mainmodel->isEditable = false;
     tv->setModel(mainmodel);
-    tv->resizeColumnsToContents();
+    tv->resizeColumnsToContents(); */
 }
 
 void sys_probsdialog::refresh()
 {
-    QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
+/*    QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
     // обновление событий
     pc.UpdateInProgress = true; // признак текущего обновления списка сообщений, чтобы не было лишних сообщений
     pc.DBCheck();
@@ -167,12 +167,12 @@ void sys_probsdialog::refresh()
     pc.Acknowledged = true; // чтобы при обновлении не выскакивало лишнее сообщение
     pc.NewNotifyHasArrived = false;
     pc.UpdateInProgress = false;
-    QApplication::restoreOverrideCursor();
+    QApplication::restoreOverrideCursor(); */
 }
 
 void sys_probsdialog::addcol()
 {
-    s_tqComboBox *cb = dlg->findChild<s_tqComboBox *>("idcb");
+/*    s_tqComboBox *cb = dlg->findChild<s_tqComboBox *>("idcb");
     db = sqlc.getdbbytablename(tble);
     QString tmpString = cb->currentText();
     if (cb->currentText() != tble) // пишем alias & idalias
@@ -195,5 +195,5 @@ void sys_probsdialog::addcol()
         updatemainTV();
         emit updateprobsnumber();
     }
-    dlg->close();
+    dlg->close(); */
 }

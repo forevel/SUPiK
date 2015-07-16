@@ -8,6 +8,7 @@
 #include "sysmenueditor.h"
 #include "../../widgets/s_tqtreeview.h"
 #include "../../models/s_ncmodel.h"
+#include "../../models/s_ntmodel.h"
 #include "../../models/s_duniversal.h"
 #include "../../gen/s_tablefields.h"
 #include "../../gen/publicclass.h"

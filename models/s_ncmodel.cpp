@@ -1,5 +1,8 @@
 #include "s_ncmodel.h"
+#include <QFile>
 #include "../gen/s_sql.h"
+#include "../gen/publicclass.h"
+#include "../gen/s_tablefields.h"
 
 static const QMap<QString, int> OPER_MAP = s_ncmodel::opers();
 
@@ -128,6 +131,7 @@ bool s_ncmodel::setData(const QModelIndex &index, const QVariant &value, int rol
                     if (maxcolswidth.at(index.column()) < vl.toString().size())
                         maxcolswidth.replace(index.column(), vl.toString().size());
                 }
+                emit dataChanged(index,index);
                 return true;
             }
         }
@@ -324,6 +328,11 @@ void s_ncmodel::prepareModel(QList<int> sl)
         if (i >= rowCount())
             addRow();
     }
+}
+
+void s_ncmodel::setDataToWrite(QList<QStringList> sl)
+{
+    DataToWrite = sl;
 }
 
 void s_ncmodel::fillModel()
@@ -554,7 +563,7 @@ QString s_ncmodel::getCellType(int row, int column)
 
 // процедура заполнения модели из таблицы tble в sup.tablefields
 
-int s_ncmodel::setup(QString tble)
+void s_ncmodel::setup(QString tble)
 {
     int i;
     DataToWrite.clear();
@@ -562,7 +571,10 @@ int s_ncmodel::setup(QString tble)
     QStringList headers, links;
     DataToWrite = tfl.tbvll(tble);
     if (tfl.result)
-        return (tfl.result+ER_NCMODEL+0x11);
+    {
+        result=tfl.result+ER_NCMODEL+0x11;
+        return;
+    }
     // в DataToWrite.at(1) содержатся links, в DataToWrite.at(0) - заголовки
     headers = DataToWrite.at(0);
     links = DataToWrite.at(1);
@@ -577,23 +589,29 @@ int s_ncmodel::setup(QString tble)
     for (i = 0; i < links.size(); i++)
         setcolumnlinks(i, links.at(i));
     fillModel();
-    return 0;
+    return;
 }
 
 // процедура заполнения модели значениями headers и по table:tablefields из таблицы tble в sup.tablefields по одному id
 // предназначена для диалога редактирования справочников (s_2cdialog)
 
-int s_ncmodel::setup(QString tble, QString id)
+void s_ncmodel::setup(QString tble, QString id)
 {
     int i;
     ClearModel();
     DataToWrite.clear();
     QStringList headers = tfl.tableheaders(tble);
     if (tfl.result)
-        return tfl.result+ER_NCMODEL+0x21;
+    {
+        result=tfl.result+ER_NCMODEL+0x21;
+        return;
+    }
     QStringList links = tfl.tablelinks(tble);
     if (tfl.result)
-        return tfl.result+ER_NCMODEL+0x24;
+    {
+        result=tfl.result+ER_NCMODEL+0x24;
+        return;
+    }
     QString tmpString;
     DataToWrite.append(headers);
     QStringList tmpsl;
@@ -615,16 +633,18 @@ int s_ncmodel::setup(QString tble, QString id)
     setcolumnlinks(0, "0.8");
     setcolumnlinks(1, links);
     fillModel();
-    return 0;
 }
 
-int s_ncmodel::setupcolumn(QString tble, QString header)
+void s_ncmodel::setupcolumn(QString tble, QString header)
 {
     ClearModel();
     DataToWrite.clear();
     QStringList tmpsl = tfl.htovl(tble, header);
     if (tfl.result)
-        return (tfl.result+ER_NCMODEL+0x31);
+    {
+        result = tfl.result+ER_NCMODEL+0x31;
+        return;
+    }
     DataToWrite.append(tmpsl);
     addColumn("");
     QList<int> il;
@@ -632,7 +652,6 @@ int s_ncmodel::setupcolumn(QString tble, QString header)
     prepareModel(il);
     setcolumnlinks(0, "0.8");
     fillModel();
-    return 0;
 }
 
 int s_ncmodel::setupraw(QString db, QString tble, QStringList fl, QString orderfield)

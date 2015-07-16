@@ -28,7 +28,7 @@ private:
     s_ncmodel *mainmodel;
     QString field;
     QString tble;
-    QSqlDatabase db;
+//    QSqlDatabase db;
     QDialog *dlg;
 
 private slots:

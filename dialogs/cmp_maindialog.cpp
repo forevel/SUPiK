@@ -1,18 +1,69 @@
 #include "cmp_maindialog.h"
-#include "../widgets/s_tqtreeview.h"
-#include "../widgets/s_tqtableview.h"
-#include "../widgets/s_tqframe.h"
-#include "../widgets/s_tqsplitter.h"
+#include <QTabWidget>
+#include <QPainter>
+#include <QStringListModel>
+//#include "../widgets/s_tqtreeview.h"
+//#include "../widgets/s_tqtableview.h"
+//#include "../widgets/s_tqframe.h"
+//#include "../widgets/s_tqsplitter.h"
 #include "../widgets/s_tqlabel.h"
+#include "../widgets/s_tqwidget.h"
+#include "../widgets/s_tqlineedit.h"
+#include "../widgets/s_tqgroupbox.h"
+#include "../widgets/s_tqpushbutton.h"
+#include "../widgets/s_tqchoosewidget.h"
 #include "../models/s_ntmodel.h"
 #include "../models/s_ncmodel.h"
+#include "../gen/s_sql.h"
+#include "../gen/publicclass.h"
 
 #include <QVBoxLayout>
 #include <QFont>
 
 cmp_maindialog::cmp_maindialog(QWidget *parent) : QDialog(parent)
 {
-
+    QVBoxLayout *lyout = new QVBoxLayout;
+    QHBoxLayout *hlyout = new QHBoxLayout;
+    s_tqLabel *lbl = new s_tqLabel("Редактор компонентов");
+    QFont font;
+    font.setPointSize(15);
+    lbl->setFont(font);
+    hlyout->addWidget(lbl, 0);
+    hlyout->setAlignment(lbl, Qt::AlignLeft);
+    hlyout->addStretch(5);
+    lbl=new s_tqLabel("Раздел:");
+    hlyout->addWidget(lbl);
+    hlyout->setAlignment(lbl,Qt::AlignRight);
+    s_tqLineEdit *le = new s_tqLineEdit;
+    le->setEnabled(false);
+    le->setObjectName("section");
+    hlyout->addWidget(le,5);
+    lbl=new s_tqLabel("Подраздел:");
+    hlyout->addWidget(lbl);
+    hlyout->setAlignment(lbl,Qt::AlignRight);
+    le = new s_tqLineEdit;
+    le->setEnabled(false);
+    le->setObjectName("subsection");
+    hlyout->addWidget(le,10);
+    lbl=new s_tqLabel("ИД:");
+    hlyout->addWidget(lbl);
+    hlyout->setAlignment(lbl,Qt::AlignRight);
+    le = new s_tqLineEdit;
+    le->setEnabled(false);
+    le->setObjectName("id");
+    hlyout->addWidget(le,4);
+    lyout->addLayout(hlyout);
+    QTabWidget *ctw = new QTabWidget;
+    ctw->setStyleSheet("QTabWidget::pane {background-color: rgba(0,0,0,0); border: 1px solid gray; border-radius: 5px;}"\
+                       "QTabWidget::tab {background-color: rgba(0,0,0,0); border: 1px solid gray; border-radius: 5px;}");
+    s_tqWidget *cp1 = new s_tqWidget;
+    cp1->setObjectName("cp1");
+    s_tqWidget *cp2 = new s_tqWidget;
+    cp2->setObjectName("cp2");
+    ctw->addTab(cp1, "Основные");
+    ctw->addTab(cp2, "Дополнительные");
+    lyout->addWidget(ctw);
+    setLayout(lyout);
 }
 
 cmp_maindialog::~cmp_maindialog()
@@ -20,58 +71,118 @@ cmp_maindialog::~cmp_maindialog()
 
 }
 
+void cmp_maindialog::paintEvent(QPaintEvent *e)
+{
+    QPainter painter(this);
+    painter.drawPixmap(rect(), QPixmap(":/res/WPAltium.png"));
+    e->accept();
+}
+
+// подготовка диалога к отображению. 1 = тип компонента (Altium,Schemagee,...), 2 = номер таблицы компонента по таблице description, 3 = ИД компонента по таблице
+
 void cmp_maindialog::SetupUI(int CompType, int CompTable, int CompID)
 {
-/*    QStringList fl = QStringList() << "Наименование";
-    CompTble = tmps.toInt();
-    tmps = QString::number(CompTble); // убираем старшие незначащие нули
-    QStringList sl = tfl.valuesbyfield(CompLetter+"Компоненты_описание_полн",fl,"ИД",tmps); // взяли имя таблицы в БД, описание которой выбрали в главной таблице
-    if (tfl.result)
+    QStringList dbsl = QStringList() << "" << "alt" << "sch" << "sol" << "con" << "dev";
+    this->CompDb = dbsl.at(CompType);
+    QString tble = sqlc.getvaluefromtablebyfield(sqlc.getdb(CompDb),"description","description","iddescription",QString::number(CompTable)); // tble ~ capasitors
+    if (sqlc.result)
     {
-        emit error(ER_COMP+tfl.result, 0x12);
+        emit error(ER_CMPMAIN+sqlc.result,0x01);
         return;
     }
-    // теперь надо вытащить в slavemodel все компоненты из выбранной таблицы
-    fl = QStringList() << "id" << "PartNumber" << "Manufacturer";
-*/
-    /*
-        s_tqWidget *cp1 = new s_tqWidget;
-        s_tqWidget *cp2 = new s_tqWidget;
-        s_tqWidget *cp3 = new s_tqWidget;
-        ctw->addTab(cp1, "Текстовые");
-        ctw->addTab(cp2, "Основные");
-        ctw->addTab(cp3, "Дополнительные");
+    this->CompTble = tble;
+    this->CompId = QString::number(CompID);
+    QStringList fl;
+    switch (CompType)
+    {
+    case CTYPE_ALT:
+    {
+        fl << "Library Ref" << "Library Path" << "Footprint Ref" << "Footprint Path" << "Sim Description" << "Sim File" << \
+              "Sim Model Name" << "Sim Parameters" << "Manufacturer" << "PartNumber" << "Package" << "Marking" << "NominalValue" << \
+              "NominalVoltage" << "Tolerance" << "OpTemperaturen" << "OpTemperaturem" << "Pmax" << "TC" << "Comment" << "HelpURL" << \
+              "RevNotes" << "Discontinued" << "Description" << "Notes" << "Modify Date" << "Creator" << "prefix" << "isSMD" << \
+              "Nominal" << "Unit" << "par4" << "par5";
+        QStringList vl = sqlc.getvaluesfromtablebyfield(sqlc.getdb(CompDb),CompTble,fl,"id",CompId);
+        if (sqlc.result)
+        {
+            emit error(ER_CMPMAIN+sqlc.result,0x02);
+            return;
+        }
+        SetAltDialog();
+        FillAltDialog(vl);
+        break;
+    }
+    case CTYPE_SCH:
+    {
+        break;
+    }
+    case CTYPE_SOL:
+    {
+        break;
+    }
+    case CTYPE_CON:
+    {
+        break;
+    }
+    case CTYPE_DEV:
+    {
+        break;
+    }
+    default:
+        break;
+    }
+}
 
+void cmp_maindialog::SetAltDialog()
+{
+    QVBoxLayout *lyout = new QVBoxLayout;
+    s_tqWidget *cp = this->findChild<s_tqWidget *>("cp1");
+    s_tqGroupBox *gb = new s_tqGroupBox;
+    gb->setTitle("Компонент");
+    QGridLayout *glyout = new QGridLayout;
+    s_tqLabel *lbl = new s_tqLabel("Наименование");
+    glyout->addWidget(lbl,0,0,1,1);
+    s_tqLineEdit *le = new s_tqLineEdit;
+    le->setObjectName("partnumber");
+    glyout->addWidget(le,0,1,1,2);
+    lbl = new s_tqLabel("Производитель");
+    glyout->addWidget(lbl,1,0,1,1);
+    s_tqChooseWidget *cw = new s_tqChooseWidget(true);
+    cw->Setup("2.2..Производители_сокращ.Наименование");
+    glyout->addWidget(cw,1,1,1,1);
+    s_tqPushButton *pb = new s_tqPushButton(QString("Добавить"));
+    connect(pb,SIGNAL(clicked()),this,SLOT(AddManuf()));
+    glyout->addWidget(pb,1,2,1,1);
+    glyout->setColumnStretch(0, 20);
+    glyout->setColumnStretch(1, 80);
+    gb->setLayout(glyout);
+    lyout->addWidget(gb);
 
-        s_tqGroupBox *gb = new s_tqGroupBox;
-        gb->setTitle("Компонент");
-        lbl = new s_tqLabel("Производитель");
-        s_tqWidget *wdgt = new s_tqWidget;
-    /*    PartNumberL = new s_tqLabel("Наименование");
-        PartNumberL->setFont(fontB);
-        PartNumberLE = new s_tqLineEdit;
-        AddManufPB = new s_tqPushButton(QString("Добавить"));
-
-        CompGBLayout = new QGridLayout;
-        CompGBLayout->addWidget(ManufL, 0, 0);
-        CompGBLayout->addWidget(ManufCB, 0, 1);
-        CompGBLayout->addWidget(AddManufPB, 0, 2);
-        CompGBLayout->addWidget(PartNumberL, 1, 0);
-        CompGBLayout->addWidget(PartNumberLE, 1, 1, 1, 2);
-        CompGBLayout->setColumnStretch(0, 40);
-        CompGBLayout->setColumnStretch(1, 60);
-        CompGB->setLayout(CompGBLayout);
-
-        LibGB = new s_tqGroupBox;
-        LibGB->setTitle("Библиотеки");
-        LibRefL = new s_tqLabel("УГО (символ)");
-        LibRefL->setFont(fontB);
-        FootPrintL = new s_tqLabel("Посадочное место");
-        FootPrintL->setFont(fontB);
-        LibRefCB = new s_tqComboBox;
-        FootPrintCB = new s_tqComboBox;
-    //    FootPrintCB->addItem("123", QVariant(123));
-    //    FootPrintCB->addItem("234", QVariant(234));
+    gb = new s_tqGroupBox;
+    gb->setTitle("Библиотеки");
+    lbl = new s_tqLabel("УГО (символ)");
+    glyout = new QGridLayout;
+    glyout->addWidget(lbl,0,0,1,1);
+    cw = new s_tqChooseWidget(true);
+    connect(cw,SIGNAL(error(int,int)),this,SLOT(emiterror(int,int)));
+    int i = 0;
+    QStringList tmpsl = CompTble.split("_", QString::KeepEmptyParts);
+    QString PathString = "";
+    QString tmps = tmpsl.last();
+    while ((tmpsl.value(i, "") != "") && (tmpsl.value(i, "") != tmps))
+    {
+        PathString += "/";
+        PathString += tmpsl.value(i++);
+    }
+    tmps = pc.PathToLibs + "Symbols" + PathString + "/" + CompTble + ".SchLib";
+    cw->Setup("2.17.."+tmps+"."+pc.symfind);
+    glyout->addWidget(cw,0,1,1,2);
+    gb->setLayout(glyout);
+    lyout->addWidget(gb);
+/*    FootPrintL = new s_tqLabel("Посадочное место");
+    FootPrintL->setFont(fontB);
+    LibRefCB = new s_tqComboBox;
+    FootPrintCB = new s_tqComboBox;
 
         LibGBLayout = new QGridLayout;
         LibGBLayout->addWidget(LibRefL, 0, 0);
@@ -100,7 +211,8 @@ void cmp_maindialog::SetupUI(int CompType, int CompTable, int CompID)
         PE3GBLayout->setColumnStretch(1, 60);
         PE3GB->setLayout(PE3GBLayout);
 
-        TechGB = new s_tqGroupBox;
+
+/*        TechGB = new s_tqGroupBox;
         TechGB->setTitle("Характеристики");
         Par1L = new s_tqLabel;
         Par3L = new s_tqLabel;
@@ -340,4 +452,35 @@ void cmp_maindialog::SetupUI(int CompType, int CompTable, int CompID)
     */
     //    TreeFrame->setVisible(false);
     //    MainLayout->replaceWidget(TreeFrame, CompFrame, Qt::FindDirectChildrenOnly);
+    cp->setLayout(lyout);
+}
+
+void cmp_maindialog::FillAltDialog(QStringList vl)
+{
+
+}
+
+void cmp_maindialog::AddManuf()
+{
+    //    qa_AddManufDialog.AddNewItem();
+    //    qa_AddManufDialog.exec();
+    /*    QStringList tmpList;
+        tmpList.clear();
+        QSqlQuery mw_ent_get_manuf (pc.ent);
+    // 0.4b    mw_ent_get_manuf.exec("SELECT manuf FROM manuf;");
+        mw_ent_get_manuf.exec("SELECT manuf FROM manuf WHERE `deleted`=0;");
+        while (mw_ent_get_manuf.next())
+        {
+            tmpList << mw_ent_get_manuf.value(0).toString();
+        }
+        CompManufModel->setStringList(tmpList);
+        CompManufModel->sort(0, Qt::AscendingOrder); // 0.4b
+        ManufCB->setModel(CompManufModel);
+        ManufCB->setCurrentText(pc.InterchangeString);*/
+}
+
+void cmp_maindialog::emiterror(int er1, int er2)
+{
+    er1 += ER_CMPMAIN;
+    emit error(er1,er2);
 }

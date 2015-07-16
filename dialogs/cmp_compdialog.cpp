@@ -443,58 +443,6 @@ void cmp_compdialog::ClearDialog ()
 }
 
 // --------------------------------------
-// Считываем информацию об элементах в библиотеке по шаблону
-// --------------------------------------
-
-QStringList cmp_compdialog::GetListFromFile (QString filename, QByteArray &StringToFind)
-{
-/*    QStringList tmpList;
-    QString tmpString;
-    char *tmpChar;
-    int filepos = 0;
-
-    tmpList.clear();
-    QFile file;
-    file.setFileName(filename);
-    if (!file.open(QIODevice::ReadOnly))
-    {
-        QMessageBox::warning(this,"Warning!",\
-                              "Невозможно открыть файл библиотеки!",\
-                              QMessageBox::Ok, QMessageBox::NoButton);
-        return QStringList();
-    }
-
-    pc.data = file.readAll();
-    while ((filepos = pc.data.indexOf(StringToFind, filepos)) != -1)
-    {
-        tmpChar = pc.data.data();
-        tmpChar += filepos;
-        while (*tmpChar)
-        {
-            if (tmpChar[0] == '=')
-            {
-                tmpChar++;
-                filepos++;
-                tmpString = "";
-                while ((tmpChar[0]) && (tmpChar[0] != '|'))
-                {
-                    tmpString += QString::fromLocal8Bit(tmpChar,1);
-                    tmpChar++;
-                    filepos++;
-                }
-                break;
-            }
-            tmpChar++;
-            filepos++;
-        }
-        tmpList << tmpString;
-    }
-    file.close();
-    return tmpList;*/
-    return QStringList();
-}
-
-// --------------------------------------
 // Отменили работу с диалогом
 // --------------------------------------
 

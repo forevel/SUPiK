@@ -2,6 +2,13 @@
 #define CMP_MAINDIALOG_H
 
 #include <QDialog>
+#include <QPaintEvent>
+
+#define CTYPE_ALT   1
+#define CTYPE_SCH   2
+#define CTYPE_SOL   3
+#define CTYPE_CON   4
+#define CTYPE_DEV   5
 
 class cmp_maindialog : public QDialog
 {
@@ -17,6 +24,18 @@ signals:
     void error(int,int);
 
 private:
+    QString CompDb, CompTble, CompId;
+
+    void SetAltDialog();
+    void FillAltDialog(QStringList);
+
+protected:
+    void paintEvent(QPaintEvent *);
+
+private slots:
+    void AddManuf();
+    void emiterror(int er1,int er2);
+
 };
 
 #endif // CMP_MAINDIALOG_H

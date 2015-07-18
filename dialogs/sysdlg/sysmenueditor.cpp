@@ -124,7 +124,7 @@ void SysmenuEditor::ChangeFields(QString str)
     }
     else
     {
-        emit error(ER_SYSMENU,0x21);
+        emit error(ER_SYSMENU+newdialog->result,0x21);
         return;
     }
 }
@@ -132,7 +132,7 @@ void SysmenuEditor::ChangeFields(QString str)
 void SysmenuEditor::Delete()
 {
     QString tmpString = GetIndex(0);
-    QStringList sl = tfl.tablefields(tble, "ИД"); // возьмём реальное имя таблицы из tablefields. sl(0) - <table>, sl(1) - <tablefields>, sl(2) - <links>
+    QStringList sl = tfl.tablefields(tble+"_полн", "ИД"); // возьмём реальное имя таблицы из tablefields. sl(0) - <table>, sl(1) - <tablefields>, sl(2) - <links>
     if (tfl.result)
     {
         emit error(ER_SYSMENU+tfl.result,0x31);
@@ -148,7 +148,7 @@ void SysmenuEditor::Delete()
                                   "Категория содержит подкатегории.\nВы уверены, что хотите удалить её?", \
                                   QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes)
         {
-            tfl.remove(tble, tmpString);
+            tfl.remove(tble+"_полн", tmpString);
             if (tfl.result)
             {
                 emit error(ER_SYSMENU,0x32);
@@ -169,9 +169,12 @@ void SysmenuEditor::Delete()
                                   "Вы уверены?", \
                                   QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes)
         {
-            tfl.remove(tble, tmpString);
+            tfl.remove(tble+"_полн", tmpString);
             if (tfl.result)
+            {
                 emit error(ER_SYSMENU,0x34);
+                return;
+            }
         }
         QMessageBox::information(this, "Успешно!", "Записано успешно!");
     }

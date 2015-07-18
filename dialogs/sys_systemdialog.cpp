@@ -1,16 +1,21 @@
 #include "sys_systemdialog.h"
 #include "s_2cdialog.h"
+#include "dir_maindialog.h"
 #include "../gen/s_sql.h"
 #include "../gen/publicclass.h"
 #include "../gen/s_tablefields.h"
 #include "../models/s_ntmodel.h"
+#include "../models/s_ncmodel.h"
 #include "../models/s_duniversal.h"
 #include "../widgets/s_tqtreeview.h"
+#include "../widgets/s_tqtableview.h"
 #include "../widgets/s_tqframe.h"
 #include "../widgets/s_tqlabel.h"
 #include "../widgets/s_tqsplitter.h"
 #include "../widgets/s_tqstackedwidget.h"
+#include "../widgets/s_tqwidget.h"
 #include "sysdlg/sysmenueditor.h"
+#include "sysdlg/systableeditor.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -29,7 +34,8 @@ sys_systemdialog::sys_systemdialog(QWidget *parent) :
     SetSysTree();
     pf["mainmenueditor"] = &sys_systemdialog::MainMenuEditor;
     pf["sysmenueditor"] = &sys_systemdialog::SystemMenuEditor;
-
+    pf["sysdireditor"] = &sys_systemdialog::SystemDirEditor;
+    pf["tableseditor"] = &sys_systemdialog::TablesEditor;
 }
 
 void sys_systemdialog::paintEvent(QPaintEvent *event)
@@ -50,6 +56,7 @@ void sys_systemdialog::SetupUI()
     lyout->setAlignment(lbl, Qt::AlignRight);
     s_tqTreeView *MainTV = new s_tqTreeView;
     s_tqStackedWidget *wdgt = new s_tqStackedWidget;
+    connect(this,SIGNAL(closeslvdlg()),this,SLOT(RemoveWidget()));
     MainTV->setObjectName("MainTV");
     wdgt->setObjectName("sw");
     s_tqSplitter *spl = new s_tqSplitter;
@@ -294,7 +301,7 @@ void sys_systemdialog::SystemMenuEditor()
     s_tqStackedWidget *wdgt = this->findChild<s_tqStackedWidget *>("sw");
     if (wdgt == 0)
     {
-        emit error(ER_SYS,0x41);
+        emit error(ER_SYS,0x32);
         return;
     }
     SysmenuEditor *dlg = new SysmenuEditor;
@@ -303,4 +310,104 @@ void sys_systemdialog::SystemMenuEditor()
     dlg->SetupUI("Системное меню");
     wdgt->addWidget(dlg);
     wdgt->repaint();
+}
+
+void sys_systemdialog::SystemDirEditor()
+{
+    s_tqStackedWidget *wdgt = this->findChild<s_tqStackedWidget *>("sw");
+    if (wdgt == 0)
+    {
+        emit error(ER_SYS,0x33);
+        return;
+    }
+    dir_maindialog *dird = new dir_maindialog("Справочники системные");
+    connect(dird,SIGNAL(error(int,int)),this,SLOT(emiterror(int,int)));
+    connect(this,SIGNAL(closeslvdlg()),dird,SLOT(close()));
+    wdgt->addWidget(dird);
+    wdgt->repaint();
+}
+
+void sys_systemdialog::TablesEditor()
+{
+    s_tqStackedWidget *wdgt = this->findChild<s_tqStackedWidget *>("sw");
+    if (wdgt == 0)
+    {
+        emit error(ER_SYS,0x34);
+        return;
+    }
+    s_tqWidget *wdt = new s_tqWidget;
+    s_tqTableView *tv = new s_tqTableView;
+    s_ncmodel *mdl = new s_ncmodel;
+    QList<QStringList> lsl;
+    QStringList ids, vls;
+    int i = 0;
+    QSqlQuery get_tables(sqlc.getdb("sup"));
+    get_tables.exec("SELECT DISTINCT `tablename` FROM `tablefields` ORDER BY `tablename` ASC;");
+    while (get_tables.next())
+    {
+        i++;
+        ids << QString("%1").arg(i, 5, 10, QChar('0'));
+        vls << get_tables.value(0).toString();
+    }
+    if (!vls.isEmpty())
+    {
+        lsl.append(ids);
+        lsl.append(vls);
+        mdl->setDataToWrite(lsl);
+        mdl->setcolumnlinks(0,"7.8");
+        mdl->setcolumnlinks(1,"7.8");
+        mdl->fillModel();
+        tv->setModel(mdl);
+        s_duniversal *GridItemDelegate = new s_duniversal;
+        tv->setItemDelegate(GridItemDelegate);
+        tv->horizontalHeader()->setVisible(false);
+        tv->verticalHeader()->setVisible(false);
+        tv->resizeColumnsToContents();
+        tv->resizeRowsToContents();
+        tv->setObjectName("tabletv");
+        connect(tv,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(EditTable(QModelIndex)));
+        QVBoxLayout *lyout = new QVBoxLayout;
+        lyout->addWidget(tv);
+        wdt->setLayout(lyout);
+        connect(this,SIGNAL(closeslvdlg()),wdt,SLOT(close()));
+        wdgt->addWidget(wdt);
+        wdgt->repaint();
+    }
+}
+
+void sys_systemdialog::RemoveWidget()
+{
+    s_tqStackedWidget *wdgt = this->findChild<s_tqStackedWidget *>("sw");
+    if (wdgt == 0)
+    {
+        emit error(ER_SYS,0x36);
+        return;
+    }
+    wdgt->removeWidget(wdgt->currentWidget());
+}
+
+void sys_systemdialog::EditTable(QModelIndex idx)
+{
+    Q_UNUSED(idx);
+    s_tqTableView *tv = this->findChild<s_tqTableView *>("tabletv");
+    if (tv == 0)
+    {
+        emit error(ER_SYS,0x35);
+        return;
+    }
+    QString tblename = tv->model()->data(tv->model()->index(tv->currentIndex().row(),1,QModelIndex()),Qt::DisplayRole).toString();
+    systableeditor *dlg = new systableeditor;
+    QLayout *lyout = this->layout();
+    QVBoxLayout *vlyout = new QVBoxLayout;
+    vlyout->addWidget(dlg);
+    setLayout(vlyout);
+    this->repaint();
+    setLayout(lyout);
+    this->repaint();
+}
+
+void sys_systemdialog::emiterror(int er1, int er2)
+{
+    er1 += ER_SYS;
+    emit error(er1,er2);
 }

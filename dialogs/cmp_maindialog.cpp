@@ -149,6 +149,7 @@ void cmp_maindialog::SetAltDialog()
     glyout->addWidget(lbl,1,0,1,1);
     s_tqChooseWidget *cw = new s_tqChooseWidget(true);
     cw->Setup("2.2..Производители_сокращ.Наименование");
+    cw->setObjectName("manufacturer");
     glyout->addWidget(cw,1,1,1,1);
     s_tqPushButton *pb = new s_tqPushButton(QString("Добавить"));
     connect(pb,SIGNAL(clicked()),this,SLOT(AddManuf()));
@@ -165,6 +166,7 @@ void cmp_maindialog::SetAltDialog()
     glyout->addWidget(lbl,0,0,1,1);
     cw = new s_tqChooseWidget(true);
     connect(cw,SIGNAL(error(int,int)),this,SLOT(emiterror(int,int)));
+    cw->setObjectName("libref");
     int i = 0;
     QStringList tmpsl = CompTble.split("_", QString::KeepEmptyParts);
     QString PathString = "";
@@ -176,43 +178,41 @@ void cmp_maindialog::SetAltDialog()
     }
     tmps = pc.PathToLibs + "Symbols" + PathString + "/" + CompTble + ".SchLib";
     cw->Setup("2.17.."+tmps+"."+pc.symfind);
-    glyout->addWidget(cw,0,1,1,2);
+    glyout->addWidget(cw,0,1,1,1);
+    lbl = new s_tqLabel("Посадочное место");
+    glyout->addWidget(lbl,1,0,1,1);
+    cw = new s_tqChooseWidget(true);
+    connect(cw,SIGNAL(error(int,int)),this,SLOT(emiterror(int,int)));
+    cw->setObjectName("footref");
+    tmps = pc.PathToLibs + "Footprints" + PathString + "/" + CompTble + ".PcbLib";
+    cw->Setup("2.17.."+tmps+"."+pc.footfind);
+    glyout->addWidget(cw,1,1,1,1);
     gb->setLayout(glyout);
     lyout->addWidget(gb);
-/*    FootPrintL = new s_tqLabel("Посадочное место");
-    FootPrintL->setFont(fontB);
-    LibRefCB = new s_tqComboBox;
-    FootPrintCB = new s_tqComboBox;
 
-        LibGBLayout = new QGridLayout;
-        LibGBLayout->addWidget(LibRefL, 0, 0);
-        LibGBLayout->addWidget(LibRefCB, 0, 1);
-        LibGBLayout->addWidget(FootPrintL, 1, 0);
-        LibGBLayout->addWidget(FootPrintCB, 1, 1);
-        LibGBLayout->setColumnStretch(0, 40);
-        LibGBLayout->setColumnStretch(1, 60);
-        LibGB->setLayout(LibGBLayout);
+    gb=new s_tqGroupBox;
+    glyout = new QGridLayout;
+    gb->setTitle("Поля ПЭ3");
+    lbl = new s_tqLabel("\"Наименование\"");
+    glyout->addWidget(lbl,0,0,1,1);
+    le = new s_tqLineEdit;
+    le->setObjectName("pe3name");
+    glyout->addWidget(le,0,1,1,1);
+    lbl = new s_tqLabel("\"Примечание\"");
+    glyout->addWidget(lbl,1,0,1,1);
+    le = new s_tqLineEdit;
+    le->setObjectName("pe3notes");
+    glyout->addWidget(le,1,1,1,1);
+    glyout->setColumnStretch(0,30);
+    glyout->setColumnStretch(1,70);
+    gb->setLayout(glyout);
+    lyout->addWidget(gb);
 
-        PE3GB = new s_tqGroupBox;
-        PE3GB->setTitle("Поля перечня элементов");
-        PE3GB->setAlignment(Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter);
-        PEDescL = new s_tqLabel("\"Наименование\"");
-        PEDescL->setFont(fontB);
-        PEDescLE = new s_tqLineEdit;
-        PENotesL = new s_tqLabel("\"Примечание\"");
-        PENotesLE = new s_tqLineEdit;
+    gb=new s_tqGroupBox;
+    glyout = new QGridLayout;
+    gb->setTitle("Характеристики");
 
-        PE3GBLayout = new QGridLayout;
-        PE3GBLayout->addWidget(PEDescL, 0, 0);
-        PE3GBLayout->addWidget(PEDescLE, 0, 1);
-        PE3GBLayout->addWidget(PENotesL, 1, 0);
-        PE3GBLayout->addWidget(PENotesLE, 1, 1);
-        PE3GBLayout->setColumnStretch(0, 40);
-        PE3GBLayout->setColumnStretch(1, 60);
-        PE3GB->setLayout(PE3GBLayout);
-
-
-/*        TechGB = new s_tqGroupBox;
+    /*        TechGB = new s_tqGroupBox;
         TechGB->setTitle("Характеристики");
         Par1L = new s_tqLabel;
         Par3L = new s_tqLabel;

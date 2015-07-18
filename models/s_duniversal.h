@@ -3,6 +3,7 @@
 
 #include <QStyledItemDelegate>
 #include "../gen/publicclass.h"
+#include "../widgets/s_tqchoosewidget.h"
 
 class s_duniversal : public QStyledItemDelegate
 {
@@ -22,9 +23,11 @@ public slots:
 protected:
 
 private slots:
+    void CommitChanges(QVariant);
 
 private:
     mutable PublicClass::fieldformat ff;
+    mutable s_tqChooseWidget *wdgt;
 };
 
 #endif // S_DUNIVERSAL_H

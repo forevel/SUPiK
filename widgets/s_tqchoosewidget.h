@@ -20,7 +20,7 @@ public:
 
     int result;
 signals:
-    void choosed(QVariant);
+    void textchanged(QVariant);
     void error(int,int);
 
 public slots:

@@ -49,8 +49,7 @@ void s_2cdialog::setup(QString tble, int Mode, QString id, QString matchtext, bo
         mainmodel->setup(tble);
         if (mainmodel->result)
         {
-            emit error(ER_2CDLG+mainmodel->result,0x11);
-            result=1;
+            result=ER_2CDLG+mainmodel->result+0x11;
             return;
         }
         mainmodel->isEditable = false;
@@ -61,8 +60,7 @@ void s_2cdialog::setup(QString tble, int Mode, QString id, QString matchtext, bo
         mainmodel->setup(tble, id);
         if (mainmodel->result)
         {
-            emit error(ER_2CDLG+mainmodel->result,0x12);
-            result=1;
+            result=ER_2CDLG+mainmodel->result+0x12;
             return;
         }
         mainmodel->isEditable = true;
@@ -71,8 +69,7 @@ void s_2cdialog::setup(QString tble, int Mode, QString id, QString matchtext, bo
     }
     default:
     {
-        emit error(ER_2CDLG,0x13);
-        result=1;
+        result=ER_2CDLG+0x13;
         return;
     }
     }

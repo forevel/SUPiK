@@ -360,7 +360,7 @@ void s_ncmodel::fillModel()
                 vl = DataToWrite.at(j).at(i);
                 if (vl.isEmpty())
                 {
-                    result = ER_NCMODEL+0x01;
+//                    result = ER_NCMODEL+0x01;
                     continue;
                 }
                 if (vl.at(0) == '_') // идентификатор составного значения - номер таблицы и само значение
@@ -630,7 +630,7 @@ void s_ncmodel::setup(QString tble, QString id)
     QList<int> il;
     il << headers.size() << headers.size();
     prepareModel(il);
-    setcolumnlinks(0, "0.8");
+    setcolumnlinks(0, "7.8");
     setcolumnlinks(1, links);
     fillModel();
 }
@@ -650,7 +650,7 @@ void s_ncmodel::setupcolumn(QString tble, QString header)
     QList<int> il;
     il << tmpsl.size();
     prepareModel(il);
-    setcolumnlinks(0, "0.8");
+    setcolumnlinks(0, "7.8");
     fillModel();
 }
 
@@ -675,7 +675,7 @@ int s_ncmodel::setupraw(QString db, QString tble, QStringList fl, QString orderf
         DataToWrite.append(tmpsl);
         addColumn(fl.at(i));
         il << tmpsl.size();
-        setcolumnlinks(i, "0.8");
+        setcolumnlinks(i, "7.8");
     }
     fillModel();
     return 0;

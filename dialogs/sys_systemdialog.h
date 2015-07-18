@@ -31,6 +31,8 @@ private:
     // функции пунктов меню системы
     void MainMenuEditor();
     void SystemMenuEditor();
+    void SystemDirEditor();
+    void TablesEditor();
 
 protected:
     void paintEvent(QPaintEvent *event);
@@ -38,6 +40,9 @@ protected:
 private slots:
     void SetSlave(QModelIndex);
     void SetSlave();
+    void EditTable(QModelIndex);
+    void emiterror(int,int);
+    void RemoveWidget();
 };
 
 #endif // SYS_SYSTEMDIALOG_H

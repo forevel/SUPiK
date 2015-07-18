@@ -234,6 +234,7 @@ void s_tqChooseWidget::accepted(QString str)
         return;
     QString tmpString = tfl.idtov(pc.getlinksfromFF(ff),str);
     le->setText(tmpString);
+    emit textchanged(QVariant(tmpString));
 }
 
 void s_tqChooseWidget::SetData(QVariant data)

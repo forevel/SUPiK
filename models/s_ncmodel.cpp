@@ -274,6 +274,15 @@ void s_ncmodel::addColumn(const QString hdrtext)
     hdr.replace(lastEntry, hdrtext);
 }
 
+void s_ncmodel::AddColumns(QStringList hdrs)
+{
+    while (!hdrs.isEmpty())
+    {
+        addColumn(hdrs.at(0));
+        hdrs.removeFirst();
+    }
+}
+
 void s_ncmodel::addRow()
 {
     int lastEntry = maindata.size();

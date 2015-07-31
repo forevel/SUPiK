@@ -24,6 +24,7 @@
 
 dir_adddialog::dir_adddialog(bool update, QString dirtype, QString dir, QWidget *parent) :
     QDialog(parent) // dirtype - имя таблицы из tablefields, где искать информацию о справочнике (dirlist, dirsyslist и т.д.)
+                    // если диалог вызван для редактирования таблиц, dirtype должен быть пустым
 {
     idx = 0;
 //    setMinimumWidth(300);
@@ -33,132 +34,149 @@ dir_adddialog::dir_adddialog(bool update, QString dirtype, QString dir, QWidget 
     this->dir = dir;
     this->dirtype = dirtype;
     upd = update;
+    IsDir = (!dirtype.isEmpty());
     setupUI();
 }
 
 void dir_adddialog::setupUI()
 {
-    QVBoxLayout *mainLayout = new QVBoxLayout;
-    QHBoxLayout *mainPBLayout = new QHBoxLayout;
-    s_tqPushButton *WriteAndClosePB = new s_tqPushButton;
-    WriteAndClosePB->setIcon(QIcon(":/res/icon_zap.png"));
-    s_tqPushButton *CancelAndClosePB = new s_tqPushButton;
-    CancelAndClosePB->setIcon(QIcon(":/res/cross.png"));
+    QVBoxLayout *lyout = new QVBoxLayout;
+    QHBoxLayout *hlyout = new QHBoxLayout;
+    s_tqLabel *lbl;
+    s_tqPushButton *pb;
+    s_tqComboBox *cb;
+    s_tqSpinBox *spb;
+    s_tqLineEdit *le;
+    lbl = new s_tqLabel("Редактор таблиц");
+    QFont font;
+    font.setPointSize(15);
+    lbl->setFont(font);
+    lyout->addWidget(lbl, 0, Qt::AlignLeft);
+
+    pb = new s_tqPushButton;
+    pb->setIcon(QIcon(":/res/icon_zap.png"));
+    connect(pb, SIGNAL(clicked()), this, SLOT(WriteAndClose()));
+    hlyout->addWidget(pb);
+    pb = new s_tqPushButton;
+    pb->setIcon(QIcon(":/res/cross.png"));
+    connect(pb, SIGNAL(clicked()), this, SLOT(CancelAndClose()));
+    hlyout->addWidget(pb);
+    hlyout->addStretch(300);
+    lyout->addLayout(hlyout);
     QTabWidget *mainTW = new QTabWidget;
     QDialog *dlg1 = new QDialog;
     QDialog *dlg2 = new QDialog;
-    dlg2->setObjectName("dlg2");
     QDialog *dlg3 = new QDialog;
+    dlg2->setObjectName("dlg2");
     dlg3->setObjectName("dlg3");
     QGridLayout *dlg1Layout = new QGridLayout;
     QGridLayout *dlg2Layout = new QGridLayout;
     QGridLayout *dlg3Layout = new QGridLayout;
-    s_tqLabel *dirAliasL = new s_tqLabel("Имя справочника");
-    s_tqLineEdit *dirAliasLE = new s_tqLineEdit;
-    dirAliasLE->setObjectName("dirAlias");
-    s_tqLabel *dirNameL = new s_tqLabel("Имя таблицы справочника (необязательно)");
-    s_tqLineEdit *dirNameLE = new s_tqLineEdit;
-    dirNameLE->setObjectName("dirName");
-    s_tqLabel *dirFieldNumL = new s_tqLabel("Количество полей");
-    s_tqSpinBox *dirFieldNumSB = new s_tqSpinBox;
-    dirFieldNumSB->setObjectName("dirFieldNum");
-    dirFieldNumSB->setValue(1);
-    dirFieldNumSB->setMinimum(1);
-    dirFieldNumSB->setMaximum(FSIZE);
-    dirFieldNumSB->setDecimals(0);
-    s_tqLabel *dirBelongL = new s_tqLabel("Тип справочника");
-    s_tqComboBox *dirBelongCB = new s_tqComboBox;
-    dirBelongCB->setObjectName("dirBelong");
-    QStringListModel *tmpSLM = new QStringListModel;
-    QStringList tmpSL;
-    tmpSL << "Основной";
-    if (pc.access & (ACC_ALT_WR | ACC_SYS_WR)) // САПРовские права
-        tmpSL << "Altium" << "Schemagee" << "Solidworks" << "Устройства" << "Конструктивы";
-    if (pc.access & (ACC_TB_WR | ACC_SYS_WR)) // ГИ права
-        tmpSL << "ОТ и ТБ";
-    if (pc.access & (ACC_SADM_WR | ACC_SYS_WR)) // Сисадминские права
-        tmpSL << "СисАдмин";
-    if (pc.access & ACC_SYS_WR)
-        tmpSL << "Системный";
-    dirBelongAliases.clear();
-    dirBelongAliases.insert("Основной","ent");
-    dirBelongAliases.insert("Altium","alt");
-    dirBelongAliases.insert("Schemagee","sch");
-    dirBelongAliases.insert("Solidworks","sol");
-    dirBelongAliases.insert("Устройства","dev");
-    dirBelongAliases.insert("Конструктивы","con");
-    dirBelongAliases.insert("ОТ и ТБ","otb");
-    dirBelongAliases.insert("СисАдмин","sys");
-    dirBelongAliases.insert("Системный","sup");
-    dirBelongCB->setEnabled(true);
-    tmpSLM->setStringList(tmpSL);
-    dirBelongCB->setModel(tmpSLM);
-    s_tqLabel *dirAccessL = new s_tqLabel("Права доступа");
-    s_tqLineEdit *dirAccessLE = new s_tqLineEdit;
-    dirAccessLE->setObjectName("dirAccess");
-    s_tqPushButton *dirAccessPB = new s_tqPushButton("...");
-    if (pc.access & ACC_SYS_WR) // если есть права на изменение системных вещей
-        dirAccessPB->setEnabled(true);
-    else
-        dirAccessPB->setEnabled(false);
-    s_tqLabel *mainL = new s_tqLabel("Редактор справочников");
-    QFont font;
-    font.setPointSize(15);
-    mainL->setFont(font);
-
-    mainPBLayout->addWidget(WriteAndClosePB);
-    mainPBLayout->addWidget(CancelAndClosePB);
-    mainPBLayout->addStretch(300);
-    mainLayout->addWidget(mainL, 0, Qt::AlignLeft);
-    mainLayout->addLayout(mainPBLayout);
-    dlg1Layout->addWidget(dirAliasL, 0, 0);
-    dlg1Layout->addWidget(dirAliasLE, 0, 1, 1, 2);
-    connect(dirAliasLE, SIGNAL(editingFinished()), this, SLOT(transliteDirName()));
-    dlg1Layout->addWidget(dirFieldNumL, 1, 0);
-    dlg1Layout->addWidget(dirFieldNumSB, 1, 1, 1, 2);
-    dlg1Layout->addWidget(dirBelongL, 2, 0);
-    dlg1Layout->addWidget(dirBelongCB, 2, 1, 1, 2);
-    dlg1Layout->addWidget(dirAccessL, 3, 0);
-    dlg1Layout->addWidget(dirAccessLE, 3, 1);
-    dlg1Layout->addWidget(dirAccessPB, 3, 2);
-    dlg1Layout->addWidget(dirNameL, 4, 0);
-    dlg1Layout->addWidget(dirNameLE, 4, 1, 1, 2);
+    lbl = new s_tqLabel("Имя справочника(таблицы)");
+    dlg1Layout->addWidget(lbl, 0, 0);
+    le = new s_tqLineEdit;
+    le->setObjectName("dirAlias");
+    connect(le, SIGNAL(editingFinished()), this, SLOT(transliteDirName()));
+    dlg1Layout->addWidget(le, 0, 1, 1, 2);
+    lbl = new s_tqLabel("Количество полей");
+    spb = new s_tqSpinBox;
+    spb->setObjectName("dirFieldNum");
+    spb->setValue(1);
+    spb->setMinimum(1);
+    spb->setMaximum(FSIZE);
+    spb->setDecimals(0);
+    connect(spb, SIGNAL(valueChanged(double)), this, SLOT(updateTWFields(double)));
+    dlg1Layout->addWidget(lbl, 1, 0);
+    dlg1Layout->addWidget(spb, 1, 1, 1, 2);
+    if (IsDir)
+    {
+        lbl = new s_tqLabel("Тип справочника");
+        cb = new s_tqComboBox;
+        cb->setObjectName("dirBelong");
+        QStringListModel *tmpSLM = new QStringListModel;
+        QStringList tmpSL;
+        tmpSL << "Основной";
+        if (pc.access & (ACC_ALT_WR | ACC_SYS_WR)) // САПРовские права
+            tmpSL << "Altium" << "Schemagee" << "Solidworks" << "Устройства" << "Конструктивы";
+        if (pc.access & (ACC_TB_WR | ACC_SYS_WR)) // ГИ права
+            tmpSL << "ОТ и ТБ";
+        if (pc.access & (ACC_SADM_WR | ACC_SYS_WR)) // Сисадминские права
+            tmpSL << "СисАдмин";
+        if (pc.access & ACC_SYS_WR)
+            tmpSL << "Системный";
+        dirBelongAliases.clear();
+        dirBelongAliases.insert("Основной","ent");
+        dirBelongAliases.insert("Altium","alt");
+        dirBelongAliases.insert("Schemagee","sch");
+        dirBelongAliases.insert("Solidworks","sol");
+        dirBelongAliases.insert("Устройства","dev");
+        dirBelongAliases.insert("Конструктивы","con");
+        dirBelongAliases.insert("ОТ и ТБ","otb");
+        dirBelongAliases.insert("СисАдмин","sys");
+        dirBelongAliases.insert("Системный","sup");
+        cb->setEnabled(true);
+        tmpSLM->setStringList(tmpSL);
+        cb->setModel(tmpSLM);
+        dlg1Layout->addWidget(lbl, 2, 0);
+        dlg1Layout->addWidget(cb, 2, 1, 1, 2);
+        lbl = new s_tqLabel("Права доступа");
+        le = new s_tqLineEdit;
+        le->setEnabled(false);
+        le->setObjectName("dirAccess");
+        pb = new s_tqPushButton("...");
+        if (pc.access & ACC_SYS_WR) // если есть права на изменение системных вещей
+            pb->setEnabled(true);
+        else
+            pb->setEnabled(false);
+        connect(pb, SIGNAL(clicked()), this, SLOT(setAccessRights()));
+        dlg1Layout->addWidget(lbl, 3, 0);
+        dlg1Layout->addWidget(le, 3, 1);
+        dlg1Layout->addWidget(pb, 3, 2);
+    }
+    lbl = new s_tqLabel("Имя таблицы в БД (необязательно)");
+    le = new s_tqLineEdit;
+    le->setObjectName("dirName");
+    dlg1Layout->addWidget(lbl, 4, 0);
+    dlg1Layout->addWidget(le, 4, 1, 1, 2);
     dlg1Layout->setColumnStretch(0, 10);
     dlg1Layout->setColumnStretch(1, 90);
     dlg1Layout->setColumnStretch(2, 0);
-    QWidget *wdgt = new QWidget;
-    QVBoxLayout *wdgtl = new QVBoxLayout;
-    wdgtl->addStretch(100);
-    dlg1Layout->addWidget(wdgt, 5, 0, 1, 3);
     dlg1->setLayout(dlg1Layout);
     mainTW->addTab(dlg1, "Основные");
+
     for (int i = 0; i < FSIZE; i++)
     {
-        s_tqLabel *hdrL = new s_tqLabel("Поле №" + QString::number(i+1) + " :");
-        hdrL->setObjectName("hdr"+QString::number(i)+"L");
-        s_tqLineEdit *nameLE = new s_tqLineEdit;
-        nameLE->setObjectName("name" + QString::number(i) + "LE");
-        nameLE->setAData(i);
-        adjustFieldSize(nameLE, 20);
-        s_tqLabel *bodyL1 = new s_tqLabel(",сист. имя:");
-        bodyL1->setObjectName("body"+QString::number(i)+"L1");
-        s_tqLineEdit *fieldLE = new s_tqLineEdit;
-        fieldLE->setObjectName("field" + QString::number(i) + "LE");
-        adjustFieldSize(fieldLE, 15);
-        s_tqLabel *bodyL2 = new s_tqLabel(", содержит:");
-        bodyL2->setObjectName("body"+QString::number(i)+"L2");
-        s_tqLineEdit *valueLE = new s_tqLineEdit;
-        valueLE->setObjectName("value" + QString::number(i) + "LE");
-        adjustFieldSize(valueLE, 10);
-        valueLE->setEnabled(false);
-        s_tqPushButton *valueconstPB = new s_tqPushButton("Конструктор");
-        valueconstPB->setAData(i);
-        valueconstPB->setObjectName("valueconst" + QString::number(i) + "PB");
-        adjustFieldSize(valueconstPB, 4);
-        connect(valueconstPB, SIGNAL(clicked(s_tqPushButton*)), this, SLOT(FPBPressed(s_tqPushButton*)));
-        connect(nameLE,SIGNAL(textChanged(QString,s_tqLineEdit*)),this,SLOT(transliteFieldName(QString,s_tqLineEdit*)));
         QList<QWidget *> wl;
-        wl << hdrL << nameLE << bodyL1 << fieldLE << bodyL2 << valueLE << valueconstPB;
+        lbl = new s_tqLabel("Поле №" + QString::number(i+1) + " :");
+        lbl->setObjectName("hdr"+QString::number(i)+"L");
+        wl << lbl;
+        le = new s_tqLineEdit;
+        le->setObjectName("name" + QString::number(i) + "LE");
+        le->setAData(i);
+        adjustFieldSize(le, 20);
+        connect(le,SIGNAL(textChanged(QString,s_tqLineEdit*)),this,SLOT(transliteFieldName(QString,s_tqLineEdit*)));
+        wl << le;
+        lbl = new s_tqLabel(",сист. имя:");
+        lbl->setObjectName("body"+QString::number(i)+"L1");
+        wl << lbl;
+        le = new s_tqLineEdit;
+        le->setObjectName("field" + QString::number(i) + "LE");
+        adjustFieldSize(le, 15);
+        wl << le;
+        lbl = new s_tqLabel(", содержит:");
+        lbl->setObjectName("body"+QString::number(i)+"L2");
+        wl << lbl;
+        le = new s_tqLineEdit;
+        le->setObjectName("value" + QString::number(i) + "LE");
+        adjustFieldSize(le, 10);
+        le->setEnabled(false);
+        wl << le;
+        pb = new s_tqPushButton("Конструктор");
+        pb->setAData(i);
+        pb->setObjectName("valueconst" + QString::number(i) + "PB");
+        adjustFieldSize(pb, 4);
+        connect(pb, SIGNAL(clicked(s_tqPushButton*)), this, SLOT(FPBPressed(s_tqPushButton*)));
+        wl << pb;
         if (i > FSIZE2)
             addLineToDlg(wl, *dlg3Layout, i-FSIZE2);
         else
@@ -174,17 +192,13 @@ void dir_adddialog::setupUI()
     mainTW->addTab(dlg3, "Поля 2");
 
     mainTW->setObjectName("mainTW");
-    mainLayout->addWidget(mainTW, 95);
-    setLayout(mainLayout);
+    lyout->addWidget(mainTW, 95);
+    setLayout(lyout);
     setMinimumHeight(height()); // меньше не даём изменять, ибо некрасиво
     setMinimumWidth(width()+50);
     if (upd)
         fillFields();
-    updateTWFields(dirFieldNumSB->value());
-    connect(dirAccessPB, SIGNAL(clicked()), this, SLOT(setAccessRights()));
-    connect(WriteAndClosePB, SIGNAL(clicked()), this, SLOT(WriteAndClose()));
-    connect(CancelAndClosePB, SIGNAL(clicked()), this, SLOT(CancelAndClose()));
-    connect(dirFieldNumSB, SIGNAL(valueChanged(double)), this, SLOT(updateTWFields(double)));
+    updateTWFields(spb->value());
 }
 
 void dir_adddialog::CancelAndClose()
@@ -195,14 +209,14 @@ void dir_adddialog::CancelAndClose()
 void dir_adddialog::WriteAndClose()
 {
     int i;
-    s_tqLineEdit *lefield = new s_tqLineEdit;
-    s_tqLineEdit *levalue = new s_tqLineEdit;
-    s_tqLineEdit *lename = new s_tqLineEdit;
-    s_tqLineEdit *dirNameLE = new s_tqLineEdit;
-    s_tqLineEdit *dirAliasLE = new s_tqLineEdit;
-    s_tqLineEdit *dirAccessLE = new s_tqLineEdit;
-    s_tqComboBox *dirB = new s_tqComboBox;
-    s_tqSpinBox *sb = new s_tqSpinBox;
+    s_tqLineEdit *lefield;
+    s_tqLineEdit *levalue;
+    s_tqLineEdit *lename;
+    s_tqLineEdit *dirNameLE;
+    s_tqLineEdit *dirAliasLE;
+    s_tqLineEdit *dirAccessLE;
+    s_tqComboBox *dirB;
+    s_tqSpinBox *sb;
     dirNameLE = this->findChild<s_tqLineEdit *>("dirName");
     if (dirNameLE == 0)
     {
@@ -227,7 +241,7 @@ void dir_adddialog::WriteAndClose()
         emit error(ER_DIRADD,0x14);
         return;
     }
-    QString tmpString = sqlc.getvaluefromtablebyfield(sqlc.getdb("sup"), "tablefields", "header", "tablename", dirAliasLE->text()+"_полн");
+    QString tmpString = sqlc.getvaluefromtablebyfield(sqlc.getdb("sup"), "tablefields", "header", "tablename", dirAliasLE->text());
     if (sqlc.result == 2) // ошибка открытия таблицы
     {
         emit error(ER_DIRADD,0x15);
@@ -262,8 +276,8 @@ void dir_adddialog::WriteAndClose()
         tmpString = (lename->text() == "ИД") ? "v" : "";
         vl << lefield->text() << tble+"."+dirNameLE->text() << tmpString << lename->text() << levalue->text();
         tmpString = QString("%1").arg(i, 2, 10, QChar('0'));
-        vl << tmpString << dirAliasLE->text()+"_полн" << pc.DateTime << "0" << QString::number(pc.idPers);
-        cmpvl << dirAliasLE->text()+"_полн" << lefield->text();
+        vl << tmpString << dirAliasLE->text() << pc.DateTime << "0" << QString::number(pc.idPers);
+        cmpvl << dirAliasLE->text() << lefield->text();
         QString id = sqlc.getvaluefromtablebyfields(sqlc.getdb("sup"), "tablefields", "idtablefields", cmpfl, cmpvl);
         if (sqlc.result == 1) // нет такой записи
             sqlc.insertvaluestotable(sqlc.getdb("sup"), "tablefields", fl, vl);
@@ -276,33 +290,37 @@ void dir_adddialog::WriteAndClose()
         }
     }
     tble = "dirlist";
-    fl.clear();
-    vl.clear();
-    fl << "dirlist" << "access" << "deleted";
-    vl << dirAliasLE->text() << dirAccessLE->text() << "0";
-    tmpString = sqlc.getvaluefromtablebyfield(db, tble, "dirlist", "dirlist", dirAliasLE->text());
-    if (tmpString.isEmpty())
+    if (IsDir)
     {
-        tmpString = sqlc.insertvaluestotable(db, tble, fl, vl);
-        if (sqlc.result)
+        fl.clear();
+        vl.clear();
+        fl << "dirlist" << "access" << "deleted";
+        vl << dirAliasLE->text() << dirAccessLE->text() << "0";
+        tmpString = sqlc.getvaluefromtablebyfield(db, tble, "dirlist", "dirlist", dirAliasLE->text());
+        if (tmpString.isEmpty())
         {
-            emit error(ER_DIRADD+sqlc.result,0x18);
-            return;
+            tmpString = sqlc.insertvaluestotable(db, tble, fl, vl);
+            if (sqlc.result)
+            {
+                emit error(ER_DIRADD+sqlc.result,0x18);
+                return;
+            }
         }
-    }
-    else
-    {
-        tmpString = sqlc.updatevaluesintable(db, tble, fl, vl, "dirlist", dirAliasLE->text());
-        if (sqlc.result)
+        else
         {
-            emit error(ER_DIRADD+sqlc.result,0x19);
-            return;
+            tmpString = sqlc.updatevaluesintable(db, tble, fl, vl, "dirlist", dirAliasLE->text());
+            if (sqlc.result)
+            {
+                emit error(ER_DIRADD+sqlc.result,0x19);
+                return;
+            }
         }
     }
     QDialog *dlg = new QDialog;
     QVBoxLayout *lyout = new QVBoxLayout;
     s_tqPushButton *pb = new s_tqPushButton("Ага");
     connect(pb,SIGNAL(clicked()),this,SLOT(close()));
+    connect(pb,SIGNAL(clicked()),dlg,SLOT(close()));
     s_tqLabel *lbl = new s_tqLabel("Записано успешно!");
     lyout->addWidget(lbl);
     lyout->addWidget(pb);
@@ -428,8 +446,7 @@ void dir_adddialog::updateTWFields(double dfn)
 void dir_adddialog::setAccessRights()
 {
     s_accessdialog *accessdialog = new s_accessdialog;
-    s_tqLineEdit *le = new s_tqLineEdit;
-    le = this->findChild<s_tqLineEdit *>("dirAccess");
+    s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("dirAccess");
     accessdialog->SetupUI(le->text());
     connect(accessdialog, SIGNAL(acceptChanges(QString)), this, SLOT(acceptAccess(QString)));
     accessdialog->exec();
@@ -440,8 +457,12 @@ void dir_adddialog::setAccessRights()
 void dir_adddialog::acceptAccess(QString rights)
 {
     isSomethingChanged = true;
-    s_tqLineEdit *le = new s_tqLineEdit;
-    le = this->findChild<s_tqLineEdit *>("dirAccess");
+    s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("dirAccess");
+    if (le == 0)
+    {
+        emit error(ER_DIRADD,0x2F);
+        return;
+    }
     le->setText(rights);
 }
 
@@ -849,14 +870,20 @@ void dir_adddialog::fillFields()
         return;
     }
     dirBelongCB->setCurrentText(tmpString);
-    QStringList fields = QStringList() << "Права доступа";
-    QStringList values = tfl.valuesbyfield(dirtype+"_полн",fields,"Наименование",dir);
-    if (tfl.result)
+    if (dirtype.isEmpty()) // для редактирования таблиц (не справочников) права не нужны, они по умолчанию системные
+        dirAccessLE->setEnabled(false);
+    else
     {
-        emit error(ER_DIRADD+0x01,0x88);
-        return;
+        QStringList fields = QStringList() << "Права доступа";
+        QStringList values = tfl.valuesbyfield(dirtype+"_полн",fields,"Наименование",dir);
+        if (tfl.result)
+        {
+            emit error(ER_DIRADD+0x01,0x88);
+            return;
+        }
+        dirAccessLE->setText(values.at(0));
+        dirAccessLE->setEnabled(true);
     }
-    dirAccessLE->setText(values.at(0));
     sb->setValue(lsl.size());
     for (int i = 0; i < lsl.size(); i++)
     {

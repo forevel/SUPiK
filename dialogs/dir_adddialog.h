@@ -28,6 +28,7 @@ private:
     int idx;
     const int module_number = 0x100;
     QString dir, dirtype;
+    bool IsDir;
     QString ltype;
     QStringList sl1, sl2;
     QMap<QString, QString> dirBelongAliases;

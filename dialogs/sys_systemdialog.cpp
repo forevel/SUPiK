@@ -1,6 +1,7 @@
 #include "sys_systemdialog.h"
 #include "s_2cdialog.h"
 #include "dir_maindialog.h"
+#include "dir_adddialog.h"
 #include "../gen/s_sql.h"
 #include "../gen/publicclass.h"
 #include "../gen/s_tablefields.h"
@@ -15,7 +16,6 @@
 #include "../widgets/s_tqstackedwidget.h"
 #include "../widgets/s_tqwidget.h"
 #include "sysdlg/sysmenueditor.h"
-#include "sysdlg/systableeditor.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -47,6 +47,10 @@ void sys_systemdialog::paintEvent(QPaintEvent *event)
 
 void sys_systemdialog::SetupUI()
 {
+    QVBoxLayout *mlyout = new QVBoxLayout;
+    QStackedWidget *sw = new QStackedWidget;
+    QWidget *mainwidget = new QWidget;
+    sw->setObjectName("stw");
     QVBoxLayout *lyout = new QVBoxLayout;
     s_tqLabel *lbl = new s_tqLabel("Структура системы");
     QFont font;
@@ -81,7 +85,10 @@ void sys_systemdialog::SetupUI()
     spl->setOrientation(Qt::Horizontal);
     spl->setSizes(il);
     lyout->addWidget(spl, 90);
-    setLayout(lyout);
+    mainwidget->setLayout(lyout);
+    sw->addWidget(mainwidget);
+    mlyout->addWidget(sw);
+    setLayout(mlyout);
 }
 
 // отображение основного системного дерева в левой части окна
@@ -314,8 +321,8 @@ void sys_systemdialog::SystemMenuEditor()
 
 void sys_systemdialog::SystemDirEditor()
 {
-    s_tqStackedWidget *wdgt = this->findChild<s_tqStackedWidget *>("sw");
-    if (wdgt == 0)
+    QStackedWidget *sw = this->findChild<QStackedWidget *>("stw");
+    if (sw == 0)
     {
         emit error(ER_SYS,0x33);
         return;
@@ -323,8 +330,9 @@ void sys_systemdialog::SystemDirEditor()
     dir_maindialog *dird = new dir_maindialog("Справочники системные");
     connect(dird,SIGNAL(error(int,int)),this,SLOT(emiterror(int,int)));
     connect(this,SIGNAL(closeslvdlg()),dird,SLOT(close()));
-    wdgt->addWidget(dird);
-    wdgt->repaint();
+    sw->addWidget(dird);
+    sw->setCurrentWidget(dird);
+    repaint();
 }
 
 void sys_systemdialog::TablesEditor()
@@ -396,14 +404,16 @@ void sys_systemdialog::EditTable(QModelIndex idx)
         return;
     }
     QString tblename = tv->model()->data(tv->model()->index(tv->currentIndex().row(),1,QModelIndex()),Qt::DisplayRole).toString();
-    systableeditor *dlg = new systableeditor;
-    QLayout *lyout = this->layout();
-    QVBoxLayout *vlyout = new QVBoxLayout;
-    vlyout->addWidget(dlg);
-    setLayout(vlyout);
-    this->repaint();
-    setLayout(lyout);
-    this->repaint();
+    QStackedWidget *sw = this->findChild<QStackedWidget *>("stw");
+    if (sw == 0)
+    {
+        emit error(ER_SYS,0x37);
+        return;
+    }
+    dir_adddialog *dlg = new dir_adddialog(true,"",tblename);
+    sw->addWidget(dlg);
+    sw->setCurrentWidget(dlg);
+    repaint();
 }
 
 void sys_systemdialog::emiterror(int er1, int er2)

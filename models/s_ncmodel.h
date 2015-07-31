@@ -33,7 +33,8 @@ public:
     bool insertRows(int position, int rows, const QModelIndex &index = QModelIndex());
     bool removeRows(int position, int rows, const QModelIndex &index = QModelIndex());
     int getHeaderPosition(QVariant hdrtext, Qt::Orientation orientation, int role); // получение индекса элемента в заголовке, который содержит текст hdrtext
-    void addColumn(const QString hdrtext); // добавление новой колонки с текстом в заголовке hdrtext для варианта двух столбцов
+    void addColumn(const QString hdrtext); // добавление новой колонки с текстом в заголовке hdrtext
+    void AddColumns(QStringList hdrs); // добавление новых колонок с текстом из hdrs
     void addRow(); // добавление строки
     void setcolumnlinks(int column, QString links); // установка типа поля на весь столбец модели
     void setcolumnlinks(int column, QStringList links); // установка типов полей на столбец модели

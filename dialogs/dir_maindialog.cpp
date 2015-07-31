@@ -105,6 +105,9 @@ void dir_maindialog::SetupUI()
     spl->addWidget(right);
     spl->setOrientation(Qt::Horizontal);
     lyout->addWidget(spl, 90);
+    s_tqPushButton *pb = new s_tqPushButton("Выход");
+    connect(pb,SIGNAL(clicked()),this,SLOT(close()));
+    lyout->addWidget(pb);
     setLayout(lyout);
 }
 
@@ -334,7 +337,7 @@ void dir_maindialog::AddDirDialog()
 void dir_maindialog::EditDirDialog()
 {
     QString tmpString = getMainIndex(1);
-    dir_adddialog *EditDialog = new dir_adddialog(true, tble, tmpString); // В tble передаётся тип справочника ("Справочники", "Справочники системные" и т.д.)
+    dir_adddialog *EditDialog = new dir_adddialog(true, tble, tmpString+"_полн"); // В tble передаётся тип справочника ("Справочники", "Справочники системные" и т.д.)
     connect(EditDialog,SIGNAL(error(int,int)),this,SIGNAL(error(int,int)));
     EditDialog->exec();
 }

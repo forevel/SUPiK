@@ -31,6 +31,7 @@ private:
     bool IsDir;
     QString ltype;
     QStringList sl1, sl2;
+    QStringList FW_Links;
     QMap<QString, QString> dirBelongAliases;
     void addLineToDlg(QList<QWidget *> wl, QGridLayout &lyt, int row);
     void adjustFieldSize(QWidget *wdgt, int widthInChar);
@@ -42,15 +43,15 @@ private slots:
     void setAccessRights();
     void acceptAccess(QString);
     void FPBPressed(s_tqPushButton *ptr);
-    void CBPressed(QString str, s_tqComboBox *ptr);
     void updateFLE(QString str);
     void updateALE(long rights);
     void fillFields();
     void transliteDirName();
     void transliteFieldName(QString str, s_tqLineEdit *ptr);
     void DTypeCBIndexChanged(int);
-    void LTypeCBIndexChanged(int);
+    void LTypeCBIndexChanged(QString str);
     void ConstructLink();
+    void TbleChoosed(QString, s_tqComboBox *);
 };
 
 #endif // DIR_ADDDIALOG_H

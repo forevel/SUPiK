@@ -14,6 +14,8 @@
 #include "../widgets/s_tqspinbox.h"
 #include "../widgets/s_tqtreeview.h"
 #include "../widgets/s_tqtableview.h"
+#include "../widgets/s_tqwidget.h"
+#include "../widgets/s_tqstackedwidget.h"
 #include "s_accessdialog.h"
 #include "../gen/s_sql.h"
 #include "../gen/publicclass.h"
@@ -36,6 +38,11 @@ dir_adddialog::dir_adddialog(bool update, QString dirtype, QString dir, QWidget 
     upd = update;
     IsDir = (!dirtype.isEmpty());
     setupUI();
+    FW_Links.clear();
+    FW_Links << "0.Автонумерация" << "1.Фиксированное значение" << "2.Простая ссылка" << "3.Ссылка на несколько таблиц" << "4.Ссылка на дочерние элементы" << \
+                "5.Значение с макс. ИД" << "6.Форматированное поле" << "7.Вычисляемое поле" << "8.Простое поле" << "9.Права доступа" << \
+                "10.Выбор таблицы" << "11.Специальная ссылка" << "12.Ссылка на методы" << "13.Вызов диалога редактирования строки" << "14.Конструктор ссылок" << \
+                "15.Ссылка на файл" << "16.Ссылка на каталог" << "17.Ссылка на элемент внутри файла" << "18.Выбор даты" << "19.Автодополнение нулями";
 }
 
 void dir_adddialog::setupUI()
@@ -70,6 +77,7 @@ void dir_adddialog::setupUI()
     dlg2->setObjectName("dlg2");
     dlg3->setObjectName("dlg3");
     QGridLayout *dlg1Layout = new QGridLayout;
+    QVBoxLayout *dlg1vlyout = new QVBoxLayout;
     QGridLayout *dlg2Layout = new QGridLayout;
     QGridLayout *dlg3Layout = new QGridLayout;
     lbl = new s_tqLabel("Имя справочника(таблицы)");
@@ -141,7 +149,9 @@ void dir_adddialog::setupUI()
     dlg1Layout->setColumnStretch(0, 10);
     dlg1Layout->setColumnStretch(1, 90);
     dlg1Layout->setColumnStretch(2, 0);
-    dlg1->setLayout(dlg1Layout);
+    dlg1vlyout->addLayout(dlg1Layout);
+    dlg1vlyout->addSpacing(200);
+    dlg1->setLayout(dlg1vlyout);
     mainTW->addTab(dlg1, "Основные");
 
     for (int i = 0; i < FSIZE; i++)
@@ -476,148 +486,328 @@ void dir_adddialog::addLineToDlg(QList<QWidget *> wl, QGridLayout &lyt, int row)
 
 void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
 {
+    QDialog *dlg = new QDialog(this);
     idx = ptr->getAData().toInt(0);
-    s_tqSpinBox *sb = new s_tqSpinBox;
-    sb = this->findChild<s_tqSpinBox *>("dirFieldNum");
-    if (sb == 0)
+    // заполняем элементы конструктора ссылок
+    s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("value"+QString::number(idx)+"LE");
+    if (le == 0)
     {
-        emit error(ER_DIRADD,0x41);
+        emit error(ER_DIRADD,0x42);
         return;
     }
+    QStringList links = le->text().split("."); // формируем links
+
     s_tqLabel *lbl1 = new s_tqLabel ("Тип поля");
     s_tqLabel *lbl2 = new s_tqLabel ("Тип ссылки");
     s_tqComboBox *cb = new s_tqComboBox;
-    QList<QStringList> lsl;
     QStringListModel *cbmodel = new QStringListModel;
     QStringList tmpStringList; // делегаты
-    tmpStringList << "Простое поле" << "Поле ввода" << "Поле выбора" << "Выпадающий список" << "Неактивное поле" <<  \
-                     "Счётчик" << "Поле выбора с вводом" << "Поле с рамкой";
+    tmpStringList << "0.Простое поле" << "1.Поле ввода" << "2.Поле выбора" << "3.Выпадающий список" << "4.Неактивное поле" <<  \
+                     "5.Счётчик" << "6.Поле выбора с вводом" << "7.Поле с рамкой";
     cbmodel->setStringList(tmpStringList);
     cb->setModel(cbmodel);
     connect(cb,SIGNAL(currentIndexChanged(int)),this,SLOT(DTypeCBIndexChanged(int)));
     adjustFieldSize(cb, 25);
     s_tqComboBox *ltypecb = new s_tqComboBox;
     ltypecb->setObjectName("ltypecb");
-    connect(ltypecb,SIGNAL(currentIndexChanged(int)),this,SLOT(LTypeCBIndexChanged(int)));
+    connect(ltypecb,SIGNAL(currentIndexChanged(QString)),this,SLOT(LTypeCBIndexChanged(QString)));
     adjustFieldSize(ltypecb, 30);
-    s_tqLineEdit *le = new s_tqLineEdit;
-    le = this->findChild<s_tqLineEdit *>("value"+QString::number(idx)+"LE");
-    if (le == 0)
+    QVBoxLayout *lyout = new QVBoxLayout;
+    QHBoxLayout *hlyout = new QHBoxLayout;
+    hlyout->addWidget(lbl1, 2);
+    hlyout->setAlignment(lbl1, Qt::AlignRight);
+    hlyout->addWidget(cb, 20);
+    hlyout->addWidget(lbl2, 2);
+    hlyout->setAlignment(lbl2, Qt::AlignRight);
+    hlyout->addWidget(ltypecb, 20);
+    lyout->addLayout(hlyout);
+
+    QStringList ids, vls;
+    int i = 0;
+    QSqlQuery get_tables(sqlc.getdb("sup"));
+    get_tables.exec("SELECT DISTINCT `tablename` FROM `tablefields` ORDER BY `tablename` ASC;");
+    while (get_tables.next())
     {
-        emit error(ER_DIRADD,0x42);
+        i++;
+        ids << QString("%1").arg(i, 5, 10, QChar('0'));
+        vls << get_tables.value(0).toString();
+    }
+
+    s_tqLabel *lbl = new s_tqLabel("Зависимость от элемента");
+    hlyout = new QHBoxLayout;
+    hlyout->addWidget(lbl);
+    hlyout->setAlignment(lbl,Qt::AlignRight);
+    s_tqSpinBox *spb = this->findChild<s_tqSpinBox *>("dirFieldNum");
+    if (spb == 0)
+    {
+        emit error(ER_DIRADD, 0x31);
         return;
     }
-    s_tqTableView *tbv = new s_tqTableView;
-    s_ncmodel *tbvmodel = new s_ncmodel;
-    QDialog *dlg = new QDialog(this);
-    QVBoxLayout *lyout = new QVBoxLayout;
-    lyout->addWidget(lbl1, 0, Qt::AlignLeft);
-    lyout->addWidget(cb, 0, Qt::AlignLeft);
-    lyout->addWidget(lbl2, 0, Qt::AlignLeft);
-    lyout->addWidget(ltypecb, 0, Qt::AlignLeft);
+    int NumFields = spb->value();
+    spb = new s_tqSpinBox;
+    spb->setMaximum(NumFields);
+    spb->setMinimum(-1);
+    spb->setDecimals(0);
+    spb->setSingleStep(1);
+    spb->setValue(-1);
+    hlyout->addWidget(spb);
+    if ((links.size()>2) && (!links.at(2).isEmpty()))
+        spb->setValue(links.at(2).toInt());
+    lyout->addLayout(hlyout);
 
-    s_tqLabel *lbl = new s_tqLabel("Число");
-    lbl->setObjectName("fw1l");
-    lbl->setVisible(false);
-    lyout->addWidget(lbl);
-    sb = new s_tqSpinBox;
-    sb->setObjectName("fw1sb");
-    sb->setVisible(false);
-    sb->setDecimals(0);
-    sb->setSingleStep(1);
-    sb->setMaximum(999999);
-    sb->setMinimum(0);
-    lyout->addWidget(sb);
-
-
-/*    case FD_CHOOSE:
+    s_tqStackedWidget *sw = new s_tqStackedWidget;
+    sw->setObjectName("linksconstrsw");
+    s_tqWidget *wdgts[20];
+    for (int i=0; i<20; i++)
     {
-        cb->setCurrentIndex(2);
-        switch (ff.ftype)
-        {
-        case FW_LINK:
-        {
-            if (trvmodel->Setup(false, ff.link.at(0)) == 11) // если не дерево
-            {
-                tmpStringList.clear();
-
-// КАЖЕТСЯ, ЗДЕСЬ ЕСТЬ ОШИБКА
-                lsl = sqlc.searchintablefieldlike(sqlc.getdb("sup"), "tablefields", QStringList("tablename"), "tablename", "^.*_сокращ$");
-                QStringList sl;
-                sl = lsl.at(0);
-                while (sl.size() > 0)
-                {
-                    tmpStringList << sl.at(0);
-                    sl.removeAll(tmpStringList.last());
-                }
-                lsl.clear();
-                lsl.append(tmpStringList);
-                tbvmodel->fillModel(lsl);
-                s_duniversal *uniDelegate = new s_duniversal;
-                tbv->setEditTriggers(QAbstractItemView::AllEditTriggers);
-                tbv->verticalHeader()->setVisible(false);
-                tbv->horizontalHeader()->setVisible(false);
-                tbv->setItemDelegate(uniDelegate);
-                tbvmodel->setcolumnlinks(0, "7.8");
-                tbv->setModel(tbvmodel);
-                tbv->resizeColumnsToContents();
-                tbv->resizeRowsToContents();
-                lyout->addWidget(tbv);
-            }
-        }
-/*            sqlc.prepareslsfortree(sl1, sl2);
-        if (sl1.isEmpty())
-            throw(0x44);
-        s_tablefilterdialog *tabledialog = new s_tablefilterdialog;
-        QString tmpString = le->text().split(".").last();
-        tabledialog->SetupUI(sl1, sl2, tmpString);
-        connect(tabledialog, SIGNAL(accepted(QString)), this, SLOT(updateFLE(QString)));
-        tabledialog->exec(); */
-//        break;
-/*        }
+        wdgts[i] = new s_tqWidget;
+        sw->addWidget(wdgts[i]);
     }
-/*        case 2: // права доступа
+
+    lyout->addWidget(sw);
+
+    // FW_NUMBER
+    QVBoxLayout *vlyout = new QVBoxLayout;
+    hlyout = new QHBoxLayout;
+    lbl = new s_tqLabel("Число");
+    hlyout->addWidget(lbl);
+    hlyout->setAlignment(lbl, Qt::AlignRight);
+    s_tqSpinBox *NumberSB = new s_tqSpinBox;
+    NumberSB->setObjectName("number");
+    NumberSB->setDecimals(0);
+    NumberSB->setSingleStep(1);
+    NumberSB->setMaximum(999999);
+    NumberSB->setMinimum(0);
+    hlyout->addWidget(NumberSB);
+    vlyout->addLayout(hlyout);
+    wdgts[1]->setLayout(vlyout);
+
+    // FW_LINK
+    vlyout = new QVBoxLayout;
+    hlyout = new QHBoxLayout;
+    lbl = new s_tqLabel("Таблица");
+    hlyout->addWidget(lbl);
+    hlyout->setAlignment(lbl,Qt::AlignRight);
+    s_tqComboBox *tcb = new s_tqComboBox;
+    tcb->setObjectName("fwlinkcb");
+    QStringListModel *tml = new QStringListModel;
+    tml->setStringList(vls);
+    tcb->setModel(tml);
+    tcb->setAData(FW_LINK);
+    connect(tcb,SIGNAL(textChanged(QString,s_tqComboBox*)),this,SLOT(TbleChoosed(QString,s_tqComboBox*)));
+    hlyout->addWidget(tcb);
+    vlyout->addLayout(hlyout);
+    hlyout = new QHBoxLayout;
+    lbl = new s_tqLabel("Поле");
+    hlyout->addWidget(lbl);
+    hlyout->setAlignment(lbl,Qt::AlignRight);
+    s_tqComboBox *stcb = new s_tqComboBox;
+    stcb->setObjectName("fwlinkcb2");
+    hlyout->addWidget(stcb);
+    vlyout->addLayout(hlyout);
+    wdgts[2]->setLayout(vlyout);
+
+    // FW_ALLINK
+    vlyout = new QVBoxLayout;
+    hlyout = new QHBoxLayout;
+    lbl = new s_tqLabel("Таблица");
+    hlyout->addWidget(lbl);
+    hlyout->setAlignment(lbl,Qt::AlignRight);
+    tcb = new s_tqComboBox;
+    tcb->setObjectName("fwallinkcb");
+    tml = new QStringListModel;
+    tml->setStringList(vls);
+    tcb->setModel(tml);
+    tcb->setAData(FW_ALLINK);
+    connect(tcb,SIGNAL(textChanged(QString,s_tqComboBox*)),this,SLOT(TbleChoosed(QString,s_tqComboBox*)));
+    hlyout->addWidget(tcb);
+    vlyout->addLayout(hlyout);
+    hlyout = new QHBoxLayout;
+    lbl = new s_tqLabel("Поле");
+    hlyout->addWidget(lbl);
+    hlyout->setAlignment(lbl,Qt::AlignRight);
+    stcb = new s_tqComboBox;
+    stcb->setObjectName("fwallinkcb2");
+    hlyout->addWidget(stcb);
+    vlyout->addLayout(hlyout);
+    wdgts[4]->setLayout(vlyout);
+
+    // FW_SPECIAL
+    vlyout = new QVBoxLayout;
+    hlyout = new QHBoxLayout;
+    lbl = new s_tqLabel("Таблица");
+    hlyout->addWidget(lbl);
+    hlyout->setAlignment(lbl,Qt::AlignRight);
+    tcb = new s_tqComboBox;
+    tcb->setObjectName("fwspecialcb");
+    tml = new QStringListModel;
+    tml->setStringList(vls);
+    tcb->setModel(tml);
+    tcb->setAData(FW_SPECIAL);
+    connect(tcb,SIGNAL(textChanged(QString,s_tqComboBox*)),this,SLOT(TbleChoosed(QString,s_tqComboBox*)));
+    hlyout->addWidget(tcb);
+    vlyout->addLayout(hlyout);
+    hlyout = new QHBoxLayout;
+    lbl = new s_tqLabel("Поле");
+    hlyout->addWidget(lbl);
+    hlyout->setAlignment(lbl,Qt::AlignRight);
+    stcb = new s_tqComboBox;
+    stcb->setObjectName("fwspecialcb2");
+    hlyout->addWidget(stcb);
+    vlyout->addLayout(hlyout);
+    wdgts[11]->setLayout(vlyout);
+
+    // FW_DLINK
+    vlyout = new QVBoxLayout;
+    s_tqComboBox *TbleCB, *TbleFieldsCB;
+    for (i = 0; i < 4; i++)
     {
-        s_accessdialog *accessdialog = new s_accessdialog;
-        accessdialog->SetupUI(le->text().toLongLong(0, 16));
-        connect(accessdialog, SIGNAL(acceptChanges(long)), this, SLOT(updateALE(long)));
-        accessdialog->exec();
-        break;
+        hlyout = new QHBoxLayout;
+        lbl = new s_tqLabel("Таблица"+QString::number(i));
+        hlyout->addWidget(lbl);
+        hlyout->setAlignment(lbl,Qt::AlignRight);
+        TbleCB = new s_tqComboBox;
+        tml = new QStringListModel;
+        tml->setStringList(vls);
+        TbleCB->setModel(tml);
+        TbleCB->setObjectName("tble"+QString::number(i));
+        TbleCB->setAData(FW_DLINK+20+i); // +20 - чтобы точно перекрыть диапазон возможных вариантов полей
+        connect(TbleCB,SIGNAL(textChanged(QString,s_tqComboBox*)),this,SLOT(TbleChoosed(QString,s_tqComboBox*)));
+        hlyout->addWidget(TbleCB);
+        vlyout->addLayout(hlyout);
+        hlyout = new QHBoxLayout;
+        lbl = new s_tqLabel("Поле"+QString::number(i));
+        hlyout->addWidget(lbl);
+        hlyout->setAlignment(lbl,Qt::AlignRight);
+        TbleFieldsCB = new s_tqComboBox;
+        TbleFieldsCB->setObjectName("tblefield"+QString::number(i));
+        hlyout->addWidget(TbleFieldsCB);
+        vlyout->addLayout(hlyout);
     }
-    case 3: // косвенная ссылка
-    {
-        QSqlDatabase db = sqlc.getdb(dir.left(3));
-        if (!db.isValid())
-            throw(0x45);
-        QString tble = dir.right(dir.size()-4);
-        QStringList fl = sqlc.getcolumnsfromtable(db, tble);
-        s_tablefilterdialog *tabledialog = new s_tablefilterdialog;
-        QString tmpString = le->text().split(".").last();
-        tabledialog->SetupUI(fl, tmpString);
-        connect(tabledialog, SIGNAL(accepted(QString)), this, SLOT(updateFLE(QString)));
-        tabledialog->exec();
-        break;
-    } */
-//    default:
-//        break;
-//    }
+    wdgts[3]->setLayout(vlyout);
+
+    // FW_MAXLINK
+    vlyout = new QVBoxLayout;
+    hlyout = new QHBoxLayout;
+    lbl = new s_tqLabel("Таблица");
+    hlyout->addWidget(lbl);
+    hlyout->setAlignment(lbl,Qt::AlignRight);
+    TbleCB = new s_tqComboBox;
+    tml = new QStringListModel;
+    tml->setStringList(vls);
+    TbleCB->setModel(tml);
+    TbleCB->setObjectName("fwmaxlinkcb");
+    TbleCB->setAData(FW_MAXLINK);
+    connect(TbleCB,SIGNAL(textChanged(QString,s_tqComboBox*)),this,SLOT(TbleChoosed(QString,s_tqComboBox*)));
+    hlyout->addWidget(TbleCB);
+    vlyout->addLayout(hlyout);
+    hlyout = new QHBoxLayout;
+    lbl = new s_tqLabel("Поле значения");
+    hlyout->addWidget(lbl);
+    hlyout->setAlignment(lbl,Qt::AlignRight);
+    TbleFieldsCB = new s_tqComboBox;
+    TbleFieldsCB->setObjectName("fwmaxlinkcb2");
+    hlyout->addWidget(TbleFieldsCB);
+    vlyout->addLayout(hlyout);
+    hlyout = new QHBoxLayout;
+    lbl = new s_tqLabel("Поле сравнения");
+    hlyout->addWidget(lbl);
+    hlyout->setAlignment(lbl,Qt::AlignRight);
+    TbleFieldsCB = new s_tqComboBox;
+    TbleFieldsCB->setObjectName("fwmaxlinkcb3");
+    hlyout->addWidget(TbleFieldsCB);
+    vlyout->addLayout(hlyout);
+    hlyout = new QHBoxLayout;
+    lbl = new s_tqLabel("Значение (опц.)");
+    hlyout->addWidget(lbl);
+    hlyout->setAlignment(lbl,Qt::AlignRight);
+    s_tqLineEdit *ValueEditLE = new s_tqLineEdit;
+    ValueEditLE->setObjectName("fwmaxlinkle");
+    hlyout->addWidget(ValueEditLE);
+    vlyout->addLayout(hlyout);
+    wdgts[5]->setLayout(vlyout);
+
+    // FW_MASKED
+    vlyout = new QVBoxLayout;
+    hlyout = new QHBoxLayout;
+    lbl = new s_tqLabel("Регулярное выражение");
+    hlyout->addWidget(lbl);
+    hlyout->setAlignment(lbl,Qt::AlignRight);
+    ValueEditLE = new s_tqLineEdit;
+    ValueEditLE->setObjectName("fwmaskedle");
+    hlyout->addWidget(ValueEditLE);
+    vlyout->addLayout(hlyout);
+    wdgts[6]->setLayout(vlyout);
+
+    // FW_EQUAT
+    vlyout = new QVBoxLayout;
+    hlyout = new QHBoxLayout;
+    lbl = new s_tqLabel("Выражение1");
+    hlyout->addWidget(lbl);
+    hlyout->setAlignment(lbl,Qt::AlignRight);
+    ValueEditLE = new s_tqLineEdit;
+    ValueEditLE->setObjectName("fwequatle");
+    hlyout->addWidget(ValueEditLE);
+    vlyout->addLayout(hlyout);
+    QStringList ops = QStringList() << "+" << "-" << "*" << "/";
+    QStringListModel *opsmdl = new QStringListModel;
+    opsmdl->setStringList(ops);
+    s_tqComboBox *opscb = new s_tqComboBox;
+    opscb->setObjectName("fwequatcb");
+    opscb->setModel(opsmdl);
+    hlyout = new QHBoxLayout;
+    lbl = new s_tqLabel("Операция");
+    hlyout->addWidget(lbl);
+    hlyout->setAlignment(lbl,Qt::AlignRight);
+    hlyout->addWidget(opscb);
+    vlyout->addLayout(hlyout);
+    hlyout = new QHBoxLayout;
+    lbl = new s_tqLabel("Выражение2");
+    hlyout->addWidget(lbl);
+    hlyout->setAlignment(lbl,Qt::AlignRight);
+    ValueEditLE = new s_tqLineEdit;
+    ValueEditLE->setObjectName("fwequatle2");
+    hlyout->addWidget(ValueEditLE);
+    vlyout->addLayout(hlyout);
+    wdgts[7]->setLayout(vlyout);
+
+    // FW_ID
+    vlyout = new QVBoxLayout;
+    hlyout = new QHBoxLayout;
+    lbl = new s_tqLabel("Размер поля");
+    hlyout->addWidget(lbl);
+    hlyout->setAlignment(lbl, Qt::AlignRight);
+    NumberSB = new s_tqSpinBox;
+    NumberSB->setObjectName("id");
+    NumberSB->setDecimals(0);
+    NumberSB->setSingleStep(1);
+    NumberSB->setMaximum(9);
+    NumberSB->setMinimum(0);
+    NumberSB->setValue(7);
+    hlyout->addWidget(NumberSB);
+    vlyout->addLayout(hlyout);
+    wdgts[19]->setLayout(vlyout);
+
     lyout->setSizeConstraint(QLayout::SetFixedSize);
+    hlyout = new QHBoxLayout;
     s_tqPushButton *pb = new s_tqPushButton("Ага");
     connect(pb,SIGNAL(clicked()),this,SLOT(ConstructLink()));
-    lyout->addWidget(pb);
+    hlyout->addWidget(pb);
     pb = new s_tqPushButton("Неа");
     connect(pb,SIGNAL(clicked()),dlg,SLOT(close()));
-    lyout->addWidget(pb);
+    hlyout->addWidget(pb);
     connect(this,SIGNAL(closelinkdialog()),dlg,SLOT(close()));
+    lyout->addLayout(hlyout);
     dlg->setLayout(lyout);
+    if (links.size()>1)
+    {
+        cb->setCurrentIndex(links.at(0).toInt());
+        QString LTypeCBString = FW_Links.at(links.at(1).toInt());
+        ltypecb->setCurrentText(LTypeCBString);
+    }
 
-    PublicClass::fieldformat ff;
-    ltype = le->text();
-    ff = pc.getFFfromLinks(ltype);
-    cb->setCurrentIndex(ff.delegate);
-    ltypecb->setCurrentIndex(ff.ftype);
     dlg->exec();
-//        updateTWFields(sb->value());
+//    updateTWFields(sb->value());
 }
 
 // установка типа поля по выбранному типу делегата
@@ -638,33 +828,30 @@ void dir_adddialog::DTypeCBIndexChanged(int FD)
     case FD_DISABLED:
     case FD_SIMGRID:
     {
-        tmpStringList << "0.Автонумерация" << "1.Фиксированное значение" << "5.Значение с макс. ИД" << "7.Вычисляемое поле" << "8.Простое поле" << "19.Автодополнение нулями";
+        tmpStringList << FW_Links.at(0) << FW_Links.at(1) << FW_Links.at(5) << FW_Links.at(7) << FW_Links.at(8) << FW_Links.at(19);
         break;
     }
     case FD_LINEEDIT:
     {
-        tmpStringList << "6.Форматированное поле" << "8.Простое поле";
+        tmpStringList << FW_Links.at(6) << FW_Links.at(8);
         break;
     }
     case FD_CHOOSE:
     case FD_CHOOSE_X:
     {
-        tmpStringList << "2.Простая ссылка" << "3.Ссылка на несколько таблиц" << "4.Ссылка на дочерние элементы" \
-                      << "9.Права доступа" << "10.Выбор таблицы" \
-                      << "11.Специальная ссылка" << "12.Ссылка на методы" << "13.Вызов диалога редактирования строки" << "14.Конструктор ссылок" << "15.Ссылка на файл" \
-                      << "16.Ссылка на каталог" << "17.Ссылка на элемент внутри файла" << "18.Выбор даты";
+        tmpStringList << FW_Links.at(2) << FW_Links.at(3) << FW_Links.at(4) << FW_Links.at(9) << FW_Links.at(10) \
+                      << FW_Links.at(11) << FW_Links.at(12) << FW_Links.at(13) << FW_Links.at(14) << FW_Links.at(15) \
+                      << FW_Links.at(16) << FW_Links.at(17) << FW_Links.at(18);
         break;
     }
     case FD_COMBO:
     {
-        tmpStringList << "2.Простая ссылка" << "4.Ссылка на дочерние элементы" \
-                      << "10.Выбор таблицы" \
-                      << "12.Ссылка на методы";
+        tmpStringList << FW_Links.at(2) << FW_Links.at(4) << FW_Links.at(10) << FW_Links.at(12);
         break;
     }
     case FD_SPIN:
     {
-        tmpStringList << "8.Простое поле";
+        tmpStringList << FW_Links.at(8);
         break;
     }
     default:
@@ -676,65 +863,183 @@ void dir_adddialog::DTypeCBIndexChanged(int FD)
 
 // отображение дополнительных элементов диалога при выборе типа ссылки
 
-void dir_adddialog::LTypeCBIndexChanged(int FW)
+void dir_adddialog::LTypeCBIndexChanged(QString str)
 {
-    s_tqLabel *lbl = this->findChild<s_tqLabel *>("fw1l");
-    if (lbl == 0)
+    int wdgtsidx = FW_Links.indexOf(str);
+    s_tqStackedWidget *sw = this->findChild<s_tqStackedWidget *>("linksconstrsw");
+    if (sw == 0)
     {
-        emit error(ER_DIRADD,0x51);
+        emit error(ER_DIRADD+0x01,0x42);
         return;
     }
-    s_tqSpinBox *sb = this->findChild<s_tqSpinBox *>("fw1sb");
-    if (sb == 0)
+    sw->setCurrentIndex(wdgtsidx);
+    s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("value"+QString::number(idx)+"LE");
+    if (le == 0)
     {
-        emit error(ER_DIRADD,0x52);
+        emit error(ER_DIRADD,0x42);
         return;
     }
-
-    lbl->setVisible(false);
-    sb->setVisible(false);
-    switch (FW)
+    QStringList links = le->text().split("."); // формируем links
+    switch (wdgtsidx)
     {
-    case FW_AUTONUM:
-    {
-        break;
-    }
     case FW_NUMBER:
     {
-        lbl->setVisible(true);
-        sb->setVisible(true);
+        if (links.size()>3)
+        {
+            s_tqSpinBox *NumberSB = this->findChild<s_tqSpinBox *>("number");
+            if (NumberSB == 0)
+                return;
+            NumberSB->setValue(links.at(3).toDouble());
+        }
         break;
     }
-    default:
+    case FW_LINK:
+    {
+        if (links.size()>4)
+        {
+            s_tqComboBox *tcb = this->findChild<s_tqComboBox *>("fwlinkcb");
+            if (tcb == 0)
+                return;
+            tcb->setCurrentText(links.at(3));
+            tcb = this->findChild<s_tqComboBox *>("fwlinkcb2");
+            if (tcb == 0)
+                return;
+            tcb->setCurrentText(links.at(4));
+        }
         break;
     }
-}
+    case FW_SPECIAL:
+    {
+        if (links.size()>4)
+        {
+            s_tqComboBox *tcb = this->findChild<s_tqComboBox *>("fwspecialcb");
+            if (tcb == 0)
+                return;
+            tcb->setCurrentText(links.at(3));
+            tcb = this->findChild<s_tqComboBox *>("fwspecialcb2");
+            if (tcb == 0)
+                return;
+            tcb->setCurrentText(links.at(4));
+        }
+        break;
+    }
+    case FW_ALLINK:
+    {
+        if (links.size()>4)
+        {
+            s_tqComboBox *tcb = this->findChild<s_tqComboBox *>("fwallinkcb");
+            if (tcb == 0)
+                return;
+            tcb->setCurrentText(links.at(3));
+            tcb = this->findChild<s_tqComboBox *>("fwallinkcb2");
+            if (tcb == 0)
+                return;
+            tcb->setCurrentText(links.at(4));
+        }
+        break;
+    }
+    case FW_DLINK:
+    {
+        if (links.size()>4)
+        {
+            int i = 0;
+            links.removeFirst();
+            links.removeFirst();
+            links.removeFirst();
+            while (links.size()>2) // вытаскиваем данные попарно
+            {
+                s_tqComboBox *cb = this->findChild<s_tqComboBox *>("tble"+QString::number(i));
+                if (cb == 0)
+                    return;
+                cb->setCurrentText(links.at(0));
+                cb = this->findChild<s_tqComboBox *>("tblefield"+QString::number(i));
+                if (cb == 0)
+                    return;
+                cb->setCurrentText(links.at(1));
+                links.removeFirst();
+                links.removeFirst();
+                i++;
+            }
+        }
+        break;
+    }
+    case FW_MAXLINK:
+    {
+        if (links.size()>5)
+        {
+            s_tqComboBox *tcb = this->findChild<s_tqComboBox *>("fwmaxlinkcb");
+            if (tcb == 0)
+                return;
+            tcb->setCurrentText(links.at(3));
+            tcb = this->findChild<s_tqComboBox *>("fwmaxlinkcb2");
+            if (tcb == 0)
+                return;
+            tcb->setCurrentText(links.at(4));
+            tcb = this->findChild<s_tqComboBox *>("fwmaxlinkcb3");
+            if (tcb == 0)
+                return;
+            tcb->setCurrentText(links.at(5));
+            if (links.size()>6)
+            {
+                s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fwmaxlinkle");
+                if (le == 0)
+                    return;
+                le->setText(links.at(6));
+            }
+        }
+        break;
+    }
+    case FW_MASKED:
+    {
+        if (links.size()>4)
+        {
+            s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fwmaskedle");
+            if (le == 0)
+                return;
+            le->setText(links.at(4));
+        }
+        break;
+    }
+    case FW_ID:
+    {
+        if (links.size()>3)
+        {
+            s_tqSpinBox *NumberSB = this->findChild<s_tqSpinBox *>("id");
+            if (NumberSB == 0)
+                return;
+            NumberSB->setValue(links.at(3).toDouble());
+        }
+        break;
+    }
+    case FW_EQUAT:
+    {
+        if (links.size()>4)
+        {
+            s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fwequatle");
+            if (le == 0)
+                return;
+            le->setText(links.at(4));
+            if (links.size()>6)
+            {
+                le = this->findChild<s_tqLineEdit *>("fwequatle2");
+                if (le == 0)
+                    return;
+                le->setText(links.at(6));
+                s_tqComboBox *cb = this->findChild<s_tqComboBox *>("fwequatcb");
+                if (cb == 0)
+                    return;
+                QString op = links.at(5);
+                if (op == "s")  cb->setCurrentIndex(0);
+                if (op == "r")  cb->setCurrentIndex(1);
+                if (op == "m")  cb->setCurrentIndex(2);
+                if (op == "d")  cb->setCurrentIndex(3);
+            }
+        }
+        break;
+    }
+    }
 
-// активация кнопки конструктора при выборе элемента типа "ссылка"
 
-void dir_adddialog::CBPressed(QString str, s_tqComboBox *ptr)
-{
-    isSomethingChanged = true;
-    Q_UNUSED(str);
-    s_tqPushButton *pb = new s_tqPushButton;
-    pb = this->findChild<s_tqPushButton *>("valueconst"+ptr->getAData().toString()+"PB");
-    s_tqLineEdit *le = new s_tqLineEdit;
-    le = this->findChild<s_tqLineEdit *>("value"+ptr->getAData().toString()+"LE");
-    if (pb == 0)
-    {
-        emit error(ER_DIRADD,0x51);
-        return;
-    }
-    if (ptr->currentIndex() == 0)
-    {
-        le->setEnabled(true);
-        pb->setEnabled(false);
-    }
-    else
-    {
-        le->setEnabled(true);
-        pb->setEnabled(true);
-    }
 }
 
 // сборка строки ссылки из элементов выбора и выход из диалога конструктора
@@ -742,6 +1047,85 @@ void dir_adddialog::CBPressed(QString str, s_tqComboBox *ptr)
 void dir_adddialog::ConstructLink()
 {
     emit closelinkdialog();
+}
+
+void dir_adddialog::TbleChoosed(QString str, s_tqComboBox *ptr)
+{
+    int Type = ptr->getAData().toInt();
+    s_tqComboBox *cb, *cb2;
+    QString cb1name, cb2name;
+    switch(Type)
+    {
+    case FW_LINK:
+    {
+        cb1name = "fwlinkcb";
+        cb2name = "fwlinkcb2";
+        break;
+    }
+    case FW_ALLINK:
+    {
+        cb1name = "fwallinkcb";
+        cb2name = "fwallinkcb2";
+        break;
+    }
+    case FW_MAXLINK:
+    {
+        cb1name = "fwmaxlinkcb";
+        cb2name = "fwmaxlinkcb2";
+        break;
+    }
+    case FW_SPECIAL:
+    {
+        cb1name = "fwspecialcb";
+        cb2name = "fwspecialcb2";
+        break;
+    }
+    case FW_DLINK+20:
+    {
+        cb1name = "tble0";
+        cb2name = "tblefield0";
+        break;
+    }
+    case FW_DLINK+21:
+    {
+        cb1name = "tble1";
+        cb2name = "tblefield1";
+        break;
+    }
+    case FW_DLINK+22:
+    {
+        cb1name = "tble2";
+        cb2name = "tblefield2";
+        break;
+    }
+    case FW_DLINK+23:
+    {
+        cb1name = "tble3";
+        cb2name = "tblefield3";
+        break;
+    }
+    }
+    cb = this->findChild<s_tqComboBox *>("fwlinkcb");
+    if (cb == 0)
+        return;
+    cb2 = this->findChild<s_tqComboBox *>("fwlinkcb2");
+    if (cb2 == 0)
+        return;
+    QStringList sl = tfl.tableheaders(cb->currentText());
+    if (tfl.result)
+        return;
+    QStringListModel *cb2mdl = new QStringListModel;
+    cb2mdl->setStringList(sl);
+    cb2->setModel(cb2mdl);
+    if (Type == FW_MAXLINK)
+    {
+        s_tqComboBox *cb3 = this->findChild<s_tqComboBox *>("fwmaxlinkcb3");
+        if (cb3 == 0)
+            return;
+        QStringListModel *cb3mdl = new QStringListModel;
+        cb3mdl->setStringList(sl);
+        cb3->setModel(cb3mdl);
+    }
 }
 
 void dir_adddialog::adjustFieldSize(QWidget *wdgt, int widthInChar)

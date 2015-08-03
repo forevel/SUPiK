@@ -43,8 +43,6 @@ private slots:
     void setAccessRights();
     void acceptAccess(QString);
     void FPBPressed(s_tqPushButton *ptr);
-    void updateFLE(QString str);
-    void updateALE(long rights);
     void fillFields();
     void transliteDirName();
     void transliteFieldName(QString str, s_tqLineEdit *ptr);

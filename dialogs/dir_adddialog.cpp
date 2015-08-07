@@ -245,6 +245,12 @@ void dir_adddialog::WriteAndClose()
         emit error(ER_DIRADD,0x13);
         return;
     }
+    if (IsDir)
+    {
+        QString tmple = dirAccessLE->text();
+        tmple.append("_полн");
+        dirAccessLE->setText(tmple);
+    }
     dirB = this->findChild<s_tqComboBox *>("dirBelong");
     if (dirB == 0)
     {
@@ -1379,54 +1385,56 @@ void dir_adddialog::fillFields()
         emit error(ER_DIRADD,0x82);
         return;
     }
-    s_tqLineEdit *dirNameLE = new s_tqLineEdit;
-    dirNameLE = this->findChild<s_tqLineEdit *>("dirName");
+    s_tqLineEdit *dirNameLE = this->findChild<s_tqLineEdit *>("dirName");
     if (dirNameLE == 0)
     {
         emit error(ER_DIRADD,0x83);
         return;
     }
-    s_tqLineEdit *dirAliasLE = new s_tqLineEdit;
-    dirAliasLE = this->findChild<s_tqLineEdit *>("dirAlias");
+    s_tqLineEdit *dirAliasLE = this->findChild<s_tqLineEdit *>("dirAlias");
     if (dirAliasLE == 0)
     {
         emit error(ER_DIRADD,0x84);
         return;
     }
-    s_tqComboBox *dirBelongCB = new s_tqComboBox;
-    dirBelongCB = this->findChild<s_tqComboBox *>("dirBelong");
-    if (dirBelongCB == 0)
+    s_tqComboBox *dirBelongCB = this->findChild<s_tqComboBox *>("dirBelong");
+    if ((dirBelongCB == 0) && (IsDir))
     {
         emit error(ER_DIRADD,0x85);
         return;
     }
-    s_tqLineEdit *dirAccessLE = new s_tqLineEdit;
-    dirAccessLE = this->findChild<s_tqLineEdit *>("dirAccess");
-    if (dirAccessLE == 0)
+    s_tqLineEdit *dirAccessLE = this->findChild<s_tqLineEdit *>("dirAccess");
+    if ((dirAccessLE == 0) && (IsDir))
     {
         emit error(ER_DIRADD,0x86);
         return;
     }
-    s_tqSpinBox *sb = new s_tqSpinBox;
-    sb = this->findChild<s_tqSpinBox *>("dirFieldNum");
+    s_tqSpinBox *sb = this->findChild<s_tqSpinBox *>("dirFieldNum");
     if (sb == 0)
     {
         emit error(ER_DIRADD,0x87);
         return;
     }
-    dirAliasLE->setText(dir);
-    dirNameLE->setText(lsl.at(0).at(0).split(".").at(1)); // берём имя таблицы по полю ИД
-    QString tmpString = dirBelongAliases.key(lsl.at(0).at(0).split(".").at(0));
-    if (tmpString.isEmpty())
+    if (IsDir)
     {
-        emit error(ER_DIRADD,0x88);
-        return;
+        QString tmpdir = dir;
+        int diridx = tmpdir.indexOf("_полн");
+        if (diridx != -1)
+            tmpdir.chop(5);
+        dirAliasLE->setText(tmpdir);
     }
-    dirBelongCB->setCurrentText(tmpString);
-    if (dirtype.isEmpty()) // для редактирования таблиц (не справочников) права не нужны, они по умолчанию системные
-        dirAccessLE->setEnabled(false);
     else
+        dirAliasLE->setText(dir);
+    dirNameLE->setText(lsl.at(0).at(0).split(".").at(1)); // берём имя таблицы по полю ИД
+    if (IsDir)
     {
+        QString tmpString = dirBelongAliases.key(lsl.at(0).at(0).split(".").at(0));
+        if (tmpString.isEmpty())
+        {
+            emit error(ER_DIRADD,0x88);
+            return;
+        }
+        dirBelongCB->setCurrentText(tmpString);
         QStringList fields = QStringList() << "Права доступа";
         QStringList values = tfl.valuesbyfield(dirtype+"_полн",fields,"Наименование",dir);
         if (tfl.result)
@@ -1437,6 +1445,7 @@ void dir_adddialog::fillFields()
         dirAccessLE->setText(values.at(0));
         dirAccessLE->setEnabled(true);
     }
+    // для редактирования таблиц (не справочников) права не нужны, они по умолчанию системные
     sb->setValue(lsl.size());
     for (int i = 0; i < lsl.size(); i++)
     {

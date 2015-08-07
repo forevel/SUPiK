@@ -30,13 +30,16 @@ dir_adddialog::dir_adddialog(bool update, QString dirtype, QString dir, QWidget 
 {
     idx = 0;
 //    setMinimumWidth(300);
-    setStyleSheet("QDialog {background-color: rgba(255,255,153);}");
     setAttribute(Qt::WA_DeleteOnClose);
     isSomethingChanged = false;
     this->dir = dir;
     this->dirtype = dirtype;
     upd = update;
     IsDir = (!dirtype.isEmpty());
+    if (IsDir)
+        setStyleSheet("QDialog {background-color: rgba(255,255,153);}");
+    else
+        setStyleSheet("QDialog {background-color: rgba(194,194,194);}");
     setupUI();
     FW_Links.clear();
     FW_Links << "0.Автонумерация" << "1.Фиксированное значение" << "2.Простая ссылка" << "3.Ссылка на несколько таблиц" << "4.Ссылка на дочерние элементы" << \
@@ -150,10 +153,12 @@ void dir_adddialog::setupUI()
     dlg1Layout->setColumnStretch(1, 90);
     dlg1Layout->setColumnStretch(2, 0);
     dlg1vlyout->addLayout(dlg1Layout);
-    dlg1vlyout->addSpacing(200);
+    dlg1vlyout->addStretch(200);
     dlg1->setLayout(dlg1vlyout);
     mainTW->addTab(dlg1, "Основные");
 
+    QVBoxLayout *dlg2vlyout = new QVBoxLayout;
+    QVBoxLayout *dlg3vlyout = new QVBoxLayout;
     for (int i = 0; i < FSIZE; i++)
     {
         QList<QWidget *> wl;
@@ -166,14 +171,14 @@ void dir_adddialog::setupUI()
         adjustFieldSize(le, 20);
         connect(le,SIGNAL(textChanged(QString,s_tqLineEdit*)),this,SLOT(transliteFieldName(QString,s_tqLineEdit*)));
         wl << le;
-        lbl = new s_tqLabel(",сист. имя:");
+        lbl = new s_tqLabel("Системное имя:");
         lbl->setObjectName("body"+QString::number(i)+"L1");
         wl << lbl;
         le = new s_tqLineEdit;
         le->setObjectName("field" + QString::number(i) + "LE");
         adjustFieldSize(le, 15);
         wl << le;
-        lbl = new s_tqLabel(", содержит:");
+        lbl = new s_tqLabel("Описание (links):");
         lbl->setObjectName("body"+QString::number(i)+"L2");
         wl << lbl;
         le = new s_tqLineEdit;
@@ -196,8 +201,12 @@ void dir_adddialog::setupUI()
     dlg3Layout->setColumnStretch(1, 10);
     dlg2Layout->setColumnStretch(5, 10);
     dlg3Layout->setColumnStretch(5, 10);
-    dlg2->setLayout(dlg2Layout);
-    dlg3->setLayout(dlg3Layout);
+    dlg2vlyout->addLayout(dlg2Layout);
+    dlg3vlyout->addLayout(dlg3Layout);
+    dlg2vlyout->addStretch(200);
+    dlg3vlyout->addStretch(200);
+    dlg2->setLayout(dlg2vlyout);
+    dlg3->setLayout(dlg3vlyout);
     mainTW->addTab(dlg2, "Поля 1");
     mainTW->addTab(dlg3, "Поля 2");
 
@@ -493,6 +502,7 @@ void dir_adddialog::addLineToDlg(QList<QWidget *> wl, QGridLayout &lyt, int row)
 void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
 {
     QDialog *dlg = new QDialog(this);
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
     idx = ptr->getAData().toInt(0);
     // заполняем элементы конструктора ссылок
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("value"+QString::number(idx)+"LE");
@@ -505,16 +515,16 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
 
     s_tqLabel *lbl1 = new s_tqLabel ("Тип поля");
     s_tqLabel *lbl2 = new s_tqLabel ("Тип ссылки");
-    s_tqComboBox *cb = new s_tqComboBox;
-    cb->setObjectName("dtypecb");
+    s_tqComboBox *dtypecb = new s_tqComboBox;
+    dtypecb->setObjectName("dtypecb");
     QStringListModel *cbmodel = new QStringListModel;
     QStringList tmpStringList; // делегаты
     tmpStringList << "0.Простое поле" << "1.Поле ввода" << "2.Поле выбора" << "3.Выпадающий список" << "4.Неактивное поле" <<  \
                      "5.Счётчик" << "6.Поле выбора с вводом" << "7.Поле с рамкой";
     cbmodel->setStringList(tmpStringList);
-    cb->setModel(cbmodel);
-    connect(cb,SIGNAL(currentIndexChanged(int)),this,SLOT(DTypeCBIndexChanged(int)));
-    adjustFieldSize(cb, 25);
+    dtypecb->setModel(cbmodel);
+    connect(dtypecb,SIGNAL(currentIndexChanged(int)),this,SLOT(DTypeCBIndexChanged(int)));
+    adjustFieldSize(dtypecb, 25);
     s_tqComboBox *ltypecb = new s_tqComboBox;
     ltypecb->setObjectName("ltypecb");
     connect(ltypecb,SIGNAL(currentIndexChanged(QString)),this,SLOT(LTypeCBIndexChanged(QString)));
@@ -523,12 +533,12 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
     QHBoxLayout *hlyout = new QHBoxLayout;
     hlyout->addWidget(lbl1, 2);
     hlyout->setAlignment(lbl1, Qt::AlignRight);
-    hlyout->addWidget(cb, 20);
+    hlyout->addWidget(dtypecb, 20);
     hlyout->addWidget(lbl2, 2);
     hlyout->setAlignment(lbl2, Qt::AlignRight);
     hlyout->addWidget(ltypecb, 20);
     lyout->addLayout(hlyout);
-    cb->setCurrentIndex(0); // если links нет, то хотя бы установить выбор ссылки по 0-му делегату
+    dtypecb->setCurrentIndex(0); // если links нет, то хотя бы установить выбор ссылки по 0-му делегату
     QStringList ids, vls;
     int i = 0;
     QSqlQuery get_tables(sqlc.getdb("sup"));
@@ -671,7 +681,7 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
     lbl = new s_tqLabel("Таблица");
     hlyout->addWidget(lbl);
     hlyout->setAlignment(lbl,Qt::AlignRight);
-    cb = new s_tqComboBox;
+    s_tqComboBox *cb = new s_tqComboBox;
     tml = new QStringListModel;
     tml->setStringList(vls);
     cb->setModel(tml);
@@ -810,7 +820,7 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
     dlg->setLayout(lyout);
     if (links.size()>1)
     {
-        cb->setCurrentIndex(links.at(0).toInt());
+        dtypecb->setCurrentIndex(links.at(0).toInt());
         QString LTypeCBString = FW_Links.at(links.at(1).toInt());
         ltypecb->setCurrentText(LTypeCBString);
     }

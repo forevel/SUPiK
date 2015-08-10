@@ -25,6 +25,8 @@
 #include <QHeaderView>
 #include <QModelIndex>
 #include <QStackedWidget>
+#include <QAction>
+#include <QMenu>
 
 sys_systemdialog::sys_systemdialog(QWidget *parent) :
     QDialog(parent)
@@ -366,6 +368,8 @@ void sys_systemdialog::TablesEditor()
         mdl->setcolumnlinks(1,"7.8");
         mdl->fillModel();
         tv->setModel(mdl);
+        tv->setContextMenuPolicy(Qt::CustomContextMenu);
+        connect (tv, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(TablesEditorContextMenu(QPoint)));
         s_duniversal *GridItemDelegate = new s_duniversal;
         tv->setItemDelegate(GridItemDelegate);
         tv->horizontalHeader()->setVisible(false);
@@ -383,6 +387,22 @@ void sys_systemdialog::TablesEditor()
     }
 }
 
+void sys_systemdialog::TablesEditorContextMenu(QPoint pt)
+{
+    Q_UNUSED(pt);
+    QAction *NewTableEditor = new QAction ("Новая таблица", this);
+    NewTableEditor->setSeparator(false);
+    connect(NewTableEditor, SIGNAL(triggered()), this, SLOT(NewTable()));
+    QAction *EditTable = new QAction ("Редактировать таблицу", this);
+    EditTable->setSeparator(false);
+    connect(EditTable, SIGNAL(triggered()), this, SLOT(EditTable()));
+    QMenu *ContextMenu = new QMenu;
+    ContextMenu->setTitle("Context menu");
+    ContextMenu->addAction(NewTableEditor);
+    ContextMenu->addAction(EditTable);
+    ContextMenu->exec(QCursor::pos()); // если есть права на удаление, на изменение тоже должны быть
+}
+
 void sys_systemdialog::RemoveWidget()
 {
     s_tqStackedWidget *wdgt = this->findChild<s_tqStackedWidget *>("sw");
@@ -392,6 +412,25 @@ void sys_systemdialog::RemoveWidget()
         return;
     }
     wdgt->removeWidget(wdgt->currentWidget());
+}
+
+void sys_systemdialog::NewTable()
+{
+    QStackedWidget *sw = this->findChild<QStackedWidget *>("stw");
+    if (sw == 0)
+    {
+        emit error(ER_SYS,0x37);
+        return;
+    }
+    dir_adddialog *dlg = new dir_adddialog(false,"");
+    sw->addWidget(dlg);
+    sw->setCurrentWidget(dlg);
+    repaint();
+}
+
+void sys_systemdialog::EditTable()
+{
+    this->EditTable(QModelIndex());
 }
 
 void sys_systemdialog::EditTable(QModelIndex idx)

@@ -16,6 +16,7 @@
 #include "../models/s_ncmodel.h"
 #include "../gen/s_sql.h"
 #include "../gen/publicclass.h"
+#include "../gen/s_tablefields.h"
 
 #include <QVBoxLayout>
 #include <QFont>
@@ -82,34 +83,48 @@ void cmp_maindialog::paintEvent(QPaintEvent *e)
 
 void cmp_maindialog::SetupUI(int CompType, int CompTable, int CompID)
 {
+    QStringList sl = QStringList() << "" << "А" << "З" << "Э" << "К" << "У";
     QStringList dbsl = QStringList() << "" << "alt" << "sch" << "sol" << "con" << "dev";
+    QStringList sectsl = QStringList() << "" << "Altium" << "Schemagee" << "Solidworks" << "Конструктивы,материалы" << "Устройства";
     this->CompDb = dbsl.at(CompType);
-    QString tble = sqlc.getvaluefromtablebyfield(sqlc.getdb(CompDb),"description","description","iddescription",QString::number(CompTable)); // tble ~ capasitors
-    if (sqlc.result)
+    QStringList fl = QStringList() << "Наименование" << "Описание";
+    QStringList tblesl = tfl.valuesbyfield(sl.at(CompType)+"Компоненты_описание_сокращ",fl,"ИД",QString::number(CompTable));
+    if (tfl.result)
     {
-        emit error(ER_CMPMAIN+sqlc.result,0x01);
+        emit error(ER_CMPMAIN+tfl.result,0x01);
         return;
     }
-    this->CompTble = tble;
+    this->CompTble = tblesl.at(0);
     this->CompId = QString::number(CompID);
-    QStringList fl;
+    s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("section");
+    if (le == 0)
+    {
+        emit error(ER_CMPMAIN,0x02);
+        return;
+    }
+    le->setText(sectsl.at(CompType));
+    le = this->findChild<s_tqLineEdit *>("subsection");
+    if (le == 0)
+    {
+        emit error(ER_CMPMAIN,0x03);
+        return;
+    }
+    le->setText(tblesl.at(1));
+    fl.clear();
     switch (CompType)
     {
     case CTYPE_ALT:
     {
+        SetAltDialog();
         fl << "Library Ref" << "Library Path" << "Footprint Ref" << "Footprint Path" << "Sim Description" << "Sim File" << \
               "Sim Model Name" << "Sim Parameters" << "Manufacturer" << "PartNumber" << "Package" << "Marking" << "NominalValue" << \
               "NominalVoltage" << "Tolerance" << "OpTemperaturen" << "OpTemperaturem" << "Pmax" << "TC" << "Comment" << "HelpURL" << \
               "RevNotes" << "Discontinued" << "Description" << "Notes" << "Modify Date" << "Creator" << "prefix" << "isSMD" << \
               "Nominal" << "Unit" << "par4" << "par5";
         QStringList vl = sqlc.getvaluesfromtablebyfield(sqlc.getdb(CompDb),CompTble,fl,"id",CompId);
-        if (sqlc.result)
-        {
-            emit error(ER_CMPMAIN+sqlc.result,0x02);
-            return;
-        }
-        SetAltDialog();
-        FillAltDialog(vl);
+        if (sqlc.result); // новый элемент, ещё нет в БД
+        else
+            FillAltDialog(vl);
         break;
     }
     case CTYPE_SCH:

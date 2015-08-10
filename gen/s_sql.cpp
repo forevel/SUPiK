@@ -421,9 +421,40 @@ int s_sql::getnextfreeindex(QSqlDatabase db, QString tble)
     QSqlQuery get_indexes (db);
     QString tmpString = "SELECT `id" + tble + "` FROM `" + tble + "` ORDER BY `id" + tble + "` ASC;";
     get_indexes.exec(tmpString); // индексы сортируем по возрастанию
-    while ((get_indexes.next()) && (get_indexes.value(0).toInt(0) == i)) // пока нет пропусков
-        i++;
-    return i;
+    if (get_indexes.isActive())
+    {
+        while ((get_indexes.next()) && (get_indexes.value(0).toInt(0) == i)) // пока нет пропусков
+            i++;
+        result = 0;
+        return i;
+    }
+    else
+    {
+        result = 1;
+        return -1;
+    }
+}
+
+// взять следующий свободный индекс из БД db, таблицы tble и вернуть его int-ом. id - без имени таблицы
+
+int s_sql::getnextfreeindexsimple(QSqlDatabase db, QString tble)
+{
+    long i = 1;
+    QSqlQuery get_indexes (db);
+    QString tmpString = "SELECT `id` FROM `" + tble + "` ORDER BY `id` ASC;";
+    get_indexes.exec(tmpString); // индексы сортируем по возрастанию
+    if (get_indexes.isActive())
+    {
+        while ((get_indexes.next()) && (get_indexes.value(0).toInt(0) == i)) // пока нет пропусков
+            i++;
+        result = 0;
+        return i;
+    }
+    else
+    {
+        result = 1;
+        return -1;
+    }
 }
 
 // процедура восстанавливает в path полный путь до потомка, ИД которого ссылается на db:tble:idalias

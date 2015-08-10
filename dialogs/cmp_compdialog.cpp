@@ -177,6 +177,7 @@ void cmp_compdialog::test()
 
 void cmp_compdialog::SlaveItemChoosed(QModelIndex idx)
 {
+    Q_UNUSED(idx);
     s_tqTableView *tv = this->findChild<s_tqTableView *>("stv");
     if (tv == 0)
     {
@@ -216,13 +217,12 @@ void cmp_compdialog::AddNewItem()
         emit error(ER_COMP+tfl.result, 0x31);
         return;
     }
-    QString NewID = sqlc.getnextfreeindex(sqlc.getdb(CompDb), sl.at(0)); // ищем первый свободный ИД
+    int CompID = sqlc.getnextfreeindexsimple(sqlc.getdb(CompDb), sl.at(0)); // ищем первый свободный ИД
     if (sqlc.result)
     {
         emit error(ER_COMP+sqlc.result, 0x32);
         return;
     }
-    int CompID = NewID.toInt();
     cmp_maindialog *dlg = new cmp_maindialog;
     dlg->SetupUI(CompType,CompTble,CompID);
     connect(dlg,SIGNAL(error(int,int)),this,SLOT(emiterror(int,int)));

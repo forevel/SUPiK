@@ -45,7 +45,7 @@ private slots:
     void FPBPressed(s_tqPushButton *ptr);
     void fillFields();
     void transliteDirName();
-    void transliteFieldName(QString str, s_tqLineEdit *ptr);
+//    void transliteFieldName(QString str, s_tqLineEdit *ptr);
     void DTypeCBIndexChanged(int);
     void LTypeCBIndexChanged(QString str);
     void ConstructLink();

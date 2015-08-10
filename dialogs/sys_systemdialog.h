@@ -1,6 +1,7 @@
 #ifndef SYS_SYSTEMDIALOG_H
 #define SYS_SYSTEMDIALOG_H
 
+#include <QPoint>
 #include <QDialog>
 #include <QPainter>
 #include <QPaintEvent>
@@ -41,8 +42,11 @@ private slots:
     void SetSlave(QModelIndex);
     void SetSlave();
     void EditTable(QModelIndex);
+    void EditTable();
+    void NewTable();
     void emiterror(int,int);
     void RemoveWidget();
+    void TablesEditorContextMenu(QPoint);
 };
 
 #endif // SYS_SYSTEMDIALOG_H

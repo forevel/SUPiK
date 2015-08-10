@@ -99,51 +99,57 @@ void dir_adddialog::setupUI()
     connect(spb, SIGNAL(valueChanged(double)), this, SLOT(updateTWFields(double)));
     dlg1Layout->addWidget(lbl, 1, 0);
     dlg1Layout->addWidget(spb, 1, 1, 1, 2);
-    if (IsDir)
+    lbl = new s_tqLabel("Тип справочника");
+    cb = new s_tqComboBox;
+    cb->setObjectName("dirBelong");
+    QStringListModel *tmpSLM = new QStringListModel;
+    QStringList tmpSL;
+    tmpSL << "Основной";
+    if (pc.access & (ACC_ALT_WR | ACC_SYS_WR)) // САПРовские права
+        tmpSL << "Altium" << "Schemagee" << "Solidworks" << "Устройства" << "Конструктивы";
+    if (pc.access & (ACC_TB_WR | ACC_SYS_WR)) // ГИ права
+        tmpSL << "ОТ и ТБ";
+    if (pc.access & (ACC_SADM_WR | ACC_SYS_WR)) // Сисадминские права
+        tmpSL << "СисАдмин";
+    if (pc.access & ACC_SYS_WR)
+        tmpSL << "Системный";
+    dirBelongAliases.clear();
+    dirBelongAliases.insert("Основной","ent");
+    dirBelongAliases.insert("Altium","alt");
+    dirBelongAliases.insert("Schemagee","sch");
+    dirBelongAliases.insert("Solidworks","sol");
+    dirBelongAliases.insert("Устройства","dev");
+    dirBelongAliases.insert("Конструктивы","con");
+    dirBelongAliases.insert("ОТ и ТБ","otb");
+    dirBelongAliases.insert("СисАдмин","sys");
+    dirBelongAliases.insert("Системный","sup");
+    cb->setEnabled(true);
+    tmpSLM->setStringList(tmpSL);
+    cb->setModel(tmpSLM);
+    dlg1Layout->addWidget(lbl, 2, 0);
+    dlg1Layout->addWidget(cb, 2, 1, 1, 2);
+    lbl = new s_tqLabel("Права доступа");
+    le = new s_tqLineEdit;
+    le->setEnabled(false);
+    le->setObjectName("dirAccess");
+    pb = new s_tqPushButton("...");
+    if (pc.access & ACC_SYS_WR) // если есть права на изменение системных вещей
+        pb->setEnabled(true);
+    else
+        pb->setEnabled(false);
+    if (IsDir);
+    else
     {
-        lbl = new s_tqLabel("Тип справочника");
-        cb = new s_tqComboBox;
-        cb->setObjectName("dirBelong");
-        QStringListModel *tmpSLM = new QStringListModel;
-        QStringList tmpSL;
-        tmpSL << "Основной";
-        if (pc.access & (ACC_ALT_WR | ACC_SYS_WR)) // САПРовские права
-            tmpSL << "Altium" << "Schemagee" << "Solidworks" << "Устройства" << "Конструктивы";
-        if (pc.access & (ACC_TB_WR | ACC_SYS_WR)) // ГИ права
-            tmpSL << "ОТ и ТБ";
-        if (pc.access & (ACC_SADM_WR | ACC_SYS_WR)) // Сисадминские права
-            tmpSL << "СисАдмин";
-        if (pc.access & ACC_SYS_WR)
-            tmpSL << "Системный";
-        dirBelongAliases.clear();
-        dirBelongAliases.insert("Основной","ent");
-        dirBelongAliases.insert("Altium","alt");
-        dirBelongAliases.insert("Schemagee","sch");
-        dirBelongAliases.insert("Solidworks","sol");
-        dirBelongAliases.insert("Устройства","dev");
-        dirBelongAliases.insert("Конструктивы","con");
-        dirBelongAliases.insert("ОТ и ТБ","otb");
-        dirBelongAliases.insert("СисАдмин","sys");
-        dirBelongAliases.insert("Системный","sup");
-        cb->setEnabled(true);
-        tmpSLM->setStringList(tmpSL);
-        cb->setModel(tmpSLM);
-        dlg1Layout->addWidget(lbl, 2, 0);
-        dlg1Layout->addWidget(cb, 2, 1, 1, 2);
-        lbl = new s_tqLabel("Права доступа");
-        le = new s_tqLineEdit;
+        pb->setEnabled(false);
         le->setEnabled(false);
-        le->setObjectName("dirAccess");
-        pb = new s_tqPushButton("...");
-        if (pc.access & ACC_SYS_WR) // если есть права на изменение системных вещей
-            pb->setEnabled(true);
-        else
-            pb->setEnabled(false);
-        connect(pb, SIGNAL(clicked()), this, SLOT(setAccessRights()));
-        dlg1Layout->addWidget(lbl, 3, 0);
-        dlg1Layout->addWidget(le, 3, 1);
-        dlg1Layout->addWidget(pb, 3, 2);
+        cb->setEnabled(false);
+        cb->setCurrentIndex(8);
+        le->setText("узч");
     }
+    connect(pb, SIGNAL(clicked()), this, SLOT(setAccessRights()));
+    dlg1Layout->addWidget(lbl, 3, 0);
+    dlg1Layout->addWidget(le, 3, 1);
+    dlg1Layout->addWidget(pb, 3, 2);
     lbl = new s_tqLabel("Имя таблицы в БД (необязательно)");
     le = new s_tqLineEdit;
     le->setObjectName("dirName");
@@ -169,7 +175,7 @@ void dir_adddialog::setupUI()
         le->setObjectName("name" + QString::number(i) + "LE");
         le->setAData(i);
         adjustFieldSize(le, 20);
-        connect(le,SIGNAL(textChanged(QString,s_tqLineEdit*)),this,SLOT(transliteFieldName(QString,s_tqLineEdit*)));
+//        connect(le,SIGNAL(textChanged(QString,s_tqLineEdit*)),this,SLOT(transliteFieldName(QString,s_tqLineEdit*)));
         wl << le;
         lbl = new s_tqLabel("Системное имя:");
         lbl->setObjectName("body"+QString::number(i)+"L1");
@@ -256,9 +262,9 @@ void dir_adddialog::WriteAndClose()
     }
     if (IsDir)
     {
-        QString tmple = dirAccessLE->text();
+        QString tmple = dirNameLE->text();
         tmple.append("_полн");
-        dirAccessLE->setText(tmple);
+        dirNameLE->setText(tmple);
     }
     dirB = this->findChild<s_tqComboBox *>("dirBelong");
     if (dirB == 0)
@@ -1092,7 +1098,8 @@ void dir_adddialog::ConstructLink()
     if (spbvalue != -1)
         links.append(QString::number(spb->value()));
     links.append(".");
-    switch (cb->currentIndex())
+    int CurFW = cb->currentText().split(".").at(0).toInt(); // вытаскиваем номер типа ссылки из её названия
+    switch (CurFW)
     {
     case FW_ALLINK:
     {
@@ -1103,6 +1110,7 @@ void dir_adddialog::ConstructLink()
             return;
         }
         links.append(tcb->currentText());
+        links.append(".");
         tcb = this->findChild<s_tqComboBox *>("fwallinkcb2");
         if (tcb == 0)
         {
@@ -1347,10 +1355,10 @@ void dir_adddialog::TbleChoosed(QString str, s_tqComboBox *ptr)
         break;
     }
     }
-    cb = this->findChild<s_tqComboBox *>("fwlinkcb");
+    cb = this->findChild<s_tqComboBox *>(cb1name);
     if (cb == 0)
         return;
-    cb2 = this->findChild<s_tqComboBox *>("fwlinkcb2");
+    cb2 = this->findChild<s_tqComboBox *>(cb2name);
     if (cb2 == 0)
         return;
     QStringList sl = tfl.tableheaders(cb->currentText());
@@ -1408,13 +1416,13 @@ void dir_adddialog::fillFields()
         return;
     }
     s_tqComboBox *dirBelongCB = this->findChild<s_tqComboBox *>("dirBelong");
-    if ((dirBelongCB == 0) && (IsDir))
+    if (dirBelongCB == 0)
     {
         emit error(ER_DIRADD,0x85);
         return;
     }
     s_tqLineEdit *dirAccessLE = this->findChild<s_tqLineEdit *>("dirAccess");
-    if ((dirAccessLE == 0) && (IsDir))
+    if (dirAccessLE == 0)
     {
         emit error(ER_DIRADD,0x86);
         return;
@@ -1485,14 +1493,14 @@ void dir_adddialog::fillFields()
     }
 }
 
-void dir_adddialog::transliteFieldName(QString str, s_tqLineEdit *ptr)
+/*void dir_adddialog::transliteFieldName(QString str, s_tqLineEdit *ptr)
 {
     isSomethingChanged = true;
     Q_UNUSED(str);
     s_tqLineEdit *le = new s_tqLineEdit;
     le = this->findChild<s_tqLineEdit *>("name"+ptr->getAData().toString()+"LE");
     s_tqLineEdit *le2 = new s_tqLineEdit;
-    le2 = this->findChild<s_tqLineEdit *>("value"+ptr->getAData().toString()+"LE");
+    le2 = this->findChild<s_tqLineEdit *>("field"+ptr->getAData().toString()+"LE");
     if (le == 0)
     {
         emit error(ER_DIRADD,0x91);
@@ -1505,7 +1513,7 @@ void dir_adddialog::transliteFieldName(QString str, s_tqLineEdit *ptr)
     }
     if (le2->text().isEmpty())
         le2->setText(pc.getTranslit(le->text()));
-}
+}*/
 
 void dir_adddialog::transliteDirName()
 {

@@ -31,6 +31,7 @@ public:
     QStringList getdbfromsql();
     QString insertvaluestotable (QSqlDatabase db, QString tble, QStringList fl, QStringList vl, int id = 0);
     int getnextfreeindex(QSqlDatabase db, QString tble);
+    int getnextfreeindexsimple(QSqlDatabase db, QString tble);
     int getfullpathtochild(QSqlDatabase db, QString tble, QString idalias, QString &path);
     int updatevaluesintable (QSqlDatabase db, QString tble, QStringList fl, QStringList vl, QString field, QString value);
     int checkdbforemptyfields (QSqlDatabase db, QString tble, QStringList fields, QStringList &probid);

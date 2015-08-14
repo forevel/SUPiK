@@ -345,7 +345,15 @@ void sys_systemdialog::TablesEditor()
         emit error(ER_SYS,0x34);
         return;
     }
-    s_tqWidget *wdt = new s_tqWidget;
+    s_tqWidget *wdt = this->findChild<s_tqWidget *>("tableseditorwidget");
+    if (wdt != 0) // если виджет с таким названием уже есть, значит, уже TablesEditor вызывали
+    {
+        wdgt->setCurrentWidget(wdt);
+        return;
+    }
+    wdt = new s_tqWidget;
+    wdt->setObjectName("tableseditorwidget");
+    wdt->setAttribute(Qt::WA_DeleteOnClose);
     s_tqTableView *tv = new s_tqTableView;
     s_ncmodel *mdl = new s_ncmodel;
     QList<QStringList> lsl;

@@ -29,7 +29,6 @@ dir_adddialog::dir_adddialog(bool update, QString dirtype, QString dir, QWidget 
                     // если диалог вызван для редактирования таблиц, dirtype должен быть пустым
 {
     idx = 0;
-//    setMinimumWidth(300);
     setAttribute(Qt::WA_DeleteOnClose);
     isSomethingChanged = false;
     this->dir = dir;
@@ -152,7 +151,8 @@ void dir_adddialog::setupUI()
     dlg1Layout->addWidget(pb, 3, 2);
     lbl = new s_tqLabel("Имя таблицы в БД (необязательно)");
     le = new s_tqLineEdit;
-    le->setObjectName("dirName");
+    le->setObjectName("dirname");
+    connect(le,SIGNAL(textChanged(QString)),this,SLOT(TbleNameChanged(QString)));
     dlg1Layout->addWidget(lbl, 4, 0);
     dlg1Layout->addWidget(le, 4, 1, 1, 2);
     dlg1Layout->setColumnStretch(0, 10);
@@ -175,15 +175,14 @@ void dir_adddialog::setupUI()
         le->setObjectName("name" + QString::number(i) + "LE");
         le->setAData(i);
         adjustFieldSize(le, 20);
-//        connect(le,SIGNAL(textChanged(QString,s_tqLineEdit*)),this,SLOT(transliteFieldName(QString,s_tqLineEdit*)));
         wl << le;
         lbl = new s_tqLabel("Системное имя:");
         lbl->setObjectName("body"+QString::number(i)+"L1");
         wl << lbl;
-        le = new s_tqLineEdit;
-        le->setObjectName("field" + QString::number(i) + "LE");
-        adjustFieldSize(le, 15);
-        wl << le;
+        cb = new s_tqComboBox;
+        cb->setObjectName("field"+QString::number(i)+"CB");
+        adjustFieldSize(cb, 15);
+        wl << cb;
         lbl = new s_tqLabel("Описание (links):");
         lbl->setObjectName("body"+QString::number(i)+"L2");
         wl << lbl;
@@ -234,15 +233,10 @@ void dir_adddialog::CancelAndClose()
 void dir_adddialog::WriteAndClose()
 {
     int i;
-    s_tqLineEdit *lefield;
-    s_tqLineEdit *levalue;
-    s_tqLineEdit *lename;
-    s_tqLineEdit *dirNameLE;
-    s_tqLineEdit *dirAliasLE;
-    s_tqLineEdit *dirAccessLE;
-    s_tqComboBox *dirB;
+    s_tqComboBox *cbfield,*dirB;
+    s_tqLineEdit *levalue,*lename,*dirNameLE,*dirAccessLE,*dirAliasLE;
     s_tqSpinBox *sb;
-    dirNameLE = this->findChild<s_tqLineEdit *>("dirName");
+    dirNameLE = this->findChild<s_tqLineEdit *>("dirname");
     if (dirNameLE == 0)
     {
         emit error(ER_DIRADD,0x11);
@@ -301,14 +295,14 @@ void dir_adddialog::WriteAndClose()
     {
         levalue = this->findChild<s_tqLineEdit *>("value"+QString::number(i)+"LE");
         lename = this->findChild<s_tqLineEdit *>("name"+QString::number(i)+"LE");
-        lefield = this->findChild<s_tqLineEdit *>("field"+QString::number(i)+"LE");
+        cbfield = this->findChild<s_tqComboBox *>("field"+QString::number(i)+"CB");
         vl.clear();
         cmpvl.clear();
         tmpString = (lename->text() == "ИД") ? "v" : "";
-        vl << lefield->text() << tble+"."+dirNameLE->text() << tmpString << lename->text() << levalue->text();
+        vl << cbfield->currentText() << tble+"."+dirNameLE->text() << tmpString << lename->text() << levalue->text();
         tmpString = QString("%1").arg(i, 2, 10, QChar('0'));
         vl << tmpString << dirAliasLE->text() << pc.DateTime << "0" << QString::number(pc.idPers);
-        cmpvl << dirAliasLE->text() << lefield->text();
+        cmpvl << dirAliasLE->text() << cbfield->currentText();
         QString id = sqlc.getvaluefromtablebyfields(sqlc.getdb("sup"), "tablefields", "idtablefields", cmpfl, cmpvl);
         if (sqlc.result == 1) // нет такой записи
             sqlc.insertvaluestotable(sqlc.getdb("sup"), "tablefields", fl, vl);
@@ -361,9 +355,10 @@ void dir_adddialog::WriteAndClose()
 
 void dir_adddialog::updateTWFields(double dfn)
 {
-    s_tqLabel *ll = new s_tqLabel;
-    s_tqLineEdit *le = new s_tqLineEdit;
-    s_tqPushButton *pb = new s_tqPushButton;
+    s_tqLabel *ll;
+    s_tqLineEdit *le;
+    s_tqPushButton *pb;
+    s_tqComboBox *cb;
     int i = 0;
     int fn = static_cast<int>(dfn);
     while (i < fn)
@@ -389,13 +384,13 @@ void dir_adddialog::updateTWFields(double dfn)
             return;
         }
         ll->setVisible(true);
-        le = this->findChild<s_tqLineEdit *>("field"+QString::number(i)+"LE");
-        if (le == 0)
+        cb = this->findChild<s_tqComboBox *>("field"+QString::number(i)+"CB");
+        if (cb == 0)
         {
             emit error(ER_DIRADD,0x24);
             return;
         }
-        le->setVisible(true);
+        cb->setVisible(true);
         le = this->findChild<s_tqLineEdit *>("name"+QString::number(i)+"LE");
         if (le == 0)
         {
@@ -442,13 +437,13 @@ void dir_adddialog::updateTWFields(double dfn)
             return;
         }
         ll->setVisible(false);
-        le = this->findChild<s_tqLineEdit *>("field"+QString::number(i)+"LE");
-        if (le == 0)
+        cb = this->findChild<s_tqComboBox *>("field"+QString::number(i)+"CB");
+        if (cb == 0)
         {
             emit error(ER_DIRADD,0x2B);
             return;
         }
-        le->setVisible(false);
+        cb->setVisible(false);
         le = this->findChild<s_tqLineEdit *>("value"+QString::number(i)+"LE");
         if (le == 0)
         {
@@ -501,6 +496,56 @@ void dir_adddialog::addLineToDlg(QList<QWidget *> wl, QGridLayout &lyt, int row)
 {
     for (int i = 0; i < wl.size(); i++)
         lyt.addWidget(wl.at(i), row, i);
+}
+
+// Обработка изменения системного имени таблицы
+
+void dir_adddialog::TbleNameChanged(QString tblename)
+{
+    // 1. Взять все столбцы из таблицы tblename
+    // 2. NumCols = количество столбцов
+    // 3. Создать модель mdl по столбцам
+    // 4. Для каждого комбобокса с именем fields<i>CB взять текущий индекс idx
+    // 5. Если idx >= NumCols, idx = NumCols-1
+    // 6. Заполнить комбобокс моделью mdl
+    // 1
+    s_tqComboBox *dirB = this->findChild<s_tqComboBox *>("dirBelong");
+    if (dirB == 0)
+    {
+        emit error(ER_DIRADD,0x31);
+        return;
+    }
+    QStringList dirColumns = sqlc.getcolumnsfromtable(sqlc.getdb(dirBelongAliases[dirB->currentText()]), tblename);
+    if (sqlc.result)
+    {
+        QMessageBox::warning(this,"Проблема","Не найдена таблица");
+        return;
+    }
+    dirColumns.removeAll("date");
+    dirColumns.removeAll("deleted");
+    dirColumns.removeAll("idpers");
+    // 2
+    int NumCols = dirColumns.size();
+    // 3
+    QStringListModel *mdl = new QStringListModel;
+    mdl->setStringList(dirColumns);
+    // 4
+    for (int i = 0; i < FSIZE; i++)
+    {
+        s_tqComboBox *cb = this->findChild<s_tqComboBox *>("field"+QString::number(i)+"CB");
+        if (cb == 0)
+        {
+            emit error(ER_DIRADD,0x31);
+            return;
+        }
+        int idx = cb->currentIndex();
+        // 5
+        if (idx >= NumCols)
+            idx = NumCols-1;
+        // 6
+        cb->setModel(mdl);
+        cb->setCurrentIndex(idx);
+    }
 }
 
 // Вызов конструктора ссылок
@@ -1386,9 +1431,9 @@ void dir_adddialog::adjustFieldSize(QWidget *wdgt, int widthInChar)
 
 void dir_adddialog::fillFields()
 {
-    s_tqLineEdit *lef = new s_tqLineEdit;
-    s_tqLineEdit *len = new s_tqLineEdit;
-    s_tqLineEdit *lev = new s_tqLineEdit;
+    s_tqComboBox *cbf;
+    s_tqLineEdit *len;
+    s_tqLineEdit *lev;
     QList<QStringList> lsl;
     QStringList fl;
     fl << "table" << "tablefields" << "header" << "links";
@@ -1403,7 +1448,7 @@ void dir_adddialog::fillFields()
         emit error(ER_DIRADD,0x82);
         return;
     }
-    s_tqLineEdit *dirNameLE = this->findChild<s_tqLineEdit *>("dirName");
+    s_tqLineEdit *dirNameLE = this->findChild<s_tqLineEdit *>("dirname");
     if (dirNameLE == 0)
     {
         emit error(ER_DIRADD,0x83);
@@ -1469,8 +1514,8 @@ void dir_adddialog::fillFields()
     {
         if (i > 16)
             break;
-        lef = this->findChild<s_tqLineEdit *>("field"+QString::number(i)+"LE"); // имя поля
-        if (lef == 0)
+        cbf = this->findChild<s_tqComboBox *>("field"+QString::number(i)+"CB"); // имя поля
+        if (cbf == 0)
         {
             emit error(ER_DIRADD,0x8A);
             return;
@@ -1487,39 +1532,17 @@ void dir_adddialog::fillFields()
             emit error(ER_DIRADD,0x8C);
             return;
         }
-        lef->setText(lsl.at(i).at(1));
+        cbf->setCurrentText(lsl.at(i).at(1));
         len->setText(lsl.at(i).at(2));
         lev->setText(lsl.at(i).at(3));
     }
 }
 
-/*void dir_adddialog::transliteFieldName(QString str, s_tqLineEdit *ptr)
-{
-    isSomethingChanged = true;
-    Q_UNUSED(str);
-    s_tqLineEdit *le = new s_tqLineEdit;
-    le = this->findChild<s_tqLineEdit *>("name"+ptr->getAData().toString()+"LE");
-    s_tqLineEdit *le2 = new s_tqLineEdit;
-    le2 = this->findChild<s_tqLineEdit *>("field"+ptr->getAData().toString()+"LE");
-    if (le == 0)
-    {
-        emit error(ER_DIRADD,0x91);
-        return;
-    }
-    if (le2 == 0)
-    {
-        emit error(ER_DIRADD,0x92);
-        return;
-    }
-    if (le2->text().isEmpty())
-        le2->setText(pc.getTranslit(le->text()));
-}*/
-
 void dir_adddialog::transliteDirName()
 {
     s_tqLineEdit *dirNameLE = new s_tqLineEdit;
     s_tqLineEdit *dirAliasLE = new s_tqLineEdit;
-    dirNameLE = this->findChild<s_tqLineEdit *>("dirName");
+    dirNameLE = this->findChild<s_tqLineEdit *>("dirname");
     if (dirNameLE == 0)
     {
         emit error(ER_DIRADD,0xA1);

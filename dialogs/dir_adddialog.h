@@ -50,6 +50,7 @@ private slots:
     void LTypeCBIndexChanged(QString str);
     void ConstructLink();
     void TbleChoosed(QString, s_tqComboBox *);
+    void TbleNameChanged(QString tblename);
 };
 
 #endif // DIR_ADDDIALOG_H

@@ -71,6 +71,11 @@ QStringList s_sql::getcolumnsfromtable(QSqlDatabase db, QString tble)
 
     sl.clear();
     get_fields_from_db.exec("SHOW COLUMNS FROM `" + tble + "`;");
+    if (!get_fields_from_db.isActive())
+    {
+        result = 1;
+        return QStringList();
+    }
     while (get_fields_from_db.next())
         sl << get_fields_from_db.value(0).toString();
     result=0;

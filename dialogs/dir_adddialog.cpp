@@ -62,16 +62,6 @@ void dir_adddialog::setupUI()
     lbl->setFont(font);
     lyout->addWidget(lbl, 0, Qt::AlignLeft);
 
-    pb = new s_tqPushButton;
-    pb->setIcon(QIcon(":/res/icon_zap.png"));
-    connect(pb, SIGNAL(clicked()), this, SLOT(WriteAndClose()));
-    hlyout->addWidget(pb);
-    pb = new s_tqPushButton;
-    pb->setIcon(QIcon(":/res/cross.png"));
-    connect(pb, SIGNAL(clicked()), this, SLOT(CancelAndClose()));
-    hlyout->addWidget(pb);
-    hlyout->addStretch(300);
-    lyout->addLayout(hlyout);
     QTabWidget *mainTW = new QTabWidget;
     QDialog *dlg1 = new QDialog;
     QDialog *dlg2 = new QDialog;
@@ -215,6 +205,19 @@ void dir_adddialog::setupUI()
 
     mainTW->setObjectName("mainTW");
     lyout->addWidget(mainTW, 95);
+    pb = new s_tqPushButton("Записать и закрыть");
+    pb->setIcon(QIcon(":/res/icon_zap.png"));
+//    pb->setStyleSheet("QPushButton {background-color: rgb(153,204,102);}");
+    connect(pb, SIGNAL(clicked()), this, SLOT(WriteAndClose()));
+    hlyout->addWidget(pb);
+    pb = new s_tqPushButton("Отмена");
+    pb->setIcon(QIcon(":/res/cross.png"));
+//    pb->setStyleSheet("QPushButton {background-color: rgb(255,153,153);}");
+    connect(pb, SIGNAL(clicked()), this, SLOT(CancelAndClose()));
+    hlyout->addWidget(pb);
+//    hlyout->addStretch(300);
+    lyout->addLayout(hlyout);
+
     setLayout(lyout);
     setMinimumHeight(height()); // меньше не даём изменять, ибо некрасиво
     setMinimumWidth(width()+50);
@@ -513,6 +516,7 @@ void dir_adddialog::TbleNameChanged(QString tblename)
         emit error(ER_DIRADD,0x31);
         return;
     }
+    QString tmps = dirB->currentText();
     QStringList dirColumns = sqlc.getcolumnsfromtable(sqlc.getdb(dirBelongAliases[dirB->currentText()]), tblename);
     if (sqlc.result)
     {

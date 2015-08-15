@@ -23,7 +23,6 @@
 #include "../widgets/s_tqsplitter.h"
 #include "../widgets/s_colortabwidget.h"
 #include "../widgets/s_tqwidget.h"
-#include "../widgets/s_tqtoolbar.h"
 #include "../gen/publicclass.h"
 #include "../gen/s_tablefields.h"
 #include "cmp_maindialog.h"
@@ -71,14 +70,20 @@ void cmp_compdialog::SetupUI()
     QApplication::setOverrideCursor(Qt::WaitCursor);
     QVBoxLayout *lyout = new QVBoxLayout;
     QHBoxLayout *hlyout = new QHBoxLayout;
-    s_tqToolBar *tb = new s_tqToolBar;
-    QAction *NewComp = new QAction(this);
-    NewComp->setToolTip("Создать новый компонент");
-    NewComp->setIcon(QIcon(":/res/newdocy.png"));
-    connect(NewComp,SIGNAL(triggered()),this,SLOT(AddNewItem()));
-    tb->addAction(NewComp);
-    tb->setMaximumHeight(30);
-    hlyout->addWidget(tb);
+
+    s_tqPushButton *pb = new s_tqPushButton;
+    pb->setIcon(QIcon(":/res/newdocy.png"));
+    connect(pb, SIGNAL(clicked()), this, SLOT(AddNewItem()));
+    hlyout->addWidget(pb);
+    pb = new s_tqPushButton;
+    pb->setIcon(QIcon(":/res/cross.png"));
+    connect(pb, SIGNAL(clicked()), this, SLOT(close()));
+    hlyout->addWidget(pb);
+    hlyout->addSpacing(20);
+    pb = new s_tqPushButton;
+
+    hlyout->addStretch(300);
+    lyout->addLayout(hlyout);
     s_tqLabel *lbl = new s_tqLabel("Компоненты");
     QFont font;
     font.setPointSize(15);
@@ -91,7 +96,7 @@ void cmp_compdialog::SetupUI()
     connect(gridItemDelegate,SIGNAL(error(int,int)),this,SLOT(emiterror(int,int)));
     MainTV->setItemDelegate(gridItemDelegate);
     MainTV->setObjectName("mtv");
-    MainTV->horizontalHeader()->setVisible(false);
+    MainTV->horizontalHeader()->setVisible(true);
     MainTV->verticalHeader()->setVisible(false);
     s_ncmodel *mainmodel = new s_ncmodel;
     mainmodel->setup(CompLetter+"Компоненты_описание_сокращ");
@@ -120,7 +125,7 @@ void cmp_compdialog::SetupUI()
     slavemodel = new s_ncmodel;
     SlaveTV->setModel(slavemodel);
     SlaveTV->setObjectName("stv");
-    SlaveTV->horizontalHeader()->setVisible(false);
+    SlaveTV->horizontalHeader()->setVisible(true);
     SlaveTV->verticalHeader()->setVisible(false);
     connect(SlaveTV,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(SlaveItemChoosed(QModelIndex)));
     rlyout->addWidget(SlaveTV);

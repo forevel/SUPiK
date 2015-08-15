@@ -1,6 +1,7 @@
 #include "s_tqtableview.h"
 #include <QDialog>
 #include <QScrollBar>
+#include <QHeaderView>
 
 s_tqTableView::s_tqTableView(QWidget *parent) :
     QTableView(parent)
@@ -12,6 +13,10 @@ s_tqTableView::s_tqTableView(QWidget *parent) :
     setShowGrid(false);
     horizontalScrollBar()->setStyleSheet("QScrollBar {background-color: rgba(0,0,0,0);}");
     verticalScrollBar()->setStyleSheet("QScrollBar {background-color: rgba(0,0,0,0);}");
+    horizontalHeader()->setStyleSheet("QHeaderView::section {background-color: rgba(0,0,0,0);}");
+    horizontalHeader()->setAttribute(Qt::WA_TranslucentBackground, true);
+    verticalHeader()->setStyleSheet("QHeaderView::section {background-color: rgba(0,0,0,0);}");
+    verticalHeader()->setAttribute(Qt::WA_TranslucentBackground, true);
 }
 
 void s_tqTableView::setAData(QVariant dat)

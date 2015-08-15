@@ -20,6 +20,8 @@ public:
     void SetupUI(int CompType, int CompTable, int CompID); // подготовка диалога к отображению. 1 = тип компонента (Altium,Schemagee,...),
                                                             // 2 = номер таблицы компонента по таблице description, 3 = ИД компонента по таблице
 
+public slots:
+
 signals:
     void error(int,int);
 
@@ -34,6 +36,7 @@ protected:
 
 private slots:
     void AddManuf();
+    void WriteAndClose();
     void emiterror(int er1,int er2);
 
 };

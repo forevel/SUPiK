@@ -12,6 +12,8 @@
 #include "../widgets/s_tqgroupbox.h"
 #include "../widgets/s_tqpushbutton.h"
 #include "../widgets/s_tqchoosewidget.h"
+#include "../widgets/s_tqcombobox.h"
+#include "../widgets/s_tqcheckbox.h"
 #include "../models/s_ntmodel.h"
 #include "../models/s_ncmodel.h"
 #include "../gen/s_sql.h"
@@ -64,6 +66,18 @@ cmp_maindialog::cmp_maindialog(QWidget *parent) : QDialog(parent)
     ctw->addTab(cp1, "Основные");
     ctw->addTab(cp2, "Дополнительные");
     lyout->addWidget(ctw);
+    s_tqPushButton *pb = new s_tqPushButton("Записать и закрыть");
+    pb->setIcon(QIcon(":/res/icon_zap.png"));
+    connect(pb,SIGNAL(clicked()),this,SLOT(WriteAndClose()));
+//    pb->setStyleSheet("QPushButton {background-color: rgb(153,204,102);}");
+    hlyout = new QHBoxLayout;
+    hlyout->addWidget(pb);
+    pb = new s_tqPushButton("Отмена");
+    pb->setIcon(QIcon(":/res/cross.png"));
+    connect(pb,SIGNAL(clicked()),this,SLOT(close()));
+//    pb->setStyleSheet("QPushButton {background-color: rgb(255,153,153);}");
+    hlyout->addWidget(pb);
+    lyout->addLayout(hlyout);
     setLayout(lyout);
 }
 
@@ -110,6 +124,13 @@ void cmp_maindialog::SetupUI(int CompType, int CompTable, int CompID)
         return;
     }
     le->setText(tblesl.at(1));
+    le = this->findChild<s_tqLineEdit *>("id");
+    if (le == 0)
+    {
+        emit error(ER_CMPMAIN,0x04);
+        return;
+    }
+    le->setText(CompId);
     fl.clear();
     switch (CompType)
     {
@@ -152,6 +173,17 @@ void cmp_maindialog::SetAltDialog()
 {
     QVBoxLayout *lyout = new QVBoxLayout;
     s_tqWidget *cp = this->findChild<s_tqWidget *>("cp1");
+    if (cp == 0)
+    {
+        emit error(ER_CMPMAIN,0x11);
+        return;
+    }
+    s_tqWidget *cp2 = this->findChild<s_tqWidget *>("cp2");
+    if (cp2 == 0)
+    {
+        emit error(ER_CMPMAIN,0x12);
+        return;
+    }
     s_tqGroupBox *gb = new s_tqGroupBox;
     gb->setTitle("Компонент");
     QGridLayout *glyout = new QGridLayout;
@@ -223,112 +255,95 @@ void cmp_maindialog::SetAltDialog()
     gb->setLayout(glyout);
     lyout->addWidget(gb);
 
+    s_tqCheckBox *chb;
+    s_tqComboBox *cb;
     gb=new s_tqGroupBox;
     glyout = new QGridLayout;
     gb->setTitle("Характеристики");
+    for (int i=0; i<5; i++)
+    {
+        lbl = new s_tqLabel("");
+        lbl->setObjectName("par"+QString::number(i)+"lbl");
+        glyout->addWidget(lbl,i,0,1,1);
+        le = new s_tqLineEdit;
+        le->setObjectName("par"+QString::number(i)+"le");
+        glyout->addWidget(le,i,1,1,1);
+        cb = new s_tqComboBox;
+        cb->setObjectName("par"+QString::number(i)+"cb");
+        glyout->addWidget(cb,i,2,1,1);
+        chb = new s_tqCheckBox;
+        chb->setText("Учёт в наименовании");
+        chb->setObjectName("par"+QString::number(i)+"chb");
+        glyout->addWidget(chb,i,3,1,1);
+    }
+    lbl = new s_tqLabel("Мин. раб. температура");
+    glyout->addWidget(lbl,6,0,1,1);
+    le = new s_tqLineEdit;
+    le->setObjectName("mintemple");
+    glyout->addWidget(le,6,1,1,3);
+    lbl = new s_tqLabel("Макс. раб. температура");
+    glyout->addWidget(lbl,7,0,1,1);
+    le = new s_tqLineEdit;
+    le->setObjectName("maxtemple");
+    glyout->addWidget(le,7,1,1,3);
+    lbl = new s_tqLabel("Корпус компонента");
+    glyout->addWidget(lbl,8,0,1,1);
+    le = new s_tqLineEdit;
+    le->setObjectName("packagele");
+    glyout->addWidget(le,8,1,1,3);
+    chb = new s_tqCheckBox;
+    chb->setText("Компонент планарный (SMD)");
+    chb->setObjectName("issmdchb");
+    glyout->addWidget(chb,9,1,1,3);
 
-    /*        TechGB = new s_tqGroupBox;
-        TechGB->setTitle("Характеристики");
-        Par1L = new s_tqLabel;
-        Par3L = new s_tqLabel;
-        Par3L = new s_tqLabel;
-        Par4L = new s_tqLabel;
-        Par5L = new s_tqLabel;
-        UnitsCB = new s_tqComboBox;
-        UnitsCB->setEditable(false);
-        AccuracyL = new s_tqLabel("Точность");
-        MinOpTL = new s_tqLabel("Мин. раб. темп.");
-        MaxOpTL = new s_tqLabel("Макс. раб. темп.");
-        Par1LE = new s_tqLineEdit;
-        Par3LE = new s_tqLineEdit;
-        Par3LE = new s_tqLineEdit;
-        Par4LE = new s_tqLineEdit;
-        Par5LE = new s_tqLineEdit;
-        AccuracyLE = new s_tqLineEdit;
-        MinOpTLE = new s_tqLineEdit;
-        MaxOpTLE = new s_tqLineEdit;
-        MaxPowerLE = new s_tqLineEdit;
-        MaxPowerL = new s_tqLabel("Макс. рассеив. мощность");
-        MaxPowerL->sizePolicy().setHeightForWidth(true);
-        TKCL = new s_tqLabel("ТКС (ТКЕ)");
-        TKCLE = new s_tqLineEdit;
-        isNeedToAccVoltageInNameCB = new s_tqCheckBox;
-        isNeedToAccVoltageInNameL = new s_tqLabel("Учёт");
-        isNeedToAccAccuracyInNameCB = new s_tqCheckBox;
-        isNeedToAccAccuracyInNameL = new s_tqLabel("Учёт");
+    gb->setLayout(glyout);
+    lyout->addWidget(gb);
+    cp->setLayout(lyout);
 
-        TechGBLayout = new QGridLayout;
-        TechGBLayout->addWidget(Par1L, 0, 0);
+    lyout = new QVBoxLayout;
+    gb = new s_tqGroupBox;
+    gb->setTitle("Дополнительные параметры");
+    glyout = new QGridLayout;
+    lbl = new s_tqLabel("Точность");
+    glyout->addWidget(lbl,0,0,1,1);
+    le = new s_tqLineEdit;
+    le->setObjectName("accuracyle");
+    glyout->addWidget(le,0,1,1,3);
+    lbl = new s_tqLabel("Макс. рассеив. мощность");
+    glyout->addWidget(lbl,1,0,1,1);
+    le = new s_tqLineEdit;
+    le->setObjectName("maxpowerle");
+    glyout->addWidget(le,1,1,1,3);
+    lbl = new s_tqLabel("ТКС (ТКЕ)");
+    glyout->addWidget(lbl,2,0,1,1);
+    le = new s_tqLineEdit;
+    le->setObjectName("tkcle");
+    glyout->addWidget(le,2,1,1,3);
+    lbl = new s_tqLabel("Маркировка корпуса");
+    glyout->addWidget(lbl,3,0,1,1);
+    le = new s_tqLineEdit;
+    le->setObjectName("markingle");
+    glyout->addWidget(le,3,1,1,3);
+    chb = new s_tqCheckBox;
+    chb->setText("Компонент выпускается");
+    chb->setObjectName("isactivechb");
+    glyout->addWidget(chb,4,0,1,4);
+    gb->setLayout(glyout);
+    lyout->addWidget(gb);
+
+    gb = new s_tqGroupBox;
+    gb->setTitle("Описание компонента");
+    glyout = new QGridLayout;
+    lbl = new s_tqLabel("Файл описания компонента");
+    glyout->addWidget(lbl,0,0,1,1);
+    cw = new s_tqChooseWidget(true);
+    cw->Setup("2.15..");
+    cw->setObjectName("dsheetcw");
+    glyout->addWidget(cw,0,1,1,1);
+    gb->setLayout(glyout);
+    lyout->addWidget(gb);
 
         /*    PackageGBLAyout = new QGridLayout;
-        DSheetGBLayout = new QGridLayout;
-        PackageGB = new s_tqGroupBox(qt_cmp_addcompdialog);
-        PackageGB->setObjectName(QStringLiteral("PackageGB"));
-        PackageGB->setGeometry(QRect(380, 320, 231, 81));
-        QFont font4;
-        font4.setFamily(QStringLiteral("MS Shell Dlg 2"));
-        font4.setBold(false);
-        font4.setItalic(false);
-        font4.setUnderline(false);
-        font4.setWeight(50);
-        font4.setStrikeOut(false);
-        font4.setKerning(false);
-        font4.setStyleStrategy(QFont::PreferDefault);
-        PackageGB->setFont(font4);
-        PackageGB->setStyleSheet(QLatin1String("color: rgb(170, 170, 0);\n"
-    "background-color: rgb(200, 255, 196);"));
-        PackageGB->setAlignment(Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter);
-        TypeL = new s_tqLabel(PackageGB);
-        TypeL->setObjectName(QStringLiteral("TypeL"));
-        TypeL->setGeometry(QRect(10, 20, 31, 16));
-        TypeL->setStyleSheet(QStringLiteral("color: rgb(85, 170, 0);"));
-        MarkL = new s_tqLabel(PackageGB);
-        MarkL->setObjectName(QStringLiteral("MarkL"));
-        MarkL->setGeometry(QRect(10, 50, 61, 20));
-        MarkL->setStyleSheet(QStringLiteral("color: rgb(85, 170, 0);"));
-        TypeLE = new s_tqLineEdit(PackageGB);
-        TypeLE->setObjectName(QStringLiteral("TypeLE"));
-        TypeLE->setGeometry(QRect(40, 20, 111, 20));
-        TypeLE->setStyleSheet(QStringLiteral("color: rgb(85, 85, 0);"));
-        MarkLE = new s_tqLineEdit(PackageGB);
-        MarkLE->setObjectName(QStringLiteral("MarkLE"));
-        MarkLE->setGeometry(QRect(110, 50, 111, 20));
-        MarkLE->setStyleSheet(QStringLiteral("color: rgb(85, 85, 0);"));
-        isSMDL = new s_tqLabel(PackageGB);
-        isSMDL->setObjectName(QStringLiteral("isSMDL"));
-        isSMDL->setGeometry(QRect(167, 20, 31, 16));
-        isSMDL->setStyleSheet(QStringLiteral("color: rgb(85, 170, 0);"));
-        isSMDCB = new s_ts_tqCheckBox(PackageGB);
-        isSMDCB->setObjectName(QStringLiteral("isSMDCB"));
-        isSMDCB->setGeometry(QRect(200, 20, 21, 17));
-        QSizePolicy sizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-        sizePolicy.setHorizontalStretch(0);
-        sizePolicy.setVerticalStretch(0);
-        sizePolicy.setHeightForWidth(isSMDCB->sizePolicy().hasHeightForWidth());
-        isSMDCB->setSizePolicy(sizePolicy);
-        isSMDCB->setSizeIncrement(QSize(0, 0));
-        isSMDCB->setBaseSize(QSize(0, 0));
-        isSMDCB->setAutoFillBackground(false);
-        isSMDCB->setChecked(false);
-        DSheetGB = new s_tqGroupBox(qt_cmp_addcompdialog);
-        DSheetGB->setObjectName(QStringLiteral("DSheetGB"));
-        DSheetGB->setGeometry(QRect(10, 410, 601, 61));
-        DSheetGB->setStyleSheet(QLatin1String("color: rgb(170, 170, 0);\n"
-    "background-color: rgb(200, 255, 196);"));
-        DSheetGB->setAlignment(Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter);
-        DSheetGB->setFlat(false);
-        DSheetPB = new s_tqPushButton(DSheetGB);
-        DSheetPB->setObjectName(QStringLiteral("DSheetPB"));
-        DSheetPB->setGeometry(QRect(570, 20, 21, 20));
-        DSheetL = new s_tqLabel(DSheetGB);
-        DSheetL->setObjectName(QStringLiteral("DSheetL"));
-        DSheetL->setGeometry(QRect(10, 17, 81, 31));
-        DSheetL->setStyleSheet(QStringLiteral("color: rgb(85, 170, 0);"));
-        DSheetLE = new s_tqLabel(DSheetGB);
-        DSheetLE->setObjectName(QStringLiteral("DSheetLE"));
-        DSheetLE->setGeometry(QRect(100, 21, 461, 21));
-        DSheetLE->setStyleSheet(QStringLiteral("color: rgb(85, 85, 0);"));
-        DSheetLE->setFrameShape(QFrame::StyledPanel);
         AcceptAndClosePB = new s_tqPushButton(qt_cmp_addcompdialog);
         AcceptAndClosePB->setObjectName(QStringLiteral("AcceptAndClosePB"));
         AcceptAndClosePB->setGeometry(QRect(360, 560, 151, 23));
@@ -465,9 +480,7 @@ void cmp_maindialog::SetAltDialog()
         CompFrame = new s_tqFrame;
         CompFrame->setLayout(CompLayout);
     */
-    //    TreeFrame->setVisible(false);
-    //    MainLayout->replaceWidget(TreeFrame, CompFrame, Qt::FindDirectChildrenOnly);
-    cp->setLayout(lyout);
+    cp2->setLayout(lyout);
 }
 
 void cmp_maindialog::FillAltDialog(QStringList vl)
@@ -492,6 +505,11 @@ void cmp_maindialog::AddManuf()
         CompManufModel->sort(0, Qt::AscendingOrder); // 0.4b
         ManufCB->setModel(CompManufModel);
         ManufCB->setCurrentText(pc.InterchangeString);*/
+}
+
+void cmp_maindialog::WriteAndClose()
+{
+
 }
 
 void cmp_maindialog::emiterror(int er1, int er2)

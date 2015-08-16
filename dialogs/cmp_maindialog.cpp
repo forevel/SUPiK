@@ -327,7 +327,7 @@ void cmp_maindialog::SetAltDialog()
     chb = new s_tqCheckBox;
     chb->setText("Компонент выпускается");
     chb->setObjectName("isactivechb");
-    glyout->addWidget(chb,4,0,1,4);
+    glyout->addWidget(chb,4,1,1,3);
     gb->setLayout(glyout);
     lyout->addWidget(gb);
 
@@ -337,7 +337,7 @@ void cmp_maindialog::SetAltDialog()
     lbl = new s_tqLabel("Файл описания компонента");
     glyout->addWidget(lbl,0,0,1,1);
     cw = new s_tqChooseWidget(true);
-    cw->Setup("2.15..");
+    cw->Setup("2.15..PDF Documents (*_pdf)");
     cw->setObjectName("dsheetcw");
     glyout->addWidget(cw,0,1,1,1);
     gb->setLayout(glyout);

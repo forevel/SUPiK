@@ -1,4 +1,5 @@
 #include <QHBoxLayout>
+#include <QFileDialog>
 #include <QStringListModel>
 #include "s_tqchoosewidget.h"
 #include "s_tqlineedit.h"
@@ -219,6 +220,27 @@ void s_tqChooseWidget::pbclicked()
         connect(dlg,SIGNAL(error(int,int)),this,SIGNAL(error(int,int)));
         connect(dlg,SIGNAL(changeshasbeenMade(QString)),this,SLOT(accepted(QString)));
         dlg->exec();
+        break;
+    }
+    case FW_FLINK: // диалог выбора файлов
+    {
+        QString Template;
+        for (int i=0; i<ff.link.size(); i++)
+        {
+            QString tmps = ff.link.at(i);
+            tmps.replace("_",".");
+            Template += tmps;
+        }
+        if (Template.isEmpty())
+            return;
+        QString filename = QFileDialog::getOpenFileName(this,"Открыть файл","",Template);
+        accepted(filename);
+        break;
+    }
+    case FW_ILINK: // диалог выбора каталога
+    {
+        QString dirname = QFileDialog::getExistingDirectory(this,"Выбрать каталог","",QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
+        accepted(dirname);
         break;
     }
     default:

@@ -26,7 +26,7 @@ signals:
     void error(int,int);
 
 private:
-    QString CompDb, CompTble, CompId;
+    QString CompDb, CompTble, CompId, CompType;
 
     void SetAltDialog();
     void FillAltDialog(QStringList);

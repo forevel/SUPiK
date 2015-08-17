@@ -10,6 +10,7 @@
 #include <QPainter>
 #include <QPaintEvent>
 #include <QApplication>
+#include <QSortFilterProxyModel>
 #include "../models/s_duniversal.h"
 #include "../widgets/s_tqgroupbox.h"
 #include "../widgets/s_tqlabel.h"
@@ -99,6 +100,7 @@ void cmp_compdialog::SetupUI()
     MainTV->horizontalHeader()->setVisible(true);
     MainTV->verticalHeader()->setVisible(false);
     s_ncmodel *mainmodel = new s_ncmodel;
+    QSortFilterProxyModel *mainproxymodel = new QSortFilterProxyModel;
     mainmodel->setup(CompLetter+"Компоненты_описание_сокращ");
     if (mainmodel->result)
     {
@@ -106,9 +108,13 @@ void cmp_compdialog::SetupUI()
         QApplication::restoreOverrideCursor();
         return;
     }
-    MainTV->setModel(mainmodel);
+    mainproxymodel->setSourceModel(mainmodel);
+    MainTV->setModel(mainproxymodel);
     MainTV->resizeColumnsToContents();
     MainTV->resizeRowsToContents();
+    MainTV->setSelectionMode(QAbstractItemView::NoSelection);
+    MainTV->setSortingEnabled(true);
+    MainTV->sortByColumn(0, Qt::AscendingOrder);
     connect(MainTV,SIGNAL(clicked(QModelIndex)),this,SLOT(MainItemChoosed(QModelIndex)));
     s_tqSplitter *spl = new s_tqSplitter;
     s_tqFrame *left = new s_tqFrame;
@@ -123,10 +129,15 @@ void cmp_compdialog::SetupUI()
     s_tqTableView *SlaveTV = new s_tqTableView;
     SlaveTV->setItemDelegate(gridItemDelegate);
     slavemodel = new s_ncmodel;
-    SlaveTV->setModel(slavemodel);
+    QSortFilterProxyModel *slaveproxymodel = new QSortFilterProxyModel;
+    slaveproxymodel->setSourceModel(slavemodel);
+    SlaveTV->setModel(slaveproxymodel);
     SlaveTV->setObjectName("stv");
     SlaveTV->horizontalHeader()->setVisible(true);
     SlaveTV->verticalHeader()->setVisible(false);
+    SlaveTV->setSelectionMode(QAbstractItemView::NoSelection);
+    SlaveTV->setSortingEnabled(true);
+    SlaveTV->sortByColumn(0, Qt::AscendingOrder);
     connect(SlaveTV,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(SlaveItemChoosed(QModelIndex)));
     rlyout->addWidget(SlaveTV);
     right->setFrameStyle(QFrame::Panel | QFrame::Sunken);

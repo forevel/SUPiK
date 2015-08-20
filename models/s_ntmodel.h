@@ -38,9 +38,9 @@ public:
     void ClearModel();
     QList<QPersistentModelIndex> expandedIndexes;
 
-    QColor colors[6]; // определение набора цветов шрифта
-    QFont fonts[6]; // определение набора шрифтов
-    QIcon icons[6]; // определение набора иконок
+    QColor colors[7]; // определение набора цветов шрифта
+    QFont fonts[7]; // определение набора шрифтов
+    QIcon icons[7]; // определение набора иконок
 
 signals:
 

@@ -69,13 +69,11 @@ cmp_maindialog::cmp_maindialog(QWidget *parent) : QDialog(parent)
     s_tqPushButton *pb = new s_tqPushButton("Записать и закрыть");
     pb->setIcon(QIcon(":/res/icon_zap.png"));
     connect(pb,SIGNAL(clicked()),this,SLOT(WriteAndClose()));
-//    pb->setStyleSheet("QPushButton {background-color: rgb(153,204,102);}");
     hlyout = new QHBoxLayout;
     hlyout->addWidget(pb);
     pb = new s_tqPushButton("Отмена");
     pb->setIcon(QIcon(":/res/cross.png"));
     connect(pb,SIGNAL(clicked()),this,SLOT(close()));
-//    pb->setStyleSheet("QPushButton {background-color: rgb(255,153,153);}");
     hlyout->addWidget(pb);
     lyout->addLayout(hlyout);
     setLayout(lyout);

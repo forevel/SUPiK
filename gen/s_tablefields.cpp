@@ -443,6 +443,7 @@ void s_tablefields::idtois(QString tble, QStringList headers, QStringList values
         result = 0x74 + ER_TFIELD;
         return;
     }
+    keyid = QString::number(keyid.toInt()); // убираем незначащие нули
     QStringList tmptablefields, tmpvalues;
     QString tmpdb, tmptble, tmpdbtble;
     int i;

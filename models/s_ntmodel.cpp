@@ -16,6 +16,7 @@ s_ntmodel::s_ntmodel(QObject *parent) :
     // 3 = обычный текст с выделением (тёмно-красный, нежирный)
     // 4 = слабый уровень (зелёный, жирный)
     // 5 = неактивный (серый, нежирный)
+    // 6 = совсем слабый уровень (зелёный, нежирный)
 
     colors[0] = Qt::black;
     colors[1] = Qt::red;
@@ -23,9 +24,10 @@ s_ntmodel::s_ntmodel(QObject *parent) :
     colors[3] = Qt::darkRed;
     colors[4] = Qt::darkGreen;
     colors[5] = Qt::gray;
+    colors[6] = Qt::darkGreen;
     QFont fontB = QFont("MS Sans Serif", -1, QFont::Bold);
     QFont fontN = QFont("MS Sans Serif", -1, QFont::Normal);
-    fonts[0] = fonts[3] = fonts[5] = fontN;
+    fonts[0] = fonts[3] = fonts[5] = fonts[6] = fontN;
     fonts[1] = fonts[2] = fonts[4] = fontB;
     icons[0] = QIcon(":/res/hr.png");
     icons[1] = QIcon(":/res/ok.png");
@@ -380,15 +382,15 @@ int s_ntmodel::BuildTree(QString id, bool twodb)
     QSqlQuery get_child_from_db1 (sqlc.getdb(catlist.at(0)));
     tmpString = "SELECT `alias`,`id"+catlist.at(1)+"` FROM `"+catlist.at(1)+"` WHERE `idalias`=\""+id+"\" AND `deleted`=0 ORDER BY `id"+catlist.at(1)+"` ASC;";
     get_child_from_db1.exec(tmpString);
-//    if (!get_child_from_db1.isActive())
-//        return 0x11+ER_NTMODEL;
-// увеличиваем уровень дерева
+    bool HaveChildren = false;
+    // увеличиваем уровень дерева
     position++;
     if (id == "0") position = 0; // для корневых элементов position д.б. равен нулю
 // строим дерево в модели model
     int set = 4;
     while (get_child_from_db1.next())
     {
+        HaveChildren = true;
         tmpStringList.clear();
         tmpStringList << QString("%1").arg(get_child_from_db1.value(1).toInt(0), 7, 10, QChar('0')) << get_child_from_db1.value(0).toString();
         additemtotree(position, tmpStringList, set);
@@ -399,10 +401,22 @@ int s_ntmodel::BuildTree(QString id, bool twodb)
     if (twodb)
     {
         res = addTreeSlvItem(position, id); // добавляем таблицу из подчинённой таблицы
-        if (res)
+        if (!res)
+            HaveChildren = true;
+        else if (res != -1) // если не нет потомков, а просто ошибка
             return 0x17 + res+ER_NTMODEL;
     }
     position--; // после добавления всех детишек уровень понижается
+    if (HaveChildren);
+    else // не имеет потомков
+    {
+        s_ntitem *item = parents.last()->child(parents.last()->childCount()-1); // текущий элемент
+        for (int i=0; i<item->columnCount(); i++)
+        {
+            item->setColor(i, colors[6]);
+            item->setFont(i, fonts[6]);
+        }
+    }
     return 0;
 }
 
@@ -415,6 +429,7 @@ int s_ntmodel::addTreeSlvItem(int position, QString id)
     int i;
     QString tmpString;
     QStringList tmpStringlist;
+    bool HaveChildren = false;
 
     tmpStringlist = slvtble.split(".");
     // считываем все данные из таблицы
@@ -428,13 +443,17 @@ int s_ntmodel::addTreeSlvItem(int position, QString id)
 
     while (get_child_from_db2.next())
     {
+        HaveChildren = true;
         tmpStringlist.clear();
         for (i = 0; i < slvtblefields.size(); i++)
             tmpStringlist << tfl.idtov(slvtblelinks.at(i), get_child_from_db2.value(i).toString()); // установка элемента дерева в соответствии с links
         tmpStringlist.replace(0,QString("%1").arg(tmpStringlist.value(0).toInt(0), 7, 10, QChar('0')));
         additemtotree(position, tmpStringlist, 0);
     }
-    return 0;
+    if (HaveChildren)
+        return 0;
+    else
+        return -1;
 }
 
 void s_ntmodel::additemtotree(int position, QStringList sl, int set)

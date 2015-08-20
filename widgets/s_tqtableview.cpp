@@ -31,5 +31,6 @@ QVariant s_tqTableView::getAData()
 
 void s_tqTableView::dataChanged()
 {
+    emit datachanged();
     resizeColumnsToContents();
 }

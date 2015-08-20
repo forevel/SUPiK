@@ -31,7 +31,7 @@ private slots:
 
 private:
     bool MainTVIsTree, SlaveTVIsTree, IsQuarantine;
-    bool firstShow;
+    bool firstShow, twodb;
     QSqlDatabase db;
     QString tble,slvtble;
     int SlaveTVAccess;

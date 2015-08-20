@@ -12,6 +12,7 @@ public:
     void setAData(QVariant dat);
 
 signals:
+    void datachanged();
 
 protected slots:
     void dataChanged();

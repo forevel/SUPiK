@@ -257,9 +257,9 @@ void dir_adddialog::WriteAndClose()
     }
     if (IsDir)
     {
-        QString tmple = dirNameLE->text();
+        QString tmple = dirAliasLE->text();
         tmple.append("_полн");
-        dirNameLE->setText(tmple);
+        dirAliasLE->setText(tmple);
     }
     dirB = this->findChild<s_tqComboBox *>("dirBelong");
     if (dirB == 0)
@@ -318,11 +318,15 @@ void dir_adddialog::WriteAndClose()
     tble = "dirlist";
     if (IsDir)
     {
+        QString tmpdir = dirAliasLE->text();
+        int diridx = tmpdir.indexOf("_полн");
+        if (diridx != -1)
+            tmpdir.chop(5);
         fl.clear();
         vl.clear();
         fl << "dirlist" << "access" << "deleted";
-        vl << dirAliasLE->text() << dirAccessLE->text() << "0";
-        tmpString = sqlc.getvaluefromtablebyfield(db, tble, "dirlist", "dirlist", dirAliasLE->text());
+        vl << tmpdir << dirAccessLE->text() << "0";
+        tmpString = sqlc.getvaluefromtablebyfield(db, tble, "dirlist", "dirlist", tmpdir);
         if (tmpString.isEmpty())
         {
             tmpString = sqlc.insertvaluestotable(db, tble, fl, vl);
@@ -334,7 +338,7 @@ void dir_adddialog::WriteAndClose()
         }
         else
         {
-            tmpString = sqlc.updatevaluesintable(db, tble, fl, vl, "dirlist", dirAliasLE->text());
+            tmpString = sqlc.updatevaluesintable(db, tble, fl, vl, "dirlist", tmpdir);
             if (sqlc.result)
             {
                 emit error(ER_DIRADD+sqlc.result,0x19);
@@ -700,7 +704,7 @@ void dir_adddialog::fillFields()
             tmpdir.chop(5);
         dirAliasLE->setText(tmpdir);
         QStringList fields = QStringList() << "Права доступа";
-        QStringList values = tfl.valuesbyfield(dirtype+"_полн",fields,"Наименование",dir);
+        QStringList values = tfl.valuesbyfield(dirtype+"_полн",fields,"Наименование",tmpdir);
         if (tfl.result)
         {
             emit error(ER_DIRADD+0x01,0x88);
@@ -938,6 +942,7 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
     hlyout->setAlignment(lbl,Qt::AlignRight);
     stcb = new s_tqComboBox;
     stcb->setObjectName("fwspecialcb2");
+    stcb->setAData(FW_SPECIAL);
     hlyout->addWidget(stcb);
     vlyout->addLayout(hlyout);
     wdgts[11]->setLayout(vlyout);
@@ -1205,6 +1210,7 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
             tcb = this->findChild<s_tqComboBox *>("fwspecialcb2");
             if (tcb == 0)
                 return;
+            TbleChoosed(links.at(3),tcb);
             tcb->setCurrentText(links.at(4));
         }
         break;

@@ -30,6 +30,7 @@ dir_maindialog::dir_maindialog(QString tble, QWidget *parent) :
     MainTVIsTree = false;
     SlaveTVIsTree = false;
     IsQuarantine = false;
+    twodb = false;
     SetupUI();
 }
 
@@ -175,9 +176,15 @@ void dir_maindialog::ShowSlaveTree(QString str)
         if (values.at(2).toUInt(0,16) & pc.access)
         {
             if (!values.at(1).isEmpty()) // есть родительские категории у справочника
+            {
+                twodb = true;
                 res = SlaveTreeModel->Setup(values.at(1)+"_сокращ",values.at(0)+"_сокращ");
+            }
             else
+            {
+                twodb = false;
                 res = SlaveTreeModel->Setup(values.at(0) + "_сокращ");
+            }
             if (res == ER_NTMODEL) // это не дерево
             {
                 SlaveTableModel->setup(values.at(0) + "_сокращ");
@@ -272,8 +279,18 @@ void dir_maindialog::EditItem(QModelIndex index)
             return;
         }
         s_ntmodel *mdl = static_cast<s_ntmodel *>(SlaveTV->model());
-        if (mdl->data(index,Qt::ForegroundRole).value<QColor>() != mdl->colors[0])
-            return; // для родителей запрещено иметь дополнительные поля
+        if (twodb) // если имеем дело с двумя таблицами
+        {
+            if ((mdl->data(index,Qt::ForegroundRole).value<QColor>() != mdl->colors[0]) || \
+                    (mdl->data(index,Qt::FontRole).value<QFont>() != mdl->fonts[0]))
+                return; // для родителей запрещено иметь дополнительные поля
+        }
+        else
+        {
+            if ((mdl->data(index,Qt::ForegroundRole).value<QColor>() == mdl->colors[4]) && \
+                    (mdl->data(index,Qt::FontRole).value<QFont>() == mdl->fonts[4]))
+                return; // для родителей запрещено иметь дополнительные поля
+        }
     }
     QString tmpString = getSlaveIndex(0);
     if (!tmpString.isEmpty())
@@ -296,11 +313,19 @@ void dir_maindialog::EditItem(QString str)
         emit error(ER_DIRMAIN+newdialog->result,0x52);
     else
         newdialog->exec();
+    ShowSlaveTree(slvtble);
 }
 
 void dir_maindialog::AddNew()
 {
     QString newID = tfl.insert(slvtble+"_полн");
+    QString tmpString = getSlaveIndex(0);
+    if (!tmpString.isEmpty())
+    {
+        QStringList fl = QStringList() << "ИД" << "ИД_а";
+        QStringList vl = QStringList() << newID << tmpString;
+        tfl.idtois(slvtble+"_полн",fl,vl);
+    }
     EditItem(newID);
 }
 

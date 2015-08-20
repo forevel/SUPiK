@@ -667,7 +667,6 @@ int s_ncmodel::setupraw(QString db, QString tble, QStringList fl, QString orderf
 {
     result = 0;
     ClearModel();
-//    QList<QStringList> lsl;
     DataToWrite.clear();
     QList<int> il;
     if (fl.isEmpty())
@@ -684,7 +683,14 @@ int s_ncmodel::setupraw(QString db, QString tble, QStringList fl, QString orderf
         DataToWrite.append(tmpsl);
         addColumn(fl.at(i));
         il << tmpsl.size();
-        setcolumnlinks(i, "7.8");
+    }
+    prepareModel(il);
+    for (int i=0; i<fl.size(); i++)
+    {
+        if (hdr.at(i) == "id")
+            setcolumnlinks(i, "4.19..7");
+        else
+            setcolumnlinks(i, "7.8");
     }
     fillModel();
     return 0;
@@ -702,4 +708,15 @@ void s_ncmodel::ClearModel()
     isEditable = false;
     rcount = 0;
     endResetModel();
+}
+
+QModelIndexList s_ncmodel::match(QString text)
+{
+    QModelIndexList mdlidxl;
+    for (int i=0; i<maindata.size(); i++)
+    {
+        if (maindata.at(i)->data(0).contains(text))
+            mdlidxl.append(index(i,0,QModelIndex()));
+    }
+    return mdlidxl;
 }

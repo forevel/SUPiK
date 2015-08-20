@@ -6,6 +6,7 @@
 #include <QColor>
 #include <QFont>
 #include <QIcon>
+#include <QModelIndexList>
 
 
 #include "s_ncitem.h"
@@ -32,6 +33,7 @@ public:
     bool removeColumns(int position, int columns, const QModelIndex &index = QModelIndex());
     bool insertRows(int position, int rows, const QModelIndex &index = QModelIndex());
     bool removeRows(int position, int rows, const QModelIndex &index = QModelIndex());
+    QModelIndexList match(QString text);
     int getHeaderPosition(QVariant hdrtext, Qt::Orientation orientation, int role); // получение индекса элемента в заголовке, который содержит текст hdrtext
     void addColumn(const QString hdrtext); // добавление новой колонки с текстом в заголовке hdrtext
     void AddColumns(QStringList hdrs); // добавление новых колонок с текстом из hdrs

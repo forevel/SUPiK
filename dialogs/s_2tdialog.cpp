@@ -98,7 +98,7 @@ void s_2tdialog::Setup(QStringList links, QString cursel, QString hdr)
         return;
     }
     QStringList tmpsl = tfl.tablefields(links.at(0),links.at(1));
-    tblename = links.at(0)+"_полн"; // имя таблицы на русском (Компоненты_описание_полн)
+    tblename = links.at(0); // имя таблицы на русском (Компоненты_описание_полн)
     tblefield = links.at(1); // имя поля на русском (Описание)
     tablefield = tmpsl.at(1); // сохраняем имя колонки для последующего использования (descriptionfull)
     MainTV->setModel(mainmodel);
@@ -266,7 +266,8 @@ void s_2tdialog::SetSlaveTvCurrentText(QString text)
         return;
     if (text.isEmpty())
         return;
-    QList<QModelIndex> item = tv->model()->match(tv->model()->index(0, 0), Qt::DisplayRole, QVariant::fromValue(text), 1, Qt::MatchRecursive);
+    s_ncmodel *mdl = static_cast<s_ncmodel *>(tv->model());
+    QList<QModelIndex> item = mdl->match(text);
     if (!item.isEmpty())
         tv->setCurrentIndex(item.at(0));
 }

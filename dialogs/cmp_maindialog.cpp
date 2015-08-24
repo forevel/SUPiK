@@ -136,7 +136,7 @@ void cmp_maindialog::SetupUI(int CompType, int CompTable, int CompID)
     case CTYPE_ALT:
     {
         SetAltDialog();
-        fl << "Library Ref" << "Library Path" << "Footprint Ref" << "Footprint Path" << "Sim Description" << "Sim File" << \
+        fl << "Library Ref" << "Footprint Ref" << "Sim Description" << "Sim File" << \
               "Sim Model Name" << "Sim Parameters" << "Manufacturer" << "PartNumber" << "Package" << "Marking" << "NominalValue" << \
               "NominalVoltage" << "Tolerance" << "OpTemperaturen" << "OpTemperaturem" << "Pmax" << "TC" << "Comment" << "HelpURL" << \
               "RevNotes" << "Discontinued" << "Description" << "Notes" << "Modify Date" << "Creator" << "prefix" << "isSMD" << \
@@ -200,8 +200,8 @@ void cmp_maindialog::SetAltDialog()
     s_tqPushButton *pb = new s_tqPushButton(QString("Добавить"));
     connect(pb,SIGNAL(clicked()),this,SLOT(AddManuf()));
     glyout->addWidget(pb,1,2,1,1);
-    glyout->setColumnStretch(0, 20);
-    glyout->setColumnStretch(1, 80);
+    glyout->setColumnStretch(0, 0);
+    glyout->setColumnStretch(1, 1);
     gb->setLayout(glyout);
     lyout->addWidget(gb);
 
@@ -249,8 +249,8 @@ void cmp_maindialog::SetAltDialog()
     le = new s_tqLineEdit;
     le->setObjectName("pe3notes");
     glyout->addWidget(le,1,1,1,1);
-    glyout->setColumnStretch(0,30);
-    glyout->setColumnStretch(1,70);
+    glyout->setColumnStretch(0,0);
+    glyout->setColumnStretch(1,1);
     gb->setLayout(glyout);
     lyout->addWidget(gb);
 
@@ -297,6 +297,7 @@ void cmp_maindialog::SetAltDialog()
 
     gb->setLayout(glyout);
     lyout->addWidget(gb);
+    lyout->addStretch(1);
     cp->setLayout(lyout);
 
     lyout = new QVBoxLayout;
@@ -368,6 +369,7 @@ void cmp_maindialog::SetAltDialog()
     glyout->addWidget(le,3,1,1,1);
     gb->setLayout(glyout);
     lyout->addWidget(gb);
+    lyout->addStretch(1);
         //    connect (ManufCB, SIGNAL(currentIndexChanged(QString)), this, SLOT(SetSomethingChanged()));
         //    connect (PartNumberLE, SIGNAL(textChanged(QString)), this, SLOT(SetSomethingChanged()));
         //    connect (Par1LE, SIGNAL(textChanged(QString)), this, SLOT(SetSomethingChanged()));
@@ -379,7 +381,47 @@ void cmp_maindialog::SetAltDialog()
 
 void cmp_maindialog::FillAltDialog(QStringList vl)
 {
+    SetCWData("libref",vl.at(0));
+    SetCWData("footref",vl.at(1));
+    SetLEData("mdldescle",vl.at(2));
+    SetCWData("mdlfilecw",vl.at(3));
+    SetLEData("mdlnamele",vl.at(4));
+    SetLEData("mdlparsle",vl.at(5));
+    SetCWData("manufacturer",vl.at(6));
+    SetLEData("partnumber",vl.at(7));
+    SetLEData("packagele",vl.at(8));
+    SetLEData("markingle",vl.at(9));
+    SetLEData("par1le",vl.at(10));
+    SetLEData("par2le",vl.at(11));
+    SetLEData("accuracyle",vl.at(12));
+    SetLEData("mintemple",vl.at(13));
+    SetLEData("maxtemple",vl.at(14));
+    SetLEData("maxpowerle",vl.at(15));
+    SetLEData("tkcle",vl.at(16));
+    SetLEData("par3le",vl.at(17));
+    SetCWData("dsheetcw",vl.at(18));
+    SetChBData("isactivechb",vl.at(19));
+}
 
+void cmp_maindialog::SetCWData(QString cwname, QVariant data)
+{
+    s_tqChooseWidget *cw = this->findChild<s_tqChooseWidget *>(cwname);
+    if (cw != 0)
+        cw->SetData(data);
+}
+
+void cmp_maindialog::SetLEData(QString lename, QVariant data)
+{
+    s_tqLineEdit *le = this->findChild<s_tqLineEdit *>(lename);
+    if (le != 0)
+        le->setText(data.toString());
+}
+
+void cmp_maindialog::SetChBData(QString chbname, QVariant data)
+{
+    s_tqCheckBox *chb = this->findChild<s_tqCheckBox *>(chbname);
+    if (chb != 0)
+        chb->setChecked(data.toBool());
 }
 
 void cmp_maindialog::AddManuf()

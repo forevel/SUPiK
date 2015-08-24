@@ -30,6 +30,9 @@ private:
 
     void SetAltDialog();
     void FillAltDialog(QStringList);
+    void SetCWData(QString cwname, QVariant data);
+    void SetLEData(QString lename, QVariant data);
+    void SetChBData(QString chbname, QVariant data);
 
 protected:
     void paintEvent(QPaintEvent *);

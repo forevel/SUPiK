@@ -25,7 +25,6 @@ public:
     bool SomethingChanged;
 
     void SetupUI();
-    void FillNullDialog ();
     void FillDialog (QString);
     void ClearDialog ();
 
@@ -70,8 +69,6 @@ private:
     bool ConnectPartNumber();
     bool DisconnectPartNumber ();
     void UpdateManufCombobox ();
-    void UpdateUnitsCombobox();
-    void GetNextId ();
     void SetParNames();
 };
 

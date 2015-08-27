@@ -17,6 +17,8 @@ public:
     QVariant Data();
     QVariant getAData();
     void setAData(QVariant dat);
+    void SetValue(QVariant data); // установить значение поля ввода в зависимости от links
+    QVariant Value(); // выдать значение в соответствии с содержимым поля ввода и links
 
     int result;
 signals:
@@ -27,7 +29,7 @@ public slots:
 
 private:
     QVariant adata;
-    QString hdr;
+    QString hdr, links;
     PublicClass::fieldformat ff;
     bool Transparent;
     QWidget *parent;

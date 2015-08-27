@@ -56,6 +56,19 @@ cmp_maindialog::cmp_maindialog(QWidget *parent) : QDialog(parent)
     le->setObjectName("id");
     hlyout->addWidget(le,4);
     lyout->addLayout(hlyout);
+
+    hlyout = new QHBoxLayout;
+    lbl = new s_tqLabel("Создано (изменено) ");
+    hlyout->addWidget(lbl);
+    le = new s_tqLineEdit;
+    le->setEnabled(false);
+    le->setObjectName("modifydatele");
+    hlyout->addWidget(le);
+    le = new s_tqLineEdit;
+    le->setEnabled(false);
+    le->setObjectName("creatorle");
+    hlyout->addWidget(le);
+
     QTabWidget *ctw = new QTabWidget;
     ctw->setStyleSheet("QTabWidget::pane {background-color: rgba(0,0,0,0); border: 1px solid gray; border-radius: 5px;}"\
                        "QTabWidget::tab {background-color: rgba(0,0,0,0); border: 1px solid gray; border-radius: 5px;}");
@@ -377,6 +390,77 @@ void cmp_maindialog::SetAltDialog()
         //    connect (isNeedToAccVoltageInNameCB, SIGNAL(clicked()), this, SLOT(VoltageOrAccuracyAccIsChecked()));
 
     cp2->setLayout(lyout);
+
+    SetUnitsAndPars();
+    //    int i;
+
+    //    CompUnitsModel->setStringList(pc.KList);
+
+    /*    for (i = 0; i < NUM_LISTS; i++)
+        {
+            if (SectionLE->text() == pc.unitlist[i].section)
+                CompUnitsModel->setStringList(*(pc.unitlist[i].list));
+        } */
+
+    //    UnitsCB->setModel(CompUnitsModel);
+    //    UnitsCB->setCurrentIndex(0);
+}
+
+// установить для данного CompType требуемые наименования параметров в par<i>lbl и единицы измерения этих параметров в par<i>cb
+
+void cmp_maindialog::SetUnitsAndPars()
+{
+    s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("subsection");
+    if (le == 0)
+    {
+        emit error(ER_CMPMAIN,0x03);
+        return;
+    }
+    QString SubSection = le->text(); // взяли описание подраздела ("Конденсаторы")
+    // теперь надо взять все par<i>name и par<i>unitset из ent.parameters, где parameters=SubSection
+    QStringList fl;
+    for (int i=1; i<6; i++)
+        fl << "par"+QString::number(i)+"name" << "par"+QString::number(i)+"unitset";
+    QStringList vl = sqlc.getvaluesfromtablebyfield(sqlc.getdb("ent"),"parameters",fl,"parameters",SubSection);
+    if (sqlc.result)
+        return;
+    // распихиваем взятые данные по соответствующим виджетам
+    for (int i=0; i<5; i++)
+    {
+        if (i < vl.size())
+        {
+            if (!vl.at(i*2).isEmpty()) // если параметр есть
+            {
+                s_tqLabel *lbl = this->findChild<s_tqLabel *>("par"+QString::number(i)+"lbl");
+                if (lbl == 0)
+                    return;
+                lbl->setText(vl.at(i*2));
+                QStringListModel *cbmdl = new QStringListModel;
+                QStringList cbfl = tfl.htovlc("Единицы измерения_сокращ", "Наименование", "ИД_а", vl.at(i*2+1));
+                cbmdl->setStringList(cbfl);
+                s_tqComboBox *cb = this->findChild<s_tqComboBox *>("par"+QString::number(i)+"cb");
+                if (cb == 0)
+                    return;
+                cb->setModel(cbmdl);
+                cb->setCurrentIndex(0);
+            }
+            else
+            {
+                s_tqLabel *lbl = this->findChild<s_tqLabel *>("par"+QString::number(i)+"lbl");
+                if (lbl != 0)
+                    lbl->setVisible(false);
+                s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("par"+QString::number(i)+"le");
+                if (le != 0)
+                    le->setVisible(false);
+                s_tqCheckBox *chb = this->findChild<s_tqCheckBox *>("par"+QString::number(i)+"chb");
+                if (chb != 0)
+                    chb->setVisible(false);
+                s_tqComboBox *cb = this->findChild<s_tqComboBox *>("par"+QString::number(i)+"cb");
+                if (cb != 0)
+                    cb->setVisible(false);
+            }
+        }
+    }
 }
 
 void cmp_maindialog::FillAltDialog(QStringList vl)
@@ -391,16 +475,21 @@ void cmp_maindialog::FillAltDialog(QStringList vl)
     SetLEData("partnumber",vl.at(7));
     SetLEData("packagele",vl.at(8));
     SetLEData("markingle",vl.at(9));
-    SetLEData("par1le",vl.at(10));
-    SetLEData("par2le",vl.at(11));
+    SetLEData("par0le",vl.at(10));
+    SetLEData("par1le",vl.at(11));
     SetLEData("accuracyle",vl.at(12));
     SetLEData("mintemple",vl.at(13));
     SetLEData("maxtemple",vl.at(14));
     SetLEData("maxpowerle",vl.at(15));
     SetLEData("tkcle",vl.at(16));
-    SetLEData("par3le",vl.at(17));
+    SetLEData("par2le",vl.at(17));
     SetCWData("dsheetcw",vl.at(18));
     SetChBData("isactivechb",vl.at(19));
+    SetLEData("pe3name",vl.at(20));
+    SetLEData("pe3notes",vl.at(21));
+    SetLEData("modifydatale",vl.at(22));
+    QString Pers;
+//    SetLEData("");
 }
 
 void cmp_maindialog::SetCWData(QString cwname, QVariant data)

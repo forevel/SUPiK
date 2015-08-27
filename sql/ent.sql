@@ -170,6 +170,7 @@ CREATE TABLE `contractors` (
   `corracc` varchar(45) DEFAULT NULL,
   `deleted` int(1) DEFAULT '0',
   `idpers` varchar(128) DEFAULT NULL,
+  `date` varchar(45) DEFAULT NULL,
   PRIMARY KEY (`idcontractors`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -180,7 +181,7 @@ CREATE TABLE `contractors` (
 
 LOCK TABLES `contractors` WRITE;
 /*!40000 ALTER TABLE `contractors` DISABLE KEYS */;
-INSERT INTO `contractors` VALUES (1,'Наименование','Страна','Индекс','Город','Адрес','Телефон','Менеджер','Телефон менеджера','ИНН','КПП','Расч. счёт','Банк','БИК','Корр. счёт',0,NULL),(2,'Наименование','Страна','Индекс','Город','Адрес','Телефон общий','ФИО менеджера','Телефон менеджера','ИНН','КПП','Расч. счёт','Банк с основным счётом','БИК','Корр. счёт',0,NULL),(3,'ООО АСУ-ВЭИ','Россия','111024','Москва','2-я Кабельная ул., д. 2','+74957858826','Афанасьев А.Д.','+74957858826','7722017180','772201001','40702810738120102490','Московский банк Сбербанка России ОАО  г. Моск','044525225','30101810400000000225',0,NULL);
+INSERT INTO `contractors` VALUES (3,'ООО АСУ-ВЭИ','Россия','111024','Москва','2-я Кабельная ул., д. 2','+74957858826','Афанасьев А.Д.','+74957858826','7722017180','772201001','40702810738120102490','Московский банк Сбербанка России ОАО  г. Моск','044525225','30101810400000000225',0,'2001','27/08/2015 21:43:55');
 /*!40000 ALTER TABLE `contractors` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -776,4 +777,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-08-20 22:04:52
+-- Dump completed on 2015-08-27 21:54:25

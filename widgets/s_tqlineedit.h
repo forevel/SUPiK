@@ -20,6 +20,7 @@ public:
 
 signals:
     void textChanged(const QString &, s_tqLineEdit *ptr);
+    void editingFinished(const QString &);
 
 public slots:
 
@@ -28,6 +29,7 @@ private:
 
 private slots:
     void changetext(const QString &);
+    void emiteditingfinished();
 
 protected:
 //    QSize sizeHint() const;

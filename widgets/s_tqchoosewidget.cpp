@@ -33,6 +33,7 @@ s_tqChooseWidget::s_tqChooseWidget(bool Transparent, QWidget *parent) :
 
 void s_tqChooseWidget::Setup(QString links, QString hdr)
 {
+    this->links = links;
     ff = pc.getFFfromLinks(links);
     this->hdr = hdr;
 
@@ -259,6 +260,11 @@ void s_tqChooseWidget::accepted(QString str)
     emit textchanged(QVariant(tmpString));
 }
 
+void s_tqChooseWidget::SetValue(QVariant data)
+{
+    SetData(tfl.idtov(links, data.toString()));
+}
+
 void s_tqChooseWidget::SetData(QVariant data)
 {
     switch (ff.delegate)
@@ -309,6 +315,12 @@ void s_tqChooseWidget::SetData(QVariant data)
     default:
         break;
     }
+}
+
+QVariant s_tqChooseWidget::Value()
+{
+    QVariant RetData = Data();
+    return tfl.vtoid(links, RetData.toString());
 }
 
 QVariant s_tqChooseWidget::Data()

@@ -77,7 +77,7 @@ void dir_adddialog::setupUI()
     le = new s_tqLineEdit;
     le->setObjectName("dirAlias");
     connect(le, SIGNAL(editingFinished()), this, SLOT(transliteDirName()));
-    dlg1Layout->addWidget(le, 0, 1, 1, 2);
+    dlg1Layout->addWidget(le, 0, 1);
     lbl = new s_tqLabel("Количество полей");
     spb = new s_tqSpinBox;
     spb->setObjectName("dirFieldNum");
@@ -87,7 +87,7 @@ void dir_adddialog::setupUI()
     spb->setDecimals(0);
     connect(spb, SIGNAL(valueChanged(double)), this, SLOT(updateTWFields(double)));
     dlg1Layout->addWidget(lbl, 1, 0);
-    dlg1Layout->addWidget(spb, 1, 1, 1, 2);
+    dlg1Layout->addWidget(spb, 1, 1);
     lbl = new s_tqLabel("Тип справочника");
     cb = new s_tqComboBox;
     cb->setObjectName("dirBelong");
@@ -116,33 +116,29 @@ void dir_adddialog::setupUI()
     tmpSLM->setStringList(tmpSL);
     cb->setModel(tmpSLM);
     dlg1Layout->addWidget(lbl, 2, 0);
-    dlg1Layout->addWidget(cb, 2, 1, 1, 2);
+    dlg1Layout->addWidget(cb, 2, 1);
     lbl = new s_tqLabel("Права доступа");
-    le = new s_tqLineEdit;
-    le->setEnabled(false);
-    le->setObjectName("dirAccess");
-    pb = new s_tqPushButton("...");
+    s_tqChooseWidget *cw = new s_tqChooseWidget;
+    cw->Setup("2.9");
+    cw->setObjectName("dirAccess");
     if (pc.access & ACC_SYS_WR) // если есть права на изменение системных вещей
-        pb->setEnabled(true);
+        cw->setEnabled(true);
     else
-        pb->setEnabled(false);
+        cw->setEnabled(false);
     if (IsDir);
     else
     {
-        pb->setEnabled(false);
-        le->setEnabled(false);
-        le->setText("узч");
+        cw->setEnabled(false);
+        cw->SetData("узч");
     }
-    connect(pb, SIGNAL(clicked()), this, SLOT(setAccessRights()));
     dlg1Layout->addWidget(lbl, 3, 0);
-    dlg1Layout->addWidget(le, 3, 1);
-    dlg1Layout->addWidget(pb, 3, 2);
+    dlg1Layout->addWidget(cw, 3, 1);
     lbl = new s_tqLabel("Имя таблицы в БД (необязательно)");
     le = new s_tqLineEdit;
     le->setObjectName("dirname");
-    connect(le,SIGNAL(textChanged(QString)),this,SLOT(TbleNameChanged(QString)));
+    connect(le,SIGNAL(editingFinished(QString)),this,SLOT(TbleNameChanged(QString)));
     dlg1Layout->addWidget(lbl, 4, 0);
-    dlg1Layout->addWidget(le, 4, 1, 1, 2);
+    dlg1Layout->addWidget(le, 4, 1);
     dlg1Layout->setColumnStretch(0, 10);
     dlg1Layout->setColumnStretch(1, 90);
     dlg1Layout->setColumnStretch(2, 0);
@@ -153,6 +149,11 @@ void dir_adddialog::setupUI()
 
     QVBoxLayout *dlg2vlyout = new QVBoxLayout;
     QVBoxLayout *dlg3vlyout = new QVBoxLayout;
+/*    hlyout = new QHBoxLayout;
+    lbl = new s_tqLabel ("Учесть в кратком виде");
+    hlyout->addWidget(lbl);
+    hlyout->setAlignment(lbl, Qt::AlignRight);
+    dlg21lyout->addLayout(hlyout); */
     for (int i = 0; i < FSIZE; i++)
     {
         QList<QWidget *> wl;
@@ -185,6 +186,10 @@ void dir_adddialog::setupUI()
         adjustFieldSize(pb, 4);
         connect(pb, SIGNAL(clicked(s_tqPushButton*)), this, SLOT(FPBPressed(s_tqPushButton*)));
         wl << pb;
+        s_tqCheckBox *chb = new s_tqCheckBox;
+        chb->setObjectName("short"+QString::number(i));
+        chb->setToolTip("Учёт в кратком виде справочника");
+        wl << chb;
         if (i > FSIZE2)
             addLineToDlg(wl, *dlg3Layout, i-FSIZE2);
         else
@@ -198,6 +203,8 @@ void dir_adddialog::setupUI()
     dlg3vlyout->addLayout(dlg3Layout);
     dlg2vlyout->addStretch(200);
     dlg3vlyout->addStretch(200);
+//    dlg21lyout->addLayout(dlg2vlyout);
+//    dlg2->setLayout(dlg21lyout);
     dlg2->setLayout(dlg2vlyout);
     dlg3->setLayout(dlg3vlyout);
     mainTW->addTab(dlg2, "Поля 1");
@@ -205,21 +212,18 @@ void dir_adddialog::setupUI()
 
     mainTW->setObjectName("mainTW");
     lyout->addWidget(mainTW, 95);
+    hlyout = new QHBoxLayout;
     pb = new s_tqPushButton("Записать и закрыть");
     pb->setIcon(QIcon(":/res/icon_zap.png"));
-//    pb->setStyleSheet("QPushButton {background-color: rgb(153,204,102);}");
     connect(pb, SIGNAL(clicked()), this, SLOT(WriteAndClose()));
     hlyout->addWidget(pb);
     pb = new s_tqPushButton("Отмена");
     pb->setIcon(QIcon(":/res/cross.png"));
-//    pb->setStyleSheet("QPushButton {background-color: rgb(255,153,153);}");
     connect(pb, SIGNAL(clicked()), this, SLOT(CancelAndClose()));
     hlyout->addWidget(pb);
-//    hlyout->addStretch(300);
     lyout->addLayout(hlyout);
 
     setLayout(lyout);
-    setMinimumHeight(height()); // меньше не даём изменять, ибо некрасиво
     setMinimumWidth(width()+50);
     if (upd)
         fillFields();
@@ -235,8 +239,10 @@ void dir_adddialog::WriteAndClose()
 {
     int i;
     s_tqComboBox *cbfield,*dirB;
-    s_tqLineEdit *levalue,*lename,*dirNameLE,*dirAccessLE,*dirAliasLE;
+    s_tqLineEdit *levalue,*lename,*dirNameLE,*dirAliasLE;
     s_tqSpinBox *sb;
+    QString FullTblename, ShortTblename;
+    bool FullToWrite=true, ShortToWrite=true;
     dirNameLE = this->findChild<s_tqLineEdit *>("dirname");
     if (dirNameLE == 0)
     {
@@ -249,25 +255,27 @@ void dir_adddialog::WriteAndClose()
         emit error(ER_DIRADD,0x12);
         return;
     }
-    dirAccessLE = this->findChild<s_tqLineEdit *>("dirAccess");
-    if (dirAccessLE == 0)
+    s_tqChooseWidget *dirAccessCW = this->findChild<s_tqChooseWidget *>("dirAccess");
+    if (dirAccessCW == 0)
     {
         emit error(ER_DIRADD,0x13);
         return;
     }
     if (IsDir)
     {
-        QString tmple = dirAliasLE->text();
-        tmple.append("_полн");
-        dirAliasLE->setText(tmple);
+        QString tmps = dirAliasLE->text();
+        FullTblename = tmps+"_полн";
+        ShortTblename = tmps+"_сокращ";
     }
+    else
+        FullTblename = dirAliasLE->text();
     dirB = this->findChild<s_tqComboBox *>("dirBelong");
     if (dirB == 0)
     {
         emit error(ER_DIRADD,0x14);
         return;
     }
-    QString tmpString = sqlc.getvaluefromtablebyfield(sqlc.getdb("sup"), "tablefields", "header", "tablename", dirAliasLE->text());
+    QString tmpString = sqlc.getvaluefromtablebyfield(sqlc.getdb("sup"), "tablefields", "header", "tablename", FullTblename);
     if (sqlc.result == 2) // ошибка открытия таблицы
     {
         emit error(ER_DIRADD,0x15);
@@ -275,10 +283,29 @@ void dir_adddialog::WriteAndClose()
     }
     else if (!sqlc.result) // есть запись про таблицу
     {
-        if (QMessageBox::question(this, "Данные справочника существуют", "Перезаписать?", QMessageBox::Yes|QMessageBox::No,\
+        if (QMessageBox::question(this, "Данные полного справочника существуют", "Перезаписать?", QMessageBox::Yes|QMessageBox::No,\
                               QMessageBox::No) == QMessageBox::No)
-            return;
+            FullToWrite = false;
     }
+    if (IsDir)
+    {
+        tmpString = sqlc.getvaluefromtablebyfield(sqlc.getdb("sup"), "tablefields", "header", "tablename", ShortTblename); // ищем сокращённое описание справочника
+        if (sqlc.result == 2) // ошибка открытия таблицы
+        {
+            emit error(ER_DIRADD,0x1A);
+            return;
+        }
+        else if (!sqlc.result) // есть запись про таблицу
+        {
+            if (QMessageBox::question(this, "Данные сокращённого справочника существуют", "Перезаписать?", QMessageBox::Yes|QMessageBox::No,\
+                                  QMessageBox::No) == QMessageBox::No)
+                ShortToWrite = false;
+        }
+    }
+    else
+        ShortToWrite = false; // для редактирования справочника через систему его имя уже содержится в FullTblename с необходимым суффиксом
+    if (!ShortToWrite && !FullToWrite) // если везде ответили "нет", то выходим
+        return;
     sb = this->findChild<s_tqSpinBox *>("dirFieldNum");
     if (sb == 0)
     {
@@ -297,22 +324,64 @@ void dir_adddialog::WriteAndClose()
         levalue = this->findChild<s_tqLineEdit *>("value"+QString::number(i)+"LE");
         lename = this->findChild<s_tqLineEdit *>("name"+QString::number(i)+"LE");
         cbfield = this->findChild<s_tqComboBox *>("field"+QString::number(i)+"CB");
+        s_tqCheckBox *chb = this->findChild<s_tqCheckBox *>("short"+QString::number(i));
+        if ((levalue == 0) || (lename == 0) || (cbfield == 0) || (chb == 0))
+        {
+            emit error(ER_DIRADD, 0x17);
+            return;
+        }
         vl.clear();
         cmpvl.clear();
         tmpString = (lename->text() == "ИД") ? "v" : "";
         vl << cbfield->currentText() << tble+"."+dirNameLE->text() << tmpString << lename->text() << levalue->text();
         tmpString = QString("%1").arg(i, 2, 10, QChar('0'));
-        vl << tmpString << dirAliasLE->text() << pc.DateTime << "0" << QString::number(pc.idPers);
-        cmpvl << dirAliasLE->text() << cbfield->currentText();
-        QString id = sqlc.getvaluefromtablebyfields(sqlc.getdb("sup"), "tablefields", "idtablefields", cmpfl, cmpvl);
-        if (sqlc.result == 1) // нет такой записи
-            sqlc.insertvaluestotable(sqlc.getdb("sup"), "tablefields", fl, vl);
-        else
-            sqlc.updatevaluesintable(sqlc.getdb("sup"), "tablefields", fl, vl, "idtablefields", id);
-        if (sqlc.result)
+        vl << tmpString << FullTblename << pc.DateTime << "0" << QString::number(pc.idPers);
+        if (FullToWrite) // сначала пишем полный вариант
         {
-            emit error(ER_DIRADD+sqlc.result,0x17);
-            return;
+            cmpvl << FullTblename << cbfield->currentText();
+            QString id = sqlc.getvaluefromtablebyfields(sqlc.getdb("sup"), "tablefields", "idtablefields", cmpfl, cmpvl);
+            if (sqlc.result == 1) // нет такой записи
+                sqlc.insertvaluestotable(sqlc.getdb("sup"), "tablefields", fl, vl);
+            else
+                sqlc.updatevaluesintable(sqlc.getdb("sup"), "tablefields", fl, vl, "idtablefields", id);
+            if (sqlc.result)
+            {
+                emit error(ER_DIRADD+sqlc.result,0x17);
+                return;
+            }
+        }
+        if (ShortToWrite) // теперь пишем сокращённый вариант только в том случае, если установлена пометка
+        {
+            vl.replace(6, ShortTblename); // заменяем полное наименование на сокращённое
+            cmpvl = QStringList() << ShortTblename << cbfield->currentText();
+            QString id = sqlc.getvaluefromtablebyfields(sqlc.getdb("sup"), "tablefields", "idtablefields", cmpfl, cmpvl);
+            if (chb->isChecked())
+            {
+                if (sqlc.result == 1) // нет такой записи
+                    sqlc.insertvaluestotable(sqlc.getdb("sup"), "tablefields", fl, vl);
+                else
+                    sqlc.updatevaluesintable(sqlc.getdb("sup"), "tablefields", fl, vl, "idtablefields", id);
+                if (sqlc.result)
+                {
+                    emit error(ER_DIRADD+sqlc.result,0x18);
+                    return;
+                }
+            }
+            else
+            {
+                if (sqlc.result == 1); // нет такой записи, и хорошо
+                else // иначе надо её удалить
+                {
+                    int delidx = fl.indexOf("deleted");
+                    vl.replace(delidx, "1");
+                    sqlc.updatevaluesintable(sqlc.getdb("sup"), "tablefields", fl, vl, "idtablefields", id);
+                    if (sqlc.result)
+                    {
+                        emit error(ER_DIRADD+sqlc.result,0x18);
+                        return;
+                    }
+                }
+            }
         }
     }
     tble = "dirlist";
@@ -325,7 +394,7 @@ void dir_adddialog::WriteAndClose()
         fl.clear();
         vl.clear();
         fl << "dirlist" << "access" << "deleted";
-        vl << tmpdir << dirAccessLE->text() << "0";
+        vl << tmpdir << dirAccessCW->Value().toString() << "0";
         tmpString = sqlc.getvaluefromtablebyfield(db, tble, "dirlist", "dirlist", tmpdir);
         if (tmpString.isEmpty())
         {
@@ -417,6 +486,13 @@ void dir_adddialog::updateTWFields(double dfn)
             return;
         }
         pb->setVisible(true);
+        s_tqCheckBox *chb = this->findChild<s_tqCheckBox *>("short"+QString::number(i));
+        if (chb == 0)
+        {
+            emit error(ER_DIRADD,0x27);
+            return;
+        }
+        chb->setVisible(true);
         i++;
     }
     while (i < FSIZE)
@@ -470,6 +546,13 @@ void dir_adddialog::updateTWFields(double dfn)
             return;
         }
         pb->setVisible(false);
+        s_tqCheckBox *chb = this->findChild<s_tqCheckBox *>("short"+QString::number(i));
+        if (chb == 0)
+        {
+            emit error(ER_DIRADD,0x2F);
+            return;
+        }
+        chb->setVisible(false);
         i++;
     }
 }
@@ -644,7 +727,7 @@ void dir_adddialog::fillFields()
     s_tqComboBox *cbf;
     s_tqLineEdit *len;
     s_tqLineEdit *lev;
-    QList<QStringList> lsl;
+    QList<QStringList> lsl, lslshort;
     QStringList fl;
     fl << "table" << "tablefields" << "header" << "links";
     lsl = sqlc.getmorevaluesfromtablebyfield(pc.sup, "tablefields", fl, "tablename", dir, "fieldsorder", true);
@@ -652,6 +735,12 @@ void dir_adddialog::fillFields()
     {
         emit error(ER_DIRADD,0x81);
         return;
+    }
+    if (IsDir)
+    {
+        QString tmps = dir;
+        tmps.replace("_полн","_сокращ");
+        lslshort = sqlc.getmorevaluesfromtablebyfield(pc.sup, "tablefields", fl, "tablename", tmps, "fieldsorder", true);
     }
     if (lsl.size() == 0)
     {
@@ -676,8 +765,8 @@ void dir_adddialog::fillFields()
         emit error(ER_DIRADD,0x85);
         return;
     }
-    s_tqLineEdit *dirAccessLE = this->findChild<s_tqLineEdit *>("dirAccess");
-    if (dirAccessLE == 0)
+    s_tqChooseWidget *dirAccessCW = this->findChild<s_tqChooseWidget *>("dirAccess");
+    if (dirAccessCW == 0)
     {
         emit error(ER_DIRADD,0x86);
         return;
@@ -710,13 +799,14 @@ void dir_adddialog::fillFields()
             emit error(ER_DIRADD+0x01,0x88);
             return;
         }
-        dirAccessLE->setText(values.at(0));
-        dirAccessLE->setEnabled(true);
+        dirAccessCW->SetValue(values.at(0));
+        dirAccessCW->setEnabled(true);
     }
     else
         dirAliasLE->setText(dir);
     // для редактирования таблиц (не справочников) права не нужны, они по умолчанию системные
     sb->setValue(lsl.size());
+    TbleNameChanged(dirNameLE->text()); // принудительно имитируем изменение имени таблицы для заполнения комбобоксов
     for (int i = 0; i < lsl.size(); i++)
     {
         if (i > 16)
@@ -739,9 +829,37 @@ void dir_adddialog::fillFields()
             emit error(ER_DIRADD,0x8C);
             return;
         }
+        s_tqCheckBox *chb = this->findChild<s_tqCheckBox *>("short"+QString::number(i));
+        if (chb == 0)
+        {
+            emit error(ER_DIRADD, 0x8D);
+            return;
+        }
         cbf->setCurrentText(lsl.at(i).at(1));
         len->setText(lsl.at(i).at(2));
-        lev->setText(lsl.at(i).at(3));
+        QString tmps = lsl.at(i).at(3);
+        if (tmps.startsWith("1.6")) // если максированное поле, надо добавить обратных слешей
+        {
+            QStringList tmpsl = tmps.split(".");
+            if (tmpsl.size()>3) // может быть неправильная запись
+            {
+                QString tmps2 = tmpsl.at(3); // берём сам link
+                tmps2.insert(0, "\\");
+                if (tmps2.size()>2)
+                    tmps2.insert(tmps2.size()-1, "\\");
+                tmpsl.replace(3, tmps2);
+            }
+            tmps = tmpsl.join(".");
+        }
+        lev->setText(tmps);
+        for (int j=0; j<lslshort.size(); j++) // проверка наличия в сокращённой таблице такого же элемента, как и в полной
+        {
+            if (lslshort.at(j).at(2) == len->text())
+            {
+                chb->setChecked(true);
+                break;
+            }
+        }
     }
 }
 
@@ -1026,6 +1144,7 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
     hlyout->setAlignment(lbl,Qt::AlignRight);
     ValueEditLE = new s_tqLineEdit;
     ValueEditLE->setObjectName("fwmaskedle");
+    ValueEditLE->setToolTip("Пример: [0-9]{0,2}-[0-9]{0,9}");
     hlyout->addWidget(ValueEditLE);
     vlyout->addLayout(hlyout);
     wdgts[6]->setLayout(vlyout);
@@ -1283,12 +1402,19 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
     }
     case FW_MASKED:
     {
-        if (links.size()>4)
+        if (links.size()>3)
         {
             s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fwmaskedle");
             if (le == 0)
                 return;
-            le->setText(links.at(4));
+            QString tmps = links.at(3);
+            int begidx = tmps.indexOf("\\\"^");
+            if (begidx != -1)
+                tmps.remove(begidx, 3);
+            int endidx = tmps.indexOf("$\\\"");
+            if (endidx != -1)
+                tmps.remove(endidx, 3);
+            le->setText(tmps);
         }
         break;
     }
@@ -1482,7 +1608,9 @@ void dir_adddialog::ConstructLink()
             emit error(ER_DIRADD,0x69);
             return;
         }
+        links.append("\\\"^"); // в lineedit-е \", для БД кавычки надо ещё больше обрамить
         links.append(le->text());
+        links.append("$\\\"");
         break;
     }
     case FW_MAXLINK:

@@ -163,7 +163,6 @@ public:
     QDateTime CurDateTime;
     QByteArray data, symfind, footfind; // data - массив хранения считанных из файлов библиотек бинарных данных,
                                         // symfind и footfind - строки поиска в библиотеках "LIBREFERENCE=" и "PATTERN="
-//    QStringList CapList, ResList, IndList, NumList, VAList, WList, LedList, ProtList, VList, MemList, KList, OptoList, VelList; // 0.34-aj
     QStringList sysMessages;
     QStringList whMessages;
     QStringList altMessages;

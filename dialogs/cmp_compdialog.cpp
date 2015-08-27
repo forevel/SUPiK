@@ -245,57 +245,6 @@ void cmp_compdialog::AddNewItem()
     dlg->exec();
 }
 
-void cmp_compdialog::GetNextId()
-{
-/*    QSqlQuery get_next_id = QSqlQuery(pc.alt);
-    get_next_id.exec("SELECT MAX(id) FROM " + pc.dbs[pc.dbs_index].dbs + ";");
-    get_next_id.next();
-    pc.idRecord = get_next_id.value(0).toInt(0) + 1; */
-}
-
-// --------------------------------------
-// Заполняем элементы диалогового окна (комбо-боксы)
-// --------------------------------------
-
-void cmp_compdialog::FillNullDialog()
-{
-/*    QStringList tmpList;
-    QString tmpString;
-    int i = 0;
-
-    ClearDialog();
-
-    // заполняем библиотеки
-    tmpList = pc.dbs[pc.dbs_index].dbs.split("_", QString::KeepEmptyParts);
-
-    PathString = "";
-
-    tmpString = tmpList.last();
-    while ((tmpList.value(i, "") != "") && (tmpList.value(i, "") != tmpString))
-    {
-        PathString += "/";
-        PathString += tmpList.value(i++);
-    }
-
-    tmpString = pc.PathToLibs + "/Symbols" + PathString + "/" + pc.dbs[pc.dbs_index].dbs + ".SchLib";
-
-    LibRefModel->setStringList(GetListFromFile(tmpString, pc.symfind));
-    LibRefCB->setModel(LibRefModel);
-    LibRefCB->setCurrentIndex(0);
-
-    tmpString = pc.PathToLibs + "/Footprints/" + PathString + "/" + pc.dbs[pc.dbs_index].dbs + ".PcbLib";
-
-    SetParNames();
-    UpdateUnitsCombobox();
-    UpdateManufCombobox();
-
-    ManufCB->setCurrentIndex(0);
-
-    FootRefModel->setStringList(GetListFromFile(tmpString, pc.footfind));
-    FootPrintCB->setModel(FootRefModel);
-    FootPrintCB->setCurrentIndex(0); */
-}
-
 // --------------------------------------
 // Заполняем элементы диалогового окна (комбо-боксы) данными из БД
 // --------------------------------------
@@ -808,23 +757,6 @@ void cmp_compdialog::SetParNames()
 /*    QSqlQuery get_parnames(pc.sup);*/
 
 }
-
-void cmp_compdialog::UpdateUnitsCombobox()
-{
-//    int i;
-
-//    CompUnitsModel->setStringList(pc.KList);
-
-/*    for (i = 0; i < NUM_LISTS; i++)
-    {
-        if (SectionLE->text() == pc.unitlist[i].section)
-            CompUnitsModel->setStringList(*(pc.unitlist[i].list));
-    } */
-
-//    UnitsCB->setModel(CompUnitsModel);
-//    UnitsCB->setCurrentIndex(0);
-}
-
 
 bool cmp_compdialog::ConnectPartNumber()
 {

@@ -33,6 +33,7 @@ private:
     void SetCWData(QString cwname, QVariant data);
     void SetLEData(QString lename, QVariant data);
     void SetChBData(QString chbname, QVariant data);
+    void SetUnitsAndPars();
 
 protected:
     void paintEvent(QPaintEvent *);

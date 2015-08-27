@@ -8,6 +8,7 @@ s_tqLineEdit::s_tqLineEdit(QWidget *parent) :
 {
     setStyleSheet("QLineEdit {background-color: rgba(0,0,0,0); border: 1px solid gray; border-radius: 5px;}");
     connect(this, SIGNAL(textChanged(QString)), this, SLOT(changetext(QString)));
+    connect(this,SIGNAL(editingFinished()),this,SLOT(emiteditingfinished()));
 }
 
 s_tqLineEdit::s_tqLineEdit(QString txt, QWidget *parent) : QLineEdit(parent)
@@ -45,6 +46,11 @@ void s_tqLineEdit::changetext(const QString &str)
     this->resize(w, this->height());
     this->updateGeometry();
     emit textChanged(str, this);
+}
+
+void s_tqLineEdit::emiteditingfinished()
+{
+    emit editingFinished(this->text());
 }
 
 /*QSize s_tqLineEdit::sizeHint() const

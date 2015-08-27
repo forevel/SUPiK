@@ -7,6 +7,7 @@ s_MaskedLineEdit::s_MaskedLineEdit(QString regexp, QWidget *parent) :
     QLineEdit(parent)
 {
     QRegExp re;
+    regexp.remove("\"");
     re.setPattern(regexp);
     QValidator *val = new QRegExpValidator(re, this);
     setValidator(val);

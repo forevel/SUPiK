@@ -59,15 +59,17 @@ cmp_maindialog::cmp_maindialog(QWidget *parent) : QDialog(parent)
 
     hlyout = new QHBoxLayout;
     lbl = new s_tqLabel("Создано (изменено) ");
-    hlyout->addWidget(lbl);
-    le = new s_tqLineEdit;
-    le->setEnabled(false);
-    le->setObjectName("modifydatele");
-    hlyout->addWidget(le);
+    hlyout->addWidget(lbl,1);
     le = new s_tqLineEdit;
     le->setEnabled(false);
     le->setObjectName("creatorle");
-    hlyout->addWidget(le);
+    hlyout->addWidget(le,1);
+    le = new s_tqLineEdit;
+    le->setEnabled(false);
+    le->setObjectName("modifydatele");
+    hlyout->addWidget(le,1);
+    hlyout->addStretch(3);
+    lyout->addLayout(hlyout);
 
     QTabWidget *ctw = new QTabWidget;
     ctw->setStyleSheet("QTabWidget::pane {background-color: rgba(0,0,0,0); border: 1px solid gray; border-radius: 5px;}"\
@@ -198,6 +200,9 @@ void cmp_maindialog::SetAltDialog()
     }
     s_tqGroupBox *gb = new s_tqGroupBox;
     gb->setTitle("Компонент");
+    QFont font;
+    font.setBold(true);
+    gb->setFont(font);
     QGridLayout *glyout = new QGridLayout;
     s_tqLabel *lbl = new s_tqLabel("Наименование");
     glyout->addWidget(lbl,0,0,1,1);
@@ -220,6 +225,7 @@ void cmp_maindialog::SetAltDialog()
 
     gb = new s_tqGroupBox;
     gb->setTitle("Библиотеки");
+    gb->setFont(font);
     lbl = new s_tqLabel("УГО (символ)");
     glyout = new QGridLayout;
     glyout->addWidget(lbl,0,0,1,1);
@@ -252,6 +258,7 @@ void cmp_maindialog::SetAltDialog()
     gb=new s_tqGroupBox;
     glyout = new QGridLayout;
     gb->setTitle("Поля ПЭ3");
+    gb->setFont(font);
     lbl = new s_tqLabel("\"Наименование\"");
     glyout->addWidget(lbl,0,0,1,1);
     le = new s_tqLineEdit;
@@ -270,6 +277,7 @@ void cmp_maindialog::SetAltDialog()
     s_tqCheckBox *chb;
     s_tqComboBox *cb;
     gb=new s_tqGroupBox;
+    gb->setFont(font);
     glyout = new QGridLayout;
     gb->setTitle("Характеристики");
     for (int i=0; i<5; i++)
@@ -283,10 +291,6 @@ void cmp_maindialog::SetAltDialog()
         cb = new s_tqComboBox;
         cb->setObjectName("par"+QString::number(i)+"cb");
         glyout->addWidget(cb,i,2,1,1);
-        chb = new s_tqCheckBox;
-        chb->setText("Учёт в наименовании");
-        chb->setObjectName("par"+QString::number(i)+"chb");
-        glyout->addWidget(chb,i,3,1,1);
     }
     lbl = new s_tqLabel("Мин. раб. температура");
     glyout->addWidget(lbl,6,0,1,1);
@@ -303,11 +307,19 @@ void cmp_maindialog::SetAltDialog()
     le = new s_tqLineEdit;
     le->setObjectName("packagele");
     glyout->addWidget(le,8,1,1,3);
+    QHBoxLayout *hlyout = new QHBoxLayout;
     chb = new s_tqCheckBox;
     chb->setText("Компонент планарный (SMD)");
     chb->setObjectName("issmdchb");
-    glyout->addWidget(chb,9,1,1,3);
-
+    chb->setLayoutDirection(Qt::RightToLeft);
+    hlyout->addWidget(chb);
+    chb = new s_tqCheckBox;
+    chb->setText("Компонент выпускается");
+    chb->setObjectName("isactivechb");
+    chb->setLayoutDirection(Qt::RightToLeft);
+    hlyout->addWidget(chb);
+    glyout->addLayout(hlyout,9,0,1,4);
+    glyout->setColumnMinimumWidth(2, 60);
     gb->setLayout(glyout);
     lyout->addWidget(gb);
     lyout->addStretch(1);
@@ -316,6 +328,7 @@ void cmp_maindialog::SetAltDialog()
     lyout = new QVBoxLayout;
     gb = new s_tqGroupBox;
     gb->setTitle("Дополнительные параметры");
+    gb->setFont(font);
     glyout = new QGridLayout;
     lbl = new s_tqLabel("Точность");
     glyout->addWidget(lbl,0,0,1,1);
@@ -337,15 +350,12 @@ void cmp_maindialog::SetAltDialog()
     le = new s_tqLineEdit;
     le->setObjectName("markingle");
     glyout->addWidget(le,3,1,1,3);
-    chb = new s_tqCheckBox;
-    chb->setText("Компонент выпускается");
-    chb->setObjectName("isactivechb");
-    glyout->addWidget(chb,4,1,1,3);
     gb->setLayout(glyout);
     lyout->addWidget(gb);
 
     gb = new s_tqGroupBox;
     gb->setTitle("Описание компонента");
+    gb->setFont(font);
     glyout = new QGridLayout;
     lbl = new s_tqLabel("Файл описания компонента");
     glyout->addWidget(lbl,0,0,1,1);
@@ -358,6 +368,7 @@ void cmp_maindialog::SetAltDialog()
 
     gb = new s_tqGroupBox;
     gb->setTitle("Модель");
+    gb->setFont(font);
     glyout = new QGridLayout;
     lbl = new s_tqLabel("Файл описания модели");
     glyout->addWidget(lbl,0,0,1,1);
@@ -484,12 +495,22 @@ void cmp_maindialog::FillAltDialog(QStringList vl)
     SetLEData("tkcle",vl.at(16));
     SetLEData("par2le",vl.at(17));
     SetCWData("dsheetcw",vl.at(18));
-    SetChBData("isactivechb",vl.at(19));
-    SetLEData("pe3name",vl.at(20));
-    SetLEData("pe3notes",vl.at(21));
-    SetLEData("modifydatale",vl.at(22));
-    QString Pers;
-//    SetLEData("");
+    // RevNotes = 19
+    SetChBData("isactivechb",(vl.at(20) == "0")?"1":"0"); // текстовая инверсия
+    SetLEData("pe3name",vl.at(21));
+    SetLEData("pe3notes",vl.at(22));
+    QString ModifyDate = vl.at(23);
+    QDateTime MDate = QDateTime::fromString(ModifyDate, "yyyy-MM-ddThh:mm:ss");
+    ModifyDate = MDate.toString("dd-MM-yyyy hh:mm:ss");
+    SetLEData("modifydatele",ModifyDate);
+    QString Pers = sqlc.getvaluefromtablebyfield(sqlc.getdb("sup"),"personel","personel","idpersonel",vl.at(24));
+    SetLEData("creatorle",Pers);
+    // Prefix = 25
+    SetChBData("issmdchb",vl.at(26));
+    // Nominal = 27
+    // Unit = 28
+    SetLEData("par3le",vl.at(29));
+    SetLEData("par4le",vl.at(30));
 }
 
 void cmp_maindialog::SetCWData(QString cwname, QVariant data)

@@ -27,11 +27,12 @@ private slots:
     void EditDirDialog();
     void EditItem (QModelIndex index = QModelIndex());
     void DeleteData();
+    void DeleteDataUnconditional(QString id);
     void AddNew();
 
 private:
     bool MainTVIsTree, SlaveTVIsTree, IsQuarantine;
-    bool firstShow, twodb;
+    bool firstShow, twodb, isNewID;
     QSqlDatabase db;
     QString tble,slvtble;
     int SlaveTVAccess;

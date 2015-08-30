@@ -597,6 +597,8 @@ CREATE TABLE `ic_isolator` (
   `isSMD` tinyint(1) DEFAULT NULL,
   `Nominal` varchar(8) DEFAULT NULL,
   `Unit` int(11) DEFAULT NULL,
+  `par4` varchar(45) DEFAULT NULL,
+  `par5` varchar(45) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=6 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -607,7 +609,7 @@ CREATE TABLE `ic_isolator` (
 
 LOCK TABLES `ic_isolator` WRITE;
 /*!40000 ALTER TABLE `ic_isolator` DISABLE KEYS */;
-INSERT INTO `ic_isolator` VALUES (5,'ISO7640','\\\\Fserver\\pcad\\Altium\\Libs\\Symbols\\IC\\IC_Isolator.SchLib','Wide So-16','\\\\Fserver\\pcad\\Altium\\Libs\\Footprints\\IC\\IC_Isolator.PcbLib','','','','','Texas Instruments','ISO7640FM','SOIC16 DW','ISO7640FM',' 3/5V','','','-40','125','','',2010,'2014-07-15 13:52:42','','\\\\Fserver\\pcad\\Altium\\Libs\\DSheet\\IC\\Isolator\\iso7640fm.pdf',3,1,'Изолятор цифровой четырехканальный ISO7640FM','',0,'',1,'',0);
+INSERT INTO `ic_isolator` VALUES (5,'ISO7640','\\\\Fserver\\pcad\\Altium\\Libs\\Symbols\\IC\\IC_Isolator.SchLib','Wide So-16','\\\\Fserver\\pcad\\Altium\\Libs\\Footprints\\IC\\IC_Isolator.PcbLib','','','','','Texas Instruments','ISO7640FM','SOIC16 DW','ISO7640FM',' 3/5V','','','-40','125','','',2010,'2014-07-15 13:52:42','','\\\\Fserver\\pcad\\Altium\\Libs\\DSheet\\IC\\Isolator\\iso7640fm.pdf',3,0,'Изолятор цифровой четырехканальный ISO7640FM','',0,'',1,'',0,NULL,NULL);
 /*!40000 ALTER TABLE `ic_isolator` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2029,4 +2031,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-08-27 21:54:23
+-- Dump completed on 2015-08-30 22:32:00

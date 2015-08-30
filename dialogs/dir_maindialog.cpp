@@ -31,6 +31,7 @@ dir_maindialog::dir_maindialog(QString tble, QWidget *parent) :
     SlaveTVIsTree = false;
     IsQuarantine = false;
     twodb = false;
+    isNewID = false;
     SetupUI();
 }
 
@@ -308,7 +309,8 @@ void dir_maindialog::EditItem(QString str)
         return;
     }
     s_2cdialog *newdialog = new s_2cdialog(tble+":"+tmps);
-    newdialog->setup(tmps+"_полн",MODE_EDIT,str);
+    bool Mode = (isNewID) ? MODE_EDITNEW : MODE_EDIT;
+    newdialog->setup(tmps+"_полн",Mode,str);
     if (newdialog->result)
         emit error(ER_DIRMAIN+newdialog->result,0x52);
     else
@@ -318,15 +320,26 @@ void dir_maindialog::EditItem(QString str)
 
 void dir_maindialog::AddNew()
 {
+    isNewID = true;
     QString newID = tfl.insert(slvtble+"_полн");
     QString tmpString = getSlaveIndex(0);
+    QStringList fl, vl;
     if (!tmpString.isEmpty())
     {
-        QStringList fl = QStringList() << "ИД" << "ИД_а";
-        QStringList vl = QStringList() << newID << tmpString;
+        if (SlaveTVIsTree)
+        {
+            fl << "ИД" << "ИД_а";
+            vl << newID << tmpString;
+        }
+        else
+        {
+            fl << "ИД";
+            vl << newID;
+        }
         tfl.idtois(slvtble+"_полн",fl,vl);
     }
     EditItem(newID);
+    isNewID = false;
 }
 
 void dir_maindialog::DeleteData()
@@ -338,8 +351,12 @@ void dir_maindialog::DeleteData()
     int res = msgBox.exec();
     if (res == QMessageBox::Cancel)
         return;
-    QString tmpString = QString::number(getSlaveIndex(0).toLongLong(0,10));
-    tfl.remove(slvtble+"_полн", tmpString);
+    DeleteDataUnconditional(QString::number(getSlaveIndex(0).toLongLong(0,10)));
+}
+
+void dir_maindialog::DeleteDataUnconditional(QString id)
+{
+    tfl.remove(slvtble+"_полн", id);
     if (tfl.result)
     {
         emit error(ER_DIRMAIN+tfl.result, 0x61);

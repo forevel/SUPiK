@@ -6,8 +6,9 @@
 #include <QSortFilterProxyModel>
 #include "../models/s_ncmodel.h"
 
-#define MODE_CHOOSE 1
-#define MODE_EDIT   2
+#define MODE_CHOOSE     1
+#define MODE_EDIT       2
+#define MODE_EDITNEW    3
 
 #define CD_ERROR    0x0200
 

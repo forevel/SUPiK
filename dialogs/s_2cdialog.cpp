@@ -56,6 +56,7 @@ void s_2cdialog::setup(QString tble, int Mode, QString id, QString matchtext, bo
         break;
     }
     case MODE_EDIT:
+    case MODE_EDITNEW:
     {
         mainmodel->setup(tble, id);
         if (mainmodel->result)
@@ -261,7 +262,7 @@ void s_2cdialog::accepted()
     QString tmpString, oldtble, oldid, newid;
     tmpString.clear();
     int tmph;
-    if (Mode == MODE_EDIT) // для режима редактирования - запись в базу
+    if ((Mode == MODE_EDIT) || (Mode == MODE_EDITNEW)) // для режима редактирования - запись в базу
     {
         QStringList headers = mainmodel->cvalues(0);
         QStringList values = mainmodel->cvalues(1);
@@ -312,6 +313,8 @@ void s_2cdialog::accepted()
 
 void s_2cdialog::cancelled()
 {
+    if (Mode == MODE_EDITNEW) // для ввода нового - удалить из БД текущую запись
+    {
     this->close();
 }
 

@@ -36,6 +36,7 @@ public:
     int updatevaluesintable (QSqlDatabase db, QString tble, QStringList fl, QStringList vl, QString field, QString value);
     int checkdbforemptyfields (QSqlDatabase db, QString tble, QStringList fields, QStringList &probid);
     int deletefromdb (QSqlDatabase db, QString tble, QString field, QString value);
+    int RealDeleteFromDB (QSqlDatabase db, QString tble, QString field, QString value); // процедура реально удаляет строку, для которой field равно value
     int dropTable (QSqlDatabase db, QString tble);
     void prepareslsfortree(QStringList &sl1, QStringList &sl2);
     int createTable (QSqlDatabase db, QString tble, QStringList fl);

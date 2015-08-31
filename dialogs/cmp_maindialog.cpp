@@ -19,6 +19,7 @@
 #include "../gen/s_sql.h"
 #include "../gen/publicclass.h"
 #include "../gen/s_tablefields.h"
+#include "s_2cdialog.h"
 
 #include <QVBoxLayout>
 #include <QFont>
@@ -536,21 +537,13 @@ void cmp_maindialog::SetChBData(QString chbname, QVariant data)
 
 void cmp_maindialog::AddManuf()
 {
-    //    qa_AddManufDialog.AddNewItem();
-    //    qa_AddManufDialog.exec();
-    /*    QStringList tmpList;
-        tmpList.clear();
-        QSqlQuery mw_ent_get_manuf (pc.ent);
-    // 0.4b    mw_ent_get_manuf.exec("SELECT manuf FROM manuf;");
-        mw_ent_get_manuf.exec("SELECT manuf FROM manuf WHERE `deleted`=0;");
-        while (mw_ent_get_manuf.next())
-        {
-            tmpList << mw_ent_get_manuf.value(0).toString();
-        }
-        CompManufModel->setStringList(tmpList);
-        CompManufModel->sort(0, Qt::AscendingOrder); // 0.4b
-        ManufCB->setModel(CompManufModel);
-        ManufCB->setCurrentText(pc.InterchangeString);*/
+    QString newID = tfl.insert("Производители_полн");
+    s_2cdialog *newdialog = new s_2cdialog("Производители:добавить");
+    newdialog->setup("Производители_полн",MODE_EDITNEW,newID);
+    if (newdialog->result)
+        emit error(ER_CMPMAIN+newdialog->result,0x52);
+    else
+        newdialog->exec();
 }
 
 void cmp_maindialog::WriteAndClose()

@@ -309,7 +309,7 @@ void dir_maindialog::EditItem(QString str)
         return;
     }
     s_2cdialog *newdialog = new s_2cdialog(tble+":"+tmps);
-    bool Mode = (isNewID) ? MODE_EDITNEW : MODE_EDIT;
+    int Mode = (isNewID) ? MODE_EDITNEW : MODE_EDIT;
     newdialog->setup(tmps+"_полн",Mode,str);
     if (newdialog->result)
         emit error(ER_DIRMAIN+newdialog->result,0x52);
@@ -324,18 +324,10 @@ void dir_maindialog::AddNew()
     QString newID = tfl.insert(slvtble+"_полн");
     QString tmpString = getSlaveIndex(0);
     QStringList fl, vl;
-    if (!tmpString.isEmpty())
+    if ((!tmpString.isEmpty()) && (SlaveTVIsTree))
     {
-        if (SlaveTVIsTree)
-        {
-            fl << "ИД" << "ИД_а";
-            vl << newID << tmpString;
-        }
-        else
-        {
-            fl << "ИД";
-            vl << newID;
-        }
+        fl << "ИД" << "ИД_а";
+        vl << newID << tmpString;
         tfl.idtois(slvtble+"_полн",fl,vl);
     }
     EditItem(newID);

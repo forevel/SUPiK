@@ -557,6 +557,18 @@ int s_sql::deletefromdb(QSqlDatabase db, QString tble, QString field, QString va
         return 1;
 }
 
+// процедура реально удаляет строку, для которой field равно value
+
+int s_sql::RealDeleteFromDB(QSqlDatabase db, QString tble, QString field, QString value)
+{
+    QSqlQuery RealDelete(db);
+    RealDelete.exec("DELETE FROM `"+tble+"` WHERE `"+field+"`=\""+value+"\";");
+    if (RealDelete.isActive())
+        return 0;
+    else
+        return 1;
+}
+
 // процедура ищет записи с пустыми полями fields и записывает их в список probid, при этом возвращая ненулевой результат
 
 int s_sql::checkdbforemptyfields(QSqlDatabase db, QString tble, QStringList fields, QStringList &probid)

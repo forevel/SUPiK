@@ -40,6 +40,7 @@ public slots:
 
 private:
     QStringList tble;
+    QString Id;
     s_ncmodel *mainmodel;
     QSortFilterProxyModel *pmainmodel;
     bool DialogIsNeedToBeResized;

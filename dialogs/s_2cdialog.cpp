@@ -42,6 +42,7 @@ void s_2cdialog::setup(QString tble, int Mode, QString id, QString matchtext, bo
     this->tble.clear();
     this->tble.append(tble);
     this->Mode = Mode;
+    this->Id = id;
     switch (Mode)
     {
     case MODE_CHOOSE:
@@ -314,7 +315,7 @@ void s_2cdialog::accepted()
 void s_2cdialog::cancelled()
 {
     if (Mode == MODE_EDITNEW) // для ввода нового - удалить из БД текущую запись
-    {
+        tfl.Delete(tble.at(0), Id);
     this->close();
 }
 
@@ -322,8 +323,6 @@ void s_2cdialog::sortModel()
 {
 //    pmainmodel->sort(0, Qt::AscendingOrder);
 }
-
-// незакончено - дописать другие варианты
 
 void s_2cdialog::fillModelAdata()
 {

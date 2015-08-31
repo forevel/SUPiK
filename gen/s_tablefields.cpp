@@ -526,6 +526,26 @@ void s_tablefields::remove(QString tble, QString id)
         result += 0x94 + ER_TFIELD;
 }
 
+// remove - реальное удаление записи с индексом id из таблицы tble
+// важно: здесь не удаляются ссылки на данную запись, которая будет удалена, проверку "дохлых" ссылок на отсутствующие записи необходимо
+// проводить и исправлять при старте СУПиКа или при "обновлении проблем"
+
+void s_tablefields::Delete(QString tble, QString id)
+{
+    QStringList fl = QStringList() << "table" << "tablefields";
+    QStringList cmpfl = QStringList() << "tablename" << "keyfield";
+    QStringList cmpvl = QStringList() << tble << "v";
+    QStringList keydbtble = sqlc.getvaluesfromtablebyfields(sqlc.getdb("sup"), "tablefields", fl, cmpfl, cmpvl);
+    if (sqlc.result)
+    {
+        result = sqlc.result + 0x91 + ER_TFIELD;
+        return;
+    }
+    result = sqlc.RealDeleteFromDB(sqlc.getdb(keydbtble.at(0).split(".").at(0)), keydbtble.at(0).split(".").at(1), keydbtble.at(1), id);
+    if (result)
+        result += 0x94 + ER_TFIELD;
+}
+
 QStringList s_tablefields::valuesbyfield(QString tble, QStringList fl, QString cmpfield, QString cmpvalue)
 {
     QStringList sl = tfl.tablefields(tble,cmpfield);

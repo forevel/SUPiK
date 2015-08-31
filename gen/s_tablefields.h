@@ -19,6 +19,7 @@ public:
     void idtois (QString tble, QStringList header, QStringList values);
     QString insert(QString tble);
     void remove(QString tble, QString id); // "удаление" элемента из таблицы
+    void Delete(QString tble, QString id); // реальное удаление из таблицы
     QStringList tablefields (QString tble, QString header);
     QStringList tableheaders (QString tble);
     QStringList tablelinks (QString tble);

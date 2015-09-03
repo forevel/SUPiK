@@ -19,6 +19,7 @@ public:
     ~cmp_maindialog();
     void SetupUI(int CompType, int CompTable, int CompID); // подготовка диалога к отображению. 1 = тип компонента (Altium,Schemagee,...),
                                                             // 2 = номер таблицы компонента по таблице description, 3 = ИД компонента по таблице
+    void SetID(); // принудительная установка ИД компонента для создания на базе существующего (сначала заполняем диалог по существующему, потом меняем ИД)
 
 public slots:
 
@@ -31,8 +32,11 @@ private:
     void SetAltDialog();
     void FillAltDialog(QStringList);
     void SetCWData(QString cwname, QVariant data);
+    QString CWData(QString cwname);
     void SetLEData(QString lename, QVariant data);
+    QString LEData(QString lename);
     void SetChBData(QString chbname, QVariant data);
+    QString ChBData(QString chbname);
     void SetUnitsAndPars();
 
 protected:
@@ -41,6 +45,7 @@ protected:
 private slots:
     void AddManuf();
     void WriteAndClose();
+    void CancelAndClose();
     void emiterror(int er1,int er2);
 
 };

@@ -89,7 +89,7 @@ cmp_maindialog::cmp_maindialog(QWidget *parent) : QDialog(parent)
     hlyout->addWidget(pb);
     pb = new s_tqPushButton("Отмена");
     pb->setIcon(QIcon(":/res/cross.png"));
-    connect(pb,SIGNAL(clicked()),this,SLOT(close()));
+    connect(pb,SIGNAL(clicked()),this,SLOT(CancelAndClose()));
     hlyout->addWidget(pb);
     lyout->addLayout(hlyout);
     setLayout(lyout);
@@ -404,18 +404,6 @@ void cmp_maindialog::SetAltDialog()
     cp2->setLayout(lyout);
 
     SetUnitsAndPars();
-    //    int i;
-
-    //    CompUnitsModel->setStringList(pc.KList);
-
-    /*    for (i = 0; i < NUM_LISTS; i++)
-        {
-            if (SectionLE->text() == pc.unitlist[i].section)
-                CompUnitsModel->setStringList(*(pc.unitlist[i].list));
-        } */
-
-    //    UnitsCB->setModel(CompUnitsModel);
-    //    UnitsCB->setCurrentIndex(0);
 }
 
 // установить для данного CompType требуемые наименования параметров в par<i>lbl и единицы измерения этих параметров в par<i>cb
@@ -475,6 +463,23 @@ void cmp_maindialog::SetUnitsAndPars()
     }
 }
 
+void cmp_maindialog::SetID()
+{
+    CompId = QString::number(sqlc.getnextfreeindexsimple(sqlc.getdb(CompDb), CompTble)); // ищем первый свободный ИД
+    if (sqlc.result)
+    {
+        emit error(ER_COMP+sqlc.result, 0x32);
+        return;
+    }
+    s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("id");
+    if (le == 0)
+    {
+        emit error(ER_CMPMAIN,0x04);
+        return;
+    }
+    le->setText(CompId);
+}
+
 void cmp_maindialog::FillAltDialog(QStringList vl)
 {
     SetCWData("libref",vl.at(0));
@@ -521,6 +526,15 @@ void cmp_maindialog::SetCWData(QString cwname, QVariant data)
         cw->SetData(data);
 }
 
+QString cmp_maindialog::CWData(QString cwname)
+{
+    s_tqChooseWidget *cw = this->findChild<s_tqChooseWidget *>(cwname);
+    if (cw != 0)
+        return cw->Data().toString();
+    else
+        return QString();
+}
+
 void cmp_maindialog::SetLEData(QString lename, QVariant data)
 {
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>(lename);
@@ -528,11 +542,29 @@ void cmp_maindialog::SetLEData(QString lename, QVariant data)
         le->setText(data.toString());
 }
 
+QString cmp_maindialog::LEData(QString lename)
+{
+    s_tqLineEdit *le = this->findChild<s_tqLineEdit *>(lename);
+    if (le != 0)
+        return le->text();
+    else
+        return QString();
+}
+
 void cmp_maindialog::SetChBData(QString chbname, QVariant data)
 {
     s_tqCheckBox *chb = this->findChild<s_tqCheckBox *>(chbname);
     if (chb != 0)
         chb->setChecked(data.toBool());
+}
+
+QString cmp_maindialog::ChBData(QString chbname)
+{
+    s_tqCheckBox *chb = this->findChild<s_tqCheckBox *>(chbname);
+    if (chb != 0)
+        return (chb->isChecked()) ? "1" : "0";
+    else
+        return QString();
 }
 
 void cmp_maindialog::AddManuf()
@@ -544,6 +576,11 @@ void cmp_maindialog::AddManuf()
         emit error(ER_CMPMAIN+newdialog->result,0x52);
     else
         newdialog->exec();
+}
+
+void cmp_maindialog::CancelAndClose()
+{
+    this->close();
 }
 
 void cmp_maindialog::WriteAndClose()

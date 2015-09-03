@@ -41,13 +41,15 @@ private slots:
     void emiterror(int,int);
     void MainItemChoosed(QModelIndex);
     void SlaveItemChoosed(QModelIndex);
+    void EditItem();
     void AddNewItem();
-
+    void AddNewOnExistingItem();
+    void DeleteItem();
+    void StartCompDialog(QString Id, bool ByExisting = false);
+    void SlaveContextMenu(QPoint);
     void UpdatePartNumber ();
     void DeclinePBClicked();
     void AcceptAndClosePBClicked();
-    void DSheetPBClicked();
-    void AddManufPBClicked();
     void VoltageOrAccuracyAccIsChecked ();
     void ModelParPBClicked();
     void test();
@@ -60,7 +62,7 @@ private:
 //    int curUnit;
     QString PathString;
     QMetaObject::Connection handle1, handle2, handle3, handle4, handle5, handle6, handle7; // 6 = 0.34-ah, 7 = 0.4
-    QString CompLetter, CompDb;
+    QString CompLetter, CompDb, CompTbles;
     int CompType, CompTble;
     s_ncmodel *slavemodel;
 
@@ -68,7 +70,6 @@ private:
     bool isModified();
     bool ConnectPartNumber();
     bool DisconnectPartNumber ();
-    void UpdateManufCombobox ();
     void SetParNames();
 };
 

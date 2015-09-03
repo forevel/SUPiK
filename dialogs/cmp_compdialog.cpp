@@ -1,6 +1,7 @@
 #include "cmp_compdialog.h"
 //#include <QStringListModel>
 #include <QAction>
+#include <QMenu>
 #include <QIcon>
 #include <QGridLayout>
 #include <QHBoxLayout>
@@ -44,7 +45,7 @@ cmp_compdialog::cmp_compdialog(int type, QWidget *parent) : QDialog(parent)
     CompType = type;
     SomethingChanged = false;
     CompTble = 0;
-
+    CompTbles = "";
     SetupUI();
 }
 
@@ -139,6 +140,8 @@ void cmp_compdialog::SetupUI()
     SlaveTV->setSortingEnabled(true);
     SlaveTV->sortByColumn(0, Qt::AscendingOrder);
     connect(SlaveTV,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(SlaveItemChoosed(QModelIndex)));
+    SlaveTV->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(SlaveTV,SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(SlaveContextMenu(QPoint)));
     rlyout->addWidget(SlaveTV);
     right->setFrameStyle(QFrame::Panel | QFrame::Sunken);
     right->setLineWidth(1);
@@ -172,7 +175,8 @@ void cmp_compdialog::MainItemChoosed(QModelIndex idx)
     }
     // теперь надо вытащить в slavemodel все компоненты из выбранной таблицы
     fl = QStringList() << "id" << "PartNumber" << "Manufacturer";
-    slavemodel->setupraw(CompDb,sl.at(0),fl,"id"); // строим таблицу с сортировкой по ИД
+    CompTbles = sl.at(0);
+    slavemodel->setupraw(CompDb,CompTbles,fl,"id"); // строим таблицу с сортировкой по ИД
     if (slavemodel->result)
         emit error(ER_COMP+slavemodel->result, 0x13);
     tv = this->findChild<s_tqTableView *>("stv");
@@ -191,6 +195,11 @@ void cmp_compdialog::test()
     emit error (0,0);
 }
 
+void cmp_compdialog::EditItem()
+{
+    SlaveItemChoosed(QModelIndex());
+}
+
 void cmp_compdialog::SlaveItemChoosed(QModelIndex idx)
 {
     Q_UNUSED(idx);
@@ -201,14 +210,20 @@ void cmp_compdialog::SlaveItemChoosed(QModelIndex idx)
         return;
     }
     QString CompIDs = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole).toString();
-    int CompID = CompIDs.toInt();
     if (CompTble == 0) // не была задана таблица компонентов (раздел)
     {
         QMessageBox::warning(this,"Предупреждение","Не выбран раздел в левой части");
         return;
     }
+    StartCompDialog(CompIDs);
+}
+
+void cmp_compdialog::StartCompDialog(QString Id, bool ByExisting)
+{
     cmp_maindialog *dlg = new cmp_maindialog;
-    dlg->SetupUI(CompType,CompTble,CompID);
+    dlg->SetupUI(CompType,CompTble,Id.toInt());
+    if (ByExisting)
+        dlg->SetID();
     connect(dlg,SIGNAL(error(int,int)),this,SLOT(emiterror(int,int)));
     dlg->exec();
 }
@@ -243,6 +258,47 @@ void cmp_compdialog::AddNewItem()
     dlg->SetupUI(CompType,CompTble,CompID);
     connect(dlg,SIGNAL(error(int,int)),this,SLOT(emiterror(int,int)));
     dlg->exec();
+}
+
+void cmp_compdialog::AddNewOnExistingItem()
+{
+    s_tqTableView *tv = this->findChild<s_tqTableView *>("stv");
+    if (tv == 0)
+    {
+        emit error(ER_COMP, 0x32);
+        return;
+    }
+    QString CompIDs = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole).toString();
+    StartCompDialog(CompIDs,true); // создаём на базе компонента CompIDs компонент с новым индексом
+}
+
+void cmp_compdialog::DeleteItem()
+{
+    QMessageBox msgBox;
+    msgBox.setText("Вы уверены, что хотите удалить элемент?");
+    msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+    msgBox.setDefaultButton(QMessageBox::Cancel);
+    int res = msgBox.exec();
+    if (res == QMessageBox::Cancel)
+        return;
+    s_tqTableView *tv = this->findChild<s_tqTableView *>("stv");
+    if (tv == 0)
+    {
+        emit error(ER_COMP, 0x21);
+        return;
+    }
+    QString CompIDs = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole).toString();
+    sqlc.deletefromdb(sqlc.getdb(CompDb),CompTbles,"id",CompIDs);
+    if (sqlc.result)
+    {
+        emit error(ER_DIRMAIN+sqlc.result, 0x35);
+        return;
+    }
+    else
+    {
+        QMessageBox::warning(this, "warning!", "Удалено успешно!");
+        MainItemChoosed(QModelIndex());
+    }
 }
 
 // --------------------------------------
@@ -688,45 +744,6 @@ bool cmp_compdialog::CheckAndAdd()
     }*/
     return true;
 }
-
-
-// --------------------------------------
-// Захотели выбрать файл описания
-// --------------------------------------
-
-void cmp_compdialog::DSheetPBClicked()
-{
-/*    QString DSheedbs = QFileDialog::getOpenFileName(this, \
-                                      "Выберите файл описания", \
-                                      pc.PathToLibs + "//DSheet//",
-                                      "PDF Files (*.pdf)");
-    DSheetLE->setText(DSheedbs);*/
-}
-
-void cmp_compdialog::AddManufPBClicked()
-{
-//    qa_AddManufDialog.AddNewItem();
-//    qa_AddManufDialog.exec();
-    UpdateManufCombobox();
-}
-
-void cmp_compdialog::UpdateManufCombobox ()
-{
-/*    QStringList tmpList;
-    tmpList.clear();
-    QSqlQuery mw_ent_get_manuf (pc.ent);
-// 0.4b    mw_ent_get_manuf.exec("SELECT manuf FROM manuf;");
-    mw_ent_get_manuf.exec("SELECT manuf FROM manuf WHERE `deleted`=0;");
-    while (mw_ent_get_manuf.next())
-    {
-        tmpList << mw_ent_get_manuf.value(0).toString();
-    }
-    CompManufModel->setStringList(tmpList);
-    CompManufModel->sort(0, Qt::AscendingOrder); // 0.4b
-    ManufCB->setModel(CompManufModel);
-    ManufCB->setCurrentText(pc.InterchangeString);*/
-}
-
 void cmp_compdialog::ManufCBIndexChanged(const QString &arg1)
 {
 /*    if (arg1 == "НКП")
@@ -868,6 +885,30 @@ void cmp_compdialog::ModelParPBClicked()
 {
 //    qa_EditCompModelDialog.FillDialog();
 //    qa_EditCompModelDialog.exec();
+}
+
+void cmp_compdialog::SlaveContextMenu(QPoint)
+{
+    QAction *ChangeDataChild;
+    ChangeDataChild = new QAction ("Изменить элемент", this);
+    ChangeDataChild->setSeparator(false);
+    connect(ChangeDataChild, SIGNAL(triggered()), this, SLOT(EditItem()));
+    QAction *AddNewByExisting = new QAction ("Создать на основе...", this);
+    AddNewByExisting->setSeparator(false);
+    connect(AddNewByExisting, SIGNAL(triggered()), this, SLOT(AddNewOnExistingItem()));
+    QAction *DeleteAction = new QAction("Удалить элемент", this);
+    DeleteAction->setSeparator(false);
+    connect (DeleteAction, SIGNAL(triggered()), this, SLOT(DeleteItem()));
+    QMenu *ContextMenu = new QMenu;
+    ContextMenu->setTitle("Context menu");
+    if (pc.access & 0x2492) // права на изменение
+    {
+        ContextMenu->addAction(AddNewByExisting);
+        ContextMenu->addAction(ChangeDataChild);
+    }
+    if (pc.access & 0x4924) // права на удаление
+        ContextMenu->addAction(DeleteAction);
+    ContextMenu->exec(QCursor::pos()); // если есть права на удаление, на изменение тоже должны быть
 }
 
 void cmp_compdialog::emiterror(int er1, int er2)

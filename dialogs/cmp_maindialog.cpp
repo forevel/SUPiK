@@ -2,6 +2,7 @@
 #include <QTabWidget>
 #include <QPainter>
 #include <QStringListModel>
+#include <QMessageBox>
 //#include "../widgets/s_tqtreeview.h"
 //#include "../widgets/s_tqtableview.h"
 //#include "../widgets/s_tqframe.h"
@@ -26,6 +27,8 @@
 
 cmp_maindialog::cmp_maindialog(QWidget *parent) : QDialog(parent)
 {
+    Changed = false;
+    RevNotes = 0;
     QVBoxLayout *lyout = new QVBoxLayout;
     QHBoxLayout *hlyout = new QHBoxLayout;
     s_tqLabel *lbl = new s_tqLabel("Редактор компонентов");
@@ -93,6 +96,8 @@ cmp_maindialog::cmp_maindialog(QWidget *parent) : QDialog(parent)
     hlyout->addWidget(pb);
     lyout->addLayout(hlyout);
     setLayout(lyout);
+    SetLEData("creatorle",pc.Pers);
+    SetLEData("modifydatele",pc.DateTime);
 }
 
 cmp_maindialog::~cmp_maindialog()
@@ -124,7 +129,7 @@ void cmp_maindialog::SetupUI(int CompType, int CompTable, int CompID)
     }
     this->CompTble = tblesl.at(0);
     this->CompId = QString::number(CompID);
-    this->CompType = CompType;
+    this->CompType = QString::number(CompType);
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("section");
     if (le == 0)
     {
@@ -209,12 +214,14 @@ void cmp_maindialog::SetAltDialog()
     glyout->addWidget(lbl,0,0,1,1);
     s_tqLineEdit *le = new s_tqLineEdit;
     le->setObjectName("partnumber");
+    connect(le,SIGNAL(textEdited(QString)),this,SLOT(SomethingChanged()));
     glyout->addWidget(le,0,1,1,2);
     lbl = new s_tqLabel("Производитель");
     glyout->addWidget(lbl,1,0,1,1);
     s_tqChooseWidget *cw = new s_tqChooseWidget(true);
     cw->Setup("2.2..Производители_сокращ.Наименование");
     cw->setObjectName("manufacturer");
+    connect(cw,SIGNAL(textchanged(QVariant)),this,SLOT(SomethingChanged()));
     glyout->addWidget(cw,1,1,1,1);
     s_tqPushButton *pb = new s_tqPushButton(QString("Добавить"));
     connect(pb,SIGNAL(clicked()),this,SLOT(AddManuf()));
@@ -232,6 +239,7 @@ void cmp_maindialog::SetAltDialog()
     glyout->addWidget(lbl,0,0,1,1);
     cw = new s_tqChooseWidget(true);
     connect(cw,SIGNAL(error(int,int)),this,SLOT(emiterror(int,int)));
+    connect(cw,SIGNAL(textchanged(QVariant)),this,SLOT(SomethingChanged()));
     cw->setObjectName("libref");
     int i = 0;
     QStringList tmpsl = CompTble.split("_", QString::KeepEmptyParts);
@@ -249,6 +257,7 @@ void cmp_maindialog::SetAltDialog()
     glyout->addWidget(lbl,1,0,1,1);
     cw = new s_tqChooseWidget(true);
     connect(cw,SIGNAL(error(int,int)),this,SLOT(emiterror(int,int)));
+    connect(cw,SIGNAL(textchanged(QVariant)),this,SLOT(SomethingChanged()));
     cw->setObjectName("footref");
     tmps = pc.PathToLibs + "Footprints" + PathString + "/" + CompTble + ".PcbLib";
     cw->Setup("2.17.."+tmps+"."+pc.footfind);
@@ -264,11 +273,13 @@ void cmp_maindialog::SetAltDialog()
     glyout->addWidget(lbl,0,0,1,1);
     le = new s_tqLineEdit;
     le->setObjectName("pe3name");
+    connect(le,SIGNAL(textEdited(QString)),this,SLOT(SomethingChanged()));
     glyout->addWidget(le,0,1,1,1);
     lbl = new s_tqLabel("\"Примечание\"");
     glyout->addWidget(lbl,1,0,1,1);
     le = new s_tqLineEdit;
     le->setObjectName("pe3notes");
+    connect(le,SIGNAL(textEdited(QString)),this,SLOT(SomethingChanged()));
     glyout->addWidget(le,1,1,1,1);
     glyout->setColumnStretch(0,0);
     glyout->setColumnStretch(1,1);
@@ -288,6 +299,7 @@ void cmp_maindialog::SetAltDialog()
         glyout->addWidget(lbl,i,0,1,1);
         le = new s_tqLineEdit;
         le->setObjectName("par"+QString::number(i)+"le");
+        connect(le,SIGNAL(textEdited(QString)),this,SLOT(SomethingChanged()));
         glyout->addWidget(le,i,1,1,1);
         cb = new s_tqComboBox;
         cb->setObjectName("par"+QString::number(i)+"cb");
@@ -297,26 +309,31 @@ void cmp_maindialog::SetAltDialog()
     glyout->addWidget(lbl,6,0,1,1);
     le = new s_tqLineEdit;
     le->setObjectName("mintemple");
+    connect(le,SIGNAL(textEdited(QString)),this,SLOT(SomethingChanged()));
     glyout->addWidget(le,6,1,1,3);
     lbl = new s_tqLabel("Макс. раб. температура");
     glyout->addWidget(lbl,7,0,1,1);
     le = new s_tqLineEdit;
     le->setObjectName("maxtemple");
+    connect(le,SIGNAL(textEdited(QString)),this,SLOT(SomethingChanged()));
     glyout->addWidget(le,7,1,1,3);
     lbl = new s_tqLabel("Корпус компонента");
     glyout->addWidget(lbl,8,0,1,1);
     le = new s_tqLineEdit;
     le->setObjectName("packagele");
+    connect(le,SIGNAL(textEdited(QString)),this,SLOT(SomethingChanged()));
     glyout->addWidget(le,8,1,1,3);
     QHBoxLayout *hlyout = new QHBoxLayout;
     chb = new s_tqCheckBox;
     chb->setText("Компонент планарный (SMD)");
     chb->setObjectName("issmdchb");
+    connect(chb,SIGNAL(toggled(bool)),this,SLOT(SomethingChanged()));
     chb->setLayoutDirection(Qt::RightToLeft);
     hlyout->addWidget(chb);
     chb = new s_tqCheckBox;
     chb->setText("Компонент выпускается");
     chb->setObjectName("isactivechb");
+    connect(chb,SIGNAL(toggled(bool)),this,SLOT(SomethingChanged()));
     chb->setLayoutDirection(Qt::RightToLeft);
     hlyout->addWidget(chb);
     glyout->addLayout(hlyout,9,0,1,4);
@@ -335,21 +352,25 @@ void cmp_maindialog::SetAltDialog()
     glyout->addWidget(lbl,0,0,1,1);
     le = new s_tqLineEdit;
     le->setObjectName("accuracyle");
+    connect(le,SIGNAL(textEdited(QString)),this,SLOT(SomethingChanged()));
     glyout->addWidget(le,0,1,1,3);
     lbl = new s_tqLabel("Макс. рассеив. мощность");
     glyout->addWidget(lbl,1,0,1,1);
     le = new s_tqLineEdit;
     le->setObjectName("maxpowerle");
+    connect(le,SIGNAL(textEdited(QString)),this,SLOT(SomethingChanged()));
     glyout->addWidget(le,1,1,1,3);
     lbl = new s_tqLabel("ТКС (ТКЕ)");
     glyout->addWidget(lbl,2,0,1,1);
     le = new s_tqLineEdit;
     le->setObjectName("tkcle");
+    connect(le,SIGNAL(textEdited(QString)),this,SLOT(SomethingChanged()));
     glyout->addWidget(le,2,1,1,3);
     lbl = new s_tqLabel("Маркировка корпуса");
     glyout->addWidget(lbl,3,0,1,1);
     le = new s_tqLineEdit;
     le->setObjectName("markingle");
+    connect(le,SIGNAL(textEdited(QString)),this,SLOT(SomethingChanged()));
     glyout->addWidget(le,3,1,1,3);
     gb->setLayout(glyout);
     lyout->addWidget(gb);
@@ -363,6 +384,7 @@ void cmp_maindialog::SetAltDialog()
     cw = new s_tqChooseWidget(true);
     cw->Setup("2.15..PDF Documents (*_pdf)");
     cw->setObjectName("dsheetcw");
+    connect(cw,SIGNAL(textchanged(QVariant)),this,SLOT(SomethingChanged()));
     glyout->addWidget(cw,0,1,1,1);
     gb->setLayout(glyout);
     lyout->addWidget(gb);
@@ -376,33 +398,30 @@ void cmp_maindialog::SetAltDialog()
     cw = new s_tqChooseWidget(true);
     cw->Setup("2.15..All files (*_*)");
     cw->setObjectName("mdlfilecw");
+    connect(cw,SIGNAL(textchanged(QVariant)),this,SLOT(SomethingChanged()));
     glyout->addWidget(cw,0,1,1,1);
     lbl = new s_tqLabel("Описание модели");
     glyout->addWidget(lbl,1,0,1,1);
     le = new s_tqLineEdit;
     le->setObjectName("mdldescle");
+    connect(le,SIGNAL(textEdited(QString)),this,SLOT(SomethingChanged()));
     glyout->addWidget(le,1,1,1,1);
     lbl = new s_tqLabel("Имя модели");
     glyout->addWidget(lbl,2,0,1,1);
     le = new s_tqLineEdit;
     le->setObjectName("mdlnamele");
+    connect(le,SIGNAL(textEdited(QString)),this,SLOT(SomethingChanged()));
     glyout->addWidget(le,2,1,1,1);
     lbl = new s_tqLabel("Параметры модели");
     glyout->addWidget(lbl,3,0,1,1);
     le = new s_tqLineEdit;
     le->setObjectName("mdlparsle");
+    connect(le,SIGNAL(textEdited(QString)),this,SLOT(SomethingChanged()));
     glyout->addWidget(le,3,1,1,1);
     gb->setLayout(glyout);
     lyout->addWidget(gb);
     lyout->addStretch(1);
-        //    connect (ManufCB, SIGNAL(currentIndexChanged(QString)), this, SLOT(SetSomethingChanged()));
-        //    connect (PartNumberLE, SIGNAL(textChanged(QString)), this, SLOT(SetSomethingChanged()));
-        //    connect (Par1LE, SIGNAL(textChanged(QString)), this, SLOT(SetSomethingChanged()));
-        //    connect (isNeedToAccAccuracyInNameCB, SIGNAL(clicked()), this, SLOT(VoltageOrAccuracyAccIsChecked()));
-        //    connect (isNeedToAccVoltageInNameCB, SIGNAL(clicked()), this, SLOT(VoltageOrAccuracyAccIsChecked()));
-
     cp2->setLayout(lyout);
-
     SetUnitsAndPars();
 }
 
@@ -500,8 +519,11 @@ void cmp_maindialog::FillAltDialog(QStringList vl)
     SetLEData("maxpowerle",vl.at(15));
     SetLEData("tkcle",vl.at(16));
     SetLEData("par2le",vl.at(17));
-    SetCWData("dsheetcw",vl.at(18));
-    // RevNotes = 19
+    QString tmps = vl.at(18);
+    tmps.replace("\\","/");
+    SetCWData("dsheetcw",tmps);
+    RevNotes = vl.at(19).toInt(); // RevNotes = 19
+    RevNotes++; // на всякий случай прибавляем редакцию, вдруг обновим?
     SetChBData("isactivechb",(vl.at(20) == "0")?"1":"0"); // текстовая инверсия
     SetLEData("pe3name",vl.at(21));
     SetLEData("pe3notes",vl.at(22));
@@ -517,6 +539,46 @@ void cmp_maindialog::FillAltDialog(QStringList vl)
     // Unit = 28
     SetLEData("par3le",vl.at(29));
     SetLEData("par4le",vl.at(30));
+}
+
+QStringList cmp_maindialog::GetAltData()
+{
+    QStringList vl;
+    vl.append(CWData("libref"));
+    vl.append(CWData("footref"));
+    vl.append(LEData("mdldescle"));
+    vl.append(CWData("mdlfilecw"));
+    vl.append(LEData("mdlnamele"));
+    vl.append(LEData("mdlparsle"));
+    vl.append(CWData("manufacturer"));
+    vl.append(LEData("partnumber"));
+    vl.append(LEData("packagele"));
+    vl.append(LEData("markingle"));
+    vl.append(LEData("par0le"));
+    vl.append(LEData("par1le"));
+    vl.append(LEData("accuracyle"));
+    vl.append(LEData("mintemple"));
+    vl.append(LEData("maxtemple"));
+    vl.append(LEData("maxpowerle"));
+    vl.append(LEData("tkcle"));
+    vl.append(LEData("par2le"));
+//    vl.append(CWData("dsheetcw"));
+    QString tmps = CWData("dsheetcw");
+    tmps.replace("/","\\\\");
+    vl.append(tmps);
+    vl.append(QString::number(RevNotes)); // RevNotes = 19
+    vl.append((ChBData("isactivechb") == "0")?"1":"0"); // текстовая инверсия
+    vl.append(LEData("pe3name"));
+    vl.append(LEData("pe3notes"));
+    vl.append(pc.DateTime);
+    vl.append(QString::number(pc.idPers));
+    vl.append(""); // Prefix = 25
+    vl.append(ChBData("issmdchb"));
+    vl.append(""); // Nominal = 27
+    vl.append(""); // Unit = 28
+    vl.append(LEData("par3le"));
+    vl.append(LEData("par4le"));
+    return vl;
 }
 
 void cmp_maindialog::SetCWData(QString cwname, QVariant data)
@@ -580,16 +642,74 @@ void cmp_maindialog::AddManuf()
 
 void cmp_maindialog::CancelAndClose()
 {
+    if (Changed)
+    {
+        if (QMessageBox::question(this, "Данные были изменены", "Всё равно выйти?", QMessageBox::Yes|QMessageBox::No,\
+                              QMessageBox::No) == QMessageBox::No)
+            return;
+    }
     this->close();
 }
 
 void cmp_maindialog::WriteAndClose()
 {
-
+    QStringList fl, vl;
+    switch (CompType.toInt())
+    {
+    case CTYPE_ALT:
+    {
+        fl << "Library Ref" << "Footprint Ref" << "Sim Description" << "Sim File" << \
+              "Sim Model Name" << "Sim Parameters" << "Manufacturer" << "PartNumber" << "Package" << "Marking" << "NominalValue" << \
+              "NominalVoltage" << "Tolerance" << "OpTemperaturen" << "OpTemperaturem" << "Pmax" << "TC" << "Comment" << "HelpURL" << \
+              "RevNotes" << "Discontinued" << "Description" << "Notes" << "Modify Date" << "Creator" << "prefix" << "isSMD" << \
+              "Nominal" << "Unit" << "par4" << "par5";
+        vl = GetAltData();
+        break;
+    }
+    case CTYPE_SCH:
+    {
+        break;
+    }
+    case CTYPE_SOL:
+    {
+        break;
+    }
+    case CTYPE_CON:
+    {
+        break;
+    }
+    case CTYPE_DEV:
+    {
+        break;
+    }
+    default:
+        break;
+    }
+    sqlc.updatevaluesintable(sqlc.getdb("alt"),CompTble,fl,vl,"id",CompId);
+    if (sqlc.result)
+    {
+        emit error(ER_CMPMAIN+sqlc.result, 0x61);
+        return;
+    }
+    QDialog *dlg = new QDialog;
+    QVBoxLayout *lyout = new QVBoxLayout;
+    s_tqPushButton *pb = new s_tqPushButton("Ага");
+    connect(pb,SIGNAL(clicked()),this,SLOT(close()));
+    connect(pb,SIGNAL(clicked()),dlg,SLOT(close()));
+    s_tqLabel *lbl = new s_tqLabel("Записано успешно!");
+    lyout->addWidget(lbl);
+    lyout->addWidget(pb);
+    dlg->setLayout(lyout);
+    dlg->exec();
 }
 
 void cmp_maindialog::emiterror(int er1, int er2)
 {
     er1 += ER_CMPMAIN;
     emit error(er1,er2);
+}
+
+void cmp_maindialog::SomethingChanged()
+{
+    Changed = true;
 }

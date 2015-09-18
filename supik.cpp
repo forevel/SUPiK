@@ -44,7 +44,7 @@ void supik::showEvent(QShowEvent *event)
 //    timer1m->setInterval(pc.timerperiod*60000);
     timer1m->setInterval(pc.timerperiod*3000);
     connect (timer1m, SIGNAL(timeout()), this, SLOT(periodicxm()));
-//    timer1s->start();
+    timer1s->start();
 //    timer1m->start();
     event->accept();
 }
@@ -485,10 +485,10 @@ void supik::executeDirDialog()
 
 void supik::periodic1s()
 {
-    pc.DateTime = QDateTime::currentDateTime().toString("dd/MM/yyyy hh:mm:ss");
+    pc.DateTime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
     s_tqLabel *le = this->findChild<s_tqLabel *>("datetime");
     le->setText(pc.DateTime);
-    QAction *ta = this->findChild<QAction *>("warning");
+/*    QAction *ta = this->findChild<QAction *>("warning");
     if (pc.NewNotifyHasArrived)
     {
         int idx = CheckForWidget(TW_PROB);
@@ -505,7 +505,7 @@ void supik::periodic1s()
     else if (pc.allprobs.size())
         ta->setVisible(true);
     else
-        ta->setVisible(false);
+        ta->setVisible(false); */
 }
 
 void supik::periodicxm()

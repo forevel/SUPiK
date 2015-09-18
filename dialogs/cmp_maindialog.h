@@ -28,9 +28,12 @@ signals:
 
 private:
     QString CompDb, CompTble, CompId, CompType;
+    bool Changed;
+    int RevNotes;
 
     void SetAltDialog();
     void FillAltDialog(QStringList);
+    QStringList GetAltData();
     void SetCWData(QString cwname, QVariant data);
     QString CWData(QString cwname);
     void SetLEData(QString lename, QVariant data);
@@ -46,6 +49,7 @@ private slots:
     void AddManuf();
     void WriteAndClose();
     void CancelAndClose();
+    void SomethingChanged();
     void emiterror(int er1,int er2);
 
 };

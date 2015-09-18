@@ -160,7 +160,6 @@ public:
     QString CurLang; // обозначение текущего языка системы
     QString SQLPath; // путь к SQL-серверу
     QSettings *LandP; // переменная для работы с настройками системы в реестре
-    QDateTime CurDateTime;
     QByteArray data, symfind, footfind; // data - массив хранения считанных из файлов библиотек бинарных данных,
                                         // symfind и footfind - строки поиска в библиотеках "LIBREFERENCE=" и "PATTERN="
     QStringList sysMessages;

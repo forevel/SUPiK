@@ -180,39 +180,6 @@ void s_2cdialog::setupUI()
     connect (pbCancel, SIGNAL(clicked()), this, SLOT(cancelled()));
 }
 
-
-// процедура заполняет модель значениями из двух списков (sl1, sl2). При этом в списке links находятся вспомогательные поля, соответствующие по индексам
-// значениям в списке sl2. Значения из списка sl1 отображаются как обычные надписи.
-
-/*int s_2cdialog::setup(QStringList sl1, QStringList links1, QStringList sl2, QStringList links2)
-{
-    s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
-    if (tv == 0)
-        return(ER_2CDLG+0x01);
-    QList<QStringList> sl;
-    sl.append(sl1);
-    sl.append(sl2);
-    QList<int> il;
-    il << sl1.size() << sl2.size();
-    mainmodel->prepareModel(il);
-    if (links1.isEmpty())
-        mainmodel->setcolumnlinks(0, "0.8");
-    else
-        mainmodel->setcolumnlinks(0, links1);
-    if (links2.isEmpty())
-        mainmodel->setcolumnlinks(1, "7.8");
-    else
-        mainmodel->setcolumnlinks(1, links2);
-    mainmodel->fillModel(sl);
-    if (mainmodel->result)
-        ShowErMsg(ER_2CDLG+mainmodel->result+0x04); // не выходим, т.к. проблема м.б. с одной из ячеек, которую можно будет поправить
-    fillModelAdata();
-    tv->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-    tv->resizeColumnsToContents();
-    DialogIsNeedToBeResized = true;
-    return 0;
-}*/
-
 void s_2cdialog::AddTable(QString tble)
 {
     this->tble.append(tble);

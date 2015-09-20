@@ -27,7 +27,7 @@
 
 cmp_maindialog::cmp_maindialog(QWidget *parent) : QDialog(parent)
 {
-    Changed = false;
+    Changed = PartNumberCreatorEnabled = ChangeEnabled = false;
     RevNotes = 0;
     QVBoxLayout *lyout = new QVBoxLayout;
     QHBoxLayout *hlyout = new QHBoxLayout;
@@ -187,6 +187,7 @@ void cmp_maindialog::SetupUI(int CompType, int CompTable, int CompID)
     default:
         break;
     }
+    ChangeEnabled = true;
 }
 
 void cmp_maindialog::SetAltDialog()
@@ -210,22 +211,33 @@ void cmp_maindialog::SetAltDialog()
     font.setBold(true);
     gb->setFont(font);
     QGridLayout *glyout = new QGridLayout;
-    s_tqLabel *lbl = new s_tqLabel("Наименование");
+    // добавляем скрытое поле prefix
+    s_tqLabel *lbl = new s_tqLabel("Префикс");
+    lbl->setObjectName("prefixl");
+    lbl->setVisible(false);
     glyout->addWidget(lbl,0,0,1,1);
     s_tqLineEdit *le = new s_tqLineEdit;
-    le->setObjectName("partnumber");
+    le->setObjectName("prefixle");
+    le->setVisible(false);
     connect(le,SIGNAL(textEdited(QString)),this,SLOT(SomethingChanged()));
     glyout->addWidget(le,0,1,1,2);
-    lbl = new s_tqLabel("Производитель");
+    lbl = new s_tqLabel("Наименование");
     glyout->addWidget(lbl,1,0,1,1);
+    le = new s_tqLineEdit;
+    le->setObjectName("partnumber");
+    connect(le,SIGNAL(textEdited(QString)),this,SLOT(SomethingChanged()));
+    glyout->addWidget(le,1,1,1,2);
+    lbl = new s_tqLabel("Производитель");
+    glyout->addWidget(lbl,2,0,1,1);
     s_tqChooseWidget *cw = new s_tqChooseWidget(true);
     cw->Setup("2.2..Производители_сокращ.Наименование");
     cw->setObjectName("manufacturer");
     connect(cw,SIGNAL(textchanged(QVariant)),this,SLOT(SomethingChanged()));
-    glyout->addWidget(cw,1,1,1,1);
+    connect(cw,SIGNAL(textchanged(QVariant)),this,SLOT(EnablePartNumberCreator(QVariant)));
+    glyout->addWidget(cw,2,1,1,1);
     s_tqPushButton *pb = new s_tqPushButton(QString("Добавить"));
     connect(pb,SIGNAL(clicked()),this,SLOT(AddManuf()));
-    glyout->addWidget(pb,1,2,1,1);
+    glyout->addWidget(pb,2,2,1,1);
     glyout->setColumnStretch(0, 0);
     glyout->setColumnStretch(1, 1);
     gb->setLayout(glyout);
@@ -425,6 +437,137 @@ void cmp_maindialog::SetAltDialog()
     SetUnitsAndPars();
 }
 
+// включаем сборщик поля PartNumber, если переданный производитель = "НКП"
+
+void cmp_maindialog::EnablePartNumberCreator(QVariant Manufacturer)
+{
+    if (Manufacturer.toString() == "НКП")
+    {
+        if (!PartNumberCreatorEnabled)
+        {
+            SetPrefixesVisible(true);
+            ConnectPartNumberCreatorLE("prefixle");
+            QString tmps = (ChBData("issmdchb") == "1") ? "Чип" : "";
+            if (tmps.isEmpty())
+            {
+                tmps += (CompTble == "capasitors") ? "Конд." : "";
+                tmps += (CompTble == "resistors") ? "Рез." : "";
+            }
+            else
+            {
+                tmps += (CompTble == "capasitors") ? " конд." : "";
+                tmps += (CompTble == "resistors") ? " рез." : "";
+            }
+            s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("prefixle");
+            if (le == 0)
+            {
+                emit error(ER_CMPMAIN, 0x91);
+                return;
+            }
+            le->setText(tmps);
+            for (int i=0; i<5; i++)
+            {
+                ConnectPartNumberCreatorLE("par"+QString::number(i)+"le");
+                ConnectPartNumberCreatorCB("par"+QString::number(i)+"cb");
+            }
+            ConnectPartNumberCreatorLE("accuracyle");
+            ConnectPartNumberCreatorLE("packagele");
+            PartNumberCreatorEnabled = true;
+        }
+    }
+    else
+    {
+        if (PartNumberCreatorEnabled)
+        {
+            SetPrefixesVisible(false);
+            PartNumberCreatorEnabled = false;
+            ClearHandles();
+        }
+    }
+}
+
+void cmp_maindialog::ConnectPartNumberCreatorLE(QString lename)
+{
+    s_tqLineEdit *le = this->findChild<s_tqLineEdit *>(lename);
+    if (le == 0)
+    {
+        emit error(ER_CMPMAIN, 0x92);
+        return;
+    }
+    QMetaObject::Connection *handle = new QMetaObject::Connection;
+    *handle = connect(le, SIGNAL(textChanged(QString)), this, SLOT(PartNumberCreator()));
+    handles.append(handle);
+}
+
+void cmp_maindialog::ConnectPartNumberCreatorCB(QString cbname)
+{
+    s_tqComboBox *cb = this->findChild<s_tqComboBox *>(cbname);
+    if (cb == 0)
+    {
+        emit error(ER_CMPMAIN, 0x94);
+        return;
+    }
+    QMetaObject::Connection *handle = new QMetaObject::Connection;
+    *handle = connect(cb,SIGNAL(currentIndexChanged(QString)),this,SLOT(PartNumberCreator()));
+    handles.append(handle);
+}
+
+// отображение/скрытие полей префикса
+
+void cmp_maindialog::SetPrefixesVisible(bool isVisible)
+{
+    s_tqLabel *lbl = this->findChild<s_tqLabel *>("prefixl");
+    if (lbl == 0)
+    {
+        emit error(ER_CMPMAIN, 0x91);
+        return;
+    }
+    lbl->setVisible(isVisible);
+    s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("prefixle");
+    if (le == 0)
+    {
+        emit error(ER_CMPMAIN, 0x92);
+        return;
+    }
+    le->setVisible(isVisible);
+}
+
+void cmp_maindialog::ClearHandles()
+{
+    while (!handles.isEmpty())
+    {
+        QMetaObject::Connection *handle = handles.at(0);
+        disconnect(*handle);
+        handles.removeFirst();
+    }
+}
+
+// формирователь поля PartNumber из других полей
+
+void cmp_maindialog::PartNumberCreator()
+{
+    QString tmps2;
+    QString tmps = LEData("prefixle") + " ";
+    for (int i=0; i<5; i++)
+    {
+        tmps2 = LEData("par"+QString::number(i)+"le");
+        if (!tmps2.isEmpty())
+        {
+            tmps += tmps2;
+            tmps += " " + CBData("par"+QString::number(i)+"cb");
+            tmps += ",";
+        }
+    }
+    tmps2 = LEData("accuracyle");
+    if (!tmps2.isEmpty())
+        tmps += tmps2;
+    tmps2 = LEData("packagele");
+    if (!tmps2.isEmpty())
+        tmps += ",тип " + tmps2;
+    SetLEData("partnumber",tmps);
+    return;
+}
+
 // установить для данного CompType требуемые наименования параметров в par<i>lbl и единицы измерения этих параметров в par<i>cb
 
 void cmp_maindialog::SetUnitsAndPars()
@@ -511,14 +654,17 @@ void cmp_maindialog::FillAltDialog(QStringList vl)
     SetLEData("partnumber",vl.at(7));
     SetLEData("packagele",vl.at(8));
     SetLEData("markingle",vl.at(9));
-    SetLEData("par0le",vl.at(10));
-    SetLEData("par1le",vl.at(11));
+    SetParLE(0,vl.at(10));
+    SetParLE(1,vl.at(11));
+/*    SetLEData("par0le",vl.at(10));
+    SetLEData("par1le",vl.at(11)); */
     SetLEData("accuracyle",vl.at(12));
     SetLEData("mintemple",vl.at(13));
     SetLEData("maxtemple",vl.at(14));
     SetLEData("maxpowerle",vl.at(15));
     SetLEData("tkcle",vl.at(16));
-    SetLEData("par2le",vl.at(17));
+//    SetLEData("par2le",vl.at(17));
+    SetParLE(2,vl.at(17));
     QString tmps = vl.at(18);
     tmps.replace("\\","/");
     SetCWData("dsheetcw",tmps);
@@ -537,8 +683,23 @@ void cmp_maindialog::FillAltDialog(QStringList vl)
     SetChBData("issmdchb",vl.at(26));
     // Nominal = 27
     // Unit = 28
-    SetLEData("par3le",vl.at(29));
-    SetLEData("par4le",vl.at(30));
+    SetParLE(3,vl.at(29));
+    SetParLE(4,vl.at(30));
+/*    SetLEData("par3le",vl.at(29));
+    SetLEData("par4le",vl.at(30)); */
+    EnablePartNumberCreator(vl.at(6)); // принудительно вызываем включение формирователя поля PartNumber, если вдруг производитель оказался "НКП"
+                                        // в конце - т.к. prefix формируется так же на основании isSMD
+}
+
+// запись в поле par<i>LE значения ParValue с разбиением на само значение и единицы измерения
+
+void cmp_maindialog::SetParLE(int ParNum, QString ParValue)
+{
+    QStringList tmpsl = ParValue.split(" ");
+    if (!tmpsl.isEmpty())
+        SetLEData("par"+QString::number(ParNum)+"le", tmpsl.at(0)); // записали значение параметра
+    if (tmpsl.size() > 1)
+        SetCBData("par"+QString::number(ParNum)+"cb", tmpsl.at(1)); // записали значение в поле единиц измерения
 }
 
 QStringList cmp_maindialog::GetAltData()
@@ -554,14 +715,17 @@ QStringList cmp_maindialog::GetAltData()
     vl.append(LEData("partnumber"));
     vl.append(LEData("packagele"));
     vl.append(LEData("markingle"));
-    vl.append(LEData("par0le"));
-    vl.append(LEData("par1le"));
+    vl.append(ParLE(0));
+    vl.append(ParLE(1));
+/*    vl.append(LEData("par0le"));
+    vl.append(LEData("par1le")); */
     vl.append(LEData("accuracyle"));
     vl.append(LEData("mintemple"));
     vl.append(LEData("maxtemple"));
     vl.append(LEData("maxpowerle"));
     vl.append(LEData("tkcle"));
-    vl.append(LEData("par2le"));
+    vl.append(ParLE(2));
+//    vl.append(LEData("par2le"));
 //    vl.append(CWData("dsheetcw"));
     QString tmps = CWData("dsheetcw");
     tmps.replace("/","\\\\");
@@ -576,9 +740,20 @@ QStringList cmp_maindialog::GetAltData()
     vl.append(ChBData("issmdchb"));
     vl.append(""); // Nominal = 27
     vl.append(""); // Unit = 28
-    vl.append(LEData("par3le"));
-    vl.append(LEData("par4le"));
+    vl.append(ParLE(3));
+    vl.append(ParLE(4));
+/*    vl.append(LEData("par3le"));
+    vl.append(LEData("par4le")); */
     return vl;
+}
+
+// формирование из par<i>LE и соответствующего поля в единицах измерения общей записи
+
+QString cmp_maindialog::ParLE(int ParNum)
+{
+    QString tmps = LEData("par"+QString::number(ParNum)+"le"); // взяли значение из поля
+    QString tmps2 = CBData("par"+QString::number(ParNum)+"cb"); // взяли значение из поля единиц измерения
+    return tmps+" "+tmps2;
 }
 
 void cmp_maindialog::SetCWData(QString cwname, QVariant data)
@@ -629,6 +804,22 @@ QString cmp_maindialog::ChBData(QString chbname)
         return QString();
 }
 
+void cmp_maindialog::SetCBData(QString cbname, QVariant data)
+{
+    s_tqComboBox *cb = this->findChild<s_tqComboBox *>(cbname);
+    if (cb != 0)
+        cb->setCurrentText(data.toString());
+}
+
+QString cmp_maindialog::CBData(QString cbname)
+{
+    s_tqComboBox *cb = this->findChild<s_tqComboBox *>(cbname);
+    if (cb != 0)
+        return (cb->currentText());
+    else
+        return QString();
+}
+
 void cmp_maindialog::AddManuf()
 {
     QString newID = tfl.insert("Производители_полн");
@@ -644,7 +835,7 @@ void cmp_maindialog::CancelAndClose()
 {
     if (Changed)
     {
-        if (QMessageBox::question(this, "Данные были изменены", "Всё равно выйти?", QMessageBox::Yes|QMessageBox::No,\
+        if (QMessageBox::question(this, "Выйти?", "Данные были изменены\nВсё равно выйти?", QMessageBox::Yes|QMessageBox::No,\
                               QMessageBox::No) == QMessageBox::No)
             return;
     }
@@ -711,5 +902,6 @@ void cmp_maindialog::emiterror(int er1, int er2)
 
 void cmp_maindialog::SomethingChanged()
 {
-    Changed = true;
+    if (ChangeEnabled)
+        Changed = true;
 }

@@ -3,7 +3,7 @@
 
 #define CMP_ALTIUM      0x01
 #define CMP_SOLIDWORKS  0x02
-#define CMP_SHEMAGEE    0x03
+#define CMP_SСHEMAGEE   0x03
 #define CMP_CONSTR      0x04
 #define CMP_DEVICES     0x05
 
@@ -25,17 +25,11 @@ public:
     bool SomethingChanged;
 
     void SetupUI();
-    void FillDialog (QString);
-    void ClearDialog ();
 
 signals:
     void error(int,int);
 
 public slots:
-
-    void DeletePBClicked();
-    void ManufCBIndexChanged(const QString &arg1);
-    void SetSomethingChanged ();
 
 private slots:
     void emiterror(int,int);
@@ -47,30 +41,18 @@ private slots:
     void DeleteItem();
     void StartCompDialog(QString Id, bool ByExisting = false);
     void SlaveContextMenu(QPoint);
-    void UpdatePartNumber ();
-    void DeclinePBClicked();
-    void AcceptAndClosePBClicked();
-    void VoltageOrAccuracyAccIsChecked ();
-    void ModelParPBClicked();
-    void test();
 
 protected:
     void paintEvent(QPaintEvent *);
 
 private:
-//    int RevNotes;
-//    int curUnit;
-    QString PathString;
-    QMetaObject::Connection handle1, handle2, handle3, handle4, handle5, handle6, handle7; // 6 = 0.34-ah, 7 = 0.4
     QString CompLetter, CompDb, CompTbles;
     int CompType, CompTble;
     s_ncmodel *slavemodel;
 
     bool CheckAndAdd();
     bool isModified();
-    bool ConnectPartNumber();
-    bool DisconnectPartNumber ();
-    void SetParNames();
+    void CheckNkAndAdd(int id); // проверка на элемента на существование в БД номенклатуры и его добавление
 };
 
 #endif // cmp_COMPDIALOG_H

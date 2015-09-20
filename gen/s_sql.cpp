@@ -89,7 +89,7 @@ QStringList s_sql::getvaluesfromtablebyid(QSqlDatabase db, QString tble, QString
     QStringList vl;
 
     vl = getvaluesfromtablebyfield(db, tble, fields, "id"+tble, id);
-    result=0;
+//    result=0;
     return vl;
 }
 

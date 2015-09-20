@@ -571,6 +571,34 @@ QStringList s_tablefields::valuesbyfield(QString tble, QStringList fl, QString c
     return sl;
 }
 
+QStringList s_tablefields::valuesbyfields(QString tble, QStringList fl, QStringList cmpfields, QStringList cmpvalues)
+{
+    if ((cmpfields.size() != cmpvalues.size()) || cmpfields.size() == 0)
+    {
+        result = ER_TFIELD+0xE0;
+        return QStringList();
+    }
+    QStringList cmpfl, tmpsl;
+    // взяли все реальные названия полей сравнения
+    for (int i=0; i<cmpfields.size(); i++)
+    {
+        tmpsl = tablefields(tble,cmpfields.at(i));
+        if (result)
+            return QStringList();
+        cmpfl << tmpsl.at(1);
+    }
+    QString cmpdb = tmpsl.at(0).split(".").at(0); // реальное имя БД
+    QString cmptble = tmpsl.at(0).split(".").at(1); // реальное название таблицы
+    QStringList tmps = sqlc.getvaluesfromtablebyfields(sqlc.getdb(cmpdb),cmptble,fl,cmpfl,cmpvalues);
+    if (sqlc.result)
+    {
+        result = ER_TFIELD+0xE1+sqlc.result;
+        return QStringList();
+    }
+    result = 0;
+    return tmps;
+}
+
 QStringList s_tablefields::tablefields(QString tble, QString header)
 {
     QStringList fl = QStringList() << "table" << "tablefields" << "links";

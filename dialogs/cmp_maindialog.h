@@ -28,8 +28,10 @@ signals:
 
 private:
     QString CompDb, CompTble, CompId, CompType;
-    bool Changed;
+    bool Changed, ChangeEnabled;
     int RevNotes;
+    bool PartNumberCreatorEnabled;
+    QList <QMetaObject::Connection *> handles;
 
     void SetAltDialog();
     void FillAltDialog(QStringList);
@@ -40,7 +42,13 @@ private:
     QString LEData(QString lename);
     void SetChBData(QString chbname, QVariant data);
     QString ChBData(QString chbname);
+    void SetCBData(QString cbname, QVariant data);
+    QString CBData(QString cbname);
     void SetUnitsAndPars();
+    void ClearHandles();
+    void SetPrefixesVisible(bool isVisible);
+    void ConnectPartNumberCreatorLE(QString lename); // подключение функции изменения значения PartNumber от сигнала изменения поля ввода
+    void ConnectPartNumberCreatorCB(QString cbname); // подключение функции изменения значения PartNumber от сигнала изменения комбобокса
 
 protected:
     void paintEvent(QPaintEvent *);
@@ -51,7 +59,10 @@ private slots:
     void CancelAndClose();
     void SomethingChanged();
     void emiterror(int er1,int er2);
-
+    void EnablePartNumberCreator(QVariant Manufacturer);
+    void PartNumberCreator();
+    void SetParLE(int ParNum, QString ParValue);
+    QString ParLE(int ParNum);
 };
 
 #endif // CMP_MAINDIALOG_H

@@ -76,10 +76,12 @@ void cmp_compdialog::SetupUI()
     s_tqPushButton *pb = new s_tqPushButton;
     pb->setIcon(QIcon(":/res/newdocy.png"));
     connect(pb, SIGNAL(clicked()), this, SLOT(AddNewItem()));
+    pb->setToolTip("Создать новый компонент");
     hlyout->addWidget(pb);
     pb = new s_tqPushButton;
     pb->setIcon(QIcon(":/res/cross.png"));
     connect(pb, SIGNAL(clicked()), this, SLOT(close()));
+    pb->setToolTip("Закрыть вкладку");
     hlyout->addWidget(pb);
     hlyout->addSpacing(20);
     pb = new s_tqPushButton;
@@ -190,11 +192,6 @@ void cmp_compdialog::MainItemChoosed(QModelIndex idx)
     QApplication::restoreOverrideCursor();
 }
 
-void cmp_compdialog::test()
-{
-    emit error (0,0);
-}
-
 void cmp_compdialog::EditItem()
 {
     SlaveItemChoosed(QModelIndex());
@@ -254,10 +251,9 @@ void cmp_compdialog::AddNewItem()
         emit error(ER_COMP+sqlc.result, 0x32);
         return;
     }
-    cmp_maindialog *dlg = new cmp_maindialog;
-    dlg->SetupUI(CompType,CompTble,CompID);
-    connect(dlg,SIGNAL(error(int,int)),this,SLOT(emiterror(int,int)));
-    dlg->exec();
+    StartCompDialog(QString::number(CompID));
+    // теперь добавим в перечень номенклатуры, если такового ещё нет
+    CheckNkAndAdd(CompID);
 }
 
 void cmp_compdialog::AddNewOnExistingItem()
@@ -270,16 +266,13 @@ void cmp_compdialog::AddNewOnExistingItem()
     }
     QString CompIDs = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole).toString();
     StartCompDialog(CompIDs,true); // создаём на базе компонента CompIDs компонент с новым индексом
+    CheckNkAndAdd(CompIDs.toInt());
 }
 
 void cmp_compdialog::DeleteItem()
 {
-    QMessageBox msgBox;
-    msgBox.setText("Вы уверены, что хотите удалить элемент?");
-    msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
-    msgBox.setDefaultButton(QMessageBox::Cancel);
-    int res = msgBox.exec();
-    if (res == QMessageBox::Cancel)
+    if (QMessageBox::question(this, "Удалить элемент", "Вы уверены, что хотите удалить элемент?", QMessageBox::Yes|QMessageBox::No,\
+                          QMessageBox::No) == QMessageBox::No)
         return;
     s_tqTableView *tv = this->findChild<s_tqTableView *>("stv");
     if (tv == 0)
@@ -301,209 +294,75 @@ void cmp_compdialog::DeleteItem()
     }
 }
 
-// --------------------------------------
-// Заполняем элементы диалогового окна (комбо-боксы) данными из БД
-// --------------------------------------
+// проверка элемента на существование в БД номенклатуры и его добавление
 
-void cmp_compdialog::FillDialog (QString PartNumber)
+void cmp_compdialog::CheckNkAndAdd(int id)
 {
-/*    QSqlQuery get_data_from_db(pc.alt);
-
-    QString tmpString = "SELECT `id`, `Library Ref`, `Footprint Ref`,"\
-            "`Sim Description`,`Sim File`,`Sim Model Name`,`Sim Parameters`,"\
-            "`Manufacturer`,`PartNumber`,`Package`,`Marking`,`NominalValue`,"\
-            "`NominalVoltage`,`Tolerance`,`OpTemperaturen`,`OpTemperaturem`,"\
-            "`Pmax`,`TC`,`prefix`,`HelpURL`,`RevNotes`,"\
-            "`Discontinued`,`Description`,`Notes`,`isSMD`,`Nominal`,`Unit`,`Par3` FROM " \
-            + pc.dbs[pc.dbs_index].dbs + " WHERE PartNumber=\"" \
-            + PartNumber + "\";";
-    get_data_from_db.exec(tmpString);
-    get_data_from_db.next();
-    if (get_data_from_db.isValid());
-    else
+    QStringList sl = QStringList() << "" << "Элемент в БД altium" << "Элемент в БД solidworks" << "Элемент в БД schemagee" << "Элемент в БД конструктивов" << "Элемент в БД устройств";
+    QString ElementString = sl.at(CompType);
+    // сначала берём наименование и производителя из соответствующей БД компонентов
+    QStringList fl = QStringList() << "PartNumber" << "Manufacturer";
+    QStringList vl = sqlc.getvaluesfromtablebyid(sqlc.getdb(CompDb),CompTbles,fl,QString::number(id));
+    if (sqlc.result) // нет такого элемента или ошибка в БД
     {
-        QMessageBox::warning(this,"Внимание!",\
-// 0.4                             "Запись в БД не найдена!",
-                             get_data_from_db.lastError().text(), \
-                             QMessageBox::Ok, QMessageBox::NoButton);
+        emit error(ER_COMP, 0x41);
         return;
     }
-
-
-    // поле id в поле id
-    tmpString = get_data_from_db.value(0).toString();
-    pc.idRecord = tmpString.toInt(0);
-
-    SectionLE->setText(pc.dbs[pc.dbs_index].alias);
-    FillNullDialog();
-    Action=INSERT;
-    idCompLE->setText(QString::number(pc.idRecord));
-
-    // поле LibRef в комбо-бокс LibRefCB
-    tmpString=get_data_from_db.value(1).toString();
-    if (LibRefCB->findText(tmpString) == -1)
+    // теперь надо взять индекс производителя
+    QStringList tmpfl = QStringList() << "ИД";
+    QStringList cmpvl;
+    if (vl.size()>1)
+        cmpvl = tfl.valuesbyfield("Производители_сокращ",tmpfl,"Наименование",vl.at(1)); // в cmpvl один нулевой элемент - индекс производителя
+    else
     {
-        QMessageBox::warning(this,"Внимание!",\
-                             "Не найдено УГО в библиотеке!",\
-                             QMessageBox::Ok, QMessageBox::NoButton);
+        emit error (ER_COMP, 0x42);
+        return;
     }
-    LibRefCB->setCurrentText(tmpString);
-
-    // поле FootRef в комбо-бокс FootPrintCB
-    tmpString=get_data_from_db.value(2).toString();
-    if (FootPrintCB->findText(tmpString) == -1)
+    if (tfl.result)
     {
-        QMessageBox::warning(this,"Внимание!",\
-                             "Не найден футпринт в библиотеке!",\
-                             QMessageBox::Ok, QMessageBox::NoButton);
+        emit error (ER_COMP, 0x43);
+        return;
     }
-    FootPrintCB->setCurrentText(tmpString);
-
-    pc.CompModelData.MDescLE = get_data_from_db.value(3).toString(); // 0.4b
-    pc.CompModelData.MFileLE = get_data_from_db.value(4).toString(); // 0.4b
-    pc.CompModelData.MNameCB = get_data_from_db.value(5).toString(); // 0.4b
-    pc.CompModelData.MParLE = get_data_from_db.value(6).toString(); // 0.4b
-
-    tmpString=get_data_from_db.value(7).toString();
-    if (ManufCB->findText(tmpString) == -1)
+    // теперь ищем в БД номенклатуры такой уже элемент
+    fl << QStringList() << "ИД" << ElementString;
+    tmpfl = QStringList() << "Наименование" << "Производитель";
+    cmpvl.insert(0, vl.at(0)); // вставка перед производителем наименования компонента
+    QStringList nkidsl = tfl.valuesbyfields("Номенклатура_полн",fl,tmpfl,cmpvl);
+    if (tfl.result) // нет такого или ошибка
     {
-        QMessageBox::warning(this,"Внимание!",\
-                             "Не найден производитель!",\
-                             QMessageBox::Ok, QMessageBox::NoButton);
-    }
-    ManufCB->setCurrentText(tmpString);
+        // создаём новый элемент в БД номенклатуры
+        tfl.insert("Номенклатура_полн");
+        // найдём ИД в таблице категорий
+        QStringList letsl = QStringList() << "" << "А" << "З" << "Э" << "К" << "У";
+        fl = QStringList() << "Описание";
+        QStringList tblesl = tfl.valuesbyfield(letsl.at(CompType)+"Компоненты_описание_сокращ",fl,"ИД",QString::number(CompTable));
 
-    if (ManufCB->currentText() == "НКП")
-    {
-        isNeedToAccAccuracyInNameCB->setEnabled(true);
-        isNeedToAccVoltageInNameCB->setEnabled(true);
+        fl = QStringList() << "Наименование" << "Категория" << "Производитель" << ElementString;
+        vl.insert(1,); // vl уже содержит PartNumber (0) и Manufacturer (1)
     }
     else
     {
-        isNeedToAccAccuracyInNameCB->setEnabled(false);
-        isNeedToAccVoltageInNameCB->setEnabled(false);
-    }
-
-    TypeLE->setText(get_data_from_db.value(9).toString());
-    MarkLE->setText(get_data_from_db.value(10).toString());
-    tmpString = get_data_from_db.value(11).toString(); // 0.34-aj
-    Par1LE->setText(tmpString.split(" ").value(0)); // 0.34-aj
-    Par2LE->setText(get_data_from_db.value(12).toString());
-    AccuracyLE->setText(get_data_from_db.value(13).toString());
-    MinOpTLE->setText(get_data_from_db.value(14).toString());
-    MaxOpTLE->setText(get_data_from_db.value(15).toString());
-    MaxPowerLE->setText(get_data_from_db.value(16).toString());
-    TKCLE->setText(get_data_from_db.value(17).toString());
-    PrefixLE->setText(get_data_from_db.value(18).toString());
-    DSheetLE->setText(get_data_from_db.value(19).toString());
-    RevNotes = get_data_from_db.value(20).toInt(0);
-    if (get_data_from_db.value(21).toString() == "0")
-        isActiveCB->setChecked(true);
-    else
-        isActiveCB->setChecked(false);
-    PEDescLE->setText(get_data_from_db.value(22).toString());
-    PENotesLE->setText(get_data_from_db.value(23).toString());
-
-    if (get_data_from_db.value(24).toString() == "0")
-        isSMDCB->setChecked(false); // 0.4 false <=> true
-    else
-        isSMDCB->setChecked(true);
-
-    if (get_data_from_db.value(25).toString() != "")
-        Par1LE->setText(get_data_from_db.value(25).toString());
-
-    QSqlQuery get_units (pc.ent);
-    get_units.exec("SELECT `units` FROM `units` WHERE `idunits`=" + get_data_from_db.value(26).toString() + ";");
-    get_units.next();
-    if (get_units.isValid())
-        UnitsCB->setCurrentText(get_units.value(0).toString());
-    else
-        UnitsCB->setCurrentText(tmpString.split(" ").value(1));
-
-    Par3LE->setText(get_data_from_db.value(27).toString());
-
-    PartNumberLE->setText(get_data_from_db.value(8).toString());
-
-    SomethingChanged = false;*/
-}
-
-// --------------------------------------
-// Очистка диалога
-// --------------------------------------
-
-void cmp_compdialog::ClearDialog ()
-{
-/*    LibRefCB->setCurrentIndex(-1);
-    FootPrintCB->setCurrentIndex(-1);
-
-    pc.CompModelData.MDescLE = ""; // 0.4b
-    pc.CompModelData.MFileLE = ""; // 0.4b
-    pc.CompModelData.MNameCB = ""; // 0.4b
-    pc.CompModelData.MParLE = ""; // 0.4b
-
-    ManufCB->setCurrentIndex(-1);
-
-    PartNumberLE->setText("");
-    TypeLE->setText("");
-    MarkLE->setText("");
-    Par1LE->setText("");
-    Par2LE->setText("");
-    AccuracyLE->setText("");
-    MinOpTLE->setText("");
-    MaxOpTLE->setText("");
-    MaxPowerLE->setText("");
-    TKCLE->setText("");
-    PrefixLE->setText("");
-    DSheetLE->setText("");
-    isActiveCB->setChecked(false);
-    PEDescLE->setText("");
-    PENotesLE->setText("");
-    isSMDCB->setChecked(false);
-    UnitsCB->clear();
-    Par3LE->setText("");*/
-}
-
-// --------------------------------------
-// Отменили работу с диалогом
-// --------------------------------------
-
-void cmp_compdialog::DeclinePBClicked()
-{
-    this->close();
-}
-
-// --------------------------------------
-// Захотели записать и закрыть
-// --------------------------------------
-
-void cmp_compdialog::AcceptAndClosePBClicked()
-{
-/*    if (SomethingChanged && (Action == UPDATE))
-    {
-        QMessageBox tmpMB;
-        tmpMB.setText("Изменить текущую запись или создать новую?");
-//        tmpMB.setInformativeText("Записать их?");
-        QPushButton *tmpOkPB = tmpMB.addButton("Изменить", QMessageBox::AcceptRole);
-        QPushButton *tmpCancelPB = tmpMB.addButton("Создать", QMessageBox::RejectRole);
-        tmpMB.exec();
-        if (tmpMB.clickedButton() == tmpOkPB)
-            Action = UPDATE;
-        else if (tmpMB.clickedButton() == tmpCancelPB)
+        // проверяем, есть ли у данного элемента в БД ссылка на данный компонент (может, уже было создано ранее для другого раздела)
+        if (nkidsl.at(1).isEmpty())
         {
-            GetNextId();
-            idCompLE->setText(QString::number(pc.idRecord));
-            Action = INSERT;
+            // нет ссылки, записываем её методом обновления
         }
         else
-            return;
-    }
-    if (CheckAndAdd())
-        this->close();*/
-}
+        {
+            if (nkidsl.at(1) == QString::number(id))
+            {
+                // есть уже точно такая же запись, ничего не делаем и выходим
+                return;
+            }
+            else
+            {
+                if (QMessageBox::question(this, "Запись найдена", "В БД номенклатуры есть такой элемент,\nно с другой ссылкой ("+nkidsl.at(1)+"). Перезаписать?", \
+                                          QMessageBox::Yes|QMessageBox::No, QMessageBox::No) == QMessageBox::No)
+                    return;
 
-void cmp_compdialog::SetSomethingChanged ()
-{
-    SomethingChanged = true;
+            }
+        }
+    }
 }
 
 // --------------------------------------
@@ -578,118 +437,7 @@ bool cmp_compdialog::CheckAndAdd()
     else
         curUnit = 0;
 
-    if (Action == INSERT)
-    {
-        RevNotes = 1;
 
-        if (DSheetLE->text().mid(0,1) == "\\") // преобразование слэшей в пути к DSheet в нужные символы
-            tmpString = DSheetLE->text().replace("\\","\\\\");
-        else
-            tmpString = DSheetLE->text().replace("/","\\\\");
-
-        tmpString="INSERT INTO " + pc.dbs[pc.dbs_index].dbs + \
-                " (`Library Ref`,`Library Path`,`Footprint Ref`,`Footprint Path`,"\
-                "`Sim Description`,`Sim File`,`Sim Model Name`,`Sim Parameters`,"\
-                "`Manufacturer`,`PartNumber`,`Package`,`Marking`,`NominalValue`,"\
-                "`NominalVoltage`,`Tolerance`,`OpTemperaturen`,`OpTemperaturem`,"\
-                "`Pmax`,`TC`,`Creator`,`Modify Date`,`prefix`,`HelpURL`,`RevNotes`,"\
-                "`Discontinued`,`Description`,`Notes`,`isSMD`,`Nominal`,`Unit`,`Par3`,`deleted`) VALUES (\""\
-                + LibRefCB->currentText() + "\",\"" \
-                + SymPath.replace("/","\\\\") + "\",\"" \
-                + FootPrintCB->currentText() + "\",\"" \
-                + FootPath.replace("/","\\\\") + "\",\"" \
-                + pc.CompModelData.MDescLE + "\",\"" \
-                + pc.CompModelData.MFileLE + "\",\"" \
-                + pc.CompModelData.MNameCB + "\",\"" \
-                + pc.CompModelData.MParLE + "\",\"" \
-                + ManufCB->currentText() + "\",\"" \
-                + PartNumberLE->text() + "\",\"" \
-                + TypeLE->text() + "\",\"" \
-                + MarkLE->text() + "\",\"" \
-                + Par1LE->text() + " " + UnitsCB->currentText() + "\",\"" \
-                + Par2LE->text() + "\",\"" \
-                + AccuracyLE->text() + "\",\"" \
-                + MinOpTLE->text() + "\",\"" \
-                + MaxOpTLE->text() + "\",\"" \
-                + MaxPowerLE->text() + "\",\"" \
-                + TKCLE->text() + "\"," \
-                + QString::number(pc.idPers) + ",\"" \
-                + QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss") + "\",\"" \
-                + PrefixLE->text() + "\",\"" \
-                + tmpString + "\"," \
-                + QString::number(RevNotes) + ",\"" \
-                + QString::number(static_cast<int>(!isActiveCB->isChecked())) + "\",\"" \
-                + PEDescLE->text() + "\",\"" \
-
-                + PENotesLE->text() + "\"," \
-                + QString::number(static_cast<int>(isSMDCB->isChecked())) + ",\"" \
-                + Par1LE->text() + "\",\"" \
-                + QString::number(curUnit) + "\",\"" \
-                + Par3LE->text() + "\",0);";
-
-    }
-    if (Action == UPDATE)
-    {
-        RevNotes++;
-
-        if (DSheetLE->text().mid(0,1) == "\\") // преобразование слэшей в пути к DSheet в нужные символы
-            tmpString = DSheetLE->text().replace("\\","\\\\");
-        else
-            tmpString = DSheetLE->text().replace("/","\\\\");
-
-        tmpString = "UPDATE " + pc.dbs[pc.dbs_index].dbs + \
-                + " SET `Library Ref`=\"" \
-                + LibRefCB->currentText() + "\",`Library Path`=\"" \
-                + SymPath.replace("/","\\\\") + "\",`Footprint Ref`=\"" \
-                + FootPrintCB->currentText() + "\",`Footprint Path`=\"" \
-                + FootPath.replace("/","\\\\") + "\",`Sim Description`=\"" \
-/* 0.4b                + MDescLE->text() + "\",`Sim File`=\"" \
-                + MFileLE->text() + "\",`Sim Model Name`=\"" \
-                + MNameCB->currentText() + "\",`Sim Parameters`=\"" \
-                + MParLE->text() + "\",`Manufacturer`=\"" \ */
-// 0.4b {{{
-/*                + pc.CompModelData.MDescLE + "\",`Sim File`=\"" \
-                + pc.CompModelData.MFileLE + "\",`Sim Model Name`=\"" \
-                + pc.CompModelData.MNameCB + "\",`Sim Parameters`=\"" \
-                + pc.CompModelData.MParLE + "\",`Manufacturer`=\"" \
-// }}} 0.4b
-                + ManufCB->currentText() + "\",`PartNumber`=\"" \
-                + PartNumberLE->text() + "\",`Package`=\"" \
-                + TypeLE->text() + "\",`Marking`=\"" \
-                + MarkLE->text() + "\",`NominalValue`=\"" \
-                + Par1LE->text() + " " + UnitsCB->currentText() + "\",`NominalVoltage`=\"" \
-                + Par2LE->text() + "\",`Tolerance`=\"" \
-                + AccuracyLE->text() + "\",`OpTemperaturen`=\"" \
-                + MinOpTLE->text() + "\",`OpTemperaturem`=\"" \
-                + MaxOpTLE->text() + "\",`Pmax`=\"" \
-                + MaxPowerLE->text() + "\",`TC`=\"" \
-// 0.4                + TKCLE->text() + "\",`Creator`="
-// 0.4                + QString::number(pc.idPers) + ",`Modify Date`=\""
-                + TKCLE->text() + "\",`Modify Date`=\"" \
-                + QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss") +"\",`prefix`=\"" \
-                + PrefixLE->text() + "\",`HelpURL`=\"" \
-                + tmpString + "\",`RevNotes`=" \
-                + QString::number(RevNotes) + ",`Discontinued`=\"" \
-                + QString::number(static_cast<int>(!isActiveCB->isChecked())) + "\",`Description`=\"" \
-                + PEDescLE->text() + "\",`Notes`=\"" \
-
-                + PENotesLE->text() + "\",`deleted`=0,`isSMD`=\"" \
-// 0.4               + QString::number(static_cast<int>(!isSMDCB->isChecked())) + "\",`Nominal`=\""
-                + QString::number(static_cast<int>(isSMDCB->isChecked())) + "\",`Nominal`=\"" \
-                + Par1LE->text() + "\",`Unit`=\"" \
-                + QString::number(curUnit) + "\",`Par3`=\"" \
-                + Par3LE->text() + "\" WHERE id=" + idCompLE->text() + ";";
-
-
-    }
-    QSqlQuery insert_comp (pc.alt);
-    insert_comp.exec(tmpString);
-    // проверка успешности записи в БД
-    if (insert_comp.isActive())
-    {
-        QMessageBox::information(this,"Warning!",\
-                             "Записано успешно",\
-                             QMessageBox::Ok, QMessageBox::NoButton);
         if (Action == INSERT)
         {
             if (QMessageBox::question(this,\
@@ -744,148 +492,7 @@ bool cmp_compdialog::CheckAndAdd()
     }*/
     return true;
 }
-void cmp_compdialog::ManufCBIndexChanged(const QString &arg1)
-{
-/*    if (arg1 == "НКП")
-    {
-        isNeedToAccAccuracyInNameCB->setEnabled(true);
-        isNeedToAccVoltageInNameCB->setEnabled(true);
-        PrefixLE->setVisible(true); // 0.4b
-        PrefixL->setVisible(true);
-        PartNumberLE->setEnabled(false);
-        PEDescLE->setEnabled(false);
-        UpdatePartNumber();
-        ConnectPartNumber();
-    }
-    else
-    {
-        isNeedToAccAccuracyInNameCB->setEnabled(false);
-        isNeedToAccVoltageInNameCB->setEnabled(false);
-        PrefixL->setVisible(false); // 0.4b
-        PrefixLE->setVisible(false);
-        PartNumberLE->setEnabled(true);
-        PEDescLE->setEnabled(true);
-        DisconnectPartNumber();
-    }*/
-}
 
-void cmp_compdialog::SetParNames()
-{
-/*    QSqlQuery get_parnames(pc.sup);*/
-
-}
-
-bool cmp_compdialog::ConnectPartNumber()
-{
-/*    handle1 = connect(PrefixLE, SIGNAL(textChanged(QString)), this, SLOT(UpdatePartNumber()));
-    handle2 = connect(Par1LE, SIGNAL(textChanged(QString)), this, SLOT(UpdatePartNumber()));
-    handle3 = connect(AccuracyLE, SIGNAL(textChanged(QString)), this, SLOT(UpdatePartNumber()));
-    handle4 = connect(TypeLE, SIGNAL(textChanged(QString)), this, SLOT(UpdatePartNumber()));
-    handle5 = connect(MaxPowerLE, SIGNAL(textChanged(QString)), this, SLOT(UpdatePartNumber()));
-    handle6 = connect(Par2LE, SIGNAL(textChanged(QString)), this, SLOT(UpdatePartNumber()));
-    handle7 = connect(UnitsCB, SIGNAL(currentTextChanged(QString)) , this, SLOT(UpdatePartNumber()));
-    bool result = handle1 && handle2 && handle3 && handle4 && handle5 && handle6 && handle7;
-    return result;*/
-    return true;
-}
-
-void cmp_compdialog::UpdatePartNumber()
-{
-/*    QString tmpString;
-    if (SectionLE->text() == "Конденсаторы")
-    {
-        tmpString = PrefixLE->text() + " Конд. " + Par1LE->text() + " " + UnitsCB->currentText() + ",";
-        if (isNeedToAccVoltageInNameCB->isChecked())
-            tmpString += Par2LE->text() + ",";
-        if (isNeedToAccAccuracyInNameCB->isChecked())
-            tmpString += AccuracyLE->text() + ",";
-        tmpString += "тип " + TypeLE->text();
-    }
-    else if (SectionLE->text() == "Резисторы")
-    {
-
-        tmpString = PrefixLE->text() + " Рез. " + MaxPowerLE->text() + "-" \
-                + Par1LE->text() + " " + UnitsCB->currentText() + "-";
-        if (isNeedToAccAccuracyInNameCB->isChecked())
-            tmpString += AccuracyLE->text() + ",";
-        tmpString += "тип " + TypeLE->text();
-    }
-    else
-        tmpString = PrefixLE->text();
-    PartNumberLE->setText(tmpString);
-    PEDescLE->setText(tmpString);*/
-}
-
-bool cmp_compdialog::DisconnectPartNumber()
-{
-/*    if (handle1)
-        if (!disconnect(handle1)) return false;
-    if (handle2)
-        if (!disconnect(handle2)) return false;
-    if (handle3)
-        if (!disconnect(handle3)) return false;
-    if (handle4)
-        if (!disconnect(handle4)) return false;
-    if (handle5)
-        if (!disconnect(handle5)) return false;
-    if (handle6) // 0.34-ah
-        if (!disconnect(handle6)) return false;
-    if (handle7) // 0.4
-        if (!disconnect(handle7)) return false; // 0.4
-    return true;*/
-    return true;
-}
-
-void cmp_compdialog::DeletePBClicked()
-{
-/*    QString tmpString;
-    if (pc.access & 0x07)
-    {
-//        qtdd.ManufLE->setText(ManufCB->currentText());
-//        qtdd.PartNumberLE->setText(PartNumberLE->text());
-//        qtdd.isAccepted = false;
-//        qtdd.exec();
-//        if (qtdd.isAccepted == true)
-//        {
-            QSqlQuery delete_comp_from_db (pc.alt);
-
-            tmpString = "UPDATE " + pc.dbs[pc.dbs_index].dbs + " SET `deleted`=1 WHERE `Manufacturer`=\"" + ManufCB->currentText() \
-                    + "\" AND `PartNumber`=\"" + PartNumberLE->text() + "\";";
-            delete_comp_from_db.exec(tmpString);
-            if (delete_comp_from_db.isActive())
-            {
-                QMessageBox::information(this,"Warning!",\
-                                     "Удалено успешно",\
-                                     QMessageBox::Ok, QMessageBox::NoButton);
-            }
-            else
-            {
-                QMessageBox::information(this,"Ошибка при удалении!",\
-                                     delete_comp_from_db.lastError().text(),\
-                                     QMessageBox::Ok, QMessageBox::NoButton);
-            }
-//        }
-    }
-    else
-    {
-        QMessageBox::warning(this,"Warning!",\
-                             "Недостаточно привилегий для выполнения действия!",\
-                             QMessageBox::Ok, QMessageBox::NoButton);
-    }
-    this->close();*/
-}
-
-void cmp_compdialog::VoltageOrAccuracyAccIsChecked()
-{
- /*   if (ManufCB->currentText() == "НКП")
-        UpdatePartNumber();*/
-}
-
-void cmp_compdialog::ModelParPBClicked()
-{
-//    qa_EditCompModelDialog.FillDialog();
-//    qa_EditCompModelDialog.exec();
-}
 
 void cmp_compdialog::SlaveContextMenu(QPoint)
 {

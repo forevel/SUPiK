@@ -292,7 +292,7 @@ void supik::Components()
     cmp_compdialog *qccda = new cmp_compdialog(CMP_ALTIUM);
     connect(qccda,SIGNAL(error(int,int)),this,SLOT(ShowErMsg(int,int)));
 
-    int ids = MainTW->addTab(qccda, "Компоненты");
+    int ids = MainTW->addTab(qccda, "Компоненты Altium");
     MainTW->tabBar()->setTabData(ids, QVariant(TW_COMP));
     MainTW->tabBar()->setCurrentIndex(ids);
     MainTW->repaint();

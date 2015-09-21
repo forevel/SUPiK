@@ -1,7 +1,6 @@
 #include <QtWidgets>
 #include <QTimer>
 #include "supik.h"
-#include "widgets/s_tqlabel.h"
 #include "dialogs/sys_settingsdialog.h"
 #include "dialogs/sys_systemdialog.h"
 #include "dialogs/dir_maindialog.h"
@@ -9,7 +8,9 @@
 #include "dialogs/cmp_compdialog.h"
 #include "dialogs/wh_dialog.h"
 #include "dialogs/sys_backuprestoredirdialog.h"
+#include "widgets/s_tqlabel.h"
 #include "widgets/s_colortabwidget.h"
+#include "widgets/s_tqtableview.h"
 #include "gen/publicclass.h"
 #include "gen/publiclang.h"
 #include "gen/s_sql.h"

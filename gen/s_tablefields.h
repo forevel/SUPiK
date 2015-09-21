@@ -25,7 +25,7 @@ public:
     QStringList tablelinks (QString tble);
     bool tableistree (QString tble);
     QStringList valuesbyfield(QString tble, QStringList fl, QString cmpfield, QString cmpvalue);
-    QString valuesbyfields(QString tble, QString fl, QStringList cmpfields, QStringList cmpvalues);
+    QStringList valuesbyfields(QString tble, QStringList fl, QStringList cmpfields, QStringList cmpvalues);
 
     int result;
 };

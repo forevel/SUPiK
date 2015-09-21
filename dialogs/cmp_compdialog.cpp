@@ -298,8 +298,8 @@ void cmp_compdialog::DeleteItem()
 
 void cmp_compdialog::CheckNkAndAdd(int id)
 {
-    QStringList sl = QStringList() << "" << "Элемент в БД altium" << "Элемент в БД solidworks" << "Элемент в БД schemagee" << "Элемент в БД конструктивов" << "Элемент в БД устройств";
-    QString ElementString = sl.at(CompType);
+    QStringList ElementSl = QStringList() << "" << "Элемент в БД altium" << "Элемент в БД solidworks" << "Элемент в БД schemagee" << "Элемент в БД конструктивов" << "Элемент в БД устройств";
+    QString ElementString = ElementSl.at(CompType);
     // сначала берём наименование и производителя из соответствующей БД компонентов
     QStringList fl = QStringList() << "PartNumber" << "Manufacturer";
     QStringList vl = sqlc.getvaluesfromtablebyid(sqlc.getdb(CompDb),CompTbles,fl,QString::number(id));
@@ -309,10 +309,10 @@ void cmp_compdialog::CheckNkAndAdd(int id)
         return;
     }
     // теперь надо взять индекс производителя
-    QStringList tmpfl = QStringList() << "ИД";
+    fl = QStringList() << "ИД";
     QStringList cmpvl;
     if (vl.size()>1)
-        cmpvl = tfl.valuesbyfield("Производители_сокращ",tmpfl,"Наименование",vl.at(1)); // в cmpvl один нулевой элемент - индекс производителя
+        cmpvl = tfl.valuesbyfield("Производители_сокращ",fl,"Наименование",vl.at(1)); // в cmpvl один нулевой элемент - индекс производителя
     else
     {
         emit error (ER_COMP, 0x42);
@@ -324,43 +324,86 @@ void cmp_compdialog::CheckNkAndAdd(int id)
         return;
     }
     // теперь ищем в БД номенклатуры такой уже элемент
-    fl << QStringList() << "ИД" << ElementString;
-    tmpfl = QStringList() << "Наименование" << "Производитель";
+    fl = QStringList() << "ИД" << ElementString;
+    QStringList cmpfl = QStringList() << "Наименование" << "Производитель";
     cmpvl.insert(0, vl.at(0)); // вставка перед производителем наименования компонента
-    QStringList nkidsl = tfl.valuesbyfields("Номенклатура_полн",fl,tmpfl,cmpvl);
+    QStringList nkidsl = tfl.valuesbyfields("Номенклатура_полн",fl,cmpfl,cmpvl);
+    QString tmps;
     if (tfl.result) // нет такого или ошибка
     {
-        // создаём новый элемент в БД номенклатуры
-        tfl.insert("Номенклатура_полн");
-        // найдём ИД в таблице категорий
-        QStringList letsl = QStringList() << "" << "А" << "З" << "Э" << "К" << "У";
+        // создаём новый элемент в БД карантинной номенклатуры
+        QString newID = tfl.insert("Номенклатура карантин_полн");
+        // найдём сначала описание категории в таблице описания для данной БД
         fl = QStringList() << "Описание";
-        QStringList tblesl = tfl.valuesbyfield(letsl.at(CompType)+"Компоненты_описание_сокращ",fl,"ИД",QString::number(CompTable));
-
-        fl = QStringList() << "Наименование" << "Категория" << "Производитель" << ElementString;
-        vl.insert(1,); // vl уже содержит PartNumber (0) и Manufacturer (1)
+        tmps = QString::number(CompTble); // убираем старшие незначащие нули
+        QStringList sl = tfl.valuesbyfield(CompLetter+"Компоненты_описание_полн",fl,"ИД",tmps); // взяли имя таблицы в БД, описание которой выбрали в главной таблице
+        if (tfl.result)
+        {
+            emit error(ER_COMP+tfl.result, 0x44);
+            return;
+        }
+        // теперь возьмём ИД в таблице категорий
+        fl = QStringList() << "ИД";
+        if (!sl.isEmpty())
+            tmps = sl.at(0);
+        else
+        {
+            emit error(ER_COMP, 0x45);
+            return;
+        }
+        sl = tfl.valuesbyfield("Категории_сокращ",fl,"Наименование",tmps);
+        if ((tfl.result) || (sl.isEmpty()))
+        {
+            emit error(ER_COMP+tfl.result, 0x46);
+            return;
+        }
+        fl = QStringList() << "ИД" << "Наименование" << "Категория" << "Производитель" << ElementString;
+        vl.insert(1,sl.at(0)); // vl уже содержит PartNumber (0) и Manufacturer (1), вставляем ИД категории
+        vl.append(QString::number(id)); // добавляем ИД компонента по его БД
+        vl.insert(0, newID);
+        tfl.idtois("Номенклатура карантин_полн", fl, vl);
+        if (tfl.result)
+        {
+            emit error(ER_COMP+tfl.result, 0x47);
+            return;
+        }
     }
     else
     {
-        // проверяем, есть ли у данного элемента в БД ссылка на данный компонент (может, уже было создано ранее для другого раздела)
-        if (nkidsl.at(1).isEmpty())
+        if (nkidsl.size()<2)
         {
-            // нет ссылки, записываем её методом обновления
+            emit error(ER_COMP, 0x48);
+            return;
         }
-        else
+        // проверяем, есть ли у данного элемента в БД ссылка на данный компонент (может, уже было создано ранее для другого раздела)
+        if (!nkidsl.at(1).isEmpty()) // ссылка есть
         {
-            if (nkidsl.at(1) == QString::number(id))
-            {
+            if (nkidsl.at(1) == QString::number(id)) // проверяем, ссылка на тот же компонент?
                 // есть уже точно такая же запись, ничего не делаем и выходим
                 return;
-            }
-            else
-            {
-                if (QMessageBox::question(this, "Запись найдена", "В БД номенклатуры есть такой элемент,\nно с другой ссылкой ("+nkidsl.at(1)+"). Перезаписать?", \
+            else if (QMessageBox::question(this, "Запись найдена", "В БД номенклатуры есть такой элемент,\nно с другой ссылкой ("+nkidsl.at(1)+"). Перезаписать?", \
                                           QMessageBox::Yes|QMessageBox::No, QMessageBox::No) == QMessageBox::No)
-                    return;
-
-            }
+                return;
+        }
+        // нет ссылки или она неправильная, записываем её методом обновления
+        // 1. Взять все значения, где ИД = nkidsl.at(0)
+        QStringList sl = QStringList() << "Наименование" << "Категория" << "Производитель" << ElementSl;
+        QStringList vl = tfl.valuesbyfield("Номенклатура_полн",sl,"ИД",nkidsl.at(0));
+        if ((tfl.result) || (vl.size()<8))
+        {
+            emit error(ER_COMP+tfl.result, 0x49);
+            return;
+        }
+        // 2. Обновить значение ElementString до QString::number(id)
+        vl.replace(sl.indexOf(ElementString), QString::number(id));
+        // 3. Отправить все значения обратно в таблицу
+        sl.insert(0, "ИД");
+        vl.insert(0, nkidsl.at(0));
+        tfl.idtois("Номенклатура_полн",sl,vl);
+        if (tfl.result)
+        {
+            emit error(ER_COMP, 0x4A);
+            return;
         }
     }
 }

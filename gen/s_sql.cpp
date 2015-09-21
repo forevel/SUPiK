@@ -16,13 +16,6 @@ QSqlDatabase s_sql::getdb(QString dbname)
     QSqlDatabase tmpdb;
     if (pc.db.keys().contains(dbname))
         tmpdb = pc.db[dbname];
-/*    if (dbname == "sup") tmpdb = pc.sup;
-    else if (dbname == "ent") tmpdb = pc.ent;
-    else if (dbname == "alt") tmpdb = pc.alt;
-    else if (dbname == "dev") tmpdb = pc.dev;
-    else if (dbname == "sch") tmpdb = pc.sch;
-    else if (dbname == "sol") tmpdb = pc.sol;
-    else if (dbname == "con") tmpdb = pc.con; */
     else
         return QSqlDatabase();
     return tmpdb;
@@ -32,14 +25,17 @@ QSqlDatabase s_sql::getdb(QString dbname)
 
 QString s_sql::fromdb(QSqlDatabase db)
 {
-    if (db.databaseName() == "supik") return "sup";
+/*    if (db.databaseName() == "supik") return "sup";
     else if (db.databaseName() == "enterprise") return "ent";
     else if (db.databaseName() == "altium") return "alt";
     else if (db.databaseName() == "solidworks") return "sol";
     else if (db.databaseName() == "devices") return "dev";
     else if (db.databaseName() == "schemagee") return "sch";
-    else if (db.databaseName() == "constructives") return "con";
-    else return QString();
+    else if (db.databaseName() == "constructives") return "con";*/
+    if (pc.db.values().contains(db))
+        return pc.db.key(db);
+    else
+        return QString();
 }
 
 // процедура возвращает базу данных по имени таблицы, которая в БД должна содержаться

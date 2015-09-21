@@ -407,7 +407,7 @@ QString s_tablefields::toid(QString tble, QString header, QString value)
 }
 
 // idtois - процедура обновления записи values по адресу table:tablefields для таблицы tble
-// ИД записи, по которой обновляются значения, хранятся в values.at(header.indexof("ИД"))
+// ИД записи, по которой обновляются значения, хранятся в values.at(headers.indexof("ИД"))
 
 void s_tablefields::idtois(QString tble, QStringList headers, QStringList values)
 {
@@ -416,6 +416,7 @@ void s_tablefields::idtois(QString tble, QStringList headers, QStringList values
         result = 0x71 + ER_TFIELD;
         return;
     }
+    // Сначала найдём для данной таблицы ключевое поле ("v") и по нему вытащим реальную БД, таблицу и наименование поля
     QStringList fl = QStringList() << "table" << "tablefields" << "header";
     QStringList cmpfl = QStringList() << "tablename" << "keyfield";
     QStringList cmpvl = QStringList() << tble << "v";
@@ -425,10 +426,9 @@ void s_tablefields::idtois(QString tble, QStringList headers, QStringList values
         result = 0x72 + ER_TFIELD;
         return;
     }
-    keydbtble.insert(1, keydbtble.at(0).split(".").at(1)); // в первом элементе будет tble
-    QString tmpString = keydbtble.at(0);
-    tmpString.remove(3, tmpString.size()-3);
-    keydbtble.replace(0, tmpString); // в нулевом элементе оставляем только db
+    QStringList tmpsl = keydbtble.at(0).split(".");
+    keydbtble.insert(1, tmpsl.at(1)); // в первом элементе будет tble
+    keydbtble.replace(0, tmpsl.at(0)); // в нулевом элементе оставляем только db
     int ididx = headers.indexOf(keydbtble.at(3)); // вытаскиваем индекс ключевого поля
     if (ididx == -1)
     {

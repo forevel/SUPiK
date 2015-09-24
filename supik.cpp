@@ -11,9 +11,10 @@
 #include "widgets/s_tqlabel.h"
 #include "widgets/s_colortabwidget.h"
 #include "widgets/s_tqtableview.h"
-#include "gen/publicclass.h"
+//#include "gen/publicclass.h"
 #include "gen/publiclang.h"
 #include "gen/s_sql.h"
+#include "models/s_ermodel.h"
 
 supik::supik()
 {
@@ -34,6 +35,7 @@ supik::supik()
     pf["WhSearch"] = &supik::WhSearch;
     pf["Quarantine"] = &supik::Quarantine;
     pf["SysDirectories"] = &supik::SysDirectories;
+    pf["Dummy"]=&supik::Dummy;
 }
 
 void supik::showEvent(QShowEvent *event)
@@ -68,6 +70,39 @@ void supik::SetSupikWindow()
     S_ColorTabWidget *MainTW = new S_ColorTabWidget;
     MainTW->setObjectName("MainTW");
     mainLayout->addWidget(MainTW, 100);
+    s_tqTableView *tv = new s_tqTableView;
+    s_ermodel *erm = new s_ermodel;
+    erm->setHeaderData(0, Qt::Horizontal, "Номер",Qt::EditRole);
+    erm->setHeaderData(1, Qt::Horizontal, "Дата/время",Qt::EditRole);
+    erm->setHeaderData(2, Qt::Horizontal, "Номер сообщения",Qt::EditRole);
+    erm->setHeaderData(3, Qt::Horizontal, "Тип сообщения",Qt::EditRole);
+    erm->setHeaderData(4, Qt::Horizontal, "Сообщение",Qt::EditRole);
+    tv->setModel(erm);
+    tv->resizeColumnsToContents();
+    connect(erm,SIGNAL(dataChanged(QModelIndex,QModelIndex)),tv,SLOT(resizeColumnsToContents()));
+    tv->horizontalHeader()->setStretchLastSection(true);
+    tv->horizontalHeader()->setEnabled(false);
+    tv->verticalHeader()->setVisible(false);
+    tv->verticalHeader()->setDefaultSectionSize(tv->verticalHeader()->fontMetrics().height()+2);
+    tv->setGridStyle(Qt::SolidLine);
+    tv->setShowGrid(true);
+    tv->setObjectName("ertv");
+//    tv->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Preferred);
+    QFrame* line = new QFrame;
+    line->setFrameShape(QFrame::HLine);
+    line->setFrameShadow(QFrame::Sunken);
+    upperLayout = new QHBoxLayout;
+    upperLayout->addWidget(line,2);
+    s_tqLabel *lbl = new s_tqLabel("Протокол работы СУПиК");
+    lbl->setEnabled(false);
+    upperLayout->addWidget(lbl,0);
+    upperLayout->setAlignment(lbl,Qt::AlignCenter);
+    line = new QFrame;
+    line->setFrameShape(QFrame::HLine);
+    line->setFrameShadow(QFrame::Sunken);
+    upperLayout->addWidget(line,2);
+    mainLayout->addLayout(upperLayout,0);
+    mainLayout->addWidget(tv,5);
     QWidget *wdgt = new QWidget;
     wdgt->setLayout(mainLayout);
     setCentralWidget(wdgt);
@@ -280,7 +315,7 @@ void supik::Components()
         return;
     if (!(pc.access & (ACC_SYS_FULL | ACC_ALT_FULL)))
     {
-        QMessageBox::warning(this, "warning!", "Недостаточно прав для продолжения!");
+        ERMSG(PublicClass::ER_SUPIK,__LINE__,"Недостаточно прав для продолжения!");
         return;
     }
     int idx = CheckForWidget(TW_COMP);
@@ -372,7 +407,7 @@ void supik::WhIncome()
         return;
     if (!(pc.access & (ACC_SYS_FULL | ACC_WH_FULL)))
     {
-        QMessageBox::warning(this, "warning!", "Недостаточно прав для продолжения!");
+        ERMSG(PublicClass::ER_SUPIK,__LINE__,"Недостаточно прав для продолжения!");
         return;
     }
 
@@ -399,7 +434,7 @@ void supik::WhOutgoing()
         return;
 /*    if (!(pc.access & (SYS_FULL | WH_FULL)))
     {
-        QMessageBox::warning(this, "warning!", "Недостаточно прав для продолжения!");
+        ERMSG(PublicClass::ER_SUPIK,__LINE__,"Недостаточно прав для продолжения!");
         return;
     }
 
@@ -417,6 +452,11 @@ void supik::WhSearch()
     S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
     if (MainTW == 0)
         return;
+}
+
+void supik::Dummy()
+{
+    // пустышка
 }
 
 void supik::BackupDir()
@@ -489,6 +529,17 @@ void supik::periodic1s()
     pc.DateTime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
     s_tqLabel *le = this->findChild<s_tqLabel *>("datetime");
     le->setText(pc.DateTime);
+    s_tqTableView *tv = this->findChild<s_tqTableView *>("ertv");
+    if (tv == 0)
+        ERMSG(PublicClass::ER_SUPIK, __LINE__);
+    s_ermodel *erm = static_cast<s_ermodel *>(tv->model());
+    if (pc.ermsgpool.isEmpty())
+        return;
+    while (!pc.ermsgpool.isEmpty())
+    {
+        erm->AddRow(pc.ermsgpool.first());
+        pc.ermsgpool.removeFirst();
+    }
 /*    QAction *ta = this->findChild<QAction *>("warning");
     if (pc.NewNotifyHasArrived)
     {
@@ -525,7 +576,7 @@ void supik::periodicxm()
         updateprobsnumberintabtext();
         if ((pc.notify & PR_Q) && !pc.Acknowledged)
         {
-//            QMessageBox::warning(this, "warning!", "Поступили новые элементы в карантин");
+//            INFOMSG(PublicClass::ER_SUPIK,__LINE__,"Поступили новые элементы в карантин");
             pc.Acknowledged = true;
         }
     }
@@ -539,9 +590,4 @@ void supik::updateprobsnumberintabtext()
     int idx = CheckForWidget(TW_PROB);
     if (idx != -1)
         MainTW->tabBar()->setTabText(idx, "Сообщения: "+QString::number(pc.allprobs.size()));
-}
-
-void supik::ShowErMsg(int ernum, int subernum)
-{
-    QMessageBox::warning(this, "warning!", "Ошибка 0x" + QString::number(ernum,16) + "." + QString::number(subernum,16), QMessageBox::Ok, QMessageBox::NoButton);
 }

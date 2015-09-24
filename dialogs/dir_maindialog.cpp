@@ -63,7 +63,7 @@ void dir_maindialog::SetupUI()
     MainTableModel->setup(tble+"_сокращ");
     if (MainTableModel->result)
     {
-        emit error(MainTableModel->result+ER_DIRMAIN,0x02);
+        DBGMSG(PublicClass::ER_DIRMAIN,__LINE__,"Ошибка при построении таблицы "+tble);
         QApplication::restoreOverrideCursor();
         return;
     }
@@ -153,13 +153,13 @@ void dir_maindialog::ShowSlaveTree(QString str)
     s_tqTreeView *SlaveTV = this->findChild<s_tqTreeView *>("SlaveTV");
     if (SlaveTV == 0)
     {
-        emit error(ER_DIRMAIN,0x11);
+        DBGMSG(PublicClass::ER_DIRMAIN,__LINE__);
         return;
     }
     s_tqTableView *SlaveTbV = this->findChild<s_tqTableView *>("SlaveTbV");
     if (SlaveTbV == 0)
     {
-        emit error(ER_DIRMAIN,0x11);
+        DBGMSG(PublicClass::ER_DIRMAIN,__LINE__);
         return;
     }
     QStringList fields, values;
@@ -186,12 +186,12 @@ void dir_maindialog::ShowSlaveTree(QString str)
                 twodb = false;
                 res = SlaveTreeModel->Setup(values.at(0) + "_сокращ");
             }
-            if (res == ER_NTMODEL) // это не дерево
+            if (res == PublicClass::ER_NTMODEL) // это не дерево
             {
                 SlaveTableModel->setup(values.at(0) + "_сокращ");
                 if (SlaveTableModel->result)
                 {
-                    emit error(SlaveTableModel->result+ER_DIRMAIN,0x12);
+                    WARNMSG(PublicClass::ER_DIRMAIN, __LINE__, "Проблемы при построении таблицы "+values.at(0));
                     QApplication::restoreOverrideCursor();
                     return;
                 }
@@ -219,10 +219,10 @@ void dir_maindialog::ShowSlaveTree(QString str)
             SlaveTVAccess = values.at(2).toLongLong(0, 16);
         }
         else
-            QMessageBox::warning(this, "warning", "Недостаточно прав для работы со справочником!");
+            ERMSG(PublicClass::ER_DIRMAIN,__LINE__,"Недостаточно прав для работы со справочником!");
     }
     else
-        emit error(tfl.result+ER_DIRMAIN, 0x13);
+        WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
     QApplication::restoreOverrideCursor();
 }
 
@@ -231,7 +231,7 @@ QString dir_maindialog::getMainIndex(int column)
     s_tqTableView *MainTV = this->findChild<s_tqTableView *>("MainTV");
     if (MainTV == 0)
     {
-        emit error(ER_DIRMAIN,0x21);
+        DBGMSG(PublicClass::ER_DIRMAIN, __LINE__);
         return QString();
     }
     QString tmpString = MainTV->model()->index(MainTV->currentIndex().row(), column, QModelIndex()).data(Qt::DisplayRole).toString();
@@ -248,7 +248,7 @@ QString dir_maindialog::getSlaveIndex(int column)
         s_tqTreeView *SlaveTV = this->findChild<s_tqTreeView *>("SlaveTV");
         if (SlaveTV == 0)
         {
-            emit error(ER_DIRMAIN,0x31);
+            DBGMSG(PublicClass::ER_DIRMAIN, __LINE__);
             return QString();
         }
         tmpString = SlaveTV->model()->index(SlaveTV->currentIndex().row(), column, SlaveTV->model()->parent(SlaveTV->currentIndex())).data(Qt::DisplayRole).toString();
@@ -258,8 +258,8 @@ QString dir_maindialog::getSlaveIndex(int column)
         s_tqTableView *SlaveTbV = this->findChild<s_tqTableView *>("SlaveTbV");
         if (SlaveTbV == 0)
         {
-            emit error(ER_DIRMAIN,0x31);
-            return QString();
+           DBGMSG(PublicClass::ER_DIRMAIN, __LINE__);
+           return QString();
         }
         tmpString = SlaveTbV->model()->index(SlaveTbV->currentIndex().row(),column,QModelIndex()).data(Qt::DisplayRole).toString();
     }
@@ -276,7 +276,7 @@ void dir_maindialog::EditItem(QModelIndex index)
         s_tqTreeView *SlaveTV = this->findChild<s_tqTreeView *>("SlaveTV");
         if (SlaveTV == 0)
         {
-            emit error(ER_DIRMAIN,0x41);
+            DBGMSG(PublicClass::ER_DIRMAIN, __LINE__);
             return;
         }
         s_ntmodel *mdl = static_cast<s_ntmodel *>(SlaveTV->model());
@@ -297,7 +297,7 @@ void dir_maindialog::EditItem(QModelIndex index)
     if (!tmpString.isEmpty())
         EditItem(tmpString);
     else
-        emit error(ER_DIRMAIN,0x42);
+        WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
 }
 
 void dir_maindialog::EditItem(QString str)
@@ -305,14 +305,14 @@ void dir_maindialog::EditItem(QString str)
     QString tmps = getMainIndex(1);
     if (tmps.isEmpty())
     {
-        emit error(ER_DIRMAIN,0x51);
+        WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
         return;
     }
     s_2cdialog *newdialog = new s_2cdialog(tble+":"+tmps);
     int Mode = (isNewID) ? MODE_EDITNEW : MODE_EDIT;
     newdialog->setup(tmps+"_полн",Mode,str);
     if (newdialog->result)
-        emit error(ER_DIRMAIN+newdialog->result,0x52);
+        WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
     else
         newdialog->exec();
     ShowSlaveTree(slvtble);
@@ -351,12 +351,12 @@ void dir_maindialog::DeleteDataUnconditional(QString id)
     tfl.remove(slvtble+"_полн", id);
     if (tfl.result)
     {
-        emit error(ER_DIRMAIN+tfl.result, 0x61);
+        WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
         return;
     }
     else
     {
-        QMessageBox::warning(this, "warning!", "Удалено успешно!");
+        INFOMSG(PublicClass::ER_DIRMAIN,__LINE__,"Удалено успешно!");
         showDirDialog();
     }
 }

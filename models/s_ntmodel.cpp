@@ -302,7 +302,10 @@ int s_ntmodel::Setup(QString table)
     QStringList fl = QStringList() << "table" << "tablefields" << "header";
     vl = sqlc.getmorevaluesfromtablebyfield(sqlc.getdb("sup"), "tablefields", fl, "tablename", table, "fieldsorder", true);
     if (sqlc.result)
-        return sqlc.result + 0x10 + ER_NTMODEL; // нет такой таблицы в tablefields
+    {
+        WARNMSG(PublicClass::ER_NTMODEL, __LINE__);
+        return 1;
+    }
     // 2
     int idalpos=-1;
     for (i = 0; i < vl.size(); i++)
@@ -314,7 +317,7 @@ int s_ntmodel::Setup(QString table)
         }
     }
     if (idalpos == -1)
-        return ER_NTMODEL; // не найдено поле idalias
+        return PublicClass::ER_NTMODEL; // не найдено поле idalias
     // 3
     catlist = vl.at(idalpos).at(0).split("."); // catlist - таблица, из которой брать категории
     vl.removeAt(idalpos); // не включать ссылку на категорию в заголовок
@@ -323,7 +326,10 @@ int s_ntmodel::Setup(QString table)
     // 4
     int res = BuildTree("0", false);
     if (res)
-        return res+ER_NTMODEL;
+    {
+        WARNMSG(PublicClass::ER_NTMODEL, __LINE__);
+        return 1;
+    }
     return 0;
 }
 
@@ -341,32 +347,50 @@ int s_ntmodel::Setup(QString maintble, QString slvtble)
     int i;
     QStringList tmpsl = tfl.tablefields(maintble, "ИД_а"); // взять table,tablefields,links из tablefields, где таблица maintble и заголовок ИД_а
     if (tfl.result) // нет поля idalias в таблице - это не дерево!
-        return ER_NTMODEL;
+    {
+        WARNMSG(PublicClass::ER_NTMODEL, __LINE__);
+        return 1;
+    }
     catlist = tmpsl.at(0).split("."); // catlist - таблица, из которой брать категории
     QStringList headers = tfl.tableheaders(slvtble);
     if (tfl.result)
-        return ER_NTMODEL + tfl.result;
-    if (headers.isEmpty())
-        return ER_NTMODEL+0x10; // нет заголовков в подчинённой таблице
+    {
+        WARNMSG(PublicClass::ER_NTMODEL, __LINE__);
+        return 1;
+    }
+    if (headers.isEmpty()) // нет заголовков в подчинённой таблице
+    {
+        WARNMSG(PublicClass::ER_NTMODEL, __LINE__);
+        return 1;
+    }
     for (i = 0; i < headers.size(); i++)
     {
         setHeaderData(i, Qt::Horizontal, headers.at(i), Qt::EditRole);
         tmpsl = tfl.tablefields(slvtble, headers.at(i)); // взяли table,tablefields,links из tablefields для подчинённой таблицы и данного заголовка
         if (tfl.result) // что-то не так с подчинённой таблицей нет такого заголовка
-            return tfl.result+ER_NTMODEL;
+        {
+            WARNMSG(PublicClass::ER_NTMODEL, __LINE__);
+            return 1;
+        }
         if (tmpsl.size() > 2)
         {
             slvtblelinks << tmpsl.at(2);
             slvtblefields << tmpsl.at(1);
         }
-        else
-            return 0x07+ER_NTMODEL; // нет почему-то в возвращённом результате второго элемента
+        else // нет почему-то в возвращённом результате второго элемента
+        {
+            WARNMSG(PublicClass::ER_NTMODEL, __LINE__);
+            return 1;
+        }
     }
     this->slvtble = tmpsl.at(0); // имя таблицы - в переменную
     // 4
     int res = BuildTree("0", true);
     if (res)
-        return res+ER_NTMODEL+0x04;
+    {
+        WARNMSG(PublicClass::ER_NTMODEL, __LINE__);
+        return 1;
+    }
     return 0;
 }
 
@@ -396,7 +420,10 @@ int s_ntmodel::BuildTree(QString id, bool twodb)
         additemtotree(position, tmpStringList, set);
         res = BuildTree(get_child_from_db1.value(1).toString(), twodb); // в качестве аргумента функции используется индекс поля idalias
         if (res)
-            return res+0x14+ER_NTMODEL;
+        {
+            WARNMSG(PublicClass::ER_NTMODEL, __LINE__);
+            return 1;
+        }
     }
     if (twodb)
     {
@@ -404,7 +431,10 @@ int s_ntmodel::BuildTree(QString id, bool twodb)
         if (!res)
             HaveChildren = true;
         else if (res != -1) // если не нет потомков, а просто ошибка
-            return 0x17 + res+ER_NTMODEL;
+        {
+            WARNMSG(PublicClass::ER_NTMODEL, __LINE__);
+            return 1;
+        }
     }
     position--; // после добавления всех детишек уровень понижается
     if (HaveChildren);

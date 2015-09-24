@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QModelIndex>
 #include <QPoint>
+#include <QSqlDatabase>
 
 #include "../models/s_ntmodel.h"
 #include "../models/s_ncmodel.h"
@@ -15,7 +16,6 @@ public:
     explicit dir_maindialog(QString tble, QWidget *parent = 0);
 
 signals:
-    void error(int,int);
 
 public slots:
 

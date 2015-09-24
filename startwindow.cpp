@@ -141,8 +141,7 @@ void StartWindow::OkPBClicked()
         }
         else
         {
-            QMessageBox::warning(this,"Ошибка!", "Пользователь не найден!",\
-                             QMessageBox::Ok, QMessageBox::NoButton);
+            ERMSG(PublicClass::ER_START,__LINE__,"Пользователь не найден!");
             return;
         }
 
@@ -152,9 +151,7 @@ void StartWindow::OkPBClicked()
             pc.access = tmpString.toLong(0, 16); // права доступа - в hex формате
         else // не нашли запись
         {
-            QMessageBox::warning(this,"Ошибка!",\
-                             "Не найдена группа доступа, обратитесь к администратору!",\
-                             QMessageBox::Ok, QMessageBox::NoButton);
+            ERMSG(PublicClass::ER_START,__LINE__,"Не найдена группа доступа, обратитесь к администратору!");
             return;
         }
 
@@ -184,8 +181,7 @@ void StartWindow::OkPBClicked()
     }
     else
     {
-        QMessageBox::warning(this,"Ошибка!", "Нет такого пользователя или пароль неверен!",\
-                         QMessageBox::Ok, QMessageBox::NoButton);
+        ERMSG(PublicClass::ER_START,__LINE__,"Нет такого пользователя или пароль неверен!");
         UNameLE->setFocus();
     }
 }
@@ -243,7 +239,7 @@ void StartWindow::OpenSettingsDialog()
 void StartWindow::OpenAndCheckDB(QSqlDatabase db, int signid)
 {
     if (!db.open())
-        QMessageBox::critical(this, "Ошибка!", db.lastError().text(), QMessageBox::Ok, QMessageBox::NoButton);
+        ERMSG(PublicClass::ER_START,__LINE__,db.lastError().text());
     else
         emit DBOpened(signid);
 }

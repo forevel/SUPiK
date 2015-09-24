@@ -124,7 +124,7 @@ void cmp_maindialog::SetupUI(int CompType, int CompTable, int CompID)
     QStringList tblesl = tfl.valuesbyfield(sl.at(CompType)+"Компоненты_описание_сокращ",fl,"ИД",QString::number(CompTable));
     if (tfl.result)
     {
-        emit error(ER_CMPMAIN+tfl.result,0x01);
+        WARNMSG(PublicClass::ER_CMPMAIN,__LINE__);
         return;
     }
     this->CompTble = tblesl.at(0);
@@ -133,21 +133,21 @@ void cmp_maindialog::SetupUI(int CompType, int CompTable, int CompID)
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("section");
     if (le == 0)
     {
-        emit error(ER_CMPMAIN,0x02);
+        DBGMSG(PublicClass::ER_CMPMAIN,__LINE__);
         return;
     }
     le->setText(sectsl.at(CompType));
     le = this->findChild<s_tqLineEdit *>("subsection");
     if (le == 0)
     {
-        emit error(ER_CMPMAIN,0x03);
+        DBGMSG(PublicClass::ER_CMPMAIN,__LINE__);
         return;
     }
     le->setText(tblesl.at(1));
     le = this->findChild<s_tqLineEdit *>("id");
     if (le == 0)
     {
-        emit error(ER_CMPMAIN,0x04);
+        DBGMSG(PublicClass::ER_CMPMAIN,__LINE__);
         return;
     }
     le->setText(CompId);
@@ -196,13 +196,13 @@ void cmp_maindialog::SetAltDialog()
     s_tqWidget *cp = this->findChild<s_tqWidget *>("cp1");
     if (cp == 0)
     {
-        emit error(ER_CMPMAIN,0x11);
+        DBGMSG(PublicClass::ER_CMPMAIN,__LINE__);
         return;
     }
     s_tqWidget *cp2 = this->findChild<s_tqWidget *>("cp2");
     if (cp2 == 0)
     {
-        emit error(ER_CMPMAIN,0x12);
+        DBGMSG(PublicClass::ER_CMPMAIN,__LINE__);
         return;
     }
     s_tqGroupBox *gb = new s_tqGroupBox;
@@ -461,7 +461,7 @@ void cmp_maindialog::EnablePartNumberCreator(QVariant Manufacturer)
             s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("prefixle");
             if (le == 0)
             {
-                emit error(ER_CMPMAIN, 0x91);
+                DBGMSG(PublicClass::ER_CMPMAIN,__LINE__);
                 return;
             }
             le->setText(tmps);
@@ -491,7 +491,7 @@ void cmp_maindialog::ConnectPartNumberCreatorLE(QString lename)
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>(lename);
     if (le == 0)
     {
-        emit error(ER_CMPMAIN, 0x92);
+        DBGMSG(PublicClass::ER_CMPMAIN,__LINE__);
         return;
     }
     QMetaObject::Connection *handle = new QMetaObject::Connection;
@@ -504,7 +504,7 @@ void cmp_maindialog::ConnectPartNumberCreatorCB(QString cbname)
     s_tqComboBox *cb = this->findChild<s_tqComboBox *>(cbname);
     if (cb == 0)
     {
-        emit error(ER_CMPMAIN, 0x94);
+        DBGMSG(PublicClass::ER_CMPMAIN,__LINE__);
         return;
     }
     QMetaObject::Connection *handle = new QMetaObject::Connection;
@@ -519,14 +519,14 @@ void cmp_maindialog::SetPrefixesVisible(bool isVisible)
     s_tqLabel *lbl = this->findChild<s_tqLabel *>("prefixl");
     if (lbl == 0)
     {
-        emit error(ER_CMPMAIN, 0x91);
+        DBGMSG(PublicClass::ER_CMPMAIN,__LINE__);
         return;
     }
     lbl->setVisible(isVisible);
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("prefixle");
     if (le == 0)
     {
-        emit error(ER_CMPMAIN, 0x92);
+        DBGMSG(PublicClass::ER_CMPMAIN,__LINE__);
         return;
     }
     le->setVisible(isVisible);
@@ -575,7 +575,7 @@ void cmp_maindialog::SetUnitsAndPars()
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("subsection");
     if (le == 0)
     {
-        emit error(ER_CMPMAIN,0x03);
+        DBGMSG(PublicClass::ER_CMPMAIN,__LINE__);
         return;
     }
     QString SubSection = le->text(); // взяли описание подраздела ("Конденсаторы")
@@ -630,13 +630,13 @@ void cmp_maindialog::SetID()
     CompId = QString::number(sqlc.getnextfreeindexsimple(sqlc.getdb(CompDb), CompTble)); // ищем первый свободный ИД
     if (sqlc.result)
     {
-        emit error(ER_COMP+sqlc.result, 0x32);
+        WARNMSG(PublicClass::ER_CMPMAIN,__LINE__);
         return;
     }
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("id");
     if (le == 0)
     {
-        emit error(ER_CMPMAIN,0x04);
+        DBGMSG(PublicClass::ER_CMPMAIN,__LINE__);
         return;
     }
     le->setText(CompId);
@@ -826,7 +826,7 @@ void cmp_maindialog::AddManuf()
     s_2cdialog *newdialog = new s_2cdialog("Производители:добавить");
     newdialog->setup("Производители_полн",MODE_EDITNEW,newID);
     if (newdialog->result)
-        emit error(ER_CMPMAIN+newdialog->result,0x52);
+        WARNMSG(PublicClass::ER_CMPMAIN,__LINE__);
     else
         newdialog->exec();
 }
@@ -879,25 +879,11 @@ void cmp_maindialog::WriteAndClose()
     sqlc.updatevaluesintable(sqlc.getdb("alt"),CompTble,fl,vl,"id",CompId);
     if (sqlc.result)
     {
-        emit error(ER_CMPMAIN+sqlc.result, 0x61);
+        WARNMSG(PublicClass::ER_CMPMAIN,__LINE__);
         return;
     }
-    QDialog *dlg = new QDialog;
-    QVBoxLayout *lyout = new QVBoxLayout;
-    s_tqPushButton *pb = new s_tqPushButton("Ага");
-    connect(pb,SIGNAL(clicked()),this,SLOT(close()));
-    connect(pb,SIGNAL(clicked()),dlg,SLOT(close()));
-    s_tqLabel *lbl = new s_tqLabel("Записано успешно!");
-    lyout->addWidget(lbl);
-    lyout->addWidget(pb);
-    dlg->setLayout(lyout);
-    dlg->exec();
-}
-
-void cmp_maindialog::emiterror(int er1, int er2)
-{
-    er1 += ER_CMPMAIN;
-    emit error(er1,er2);
+    INFOMSG(PublicClass::ER_CMPMAIN,__LINE__,"Записано успешно!");
+    this->close();
 }
 
 void cmp_maindialog::SomethingChanged()

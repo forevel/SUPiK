@@ -1,26 +1,133 @@
 #include "s_ermodel.h"
-#include "../gen/publicclass.h"
 
 s_ermodel::s_ermodel(QObject *parent) :
     QAbstractTableModel(parent)
 {
+    MsgCount = 1;
 }
 
-s_ermodel::~s_ermodel()
+QVariant s_ermodel::headerData(int section, Qt::Orientation orientation, int role) const
 {
-
+    if ((orientation == Qt::Horizontal) && (role == Qt::DisplayRole || role == Qt::EditRole) && (section < hdr.size()))
+        return hdr.at(section);
+    return QVariant();
 }
 
-void s_ermodel::AddRow(msgtype type, QString text)
+bool s_ermodel::setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role)
 {
-    if (msgpool.size() < MAX_MSG)
+    if (orientation == Qt::Horizontal)
     {
-        int pos = rowCount();
-        insertRow(pos-1);
-        msg tmpmsg;
-        tmpmsg.DateTime = pc.DateTime;
-        tmpmsg.type = type;
-        tmpmsg.msg = text;
-        msgpool.replace(pos,tmpmsg);
+        if (section >= hdr.size())
+        {
+            while (hdr.size()<=section)
+                hdr.append("");
+        }
+        hdr.replace(section, value.toString());
     }
+    return QAbstractTableModel::setHeaderData(section, orientation, value, role);
+}
+
+QVariant s_ermodel::data(const QModelIndex &index, int role) const
+{
+    if (index.isValid())
+    {
+        if (index.row() < erdata.size())
+        {
+            if ((role == Qt::DisplayRole) || (role == Qt::EditRole))
+                return erdata.at(index.row()).at(index.column());
+            else if (role == Qt::ForegroundRole)
+            {
+                if (ertypedata.at(index.row()) == PublicClass::ER_MSG)
+                    return QVariant::fromValue(QColor(255,0,0));
+                else if (ertypedata.at(index.row()) == PublicClass::WARN_MSG)
+                    return QVariant::fromValue(QColor(255,0,255));
+                else if (ertypedata.at(index.row()) == PublicClass::INFO_MSG)
+                    return QVariant::fromValue(QColor(0,150,67));
+                else if (ertypedata.at(index.row()) == PublicClass::DBG_MSG)
+                    return QVariant::fromValue(QColor(0,0,255));
+                else
+                    return QVariant();
+            }
+            else if (role == Qt::BackgroundRole)
+            {
+                if (ertypedata.at(index.row()) == PublicClass::ER_MSG)
+                    return QVariant::fromValue(QColor(255,139,137)); // red
+                else if (ertypedata.at(index.row()) == PublicClass::WARN_MSG)
+                    return QVariant::fromValue(QColor(255,190,255)); // magenta
+                else if (ertypedata.at(index.row()) == PublicClass::INFO_MSG)
+                    return QVariant::fromValue(QColor(204,253,243)); // green
+                else if (ertypedata.at(index.row()) == PublicClass::DBG_MSG)
+                    return QVariant::fromValue(QColor(190,255,255)); // blue
+                else
+                    return QVariant();
+            }
+            else if ((role == Qt::DecorationRole) && (index.column() == 4))
+            {
+                if (ertypedata.at(index.row()) == PublicClass::ER_MSG)
+                    return QVariant::fromValue(QIcon(":/res/er_msg.png"));
+                else if (ertypedata.at(index.row()) == PublicClass::WARN_MSG)
+                    return QVariant::fromValue(QIcon(":/res/warn_msg.png"));
+                else if (ertypedata.at(index.row()) == PublicClass::INFO_MSG)
+                    return QVariant::fromValue(QIcon(":/res/info_msg.png"));
+                else if (ertypedata.at(index.row()) == PublicClass::DBG_MSG)
+                    return QVariant::fromValue(QIcon(":/res/dbg_msg.png"));
+                else
+                    return QVariant();
+            }
+        }
+    }
+    return QVariant();
+}
+
+Qt::ItemFlags s_ermodel::flags(const QModelIndex &index) const
+{
+    return QAbstractItemModel::flags(index) | Qt::ItemIsEnabled | Qt::ItemIsSelectable;
+}
+
+/*bool s_ermodel::removeRows(int position, int rows, const QModelIndex &index)
+{
+    beginRemoveRows(index, position, position + rows - 1);
+    if ((position+rows) > maindata.size())
+        return false;
+    for (int i = 0; i < rows; i++)
+    {
+        s_ncitem *item = maindata.at(position);
+        maindata.removeAt(position);
+        delete item;
+    }
+    if (rcount)
+        rcount--;
+    endRemoveRows();
+    return true;
+}*/
+
+int s_ermodel::rowCount(const QModelIndex &index) const
+{
+    Q_UNUSED(index);
+    return erdata.size();
+}
+
+int s_ermodel::columnCount(const QModelIndex &index) const
+{
+    Q_UNUSED(index);
+    return 5;
+}
+// ########################## СВОИ МЕТОДЫ ########################
+
+void s_ermodel::AddRow(PublicClass::ermsg msg)
+{
+    beginResetModel();
+    if (rowCount()<MAX_MSG)
+        insertRows(0,1,QModelIndex());
+    QStringList tmpsl;
+    tmpsl << "#"+QString::number(MsgCount) << msg.DateTime << "0x"+QString::number(msg.ernum,16) << "0x"+QString::number(msg.ersubnum,16) << msg.msg;
+    MsgCount++;
+    erdata.insert(0,tmpsl);
+    if (erdata.size() >= MAX_MSG)
+        erdata.removeLast();
+    ertypedata.insert(0,msg.type);
+    if (ertypedata.size() >= MAX_MSG)
+        ertypedata.removeLast();
+    endResetModel();
+    emit dataChanged(index(0, 0), index(rowCount(),columnCount()));
 }

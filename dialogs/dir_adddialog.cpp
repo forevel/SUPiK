@@ -246,19 +246,19 @@ void dir_adddialog::WriteAndClose()
     dirNameLE = this->findChild<s_tqLineEdit *>("dirname");
     if (dirNameLE == 0)
     {
-        emit error(ER_DIRADD,0x11);
+        DBGMSG(PublicClass::ER_DIRADD,__LINE__);
         return;
     }
     dirAliasLE = this->findChild<s_tqLineEdit *>("dirAlias");
     if (dirAliasLE == 0)
     {
-        emit error(ER_DIRADD,0x12);
+        DBGMSG(PublicClass::ER_DIRADD,__LINE__);
         return;
     }
     s_tqChooseWidget *dirAccessCW = this->findChild<s_tqChooseWidget *>("dirAccess");
     if (dirAccessCW == 0)
     {
-        emit error(ER_DIRADD,0x13);
+        DBGMSG(PublicClass::ER_DIRADD,__LINE__);
         return;
     }
     if (IsDir)
@@ -272,13 +272,13 @@ void dir_adddialog::WriteAndClose()
     dirB = this->findChild<s_tqComboBox *>("dirBelong");
     if (dirB == 0)
     {
-        emit error(ER_DIRADD,0x14);
+        DBGMSG(PublicClass::ER_DIRADD,__LINE__);
         return;
     }
     QString tmpString = sqlc.getvaluefromtablebyfield(sqlc.getdb("sup"), "tablefields", "header", "tablename", FullTblename);
     if (sqlc.result == 2) // ошибка открытия таблицы
     {
-        emit error(ER_DIRADD,0x15);
+        WARNMSG(PublicClass::ER_DIRADD,__LINE__);
         return;
     }
     else if (!sqlc.result) // есть запись про таблицу
@@ -292,7 +292,7 @@ void dir_adddialog::WriteAndClose()
         tmpString = sqlc.getvaluefromtablebyfield(sqlc.getdb("sup"), "tablefields", "header", "tablename", ShortTblename); // ищем сокращённое описание справочника
         if (sqlc.result == 2) // ошибка открытия таблицы
         {
-            emit error(ER_DIRADD,0x1A);
+            WARNMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         else if (!sqlc.result) // есть запись про таблицу
@@ -309,7 +309,7 @@ void dir_adddialog::WriteAndClose()
     sb = this->findChild<s_tqSpinBox *>("dirFieldNum");
     if (sb == 0)
     {
-        emit error(ER_DIRADD,0x16);
+        DBGMSG(PublicClass::ER_DIRADD,__LINE__);
         return;
     }
     QSqlDatabase db = sqlc.getdb("sup");
@@ -327,7 +327,7 @@ void dir_adddialog::WriteAndClose()
         s_tqCheckBox *chb = this->findChild<s_tqCheckBox *>("short"+QString::number(i));
         if ((levalue == 0) || (lename == 0) || (cbfield == 0) || (chb == 0))
         {
-            emit error(ER_DIRADD, 0x17);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         vl.clear();
@@ -346,7 +346,7 @@ void dir_adddialog::WriteAndClose()
                 sqlc.updatevaluesintable(sqlc.getdb("sup"), "tablefields", fl, vl, "idtablefields", id);
             if (sqlc.result)
             {
-                emit error(ER_DIRADD+sqlc.result,0x17);
+                WARNMSG(PublicClass::ER_DIRADD,__LINE__);
                 return;
             }
         }
@@ -363,7 +363,7 @@ void dir_adddialog::WriteAndClose()
                     sqlc.updatevaluesintable(sqlc.getdb("sup"), "tablefields", fl, vl, "idtablefields", id);
                 if (sqlc.result)
                 {
-                    emit error(ER_DIRADD+sqlc.result,0x18);
+                    WARNMSG(PublicClass::ER_DIRADD,__LINE__);
                     return;
                 }
             }
@@ -377,7 +377,7 @@ void dir_adddialog::WriteAndClose()
                     sqlc.updatevaluesintable(sqlc.getdb("sup"), "tablefields", fl, vl, "idtablefields", id);
                     if (sqlc.result)
                     {
-                        emit error(ER_DIRADD+sqlc.result,0x18);
+                        WARNMSG(PublicClass::ER_DIRADD,__LINE__);
                         return;
                     }
                 }
@@ -401,7 +401,7 @@ void dir_adddialog::WriteAndClose()
             tmpString = sqlc.insertvaluestotable(db, tble, fl, vl);
             if (sqlc.result)
             {
-                emit error(ER_DIRADD+sqlc.result,0x18);
+                WARNMSG(PublicClass::ER_DIRADD,__LINE__);
                 return;
             }
         }
@@ -410,21 +410,13 @@ void dir_adddialog::WriteAndClose()
             tmpString = sqlc.updatevaluesintable(db, tble, fl, vl, "dirlist", tmpdir);
             if (sqlc.result)
             {
-                emit error(ER_DIRADD+sqlc.result,0x19);
+                WARNMSG(PublicClass::ER_DIRADD,__LINE__);
                 return;
             }
         }
     }
-    QDialog *dlg = new QDialog;
-    QVBoxLayout *lyout = new QVBoxLayout;
-    s_tqPushButton *pb = new s_tqPushButton("Ага");
-    connect(pb,SIGNAL(clicked()),this,SLOT(close()));
-    connect(pb,SIGNAL(clicked()),dlg,SLOT(close()));
-    s_tqLabel *lbl = new s_tqLabel("Записано успешно!");
-    lyout->addWidget(lbl);
-    lyout->addWidget(pb);
-    dlg->setLayout(lyout);
-    dlg->exec();
+    INFOMSG(PublicClass::ER_CMPMAIN,__LINE__,"Записано успешно!");
+    this->close();
 }
 
 void dir_adddialog::updateTWFields(double dfn)
@@ -440,56 +432,56 @@ void dir_adddialog::updateTWFields(double dfn)
         ll = this->findChild<s_tqLabel *>("hdr"+QString::number(i)+"L");
         if (ll == 0)
         {
-            emit error(ER_DIRADD,0x21);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         ll->setVisible(true);
         ll = this->findChild<s_tqLabel *>("body"+QString::number(i)+"L1");
         if (ll == 0)
         {
-            emit error(ER_DIRADD,0x22);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         ll->setVisible(true);
         ll = this->findChild<s_tqLabel *>("body"+QString::number(i)+"L2");
         if (ll == 0)
         {
-            emit error(ER_DIRADD,0x23);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         ll->setVisible(true);
         cb = this->findChild<s_tqComboBox *>("field"+QString::number(i)+"CB");
         if (cb == 0)
         {
-            emit error(ER_DIRADD,0x24);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         cb->setVisible(true);
         le = this->findChild<s_tqLineEdit *>("name"+QString::number(i)+"LE");
         if (le == 0)
         {
-            emit error(ER_DIRADD,0x25);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         le->setVisible(true);
         le = this->findChild<s_tqLineEdit *>("value"+QString::number(i)+"LE");
         if (le == 0)
         {
-            emit error(ER_DIRADD,0x26);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         le->setVisible(true);
         pb = this->findChild<s_tqPushButton *>("valueconst"+QString::number(i)+"PB");
         if (pb == 0)
         {
-            emit error(ER_DIRADD,0x27);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         pb->setVisible(true);
         s_tqCheckBox *chb = this->findChild<s_tqCheckBox *>("short"+QString::number(i));
         if (chb == 0)
         {
-            emit error(ER_DIRADD,0x27);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         chb->setVisible(true);
@@ -500,56 +492,56 @@ void dir_adddialog::updateTWFields(double dfn)
         ll = this->findChild<s_tqLabel *>("hdr"+QString::number(i)+"L");
         if (ll == 0)
         {
-            emit error(ER_DIRADD,0x28);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         ll->setVisible(false);
         ll = this->findChild<s_tqLabel *>("body"+QString::number(i)+"L1");
         if (ll == 0)
         {
-            emit error(ER_DIRADD,0x29);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         ll->setVisible(false);
         ll = this->findChild<s_tqLabel *>("body"+QString::number(i)+"L2");
         if (ll == 0)
         {
-            emit error(ER_DIRADD,0x2A);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         ll->setVisible(false);
         cb = this->findChild<s_tqComboBox *>("field"+QString::number(i)+"CB");
         if (cb == 0)
         {
-            emit error(ER_DIRADD,0x2B);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         cb->setVisible(false);
         le = this->findChild<s_tqLineEdit *>("value"+QString::number(i)+"LE");
         if (le == 0)
         {
-            emit error(ER_DIRADD,0x2C);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         le->setVisible(false);
         le = this->findChild<s_tqLineEdit *>("name"+QString::number(i)+"LE");
         if (le == 0)
         {
-            emit error(ER_DIRADD,0x2D);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         le->setVisible(false);
         pb = this->findChild<s_tqPushButton *>("valueconst"+QString::number(i)+"PB");
         if (pb == 0)
         {
-            emit error(ER_DIRADD,0x2E);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         pb->setVisible(false);
         s_tqCheckBox *chb = this->findChild<s_tqCheckBox *>("short"+QString::number(i));
         if (chb == 0)
         {
-            emit error(ER_DIRADD,0x2F);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         chb->setVisible(false);
@@ -574,7 +566,7 @@ void dir_adddialog::acceptAccess(QString rights)
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("dirAccess");
     if (le == 0)
     {
-        emit error(ER_DIRADD,0x2F);
+        DBGMSG(PublicClass::ER_DIRADD,__LINE__);
         return;
     }
     le->setText(rights);
@@ -600,14 +592,14 @@ void dir_adddialog::TbleNameChanged(QString tblename)
     s_tqComboBox *dirB = this->findChild<s_tqComboBox *>("dirBelong");
     if (dirB == 0)
     {
-        emit error(ER_DIRADD,0x31);
+        DBGMSG(PublicClass::ER_DIRADD,__LINE__);
         return;
     }
     QString tmps = dirB->currentText();
     QStringList dirColumns = sqlc.getcolumnsfromtable(sqlc.getdb(dirBelongAliases[dirB->currentText()]), tblename);
     if (sqlc.result)
     {
-        QMessageBox::warning(this,"Проблема","Не найдена таблица");
+        INFOMSG(PublicClass::ER_DIRADD,__LINE__,"Не найдена таблица");
         return;
     }
     dirColumns.removeAll("date");
@@ -624,7 +616,7 @@ void dir_adddialog::TbleNameChanged(QString tblename)
         s_tqComboBox *cb = this->findChild<s_tqComboBox *>("field"+QString::number(i)+"CB");
         if (cb == 0)
         {
-            emit error(ER_DIRADD,0x31);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         int idx = cb->currentIndex();
@@ -733,7 +725,7 @@ void dir_adddialog::fillFields()
     lsl = sqlc.getmorevaluesfromtablebyfield(pc.sup, "tablefields", fl, "tablename", dir, "fieldsorder", true);
     if (sqlc.result)
     {
-        emit error(ER_DIRADD,0x81);
+        DBGMSG(PublicClass::ER_DIRADD,__LINE__);
         return;
     }
     if (IsDir)
@@ -744,43 +736,43 @@ void dir_adddialog::fillFields()
     }
     if (lsl.size() == 0)
     {
-        emit error(ER_DIRADD,0x82);
+        WARNMSG(PublicClass::ER_DIRADD,__LINE__);
         return;
     }
     s_tqLineEdit *dirNameLE = this->findChild<s_tqLineEdit *>("dirname");
     if (dirNameLE == 0)
     {
-        emit error(ER_DIRADD,0x83);
+        DBGMSG(PublicClass::ER_DIRADD,__LINE__);
         return;
     }
     s_tqLineEdit *dirAliasLE = this->findChild<s_tqLineEdit *>("dirAlias");
     if (dirAliasLE == 0)
     {
-        emit error(ER_DIRADD,0x84);
+        DBGMSG(PublicClass::ER_DIRADD,__LINE__);
         return;
     }
     s_tqComboBox *dirBelongCB = this->findChild<s_tqComboBox *>("dirBelong");
     if (dirBelongCB == 0)
     {
-        emit error(ER_DIRADD,0x85);
+        DBGMSG(PublicClass::ER_DIRADD,__LINE__);
         return;
     }
     s_tqChooseWidget *dirAccessCW = this->findChild<s_tqChooseWidget *>("dirAccess");
     if (dirAccessCW == 0)
     {
-        emit error(ER_DIRADD,0x86);
+        DBGMSG(PublicClass::ER_DIRADD,__LINE__);
         return;
     }
     s_tqSpinBox *sb = this->findChild<s_tqSpinBox *>("dirFieldNum");
     if (sb == 0)
     {
-        emit error(ER_DIRADD,0x87);
+        DBGMSG(PublicClass::ER_DIRADD,__LINE__);
         return;
     }
     QString tmpString = dirBelongAliases.key(lsl.at(0).at(0).split(".").at(0));
     if (tmpString.isEmpty())
     {
-        emit error(ER_DIRADD,0x88);
+        DBGMSG(PublicClass::ER_DIRADD,__LINE__);
         return;
     }
     dirBelongCB->setCurrentText(tmpString);
@@ -796,7 +788,7 @@ void dir_adddialog::fillFields()
         QStringList values = tfl.valuesbyfield(dirtype+"_полн",fields,"Наименование",tmpdir);
         if (tfl.result)
         {
-            emit error(ER_DIRADD+0x01,0x88);
+            WARNMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         dirAccessCW->SetValue(values.at(0));
@@ -814,25 +806,25 @@ void dir_adddialog::fillFields()
         cbf = this->findChild<s_tqComboBox *>("field"+QString::number(i)+"CB"); // имя поля
         if (cbf == 0)
         {
-            emit error(ER_DIRADD,0x8A);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         lev = this->findChild<s_tqLineEdit *>("value"+QString::number(i)+"LE"); // строка 1
         if (lev == 0)
         {
-            emit error(ER_DIRADD,0x8B);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         len = this->findChild<s_tqLineEdit *>("name"+QString::number(i)+"LE"); // строка 2
         if (len == 0)
         {
-            emit error(ER_DIRADD,0x8C);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         s_tqCheckBox *chb = this->findChild<s_tqCheckBox *>("short"+QString::number(i));
         if (chb == 0)
         {
-            emit error(ER_DIRADD, 0x8D);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         cbf->setCurrentText(lsl.at(i).at(1));
@@ -870,7 +862,7 @@ void dir_adddialog::transliteDirName()
     dirNameLE = this->findChild<s_tqLineEdit *>("dirname");
     if (dirNameLE == 0)
     {
-        emit error(ER_DIRADD,0xA1);
+        DBGMSG(PublicClass::ER_DIRADD,__LINE__);
         return;
     }
     if (dirNameLE->text().isEmpty())
@@ -878,7 +870,7 @@ void dir_adddialog::transliteDirName()
         dirAliasLE = this->findChild<s_tqLineEdit *>("dirAlias");
         if (dirAliasLE == 0)
         {
-            emit error(ER_DIRADD,0xA2);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         QString tmpString = pc.getTranslit(dirAliasLE->text());
@@ -897,7 +889,7 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("value"+QString::number(idx)+"LE");
     if (le == 0)
     {
-        emit error(ER_DIRADD,0x42);
+        DBGMSG(PublicClass::ER_DIRADD,__LINE__);
         return;
     }
     QStringList links = le->text().split("."); // формируем links
@@ -946,7 +938,7 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
     s_tqSpinBox *spb = this->findChild<s_tqSpinBox *>("dirFieldNum");
     if (spb == 0)
     {
-        emit error(ER_DIRADD, 0x31);
+        DBGMSG(PublicClass::ER_DIRADD,__LINE__);
         return;
     }
     int NumFields = spb->value();
@@ -1229,7 +1221,7 @@ void dir_adddialog::DTypeCBIndexChanged(int FD)
     QStringList tmpStringList;
     if (cb == 0)
     {
-        emit error(ER_DIRADD+0x01,0x41);
+        DBGMSG(PublicClass::ER_DIRADD,__LINE__);
         return;
     }
     switch (FD)
@@ -1279,14 +1271,14 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
     s_tqStackedWidget *sw = this->findChild<s_tqStackedWidget *>("linksconstrsw");
     if (sw == 0)
     {
-        emit error(ER_DIRADD+0x01,0x42);
+        DBGMSG(PublicClass::ER_DIRADD,__LINE__);
         return;
     }
     sw->setCurrentIndex(wdgtsidx);
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("value"+QString::number(idx)+"LE");
     if (le == 0)
     {
-        emit error(ER_DIRADD,0x42);
+        DBGMSG(PublicClass::ER_DIRADD,__LINE__);
         return;
     }
     QStringList links = le->text().split("."); // формируем links
@@ -1468,7 +1460,7 @@ void dir_adddialog::ConstructLink()
     s_tqComboBox *cb = this->findChild<s_tqComboBox *>("dtypecb");
     if (cb == 0)
     {
-        emit error(ER_DIRADD, 0x61);
+        DBGMSG(PublicClass::ER_DIRADD,__LINE__);
         return;
     }
     links.append(QString::number(cb->currentIndex()));
@@ -1476,7 +1468,7 @@ void dir_adddialog::ConstructLink()
     cb = this->findChild<s_tqComboBox *>("ltypecb");
     if (cb == 0)
     {
-        emit error(ER_DIRADD,0x62);
+        DBGMSG(PublicClass::ER_DIRADD,__LINE__);
         return;
     }
     links.append(QString::number(FW_Links.indexOf(cb->currentText())));
@@ -1484,7 +1476,7 @@ void dir_adddialog::ConstructLink()
     s_tqSpinBox *spb = this->findChild<s_tqSpinBox *>("dependsspb");
     if (spb == 0)
     {
-        emit (ER_DIRADD,0x63);
+        DBGMSG(PublicClass::ER_DIRADD,__LINE__);
         return;
     }
     int spbvalue = spb->value();
@@ -1499,7 +1491,7 @@ void dir_adddialog::ConstructLink()
         s_tqComboBox *tcb = this->findChild<s_tqComboBox *>("fwallinkcb");
         if (tcb == 0)
         {
-            emit error(ER_DIRADD,0x64);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         links.append(tcb->currentText());
@@ -1507,7 +1499,7 @@ void dir_adddialog::ConstructLink()
         tcb = this->findChild<s_tqComboBox *>("fwallinkcb2");
         if (tcb == 0)
         {
-            emit error(ER_DIRADD,0x64);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         links.append(tcb->currentText());
@@ -1520,7 +1512,7 @@ void dir_adddialog::ConstructLink()
             s_tqComboBox *cb = this->findChild<s_tqComboBox *>("tble"+QString::number(i));
             if (cb == 0)
             {
-                emit error(ER_DIRADD,0x65);
+                DBGMSG(PublicClass::ER_DIRADD,__LINE__);
                 return;
             }
             if (cb->currentText().isEmpty())
@@ -1530,7 +1522,7 @@ void dir_adddialog::ConstructLink()
             cb = this->findChild<s_tqComboBox *>("tblefield"+QString::number(i));
             if (cb == 0)
             {
-                emit error(ER_DIRADD,0x65);
+                DBGMSG(PublicClass::ER_DIRADD,__LINE__);
                 return;
             }
             links.append(cb->currentText());
@@ -1544,14 +1536,14 @@ void dir_adddialog::ConstructLink()
         s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fwequatle");
         if (le == 0)
         {
-            emit error(ER_DIRADD,0x66);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         links.append(le->text());
         le = this->findChild<s_tqLineEdit *>("fwequatle2");
         if (le == 0)
         {
-            emit error(ER_DIRADD,0x66);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         if (!le->text().isEmpty())
@@ -1561,7 +1553,7 @@ void dir_adddialog::ConstructLink()
             s_tqComboBox *cb = this->findChild<s_tqComboBox *>("fwequatcb");
             if (cb == 0)
             {
-                emit error(ER_DIRADD,0x66);
+                DBGMSG(PublicClass::ER_DIRADD,__LINE__);
                 return;
             }
             links.append(ops[cb->currentIndex()]);
@@ -1575,7 +1567,7 @@ void dir_adddialog::ConstructLink()
         spb = this->findChild<s_tqSpinBox *>("id");
         if (spb == 0)
         {
-            emit error(ER_DIRADD,0x67);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         links.append(QString::number(spb->value()));
@@ -1586,7 +1578,7 @@ void dir_adddialog::ConstructLink()
         s_tqComboBox *tcb = this->findChild<s_tqComboBox *>("fwlinkcb");
         if (tcb == 0)
         {
-            emit error(ER_DIRADD,0x68);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         links.append(tcb->currentText());
@@ -1594,7 +1586,7 @@ void dir_adddialog::ConstructLink()
         tcb = this->findChild<s_tqComboBox *>("fwlinkcb2");
         if (tcb == 0)
         {
-            emit error(ER_DIRADD,0x68);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         links.append(tcb->currentText());
@@ -1605,7 +1597,7 @@ void dir_adddialog::ConstructLink()
         s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fwmaskedle");
         if (le == 0)
         {
-            emit error(ER_DIRADD,0x69);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         links.append("\\\"^"); // в lineedit-е \", для БД кавычки надо ещё больше обрамить
@@ -1618,7 +1610,7 @@ void dir_adddialog::ConstructLink()
         s_tqComboBox *tcb = this->findChild<s_tqComboBox *>("fwmaxlinkcb");
         if (tcb == 0)
         {
-            emit error(ER_DIRADD,0x6A);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         links.append(tcb->currentText());
@@ -1626,7 +1618,7 @@ void dir_adddialog::ConstructLink()
         tcb = this->findChild<s_tqComboBox *>("fwmaxlinkcb2");
         if (tcb == 0)
         {
-            emit error(ER_DIRADD,0x6A);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         links.append(tcb->currentText());
@@ -1634,14 +1626,14 @@ void dir_adddialog::ConstructLink()
         tcb = this->findChild<s_tqComboBox *>("fwmaxlinkcb3");
         if (tcb == 0)
         {
-            emit error(ER_DIRADD,0x6A);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         links.append(tcb->currentText());
         s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fwmaxlinkle");
         if (le == 0)
         {
-            emit error(ER_DIRADD,0x6A);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         if (!le->text().isEmpty())
@@ -1656,7 +1648,7 @@ void dir_adddialog::ConstructLink()
         spb = this->findChild<s_tqSpinBox *>("number");
         if (spb == 0)
         {
-            emit error(ER_DIRADD,0x6B);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         links.append(QString::number(spb->value()));
@@ -1667,7 +1659,7 @@ void dir_adddialog::ConstructLink()
         s_tqComboBox *tcb = this->findChild<s_tqComboBox *>("fwspecialcb");
         if (tcb == 0)
         {
-            emit error(ER_DIRADD,0x6C);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         links.append(tcb->currentText());
@@ -1675,7 +1667,7 @@ void dir_adddialog::ConstructLink()
         tcb = this->findChild<s_tqComboBox *>("fwspecialcb2");
         if (tcb == 0)
         {
-            emit error(ER_DIRADD,0x6C);
+            DBGMSG(PublicClass::ER_DIRADD,__LINE__);
             return;
         }
         links.append(tcb->currentText());
@@ -1687,7 +1679,7 @@ void dir_adddialog::ConstructLink()
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("value"+QString::number(idx)+"LE");
     if (le == 0)
     {
-        emit error(ER_DIRADD,0x6D);
+        DBGMSG(PublicClass::ER_DIRADD,__LINE__);
         return;
     }
     le->setText(links);

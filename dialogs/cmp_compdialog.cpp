@@ -107,7 +107,7 @@ void cmp_compdialog::SetupUI()
     mainmodel->setup(CompLetter+"Компоненты_описание_сокращ");
     if (mainmodel->result)
     {
-        emit error(ER_COMP+mainmodel->result,0x01);
+        WARNMSG(PublicClass::ER_COMP, __LINE__);
         QApplication::restoreOverrideCursor();
         return;
     }
@@ -162,7 +162,7 @@ void cmp_compdialog::MainItemChoosed(QModelIndex idx)
     s_tqTableView *tv = this->findChild<s_tqTableView *>("mtv");
     if (tv == 0)
     {
-        emit error(ER_COMP, 0x11);
+        DBGMSG(PublicClass::ER_DIRMAIN, __LINE__);
         return;
     }
     QString tmps = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole).toString();
@@ -172,7 +172,7 @@ void cmp_compdialog::MainItemChoosed(QModelIndex idx)
     QStringList sl = tfl.valuesbyfield(CompLetter+"Компоненты_описание_полн",fl,"ИД",tmps); // взяли имя таблицы в БД, описание которой выбрали в главной таблице
     if (tfl.result)
     {
-        emit error(ER_COMP+tfl.result, 0x12);
+        WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
         return;
     }
     // теперь надо вытащить в slavemodel все компоненты из выбранной таблицы
@@ -180,11 +180,11 @@ void cmp_compdialog::MainItemChoosed(QModelIndex idx)
     CompTbles = sl.at(0);
     slavemodel->setupraw(CompDb,CompTbles,fl,"id"); // строим таблицу с сортировкой по ИД
     if (slavemodel->result)
-        emit error(ER_COMP+slavemodel->result, 0x13);
+        WARNMSG(PublicClass::ER_DIRMAIN, __LINE__, "Проблемы при построении таблицы "+CompTbles);
     tv = this->findChild<s_tqTableView *>("stv");
     if (tv == 0)
     {
-        emit error(ER_COMP, 0x14);
+        DBGMSG(PublicClass::ER_DIRMAIN, __LINE__);
         return;
     }
     tv->resizeColumnsToContents();
@@ -203,13 +203,13 @@ void cmp_compdialog::SlaveItemChoosed(QModelIndex idx)
     s_tqTableView *tv = this->findChild<s_tqTableView *>("stv");
     if (tv == 0)
     {
-        emit error(ER_COMP, 0x21);
+        DBGMSG(PublicClass::ER_DIRMAIN, __LINE__);
         return;
     }
     QString CompIDs = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole).toString();
     if (CompTble == 0) // не была задана таблица компонентов (раздел)
     {
-        QMessageBox::warning(this,"Предупреждение","Не выбран раздел в левой части");
+        INFOMSG(PublicClass::ER_DIRMAIN,__LINE__,"Не выбран раздел в левой части");
         return;
     }
     StartCompDialog(CompIDs);
@@ -234,7 +234,7 @@ void cmp_compdialog::AddNewItem()
     // В CompDb содержится выбранная БД, соответствующая типу компонентов
     if ((CompDb == 0) || (CompTble == 0))
     {
-        QMessageBox::warning(this,"Предупреждение","Не выбран раздел в левой части");
+        INFOMSG(PublicClass::ER_DIRMAIN,__LINE__,"Не выбран раздел в левой части");
         return;
     }
     QStringList fl = QStringList() << "Наименование";
@@ -242,13 +242,13 @@ void cmp_compdialog::AddNewItem()
     QStringList sl = tfl.valuesbyfield(CompLetter+"Компоненты_описание_полн",fl,"ИД",tmps); // взяли имя таблицы в БД, описание которой выбрали в главной таблице
     if (tfl.result)
     {
-        emit error(ER_COMP+tfl.result, 0x31);
+        WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
         return;
     }
     int CompID = sqlc.getnextfreeindexsimple(sqlc.getdb(CompDb), sl.at(0)); // ищем первый свободный ИД
     if (sqlc.result)
     {
-        emit error(ER_COMP+sqlc.result, 0x32);
+        WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
         return;
     }
     StartCompDialog(QString::number(CompID));
@@ -261,7 +261,7 @@ void cmp_compdialog::AddNewOnExistingItem()
     s_tqTableView *tv = this->findChild<s_tqTableView *>("stv");
     if (tv == 0)
     {
-        emit error(ER_COMP, 0x32);
+        DBGMSG(PublicClass::ER_DIRMAIN, __LINE__);
         return;
     }
     QString CompIDs = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole).toString();
@@ -277,19 +277,19 @@ void cmp_compdialog::DeleteItem()
     s_tqTableView *tv = this->findChild<s_tqTableView *>("stv");
     if (tv == 0)
     {
-        emit error(ER_COMP, 0x21);
+        DBGMSG(PublicClass::ER_DIRMAIN, __LINE__);
         return;
     }
     QString CompIDs = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole).toString();
     sqlc.deletefromdb(sqlc.getdb(CompDb),CompTbles,"id",CompIDs);
     if (sqlc.result)
     {
-        emit error(ER_DIRMAIN+sqlc.result, 0x35);
+        WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
         return;
     }
     else
     {
-        QMessageBox::warning(this, "warning!", "Удалено успешно!");
+        INFOMSG(PublicClass::ER_DIRMAIN,__LINE__,"Удалено успешно!");
         MainItemChoosed(QModelIndex());
     }
 }
@@ -305,7 +305,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
     QStringList vl = sqlc.getvaluesfromtablebyid(sqlc.getdb(CompDb),CompTbles,fl,QString::number(id));
     if (sqlc.result) // нет такого элемента или ошибка в БД
     {
-        emit error(ER_COMP, 0x41);
+        WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
         return;
     }
     // теперь надо взять индекс производителя
@@ -315,12 +315,12 @@ void cmp_compdialog::CheckNkAndAdd(int id)
         cmpvl = tfl.valuesbyfield("Производители_сокращ",fl,"Наименование",vl.at(1)); // в cmpvl один нулевой элемент - индекс производителя
     else
     {
-        emit error (ER_COMP, 0x42);
+        WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
         return;
     }
     if (tfl.result)
     {
-        emit error (ER_COMP, 0x43);
+        WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
         return;
     }
     // теперь ищем в БД номенклатуры такой уже элемент
@@ -339,7 +339,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
         QStringList sl = tfl.valuesbyfield(CompLetter+"Компоненты_описание_полн",fl,"ИД",tmps); // взяли имя таблицы в БД, описание которой выбрали в главной таблице
         if (tfl.result)
         {
-            emit error(ER_COMP+tfl.result, 0x44);
+            WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
             return;
         }
         // теперь возьмём ИД в таблице категорий
@@ -348,13 +348,13 @@ void cmp_compdialog::CheckNkAndAdd(int id)
             tmps = sl.at(0);
         else
         {
-            emit error(ER_COMP, 0x45);
+            WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
             return;
         }
         sl = tfl.valuesbyfield("Категории_сокращ",fl,"Наименование",tmps);
         if ((tfl.result) || (sl.isEmpty()))
         {
-            emit error(ER_COMP+tfl.result, 0x46);
+            WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
             return;
         }
         fl = QStringList() << "ИД" << "Наименование" << "Категория" << "Производитель" << ElementString;
@@ -364,7 +364,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
         tfl.idtois("Номенклатура карантин_полн", fl, vl);
         if (tfl.result)
         {
-            emit error(ER_COMP+tfl.result, 0x47);
+            WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
             return;
         }
     }
@@ -372,7 +372,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
     {
         if (nkidsl.size()<2)
         {
-            emit error(ER_COMP, 0x48);
+            WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
             return;
         }
         // проверяем, есть ли у данного элемента в БД ссылка на данный компонент (может, уже было создано ранее для другого раздела)
@@ -391,7 +391,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
         QStringList vl = tfl.valuesbyfield("Номенклатура_полн",sl,"ИД",nkidsl.at(0));
         if ((tfl.result) || (vl.size()<8))
         {
-            emit error(ER_COMP+tfl.result, 0x49);
+            WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
             return;
         }
         // 2. Обновить значение ElementString до QString::number(id)
@@ -402,7 +402,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
         tfl.idtois("Номенклатура_полн",sl,vl);
         if (tfl.result)
         {
-            emit error(ER_COMP, 0x4A);
+            WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
             return;
         }
     }
@@ -559,10 +559,4 @@ void cmp_compdialog::SlaveContextMenu(QPoint)
     if (pc.access & 0x4924) // права на удаление
         ContextMenu->addAction(DeleteAction);
     ContextMenu->exec(QCursor::pos()); // если есть права на удаление, на изменение тоже должны быть
-}
-
-void cmp_compdialog::emiterror(int er1, int er2)
-{
-    er1 += ER_COMP;
-    emit error(er1,er2);
 }

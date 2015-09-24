@@ -30,7 +30,7 @@ wh_dialog::wh_dialog(int Reason, QString id, QWidget *parent) :
     setAttribute(Qt::WA_DeleteOnClose);
     if (Reason > R_SIZE)
     {
-        emit error(ER_WH,0x01);
+        WARNMSG(PublicClass::ER_WH, __LINE__);
         this->close();
     }
     mainmodel = new s_ncmodel;
@@ -48,7 +48,7 @@ wh_dialog::wh_dialog(int Reason, QString id, QWidget *parent) :
     FlowFields.clear();
     if (res = SetupUI(id))
     {
-        emit error(ER_WH+res,0x02);
+        WARNMSG(PublicClass::ER_WH, __LINE__);
         this->close();
     }
 }
@@ -496,13 +496,12 @@ void wh_dialog::acceptandclose()
             else if (sqlc.result > 1) // ошибка
                 throw 0x2a;
             values.replace(whidx, tmpString);
-            sqlc.bytablefieldsinsert(tble, headers, values);
+//            sqlc.bytablefieldsinsert(tble, headers, values);
         }
         this->close();
     }
     catch (int res)
     {
-        emit error(res,0x11);
     }
 }
 

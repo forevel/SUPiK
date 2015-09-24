@@ -17,7 +17,6 @@ public:
     explicit dir_adddialog(bool update, QString dirtype, QString dir="", QWidget *parent = 0);
 
 signals:
-    void error(int,int);
     void closelinkdialog();
 
 public slots:

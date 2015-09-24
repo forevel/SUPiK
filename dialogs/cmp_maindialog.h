@@ -24,7 +24,6 @@ public:
 public slots:
 
 signals:
-    void error(int,int);
 
 private:
     QString CompDb, CompTble, CompId, CompType;
@@ -58,7 +57,6 @@ private slots:
     void WriteAndClose();
     void CancelAndClose();
     void SomethingChanged();
-    void emiterror(int er1,int er2);
     void EnablePartNumberCreator(QVariant Manufacturer);
     void PartNumberCreator();
     void SetParLE(int ParNum, QString ParValue);

@@ -157,9 +157,7 @@ void sys_settingsdialog::OKPBClicked()
     file.setFileName(tmpString);
     if (!file.exists())
     {
-        QMessageBox::warning(this,"Внимание!",\
-                              "Неправильный путь к файлам библиотеки",\
-                              QMessageBox::Ok, QMessageBox::NoButton);
+        INFOMSG(PublicClass::ER_SYS,__LINE__,"Неправильный путь к файлам библиотеки");
         return;
     }
     else

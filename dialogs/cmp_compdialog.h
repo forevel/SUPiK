@@ -9,7 +9,6 @@
 
 #include <QDialog>
 
-#include "../gen/publicclass.h"
 #include "../models/s_ncmodel.h"
 #include "../models/s_ntmodel.h"
 
@@ -27,12 +26,10 @@ public:
     void SetupUI();
 
 signals:
-    void error(int,int);
 
 public slots:
 
 private slots:
-    void emiterror(int,int);
     void MainItemChoosed(QModelIndex);
     void SlaveItemChoosed(QModelIndex);
     void EditItem();

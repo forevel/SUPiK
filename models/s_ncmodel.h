@@ -7,10 +7,9 @@
 #include <QFont>
 #include <QIcon>
 #include <QModelIndexList>
-
+#include "../gen/publicclass.h"
 
 #include "s_ncitem.h"
-#include "../gen/publicclass.h"
 
 class s_ncmodel : public QAbstractTableModel
 {

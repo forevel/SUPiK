@@ -24,6 +24,12 @@ QT_END_NAMESPACE
 
 #include "publiclang.h"
 
+// Макросы для выдачи сообщений
+#define ERMSG(...)     pc.AddErrMsg(PublicClass::ER_MSG,__VA_ARGS__)
+#define DBGMSG(...)    pc.AddErrMsg(PublicClass::DBG_MSG,__VA_ARGS__)
+#define INFOMSG(...)   pc.AddErrMsg(PublicClass::INFO_MSG,__VA_ARGS__)
+#define WARNMSG(...)   pc.AddErrMsg(PublicClass::WARN_MSG,__VA_ARGS__)
+
 // диалоговые окна в СУПиКе
 #define TW_SET      0x100 // настройки (Settings)
 #define TW_SYSST    0x101 // SysStructEdit - редактор структуры системы
@@ -38,21 +44,8 @@ QT_END_NAMESPACE
 #define TW_DOC      0x10A // редактор документов
 #define TW_ADM      0x10B // сисадминистрирование
 
-// Коды ошибок
-#define ER_COMP     0x5000000 // cmp_compdialog
-#define ER_DIRADD   0x4000000 // dir_adddialog
-#define ER_WH       0x3000000 // wh_dialog
-#define ER_SYS      0x2000000 // sys_systemdialog
-#define ER_DIRMAIN  0x1000000 // dir_maindialog
-#define ER_CHWDG    0xF00000 // s_tqchoosewidget
-#define ER_CMPMAIN  0x200000 // cmp_maindialog
-#define ER_SYSMENU  0x100000 // sysmenueditor
-#define ER_2TDLG    0x30000 // 2tdialog
-#define ER_2CTDLG   0x20000 // 2ctdialog
-#define ER_2CDLG    0x10000 // 2cdialog
-#define ER_NCMODEL  0x4000 // s_ncmodel
-#define ER_NTMODEL  0x3000 // s_ntmodel
-#define ER_TFIELD   0x200 // tablefields
+// Максимальный размер буфера ошибок
+#define ER_BUFMAX   0x40 // 64 элемента
 
 #define DB_ALT      0x00
 #define DB_ENT      0x01
@@ -61,8 +54,6 @@ QT_END_NAMESPACE
 #define DB_DEV      0x04
 #define DB_SCH      0x05
 #define DB_CON      0x06
-
-#define MAX_DBS     50
 
 #define ACC_SYS_RO      0x0001
 #define ACC_SYS_WR      0x0002
@@ -139,6 +130,28 @@ public:
     PublicClass();
     ~PublicClass();
 
+// Коды ошибок
+    enum errors
+    {
+        ER_SUPIK,    // supik
+        ER_COMP,     // cmp_compdialog
+        ER_DIRADD,   // dir_adddialog
+        ER_WH,       // wh_dialog
+        ER_SYS,      // sys_systemdialog
+        ER_DIRMAIN,  // dir_maindialog
+        ER_CHWDG,    // s_tqchoosewidget
+        ER_CMPMAIN,  // cmp_maindialog
+        ER_SYSMENU,  // sysmenueditor
+        ER_2TDLG,    // 2tdialog
+        ER_2CTDLG,   // 2ctdialog
+        ER_2CDLG,    // 2cdialog
+        ER_NCMODEL,  // s_ncmodel
+        ER_NTMODEL,  // s_ntmodel
+        ER_TFIELD,   // tablefields
+        ER_SQL,      // s_sql
+        ER_START     // startwindow
+    };
+
     double timerperiod;
     QString SQLUser, SQLPsw;
     QSqlDatabase ent;
@@ -173,20 +186,6 @@ public:
 //    int probpos;
     int Mode; // Режим работы (Справочники/Компоненты/Склады/Движение)
     int Altium; // граница между списком справочников и списком компонентов (для maintree)
-    int dbs_index; // для справочников содержит индекс справочника (NK=0,MANUF=1 и т. д.).
-                    // для компонентов содержит индекс в таблице синонимов названий таблиц компонентов
-                    // в БД altium. Т.е. -1 в этом поле для справочников (pc.ent) означает
-                    // ошибку, отсутствие такого справочника или что ни один справочник не выделен
-                    // в дереве, то для компонентов это означает только, что не найден alias для
-                    // выбранного элемента дерева (например, таблицу компонентов ic_fairchild уже
-                    // создали с компонентами, а названия "Микросхемы Fairchild" для дерева
-                    // ещё не присвоили
-    QString InterchangeString;
-    struct
-    {
-        QString dbs; // наименование таблицы (nk, wh, ...)
-        QString alias; // наименования элемента дерева-меню ("номенклатура", "склады", ...)
-    } dbs[MAX_DBS]; // таблица соответствия названий таблиц наименованиям в дереве-меню
     int access; // текущие права доступа. Зашифрованы тройками бит (с младшего до старшего: право на чтение/изменение/удаление) (начиная с младших):
                 // Системные, Складские, Альтиумовские, ГлавноИнженерские, Сисадминские
     int notify; // активные уведомления (см. PR_-defines выше)
@@ -277,6 +276,7 @@ public:
     }
 
     int S_TabWidgetWidth;
+
     QMap <int, QColor> TabColors;
     QColor colors[6]; // определение набора цветов шрифта
     QFont fonts[6]; // определение набора шрифтов
@@ -297,7 +297,28 @@ public:
     void minutetest();
     QString getTranslit(QString);
 
+    enum ermsgtype
+    {
+        ER_MSG,
+        WARN_MSG,
+        INFO_MSG,
+        DBG_MSG
+    };
+
+    struct ermsg
+    {
+        QString DateTime;
+        ermsgtype type;
+        quint64 ernum;
+        quint64 ersubnum;
+        QString msg;
+    };
+    QList<ermsg> ermsgpool;
+
+    void AddErrMsg(ermsgtype msgtype, quint64 ernum, quint64 ersubnum, QString msg="");
+
 private:
+
     void addmessage(QStringList &sl, QString mes);
     void openBD(QSqlDatabase &db, QString dbid, QString dbname, QString login, QString psw);
 };

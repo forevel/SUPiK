@@ -19,7 +19,6 @@ public:
 
 signals:
     void finished (QString);
-    void error(int,int);
 
 protected:
     void paintEvent(QPaintEvent *e);

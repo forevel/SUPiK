@@ -14,7 +14,6 @@ public:
     void SetupUI(QString tble);
 
 signals:
-    void error(int,int);
 
 private slots:
     void ChangeFields(QModelIndex);

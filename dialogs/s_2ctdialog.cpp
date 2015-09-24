@@ -11,7 +11,6 @@
 #include <QPainter>
 #include <QPixmap>
 #include <QHeaderView>
-#include <QMessageBox>
 #include <QApplication>
 #include <QDesktopWidget>
 

@@ -1,7 +1,6 @@
 #include "s_ncmodel.h"
 #include <QFile>
 #include "../gen/s_sql.h"
-#include "../gen/publicclass.h"
 #include "../gen/s_tablefields.h"
 
 static const QMap<QString, int> OPER_MAP = s_ncmodel::opers();
@@ -368,10 +367,7 @@ void s_ncmodel::fillModel()
                 // значения в DataToWrite уже подготовлены в процедурах setup
                 vl = DataToWrite.at(j).at(i);
                 if (vl.isEmpty())
-                {
-//                    result = ER_NCMODEL+0x01;
                     continue;
-                }
                 if (vl.at(0) == '_') // идентификатор составного значения - номер таблицы и само значение
                 {
                     setData(index(rcount,j,QModelIndex()),QVariant(vl.at(1)),Qt::UserRole+2); // пишем доп. информацию о номере таблицы для ячейки
@@ -423,7 +419,8 @@ QString s_ncmodel::value(int row, int column)
     vl = tfl.vtoid(links, vl);
     if (tfl.result)
     {
-        result = tfl.result + ER_NCMODEL+0x04;
+        result=1;
+        WARNMSG(PublicClass::ER_NCMODEL,__LINE__);
         return QString(); // если произошла ошибка при получении ИД по значению, добавляем пустую строку
     }
     return vl;
@@ -575,13 +572,15 @@ QString s_ncmodel::getCellType(int row, int column)
 void s_ncmodel::setup(QString tble)
 {
     int i;
+    result = 0;
     DataToWrite.clear();
     ClearModel();
     QStringList headers, links;
     DataToWrite = tfl.tbvll(tble);
     if (tfl.result)
     {
-        result=tfl.result+ER_NCMODEL+0x11;
+        result=1;
+        WARNMSG(PublicClass::ER_NCMODEL,__LINE__);
         return;
     }
     // в DataToWrite.at(1) содержатся links, в DataToWrite.at(0) - заголовки
@@ -612,13 +611,15 @@ void s_ncmodel::setup(QString tble, QString id)
     QStringList headers = tfl.tableheaders(tble);
     if (tfl.result)
     {
-        result=tfl.result+ER_NCMODEL+0x21;
+        result=1;
+        WARNMSG(PublicClass::ER_NCMODEL,__LINE__);
         return;
     }
     QStringList links = tfl.tablelinks(tble);
     if (tfl.result)
     {
-        result=tfl.result+ER_NCMODEL+0x24;
+        result=1;
+        WARNMSG(PublicClass::ER_NCMODEL,__LINE__);
         return;
     }
     QString tmpString;
@@ -651,7 +652,7 @@ void s_ncmodel::setupcolumn(QString tble, QString header)
     QStringList tmpsl = tfl.htovl(tble, header);
     if (tfl.result)
     {
-        result = tfl.result+ER_NCMODEL+0x31;
+        WARNMSG(PublicClass::ER_NCMODEL,__LINE__);
         return;
     }
     DataToWrite.append(tmpsl);
@@ -673,13 +674,19 @@ int s_ncmodel::setupraw(QString db, QString tble, QStringList fl, QString orderf
     {
         fl = sqlc.getcolumnsfromtable(sqlc.getdb(db), tble);
         if (sqlc.result)
-            return (sqlc.result+0x37+ER_NCMODEL);
+        {
+            WARNMSG(PublicClass::ER_NCMODEL,__LINE__);
+            return 1;
+        }
     }
     for (int i = 0; i < fl.size(); i++)
     {
         QStringList tmpsl = sqlc.getvaluesfromtablebycolumn(sqlc.getdb(db), tble, fl.at(i),orderfield,true);
         if (sqlc.result)
-            return (sqlc.result+0x34+ER_NCMODEL);
+        {
+            WARNMSG(PublicClass::ER_NCMODEL,__LINE__);
+            return 1;
+        }
         DataToWrite.append(tmpsl);
         addColumn(fl.at(i));
         il << tmpsl.size();

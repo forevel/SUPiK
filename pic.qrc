@@ -42,5 +42,9 @@
         <file>res/Sys2Wallpaper.png</file>
         <file>res/SysWallpaper.png</file>
         <file>res/WPAltium.png</file>
+        <file>res/dbg_msg.png</file>
+        <file>res/er_msg.png</file>
+        <file>res/info_msg.png</file>
+        <file>res/warn_msg.png</file>
     </qresource>
 </RCC>

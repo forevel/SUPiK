@@ -14,7 +14,6 @@ public:
     explicit sys_systemdialog(QWidget *parent = 0);
 
 signals:
-    void error(int,int);
     void closeslvdlg();
 
 public slots:
@@ -44,7 +43,6 @@ private slots:
     void EditTable(QModelIndex);
     void EditTable();
     void NewTable();
-    void emiterror(int,int);
     void RemoveWidget();
     void TablesEditorContextMenu(QPoint);
 };

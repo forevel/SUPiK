@@ -50,7 +50,8 @@ void s_2cdialog::setup(QString tble, int Mode, QString id, QString matchtext, bo
         mainmodel->setup(tble);
         if (mainmodel->result)
         {
-            result=ER_2CDLG+mainmodel->result+0x11;
+            result=1;
+            WARNMSG(PublicClass::ER_2CDLG,__LINE__);
             return;
         }
         mainmodel->isEditable = false;
@@ -62,7 +63,7 @@ void s_2cdialog::setup(QString tble, int Mode, QString id, QString matchtext, bo
         mainmodel->setup(tble, id);
         if (mainmodel->result)
         {
-            result=ER_2CDLG+mainmodel->result+0x12;
+            result=PublicClass::ER_2CDLG+mainmodel->result+0x12;
             return;
         }
         mainmodel->isEditable = true;
@@ -71,7 +72,7 @@ void s_2cdialog::setup(QString tble, int Mode, QString id, QString matchtext, bo
     }
     default:
     {
-        result=ER_2CDLG+0x13;
+        result=PublicClass::ER_2CDLG+0x13;
         return;
     }
     }
@@ -93,7 +94,7 @@ void s_2cdialog::SetupFile(QString Filename, QString StringToFind, QString str)
     file.setFileName(Filename);
     if (!file.open(QIODevice::ReadOnly))
     {
-        emit error(ER_2CDLG,0x21);
+        emit error(PublicClass::ER_2CDLG,0x21);
         return;
     }
 
@@ -134,7 +135,7 @@ void s_2cdialog::SetupFile(QString Filename, QString StringToFind, QString str)
     mainmodel->fillModel();
     if (mainmodel->result)
     {
-        emit error(ER_2CDLG+mainmodel->result,0x22);
+        emit error(PublicClass::ER_2CDLG+mainmodel->result,0x22);
         return;
     }
     fillModelAdata();
@@ -186,7 +187,7 @@ void s_2cdialog::AddTable(QString tble)
     mainmodel->setup(tble);
     if (mainmodel->result)
     {
-        result=ER_2CDLG+0x11+mainmodel->result;
+        result=PublicClass::ER_2CDLG+0x11+mainmodel->result;
         return;
     }
     result = 0;
@@ -251,16 +252,16 @@ void s_2cdialog::accepted()
         tfl.idtois(tble.at(0), headers, values);
         if (tfl.result)
         {
-            emit error(ER_2CDLG+tfl.result,0x31);
+            emit error(PublicClass::ER_2CDLG+tfl.result,0x31);
             return;
         }
-        QMessageBox::information(this, "Успешно!", "Записано успешно!");
+        INFOMSG(PublicClass::ER_DIRMAIN,__LINE__,"Записано успешно!");
         if (IsQuarantine)
         {
             tfl.remove(oldtble, oldid); // при успешной записи в некарантин, из карантина старую надо удалить
             if (tfl.result)
             {
-                emit error(ER_2CDLG+tfl.result,0x32);
+                emit error(PublicClass::ER_2CDLG+tfl.result,0x32);
                 return;
             }
         }
@@ -270,7 +271,7 @@ void s_2cdialog::accepted()
         s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
         if (tv == 0)
         {
-            emit error(ER_2CDLG,0x23);
+            emit error(PublicClass::ER_2CDLG,0x23);
             return;
         }
         tmpString = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole).toString();

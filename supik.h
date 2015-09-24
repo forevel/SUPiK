@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QPaintEvent>
+#include "gen/publicclass.h"
 
 #define SUPIKMENUBAR_BG "transparent"
 #define SUPIKMENUBAR_ITEM_SELECTED "#EEEEEE"
@@ -47,6 +48,7 @@ private:
     void WhOutgoing();
     void WhSearch();
     void Quarantine();
+    void Dummy();
     void SysDirectories();
 
     void showEvent(QShowEvent *event);
@@ -57,7 +59,6 @@ private slots:
     void updateprobsnumberintabtext();
     void periodic1s();
     void periodicxm();
-    void ShowErMsg(int, int);
 };
 
 #endif // SUPIK_H

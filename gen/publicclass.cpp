@@ -53,7 +53,7 @@ void PublicClass::InitiatePublicClass()
     icons[4] = QIcon(":/res/refresh.png");
     icons[5] = QIcon(":/res/TN.png");
 //    Date = QDate::currentDate().toString("dd/MM/yyyy");
-    DateTime = QDateTime::currentDateTime().toString("dd/MM/yyyy hh:mm:ss");
+    DateTime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
     SQLPath = LandP->value("settings/SQLPath","localhost").toString();
     PathToLibs = LandP->value("settings/pathtolibs","////FSERVER//PCAD//Altium//Libs//").toString();
     PathToSup = LandP->value("settings/pathtosup","////NS//SUPiK").toString();
@@ -316,4 +316,34 @@ QString PublicClass::getlinksfromFF(PublicClass::fieldformat ff)
         ff.link.removeAt(0);
     }
     return tmpString;
+}
+
+void PublicClass::AddErrMsg(ermsgtype msgtype, quint64 ernum, quint64 ersubnum, QString msg)
+{
+    QStringList filessl = QStringList() << "Супик" << "Компоненты" << "Добавление_справочника" << "Работа со складом" << "Система" << "Справочники_гл" << \
+                                           "Комплексная_строка" << "Компоненты_гл" << "Редактор_системы" << "Диалог_дерево" << "Диалог_2_дерева" << \
+                                           "Диалог_2_столбца" << "Модель_таблица" << "Модель_дерево" << "Таблицы" << "БД" << "Вход_в_систему";
+    if (ermsgpool.size()>=ER_BUFMAX)
+        ermsgpool.removeFirst();
+    ermsg tmpm;
+    tmpm.DateTime = DateTime;
+    tmpm.type = msgtype;
+    tmpm.ernum = ernum;
+    tmpm.ersubnum = ersubnum;
+    // Разбор кода ошибки
+    QString prefix;
+    if ((msg.isEmpty()) || (msg == " ")) // пробел выдаётся при пустом запросе в БД
+    {
+        switch (msgtype)
+        {
+        case ER_MSG: prefix = "Ошибка "; break;
+        case WARN_MSG: prefix = "Проблема "; break;
+        case INFO_MSG: prefix = "Инфо "; break;
+        case DBG_MSG: prefix = "Отладка "; break;
+        }
+
+        msg = prefix+"в модуле " + filessl.at(ernum) + " строка " + QString::number(ersubnum);
+    }
+    tmpm.msg = msg;
+    ermsgpool.append(tmpm);
 }

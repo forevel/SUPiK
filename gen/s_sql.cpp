@@ -195,13 +195,23 @@ QList<QStringList> s_sql::getvaluesfromtablebycolumns(QSqlDatabase db, QString t
 
 // процедура берёт из таблицы только те значения по столбцу column, для которых поле str1 равно значению str2
 
-QStringList s_sql::getvaluesfromtablebycolumnandfield(QSqlDatabase db, QString tble, QString column, QString cmpfield, QString cmpvalue)
+QStringList s_sql::getvaluesfromtablebycolumnandfield(QSqlDatabase db, QString tble, QString column, QString cmpfield, QString cmpvalue,\
+                                                      QString orderby, bool asc)
 {
     QString tmpString;
     QStringList vl;
     QSqlQuery get_fields_from_db (db);
 
-    tmpString = "SELECT `" + column + "` FROM `" + tble + "` WHERE `deleted`=0 AND `" + cmpfield + "`=\"" + cmpvalue + "\";";
+    tmpString = "SELECT `" + column + "` FROM `" + tble + "` WHERE `deleted`=0 AND `" + cmpfield + "`=\"" + cmpvalue + "\"";
+    if (!orderby.isEmpty())
+    {
+        tmpString += " ORDER BY `"+orderby+"` ";
+        if (asc)
+            tmpString += "ASC";
+        else
+            tmpString += "DESC";
+    }
+    tmpString += ";";
     get_fields_from_db.exec(tmpString);
     if (!get_fields_from_db.isActive())
     {

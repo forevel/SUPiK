@@ -725,7 +725,7 @@ void dir_adddialog::fillFields()
     lsl = sqlc.getmorevaluesfromtablebyfield(pc.sup, "tablefields", fl, "tablename", dir, "fieldsorder", true);
     if (sqlc.result)
     {
-        DBGMSG(PublicClass::ER_DIRADD,__LINE__);
+        WARNMSG(PublicClass::ER_DIRADD,__LINE__);
         return;
     }
     if (IsDir)

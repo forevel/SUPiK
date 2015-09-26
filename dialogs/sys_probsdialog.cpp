@@ -52,6 +52,7 @@ void sys_probsdialog::mainTVcontextmenu(QPoint)
 
 void sys_probsdialog::removeProb(QModelIndex index)
 {
+    Q_UNUSED(index);
 /*    s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
     QStringList probchunks;
     probchunks = tv->model()->data(index, Qt::DisplayRole).toString().split(" "); // делим сообщение на части, используя разделитель - пробел

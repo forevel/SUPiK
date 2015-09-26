@@ -3,10 +3,6 @@
 #include <QPainter>
 #include <QStringListModel>
 #include <QMessageBox>
-//#include "../widgets/s_tqtreeview.h"
-//#include "../widgets/s_tqtableview.h"
-//#include "../widgets/s_tqframe.h"
-//#include "../widgets/s_tqsplitter.h"
 #include "../widgets/s_tqlabel.h"
 #include "../widgets/s_tqwidget.h"
 #include "../widgets/s_tqlineedit.h"
@@ -250,7 +246,6 @@ void cmp_maindialog::SetAltDialog()
     glyout = new QGridLayout;
     glyout->addWidget(lbl,0,0,1,1);
     cw = new s_tqChooseWidget(true);
-    connect(cw,SIGNAL(error(int,int)),this,SLOT(emiterror(int,int)));
     connect(cw,SIGNAL(textchanged(QVariant)),this,SLOT(SomethingChanged()));
     cw->setObjectName("libref");
     int i = 0;
@@ -268,7 +263,6 @@ void cmp_maindialog::SetAltDialog()
     lbl = new s_tqLabel("Посадочное место");
     glyout->addWidget(lbl,1,0,1,1);
     cw = new s_tqChooseWidget(true);
-    connect(cw,SIGNAL(error(int,int)),this,SLOT(emiterror(int,int)));
     connect(cw,SIGNAL(textchanged(QVariant)),this,SLOT(SomethingChanged()));
     cw->setObjectName("footref");
     tmps = pc.PathToLibs + "Footprints" + PathString + "/" + CompTble + ".PcbLib";

@@ -1,3 +1,4 @@
+#include <QDebug>
 #include <QShowEvent>
 #include <QCloseEvent>
 #include <QPaintEvent>
@@ -502,6 +503,7 @@ void wh_dialog::acceptandclose()
     }
     catch (int res)
     {
+        qDebug() << res;
     }
 }
 

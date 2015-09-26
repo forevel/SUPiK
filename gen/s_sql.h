@@ -19,7 +19,8 @@ public:
     QStringList getvaluesfromtablebyfields (QSqlDatabase db, QString tble, QStringList fields, QStringList cmpfields, QStringList cmpvalues);
     QStringList getvaluesfromtablebycolumn (QSqlDatabase db, QString tble, QString column, QString orderby="", bool asc=true);
     QList<QStringList> getvaluesfromtablebycolumns (QSqlDatabase db, QString tble, QStringList columns);
-    QStringList getvaluesfromtablebycolumnandfield(QSqlDatabase db, QString tble, QString field, QString cmpfield, QString cmpvalue);
+    QStringList getvaluesfromtablebycolumnandfield(QSqlDatabase db, QString tble, QString field, QString cmpfield, QString cmpvalue, \
+                                                   QString orderby="", bool asc=true);
     QString getvaluefromtablebyfield (QSqlDatabase db, QString tble, QString field, QString cmpfield, QString cmpvalue);
     QString getvaluefromtablebyfields (QSqlDatabase db, QString tble, QString field, QStringList cmpfields, QStringList cmpvalues);
     QString getlastvaluefromtablebyfield (QSqlDatabase db, QString tble, QString field, QString cmpfield, QString cmpvalue);

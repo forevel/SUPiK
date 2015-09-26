@@ -650,7 +650,7 @@ QStringList s_tablefields::tablefields(QString tble, QString header)
 
 QStringList s_tablefields::tableheaders(QString tble)
 {
-    QStringList sl = sqlc.getvaluesfromtablebycolumnandfield(sqlc.getdb("sup"), "tablefields", "header", "tablename", tble);
+    QStringList sl = sqlc.getvaluesfromtablebycolumnandfield(sqlc.getdb("sup"), "tablefields", "header", "tablename", tble, "fieldsorder", true);
     if ((sqlc.result) || (sl.isEmpty()))
     {
         WARNMSG(PublicClass::ER_TFIELD,__LINE__);
@@ -663,7 +663,7 @@ QStringList s_tablefields::tableheaders(QString tble)
 
 QStringList s_tablefields::tablelinks(QString tble)
 {
-    QStringList sl = sqlc.getvaluesfromtablebycolumnandfield(sqlc.getdb("sup"), "tablefields", "links", "tablename", tble);
+    QStringList sl = sqlc.getvaluesfromtablebycolumnandfield(sqlc.getdb("sup"), "tablefields", "links", "tablename", tble, "fieldsorder", true);
     if ((sqlc.result) || (sl.isEmpty()))
     {
         WARNMSG(PublicClass::ER_TFIELD,__LINE__);

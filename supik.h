@@ -47,6 +47,7 @@ private:
     void WhIncome();
     void WhOutgoing();
     void WhSearch();
+    void WhEditor();
     void Quarantine();
     void Dummy();
     void SysDirectories();

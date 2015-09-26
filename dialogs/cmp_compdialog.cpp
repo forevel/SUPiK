@@ -74,30 +74,35 @@ void cmp_compdialog::SetupUI()
     QHBoxLayout *hlyout = new QHBoxLayout;
 
     s_tqPushButton *pb = new s_tqPushButton;
+    pb->setIcon(QIcon(":/res/newcaty.png"));
+    connect(pb, SIGNAL(clicked()), this, SLOT(AddNewSubsection()));
+    pb->setToolTip("Создать новый раздел");
+    hlyout->addWidget(pb);
+    hlyout->addSpacing(5);
+    pb = new s_tqPushButton;
     pb->setIcon(QIcon(":/res/newdocy.png"));
     connect(pb, SIGNAL(clicked()), this, SLOT(AddNewItem()));
     pb->setToolTip("Создать новый компонент");
     hlyout->addWidget(pb);
+    hlyout->addSpacing(5);
     pb = new s_tqPushButton;
     pb->setIcon(QIcon(":/res/cross.png"));
     connect(pb, SIGNAL(clicked()), this, SLOT(close()));
     pb->setToolTip("Закрыть вкладку");
     hlyout->addWidget(pb);
-    hlyout->addSpacing(20);
-    pb = new s_tqPushButton;
 
     hlyout->addStretch(300);
-    lyout->addLayout(hlyout);
+//    lyout->addLayout(hlyout);
     s_tqLabel *lbl = new s_tqLabel("Компоненты");
     QFont font;
     font.setPointSize(15);
     lbl->setFont(font);
     hlyout->addWidget(lbl, 0);
     hlyout->setAlignment(lbl, Qt::AlignRight);
+
     lyout->addLayout(hlyout);
     s_tqTableView *MainTV = new s_tqTableView;
     s_duniversal *gridItemDelegate = new s_duniversal;
-    connect(gridItemDelegate,SIGNAL(error(int,int)),this,SLOT(emiterror(int,int)));
     MainTV->setItemDelegate(gridItemDelegate);
     MainTV->setObjectName("mtv");
     MainTV->horizontalHeader()->setVisible(true);
@@ -162,7 +167,7 @@ void cmp_compdialog::MainItemChoosed(QModelIndex idx)
     s_tqTableView *tv = this->findChild<s_tqTableView *>("mtv");
     if (tv == 0)
     {
-        DBGMSG(PublicClass::ER_DIRMAIN, __LINE__);
+        COMPDBG;
         return;
     }
     QString tmps = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole).toString();
@@ -172,7 +177,7 @@ void cmp_compdialog::MainItemChoosed(QModelIndex idx)
     QStringList sl = tfl.valuesbyfield(CompLetter+"Компоненты_описание_полн",fl,"ИД",tmps); // взяли имя таблицы в БД, описание которой выбрали в главной таблице
     if (tfl.result)
     {
-        WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
+        COMPWARN;
         return;
     }
     // теперь надо вытащить в slavemodel все компоненты из выбранной таблицы
@@ -184,7 +189,7 @@ void cmp_compdialog::MainItemChoosed(QModelIndex idx)
     tv = this->findChild<s_tqTableView *>("stv");
     if (tv == 0)
     {
-        DBGMSG(PublicClass::ER_DIRMAIN, __LINE__);
+        COMPDBG;
         return;
     }
     tv->resizeColumnsToContents();
@@ -203,7 +208,7 @@ void cmp_compdialog::SlaveItemChoosed(QModelIndex idx)
     s_tqTableView *tv = this->findChild<s_tqTableView *>("stv");
     if (tv == 0)
     {
-        DBGMSG(PublicClass::ER_DIRMAIN, __LINE__);
+        COMPDBG;
         return;
     }
     QString CompIDs = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole).toString();
@@ -221,7 +226,6 @@ void cmp_compdialog::StartCompDialog(QString Id, bool ByExisting)
     dlg->SetupUI(CompType,CompTble,Id.toInt());
     if (ByExisting)
         dlg->SetID();
-    connect(dlg,SIGNAL(error(int,int)),this,SLOT(emiterror(int,int)));
     dlg->exec();
 }
 
@@ -242,13 +246,13 @@ void cmp_compdialog::AddNewItem()
     QStringList sl = tfl.valuesbyfield(CompLetter+"Компоненты_описание_полн",fl,"ИД",tmps); // взяли имя таблицы в БД, описание которой выбрали в главной таблице
     if (tfl.result)
     {
-        WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
+        COMPWARN;
         return;
     }
     int CompID = sqlc.getnextfreeindexsimple(sqlc.getdb(CompDb), sl.at(0)); // ищем первый свободный ИД
     if (sqlc.result)
     {
-        WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
+        COMPWARN;
         return;
     }
     StartCompDialog(QString::number(CompID));
@@ -261,7 +265,7 @@ void cmp_compdialog::AddNewOnExistingItem()
     s_tqTableView *tv = this->findChild<s_tqTableView *>("stv");
     if (tv == 0)
     {
-        DBGMSG(PublicClass::ER_DIRMAIN, __LINE__);
+        COMPDBG;
         return;
     }
     QString CompIDs = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole).toString();
@@ -277,14 +281,14 @@ void cmp_compdialog::DeleteItem()
     s_tqTableView *tv = this->findChild<s_tqTableView *>("stv");
     if (tv == 0)
     {
-        DBGMSG(PublicClass::ER_DIRMAIN, __LINE__);
+        COMPDBG;
         return;
     }
     QString CompIDs = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole).toString();
     sqlc.deletefromdb(sqlc.getdb(CompDb),CompTbles,"id",CompIDs);
     if (sqlc.result)
     {
-        WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
+        COMPWARN;
         return;
     }
     else
@@ -305,7 +309,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
     QStringList vl = sqlc.getvaluesfromtablebyid(sqlc.getdb(CompDb),CompTbles,fl,QString::number(id));
     if (sqlc.result) // нет такого элемента или ошибка в БД
     {
-        WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
+        COMPWARN;
         return;
     }
     // теперь надо взять индекс производителя
@@ -315,12 +319,12 @@ void cmp_compdialog::CheckNkAndAdd(int id)
         cmpvl = tfl.valuesbyfield("Производители_сокращ",fl,"Наименование",vl.at(1)); // в cmpvl один нулевой элемент - индекс производителя
     else
     {
-        WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
+        COMPWARN;
         return;
     }
     if (tfl.result)
     {
-        WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
+        COMPWARN;
         return;
     }
     // теперь ищем в БД номенклатуры такой уже элемент
@@ -339,7 +343,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
         QStringList sl = tfl.valuesbyfield(CompLetter+"Компоненты_описание_полн",fl,"ИД",tmps); // взяли имя таблицы в БД, описание которой выбрали в главной таблице
         if (tfl.result)
         {
-            WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
+            COMPWARN;
             return;
         }
         // теперь возьмём ИД в таблице категорий
@@ -348,13 +352,13 @@ void cmp_compdialog::CheckNkAndAdd(int id)
             tmps = sl.at(0);
         else
         {
-            WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
+            COMPWARN;
             return;
         }
         sl = tfl.valuesbyfield("Категории_сокращ",fl,"Наименование",tmps);
         if ((tfl.result) || (sl.isEmpty()))
         {
-            WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
+            COMPWARN;
             return;
         }
         fl = QStringList() << "ИД" << "Наименование" << "Категория" << "Производитель" << ElementString;
@@ -364,7 +368,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
         tfl.idtois("Номенклатура карантин_полн", fl, vl);
         if (tfl.result)
         {
-            WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
+            COMPWARN;
             return;
         }
     }
@@ -372,7 +376,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
     {
         if (nkidsl.size()<2)
         {
-            WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
+            COMPWARN;
             return;
         }
         // проверяем, есть ли у данного элемента в БД ссылка на данный компонент (может, уже было создано ранее для другого раздела)
@@ -391,7 +395,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
         QStringList vl = tfl.valuesbyfield("Номенклатура_полн",sl,"ИД",nkidsl.at(0));
         if ((tfl.result) || (vl.size()<8))
         {
-            WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
+            COMPWARN;
             return;
         }
         // 2. Обновить значение ElementString до QString::number(id)
@@ -402,10 +406,22 @@ void cmp_compdialog::CheckNkAndAdd(int id)
         tfl.idtois("Номенклатура_полн",sl,vl);
         if (tfl.result)
         {
-            WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
+            COMPWARN;
             return;
         }
     }
+}
+
+// добавление нового раздела
+
+void cmp_compdialog::AddNewSubsection()
+{
+    // 1. Спросить имя
+    // 2. Создать таблицу в соотв. БД (например, relay в altium)
+    // 3. Создать категорию
+    // 4. Если надо, задать подкатегории ("чип", "защитные" и т.п.)
+    // 4. Задать имена и единицы измерения параметров
+    // 5. Создать соответствующие записи в unitset и parameters
 }
 
 // --------------------------------------

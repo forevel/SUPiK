@@ -46,5 +46,6 @@
         <file>res/er_msg.png</file>
         <file>res/info_msg.png</file>
         <file>res/warn_msg.png</file>
+        <file>res/newcaty.png</file>
     </qresource>
 </RCC>

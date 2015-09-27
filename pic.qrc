@@ -47,5 +47,7 @@
         <file>res/info_msg.png</file>
         <file>res/warn_msg.png</file>
         <file>res/newcaty.png</file>
+        <file>res/whPB-grn.png</file>
+        <file>res/whPB-red.png</file>
     </qresource>
 </RCC>

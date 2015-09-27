@@ -114,7 +114,7 @@ void StartWindow::OkPBClicked()
     s_tqCheckBox *SaveCB = this->findChild<s_tqCheckBox *>("SaveCB");
     if (SaveCB == 0)
         return;
-    tmpString = sqlc.getvaluefromtablebyfield(pc.sup, "personel", "psw", "login", UNameLE->text());
+    tmpString = sqlc.GetValueFromTableByField(pc.sup, "personel", "psw", "login", UNameLE->text());
     if (tmpString == PasswdLE->text())
     {
         if (SaveCB->isChecked())
@@ -132,7 +132,7 @@ void StartWindow::OkPBClicked()
 
         QStringList sl, vl;
         sl << "idpersonel" << "personel" << "group";
-        vl = sqlc.getvaluesfromtablebyfield(pc.sup, "personel", sl, "login", UNameLE->text());
+        vl = sqlc.GetValuesFromTableByField(pc.sup, "personel", sl, "login", UNameLE->text());
         if (!vl.isEmpty())
         {
             pc.idPers=vl.at(0).toInt();
@@ -146,7 +146,7 @@ void StartWindow::OkPBClicked()
         }
 
         // считывание прав доступа к СУПиКу
-        tmpString = sqlc.getvaluefromtablebyid(pc.sup, "groups", "access", QString::number(pc.idGroup));
+        tmpString = sqlc.GetValueFromTableByID(pc.sup, "groups", "access", QString::number(pc.idGroup));
         if (!tmpString.isEmpty())
             pc.access = tmpString.toLong(0, 16); // права доступа - в hex формате
         else // не нашли запись

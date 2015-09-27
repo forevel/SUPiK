@@ -672,7 +672,7 @@ int s_ncmodel::setupraw(QString db, QString tble, QStringList fl, QString orderf
     QList<int> il;
     if (fl.isEmpty())
     {
-        fl = sqlc.getcolumnsfromtable(sqlc.getdb(db), tble);
+        fl = sqlc.GetColumnsFromTable(sqlc.GetDB(db), tble);
         if (sqlc.result)
         {
             WARNMSG(PublicClass::ER_NCMODEL,__LINE__);
@@ -681,7 +681,7 @@ int s_ncmodel::setupraw(QString db, QString tble, QStringList fl, QString orderf
     }
     for (int i = 0; i < fl.size(); i++)
     {
-        QStringList tmpsl = sqlc.getvaluesfromtablebycolumn(sqlc.getdb(db), tble, fl.at(i),orderfield,true);
+        QStringList tmpsl = sqlc.GetValuesFromTableByColumn(sqlc.GetDB(db), tble, fl.at(i),orderfield,true);
         if (sqlc.result)
         {
             WARNMSG(PublicClass::ER_NCMODEL,__LINE__);

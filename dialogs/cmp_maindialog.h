@@ -10,6 +10,9 @@
 #define CTYPE_CON   4
 #define CTYPE_DEV   5
 
+#define CMPWARN WARNMSG(PublicClass::ER_CMPMAIN,__LINE__)
+#define CMPDBG  DBGMSG(PublicClass::ER_CMPMAIN,__LINE__)
+
 class cmp_maindialog : public QDialog
 {
     Q_OBJECT

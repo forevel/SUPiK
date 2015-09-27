@@ -137,7 +137,7 @@ void supik::SetSupikMenuBar()
                 tmpAction = new QAction(this);
                 tmpAction->setText(get_mainmenu.value(1).toString());
                 connect (tmpAction, SIGNAL(triggered()), this, SLOT(ExecuteSub()));
-                tmpString = sqlc.getvaluefromtablebyfield(sqlc.getdb("sup"),"mainmenumethods","mainmenumethods","idmainmenumethods",get_mainmenu.value(4).toString());
+                tmpString = sqlc.GetValueFromTableByField(sqlc.GetDB("sup"),"mainmenumethods","mainmenumethods","idmainmenumethods",get_mainmenu.value(4).toString());
                 if (!sqlc.result)
                     tmpAction->setData(tmpString);
 //                tmpAction->setData(get_mainmenu.value(4).toString());
@@ -202,7 +202,7 @@ QMenu *supik::AddChildToMenu(int id)
                 tmpString = get_child_mainmenu.value(3).toString();
                 if (tmpString != "")
                     action->setStatusTip(tmpString);
-                tmpString = sqlc.getvaluefromtablebyfield(sqlc.getdb("sup"),"mainmenumethods","mainmenumethods","idmainmenumethods",get_child_mainmenu.value(4).toString());
+                tmpString = sqlc.GetValueFromTableByField(sqlc.GetDB("sup"),"mainmenumethods","mainmenumethods","idmainmenumethods",get_child_mainmenu.value(4).toString());
                 if (!sqlc.result)
                 {
                     if (tmpString != "")
@@ -471,7 +471,7 @@ void supik::WhEditor()
 
     Wh_Editor *whd = new Wh_Editor;
 
-    int ids = MainTW->addTab(whd, "Выдача со склада");
+    int ids = MainTW->addTab(whd, "Редактор складов");
     MainTW->tabBar()->setTabData(ids, QVariant(TW_WH));
     MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
     MainTW->tabBar()->setCurrentIndex(ids);

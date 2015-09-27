@@ -71,7 +71,6 @@ void dir_maindialog::SetupUI()
     MainTV->horizontalHeader()->setVisible(false);
     MainTV->verticalHeader()->setVisible(false);
     s_duniversal *gridItemDelegate = new s_duniversal;
-    connect(gridItemDelegate,SIGNAL(error(int,int)),this,SIGNAL(error(int,int)));
     MainTV->setItemDelegate(gridItemDelegate);
     SlaveTbV->setItemDelegate(gridItemDelegate);
     SlaveTV->setItemDelegate(gridItemDelegate);
@@ -364,7 +363,6 @@ void dir_maindialog::DeleteDataUnconditional(QString id)
 void dir_maindialog::AddDirDialog()
 {
     dir_adddialog *AddDialog = new dir_adddialog(false, tble); // no update. В tble передаётся тип справочника ("Справочники", "Справочники системные" и т.д.)
-    connect(AddDialog,SIGNAL(error(int,int)),this,SIGNAL(error(int,int)));
     AddDialog->exec();
 }
 
@@ -372,7 +370,6 @@ void dir_maindialog::EditDirDialog()
 {
     QString tmpString = getMainIndex(1);
     dir_adddialog *EditDialog = new dir_adddialog(true, tble, tmpString+"_полн"); // В tble передаётся тип справочника ("Справочники", "Справочники системные" и т.д.)
-    connect(EditDialog,SIGNAL(error(int,int)),this,SIGNAL(error(int,int)));
     EditDialog->exec();
 }
 

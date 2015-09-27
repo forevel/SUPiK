@@ -151,7 +151,7 @@ void s_2tdialog::MainItemChoosed(QModelIndex idx)
     }
     QString db = tmpsl.at(0).split(".").at(0); // table = <db>.<tble>
     QString mntble = tmpsl.at(0).split(".").at(1);
-    QString sltble = sqlc.getvaluefromtablebyfield(sqlc.getdb(db),mntble,tmpsl.at(1),tablefield,tmpString); // берём из главной таблицы значение по полю "Наименование", для которого сохранённое tablefield равен текущему элементу таблицы
+    QString sltble = sqlc.GetValueFromTableByField(sqlc.GetDB(db),mntble,tmpsl.at(1),tablefield,tmpString); // берём из главной таблицы значение по полю "Наименование", для которого сохранённое tablefield равен текущему элементу таблицы
     if (sqlc.result)
     {
         WARNMSG(PublicClass::ER_2TDLG,__LINE__);

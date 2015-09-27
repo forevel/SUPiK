@@ -249,7 +249,7 @@ void cmp_compdialog::AddNewItem()
         COMPWARN;
         return;
     }
-    int CompID = sqlc.getnextfreeindexsimple(sqlc.getdb(CompDb), sl.at(0)); // ищем первый свободный ИД
+    int CompID = sqlc.GetNextFreeIndexSimple(sqlc.GetDB(CompDb), sl.at(0)); // ищем первый свободный ИД
     if (sqlc.result)
     {
         COMPWARN;
@@ -285,7 +285,7 @@ void cmp_compdialog::DeleteItem()
         return;
     }
     QString CompIDs = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole).toString();
-    sqlc.deletefromdb(sqlc.getdb(CompDb),CompTbles,"id",CompIDs);
+    sqlc.DeleteFromDB(sqlc.GetDB(CompDb),CompTbles,"id",CompIDs);
     if (sqlc.result)
     {
         COMPWARN;
@@ -306,7 +306,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
     QString ElementString = ElementSl.at(CompType);
     // сначала берём наименование и производителя из соответствующей БД компонентов
     QStringList fl = QStringList() << "PartNumber" << "Manufacturer";
-    QStringList vl = sqlc.getvaluesfromtablebyid(sqlc.getdb(CompDb),CompTbles,fl,QString::number(id));
+    QStringList vl = sqlc.GetValuesFromTableByID(sqlc.GetDB(CompDb),CompTbles,fl,QString::number(id));
     if (sqlc.result) // нет такого элемента или ошибка в БД
     {
         COMPWARN;

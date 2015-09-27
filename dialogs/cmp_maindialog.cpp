@@ -120,7 +120,7 @@ void cmp_maindialog::SetupUI(int CompType, int CompTable, int CompID)
     QStringList tblesl = tfl.valuesbyfield(sl.at(CompType)+"Компоненты_описание_сокращ",fl,"ИД",QString::number(CompTable));
     if (tfl.result)
     {
-        WARNMSG(PublicClass::ER_CMPMAIN,__LINE__);
+        CMPWARN;
         return;
     }
     this->CompTble = tblesl.at(0);
@@ -129,21 +129,21 @@ void cmp_maindialog::SetupUI(int CompType, int CompTable, int CompID)
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("section");
     if (le == 0)
     {
-        DBGMSG(PublicClass::ER_CMPMAIN,__LINE__);
+        CMPDBG;
         return;
     }
     le->setText(sectsl.at(CompType));
     le = this->findChild<s_tqLineEdit *>("subsection");
     if (le == 0)
     {
-        DBGMSG(PublicClass::ER_CMPMAIN,__LINE__);
+        CMPDBG;
         return;
     }
     le->setText(tblesl.at(1));
     le = this->findChild<s_tqLineEdit *>("id");
     if (le == 0)
     {
-        DBGMSG(PublicClass::ER_CMPMAIN,__LINE__);
+        CMPDBG;
         return;
     }
     le->setText(CompId);
@@ -158,7 +158,7 @@ void cmp_maindialog::SetupUI(int CompType, int CompTable, int CompID)
               "NominalVoltage" << "Tolerance" << "OpTemperaturen" << "OpTemperaturem" << "Pmax" << "TC" << "Comment" << "HelpURL" << \
               "RevNotes" << "Discontinued" << "Description" << "Notes" << "Modify Date" << "Creator" << "prefix" << "isSMD" << \
               "Nominal" << "Unit" << "par4" << "par5";
-        QStringList vl = sqlc.getvaluesfromtablebyfield(sqlc.getdb(CompDb),CompTble,fl,"id",CompId);
+        QStringList vl = sqlc.GetValuesFromTableByField(sqlc.GetDB(CompDb),CompTble,fl,"id",CompId);
         if (sqlc.result); // новый элемент, ещё нет в БД
         else
             FillAltDialog(vl);
@@ -192,13 +192,13 @@ void cmp_maindialog::SetAltDialog()
     s_tqWidget *cp = this->findChild<s_tqWidget *>("cp1");
     if (cp == 0)
     {
-        DBGMSG(PublicClass::ER_CMPMAIN,__LINE__);
+        CMPDBG;
         return;
     }
     s_tqWidget *cp2 = this->findChild<s_tqWidget *>("cp2");
     if (cp2 == 0)
     {
-        DBGMSG(PublicClass::ER_CMPMAIN,__LINE__);
+        CMPDBG;
         return;
     }
     s_tqGroupBox *gb = new s_tqGroupBox;
@@ -455,7 +455,7 @@ void cmp_maindialog::EnablePartNumberCreator(QVariant Manufacturer)
             s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("prefixle");
             if (le == 0)
             {
-                DBGMSG(PublicClass::ER_CMPMAIN,__LINE__);
+                CMPDBG;
                 return;
             }
             le->setText(tmps);
@@ -485,7 +485,7 @@ void cmp_maindialog::ConnectPartNumberCreatorLE(QString lename)
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>(lename);
     if (le == 0)
     {
-        DBGMSG(PublicClass::ER_CMPMAIN,__LINE__);
+        CMPDBG;
         return;
     }
     QMetaObject::Connection *handle = new QMetaObject::Connection;
@@ -498,7 +498,7 @@ void cmp_maindialog::ConnectPartNumberCreatorCB(QString cbname)
     s_tqComboBox *cb = this->findChild<s_tqComboBox *>(cbname);
     if (cb == 0)
     {
-        DBGMSG(PublicClass::ER_CMPMAIN,__LINE__);
+        CMPDBG;
         return;
     }
     QMetaObject::Connection *handle = new QMetaObject::Connection;
@@ -513,14 +513,14 @@ void cmp_maindialog::SetPrefixesVisible(bool isVisible)
     s_tqLabel *lbl = this->findChild<s_tqLabel *>("prefixl");
     if (lbl == 0)
     {
-        DBGMSG(PublicClass::ER_CMPMAIN,__LINE__);
+        CMPDBG;
         return;
     }
     lbl->setVisible(isVisible);
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("prefixle");
     if (le == 0)
     {
-        DBGMSG(PublicClass::ER_CMPMAIN,__LINE__);
+        CMPDBG;
         return;
     }
     le->setVisible(isVisible);
@@ -569,7 +569,7 @@ void cmp_maindialog::SetUnitsAndPars()
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("subsection");
     if (le == 0)
     {
-        DBGMSG(PublicClass::ER_CMPMAIN,__LINE__);
+        CMPDBG;
         return;
     }
     QString SubSection = le->text(); // взяли описание подраздела ("Конденсаторы")
@@ -577,7 +577,7 @@ void cmp_maindialog::SetUnitsAndPars()
     QStringList fl;
     for (int i=1; i<6; i++)
         fl << "par"+QString::number(i)+"name" << "par"+QString::number(i)+"unitset";
-    QStringList vl = sqlc.getvaluesfromtablebyfield(sqlc.getdb("ent"),"parameters",fl,"parameters",SubSection);
+    QStringList vl = sqlc.GetValuesFromTableByField(sqlc.GetDB("ent"),"parameters",fl,"parameters",SubSection);
     if (sqlc.result)
         return;
     // распихиваем взятые данные по соответствующим виджетам
@@ -621,16 +621,16 @@ void cmp_maindialog::SetUnitsAndPars()
 
 void cmp_maindialog::SetID()
 {
-    CompId = QString::number(sqlc.getnextfreeindexsimple(sqlc.getdb(CompDb), CompTble)); // ищем первый свободный ИД
+    CompId = QString::number(sqlc.GetNextFreeIndexSimple(sqlc.GetDB(CompDb), CompTble)); // ищем первый свободный ИД
     if (sqlc.result)
     {
-        WARNMSG(PublicClass::ER_CMPMAIN,__LINE__);
+        CMPWARN;
         return;
     }
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("id");
     if (le == 0)
     {
-        DBGMSG(PublicClass::ER_CMPMAIN,__LINE__);
+        CMPDBG;
         return;
     }
     le->setText(CompId);
@@ -671,7 +671,7 @@ void cmp_maindialog::FillAltDialog(QStringList vl)
     QDateTime MDate = QDateTime::fromString(ModifyDate, "yyyy-MM-ddThh:mm:ss");
     ModifyDate = MDate.toString("dd-MM-yyyy hh:mm:ss");
     SetLEData("modifydatele",ModifyDate);
-    QString Pers = sqlc.getvaluefromtablebyfield(sqlc.getdb("sup"),"personel","personel","idpersonel",vl.at(24));
+    QString Pers = sqlc.GetValueFromTableByField(sqlc.GetDB("sup"),"personel","personel","idpersonel",vl.at(24));
     SetLEData("creatorle",Pers);
     // Prefix = 25
     SetChBData("issmdchb",vl.at(26));
@@ -820,7 +820,7 @@ void cmp_maindialog::AddManuf()
     s_2cdialog *newdialog = new s_2cdialog("Производители:добавить");
     newdialog->setup("Производители_полн",MODE_EDITNEW,newID);
     if (newdialog->result)
-        WARNMSG(PublicClass::ER_CMPMAIN,__LINE__);
+        CMPWARN;
     else
         newdialog->exec();
 }
@@ -870,10 +870,10 @@ void cmp_maindialog::WriteAndClose()
     default:
         break;
     }
-    sqlc.updatevaluesintable(sqlc.getdb("alt"),CompTble,fl,vl,"id",CompId);
+    sqlc.UpdateValuesInTable(sqlc.GetDB("alt"),CompTble,fl,vl,"id",CompId);
     if (sqlc.result)
     {
-        WARNMSG(PublicClass::ER_CMPMAIN,__LINE__);
+        CMPWARN;
         return;
     }
     INFOMSG(PublicClass::ER_CMPMAIN,__LINE__,"Записано успешно!");

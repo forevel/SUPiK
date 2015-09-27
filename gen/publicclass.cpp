@@ -111,10 +111,10 @@ void PublicClass::DBCheck()
     {
         for (i = 0; i < databases.size(); i++)
         {
-            tables = sqlc.gettablesfromdb(db[databases.at(i)]);
+            tables = sqlc.GetTablesFromDB(db[databases.at(i)]);
             for (j = 0; j < tables.size(); j++)
             {
-                values = sqlc.getcolumnsfromtable(db[databases.at(i)], tables.at(j));
+                values = sqlc.GetColumnsFromTable(db[databases.at(i)], tables.at(j));
                 if (sqlc.result) addmessage(sysMessages, "!Невозможно получить данные по столбцам таблицы " + tables.at(j));
                 if (values.indexOf("idpers") == -1)
                     addmessage(sysMessages, "!Отсутствует поле idpers в таблице " + tables.at(j));
@@ -126,7 +126,7 @@ void PublicClass::DBCheck()
                 if (values.indexOf(tables.at(j)) != -1) // есть поле <tble>
                 {
                     fields << tables.at(j);
-                    res = sqlc.checkdbforemptyfields(pc.sup, "syslist", fields, tmpprob);
+                    res = sqlc.CheckDBForEmptyFields(pc.sup, "syslist", fields, tmpprob);
                     if (res)
                     {
                         while (!tmpprob.isEmpty())
@@ -139,7 +139,7 @@ void PublicClass::DBCheck()
                 else if ((values.indexOf("idalias") != -1) && (values.indexOf("alias") != -1))
                 {
                     fields << "alias" << "idalias";
-                    res = sqlc.checkdbforemptyfields(pc.sup, "syslist", fields, tmpprob);
+                    res = sqlc.CheckDBForEmptyFields(pc.sup, "syslist", fields, tmpprob);
                     if (res)
                     {
                         while (!tmpprob.isEmpty())
@@ -164,7 +164,7 @@ void PublicClass::DBCheck()
                 if ((dirlist.value(1).toString() != "") && (dirlist.value(2).toString()!=""))
                 {
                     tmpString = dirlist.value(2).toString();
-                    QSqlDatabase db = sqlc.getdb(tmpString.mid(0,3));
+                    QSqlDatabase db = sqlc.GetDB(tmpString.mid(0,3));
                     if (db.isValid())
                     {
                         QSqlQuery tryopen(db);
@@ -218,19 +218,19 @@ void PublicClass::minutetest()
         if (notify & PR_Q); // если признак уже висит, то не надо его и менять
         else
         {
-            QStringList vl = sqlc.getvaluesfromtablebycolumn(sqlc.getdb("ent"), "qnk", "idqnk","idqnk",true);
+            QStringList vl = sqlc.GetValuesFromTableByColumn(sqlc.GetDB("ent"), "qnk", "idqnk","idqnk",true);
             if (!vl.isEmpty())
             {
                 notify |= PR_Q;
                 addmessage(altMessages, "Добавлены новые элементы в БД номенклатуры");
             }
-            vl = sqlc.getvaluesfromtablebycolumn(sqlc.getdb("ent"), "qaltium", "idqaltium","idqaltium",true);
+            vl = sqlc.GetValuesFromTableByColumn(sqlc.GetDB("ent"), "qaltium", "idqaltium","idqaltium",true);
             if (!vl.isEmpty())
             {
                 notify |= PR_Q;
                 addmessage(altMessages, "Добавлены новые элементы в БД Altium");
             }
-            vl = sqlc.getvaluesfromtablebycolumn(sqlc.getdb("ent"), "qschemagee", "idqschemagee","idschemagee",true);
+            vl = sqlc.GetValuesFromTableByColumn(sqlc.GetDB("ent"), "qschemagee", "idqschemagee","idschemagee",true);
             if (!vl.isEmpty())
             {
                 notify |= PR_Q;
@@ -320,9 +320,10 @@ QString PublicClass::getlinksfromFF(PublicClass::fieldformat ff)
 
 void PublicClass::AddErrMsg(ermsgtype msgtype, quint64 ernum, quint64 ersubnum, QString msg)
 {
-    QStringList filessl = QStringList() << "Супик" << "Компоненты" << "Добавление_справочника" << "Работа со складом" << "Система" << "Справочники_гл" << \
-                                           "Комплексная_строка" << "Компоненты_гл" << "Редактор_системы" << "Диалог_дерево" << "Диалог_2_дерева" << \
-                                           "Диалог_2_столбца" << "Модель_таблица" << "Модель_дерево" << "Таблицы" << "БД" << "Вход_в_систему";
+    QStringList filessl = QStringList() << "Супик" << "Компоненты" << "Добавление_справочника" << "Работа со складом" << "Редактор_складов" << \
+                                           "Система" << "Справочники_гл" << "Комплексная_строка" << "Компоненты_гл" << "Редактор_системы" << \
+                                           "Диалог_дерево" << "Диалог_2_дерева" << "Диалог_2_столбца" << "Модель_таблица" << "Модель_дерево" << \
+                                           "Таблицы" << "БД" << "Вход_в_систему";
     if (ermsgpool.size()>=ER_BUFMAX)
         ermsgpool.removeFirst();
     ermsg tmpm;

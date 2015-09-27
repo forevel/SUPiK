@@ -300,7 +300,7 @@ int s_ntmodel::Setup(QString table)
     // 1
     int i;
     QStringList fl = QStringList() << "table" << "tablefields" << "header";
-    vl = sqlc.getmorevaluesfromtablebyfield(sqlc.getdb("sup"), "tablefields", fl, "tablename", table, "fieldsorder", true);
+    vl = sqlc.GetMoreValuesFromTableByField(sqlc.GetDB("sup"), "tablefields", fl, "tablename", table, "fieldsorder", true);
     if (sqlc.result)
     {
         WARNMSG(PublicClass::ER_NTMODEL, __LINE__);
@@ -403,7 +403,7 @@ int s_ntmodel::BuildTree(QString id, bool twodb)
     QStringList tmpStringList;
     QString tmpString;
     // считываем все данные из таблицы
-    QSqlQuery get_child_from_db1 (sqlc.getdb(catlist.at(0)));
+    QSqlQuery get_child_from_db1 (sqlc.GetDB(catlist.at(0)));
     tmpString = "SELECT `alias`,`id"+catlist.at(1)+"` FROM `"+catlist.at(1)+"` WHERE `idalias`=\""+id+"\" AND `deleted`=0 ORDER BY `id"+catlist.at(1)+"` ASC;";
     get_child_from_db1.exec(tmpString);
     bool HaveChildren = false;
@@ -463,7 +463,7 @@ int s_ntmodel::addTreeSlvItem(int position, QString id)
 
     tmpStringlist = slvtble.split(".");
     // считываем все данные из таблицы
-    QSqlQuery get_child_from_db2 (sqlc.getdb(tmpStringlist.at(0)));
+    QSqlQuery get_child_from_db2 (sqlc.GetDB(tmpStringlist.at(0)));
     tmpString = "SELECT ";
     for (i = 0; i < slvtblefields.count(); i++)
         tmpString += "`" + slvtblefields.at(i) + "`,";

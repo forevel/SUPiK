@@ -66,7 +66,7 @@ void sys_probsdialog::removeProb(QModelIndex index)
         tble = probchunks.at(5);
         if (tble == "полей") // "Отсутствует поле " + tables.at(j) + " или набор полей alias+idalias в таблице " + tables.at(j))
         {
-            db = sqlc.getdbbytablename(field);
+            db = sqlc.GetDBByTableName(field);
             tble = field;
             dlg = new QDialog;
             dlg->setObjectName("iddlg");
@@ -94,11 +94,11 @@ void sys_probsdialog::removeProb(QModelIndex index)
         }
         else
         {
-            db = sqlc.getdbbytablename(tble);
+            db = sqlc.GetDBByTableName(tble);
             if (field == "deleted")
-                sqlc.addColumn(db, tble, field, "0");
+                sqlc.AddColumn(db, tble, field, "0");
             else
-                sqlc.addColumn(db, tble, field);
+                sqlc.AddColumn(db, tble, field);
             if (sqlc.result)
                 QMessageBox::warning(this,"warning!","Ошибка при добавлении поля "+field+" в таблицу "+tble+"!");
         }
@@ -174,19 +174,19 @@ void sys_probsdialog::refresh()
 void sys_probsdialog::addcol()
 {
 /*    s_tqComboBox *cb = dlg->findChild<s_tqComboBox *>("idcb");
-    db = sqlc.getdbbytablename(tble);
+    db = sqlc.GetDBByTableName(tble);
     QString tmpString = cb->currentText();
     if (cb->currentText() != tble) // пишем alias & idalias
     {
         field = "alias";
-        sqlc.addColumn(db, tble, field);
+        sqlc.AddColumn(db, tble, field);
         if (sqlc.result)
             QMessageBox::warning(this,"warning!","Ошибка при добавлении поля "+field+" в таблицу "+tble+"!");
         field = "idalias";
     }
     else
         field = cb->currentText();
-    sqlc.addColumn(db, tble, field);
+    sqlc.AddColumn(db, tble, field);
     if (sqlc.result)
         QMessageBox::warning(this,"warning!","Ошибка при добавлении поля "+field+" в таблицу "+tble+"!");
     else

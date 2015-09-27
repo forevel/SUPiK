@@ -117,7 +117,6 @@ void sys_systemdialog::SetSysTree()
     MainTV->setIndentation(2);
     MainTV->setAnimated(false);
     s_duniversal *gridItemDelegate = new s_duniversal;
-    connect(gridItemDelegate,SIGNAL(error(int,int)),this,SIGNAL(error(int,int)));
     MainTV->setItemDelegate(gridItemDelegate);
     MainTV->ResizeColumnsToContents();
     QApplication::restoreOverrideCursor();
@@ -153,7 +152,7 @@ void sys_systemdialog::SetSlave()
             return;
         }
         tmpString = tmpsl.at(0);
-        tmpString = sqlc.getvaluefromtablebyfield(sqlc.getdb("sup"),"sysmenumethods","sysmenumethods","idsysmenumethods",tmpString);
+        tmpString = sqlc.GetValueFromTableByField(sqlc.GetDB("sup"),"sysmenumethods","sysmenumethods","idsysmenumethods",tmpString);
         if (sqlc.result)
         {
             WARNMSG(PublicClass::ER_SYS, __LINE__);
@@ -359,7 +358,7 @@ void sys_systemdialog::TablesEditor()
     QList<QStringList> lsl;
     QStringList ids, vls;
     int i = 0;
-    QSqlQuery get_tables(sqlc.getdb("sup"));
+    QSqlQuery get_tables(sqlc.GetDB("sup"));
     get_tables.exec("SELECT DISTINCT `tablename` FROM `tablefields` ORDER BY `tablename` ASC;");
     while (get_tables.next())
     {

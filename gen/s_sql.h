@@ -5,43 +5,53 @@
 #include <QSqlDatabase>
 #include <QSqlQuery>
 
+#define SQLWARN WARNMSG(PublicClass::ER_SQL, __LINE__, exec_db.lastError().text())
 class s_sql
 {
 public:
     s_sql();
-    QSqlDatabase getdb (QString dbname);
-    QString fromdb (QSqlDatabase db);
-    QSqlDatabase getdbbytablename (QString tble);
-    QStringList getcolumnsfromtable (QSqlDatabase db, QString tble);
-    QStringList getvaluesfromtablebyid (QSqlDatabase db, QString tble, QStringList fields, QString id);
-    QString getvaluefromtablebyid (QSqlDatabase db, QString tble, QString field, QString id);
-    QStringList getvaluesfromtablebyfield (QSqlDatabase db, QString tble, QStringList fields, QString cmpfield, QString cmpvalue);
-    QStringList getvaluesfromtablebyfields (QSqlDatabase db, QString tble, QStringList fields, QStringList cmpfields, QStringList cmpvalues);
-    QStringList getvaluesfromtablebycolumn (QSqlDatabase db, QString tble, QString column, QString orderby="", bool asc=true);
-    QList<QStringList> getvaluesfromtablebycolumns (QSqlDatabase db, QString tble, QStringList columns);
-    QStringList getvaluesfromtablebycolumnandfield(QSqlDatabase db, QString tble, QString field, QString cmpfield, QString cmpvalue, \
+
+    // вспомогательные процедуры
+    QSqlDatabase GetDB (QString dbname); // вернуть ссылку на БД по её имени
+    QString FromDB (QSqlDatabase db); // вернуть имя БД по ссылке на неё
+    QSqlDatabase GetDBByTableName (QString tble); // поиск таблицы в базах данных и вернуть ссылку на БД, которая её содержит
+
+    // стандартные операции с БД
+    QStringList GetDBFromSQL(); // вернуть все БД, к которым есть доступ
+    QStringList GetTablesFromDB(QSqlDatabase db); // вернуть все таблицы, содержащиеся в БД
+    QStringList GetColumnsFromTable (QSqlDatabase db, QString tble); // вернуть все поля из таблицы tble БД db
+    void CreateTable(QSqlDatabase db, QString tble, QStringList fl); // создать таблицу с заданными в списке строк fl полями
+    void AlterTable(QSqlDatabase db, QString tble, QStringList DeleteList, QStringList AddList); // удалить поля по списку DeleteList и добавить поля по списку AddList
+    void DropTable(QSqlDatabase db, QString tble); // удалить таблицу из БД
+    void AddColumn(QSqlDatabase db, QString tble, QString col, QString def = "NULL"); // добавить поле col в таблицу tble БД db со значением по умолчанию def
+
+    // условные операции
+    QString InsertValuesToTable (QSqlDatabase db, QString tble, QStringList fl, QStringList vl); // вставить в таблицу tble значения vl по полям fl
+    int UpdateValuesInTable (QSqlDatabase db, QString tble, QStringList fl, QStringList vl, QString field, QString value); // обновить данные в полях fl значениями vl, где field = value
+    int DeleteFromDB (QSqlDatabase db, QString tble, QString field, QString value); // "удалить" (поставить "deleted"=1) запись, где field=value
+    QList<QStringList> SearchInTableLike (QSqlDatabase db, QString tble, QString field, QString regexpstr); // вернуть список из записей, для которых field похож на regexpstr
+
+    // условные запросы
+    QString GetValueFromTableByID (QSqlDatabase db, QString tble, QString field, QString id); // взять значение по полю field для записи с ИД=id
+    QString GetValueFromTableByField (QSqlDatabase db, QString tble, QString field, QString cmpfield, QString cmpvalue);
+    QString GetValueFromTableByFields (QSqlDatabase db, QString tble, QString field, QStringList cmpfields, QStringList cmpvalues);
+    QString GetLastValueFromTableByField (QSqlDatabase db, QString tble, QString field, QString cmpfield, QString cmpvalue); // взять из таблицы последнюю запись по полю field, где cmpfield=cmpvalue
+    QStringList GetValuesFromTableByID (QSqlDatabase db, QString tble, QStringList fields, QString id); // взять значения по полям fields для записи с ИД=id
+    QStringList GetValuesFromTableByField (QSqlDatabase db, QString tble, QStringList fields, QString cmpfield, QString cmpvalue);
+    QStringList GetValuesFromTableByFields (QSqlDatabase db, QString tble, QStringList fields, QStringList cmpfields, QStringList cmpvalues);
+    QStringList GetValuesFromTableByColumn (QSqlDatabase db, QString tble, QString column, QString orderby="", bool asc=true);
+    QList<QStringList> GetValuesFromTableByColumns (QSqlDatabase db, QString tble, QStringList columns);
+    QStringList GetValuesFromTableByColumnAndField(QSqlDatabase db, QString tble, QString field, QString cmpfield, QString cmpvalue, \
                                                    QString orderby="", bool asc=true);
-    QString getvaluefromtablebyfield (QSqlDatabase db, QString tble, QString field, QString cmpfield, QString cmpvalue);
-    QString getvaluefromtablebyfields (QSqlDatabase db, QString tble, QString field, QStringList cmpfields, QStringList cmpvalues);
-    QString getlastvaluefromtablebyfield (QSqlDatabase db, QString tble, QString field, QString cmpfield, QString cmpvalue);
-    QString getvaluefromtablebytablefields(QString tablenheaders, QString keyfield, QString keyfieldid);
-    QList<QStringList> searchintablefieldlike (QSqlDatabase db, QString tble, QStringList col, QString field, QString regexpstr);
-    QList<QStringList> getmorevaluesfromtablebyfield (QSqlDatabase db, QString tble, QStringList fields, QString cmpfield, QString cmpvalue,\
+    QList<QStringList> GetMoreValuesFromTableByField (QSqlDatabase db, QString tble, QStringList fields, QString cmpfield, QString cmpvalue,\
                                                       QString orderby="", bool asc=true);
-    QStringList gettablesfromdb(QSqlDatabase db);
-    QStringList getdbfromsql();
-    QString insertvaluestotable (QSqlDatabase db, QString tble, QStringList fl, QStringList vl, int id = 0);
-    int getnextfreeindex(QSqlDatabase db, QString tble);
-    int getnextfreeindexsimple(QSqlDatabase db, QString tble);
-    int getfullpathtochild(QSqlDatabase db, QString tble, QString idalias, QString &path);
-    int updatevaluesintable (QSqlDatabase db, QString tble, QStringList fl, QStringList vl, QString field, QString value);
-    int checkdbforemptyfields (QSqlDatabase db, QString tble, QStringList fields, QStringList &probid);
-    int deletefromdb (QSqlDatabase db, QString tble, QString field, QString value);
+
+    // специфические операции
+    int GetNextFreeIndex(QSqlDatabase db, QString tble); // вернуть ИД первого попавшегося свободного места, в порядке по возрастанию ИД, в таблице поле ИД идёт как id<tble>
+    int GetNextFreeIndexSimple(QSqlDatabase db, QString tble); // вернуть ИД первого попавшегося свободного места, в порядке по возрастанию ИД, в таблице поле ИД идёт как id
+    QString GetFullPathToChild(QSqlDatabase db, QString tble, QString idalias);
+    int CheckDBForEmptyFields (QSqlDatabase db, QString tble, QStringList fields, QStringList &probid);
     int RealDeleteFromDB (QSqlDatabase db, QString tble, QString field, QString value); // процедура реально удаляет строку, для которой field равно value
-    int dropTable (QSqlDatabase db, QString tble);
-    void prepareslsfortree(QStringList &sl1, QStringList &sl2);
-    int createTable (QSqlDatabase db, QString tble, QStringList fl);
-    void addColumn(QSqlDatabase db, QString tble, QString col, QString def = "NULL");
 
     int result;
 };

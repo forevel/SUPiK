@@ -141,7 +141,7 @@ void SysmenuEditor::Delete()
     QString tmpdb = sl.at(0).split(".").at(0);
     QString tmptble = sl.at(0).split(".").at(1);
     sl = QStringList() << "id"+tmptble;
-    sl = sqlc.getvaluesfromtablebyfield(sqlc.getdb(tmpdb), tmptble, sl, "idalias", tmpString);
+    sl = sqlc.GetValuesFromTableByField(sqlc.GetDB(tmpdb), tmptble, sl, "idalias", tmpString);
     if (!sqlc.result) // есть записи с данным idalias
     {
         if (QMessageBox::question(this, "Вы уверены?", \
@@ -154,7 +154,7 @@ void SysmenuEditor::Delete()
                 WARNMSG(PublicClass::ER_SYSMENU,__LINE__);
                 return;
             }
-            sqlc.deletefromdb(sqlc.getdb(tmpdb), tmptble, "idalias", tmpString);
+            sqlc.DeleteFromDB(sqlc.GetDB(tmpdb), tmptble, "idalias", tmpString);
             if (sqlc.result)
             {
                 WARNMSG(PublicClass::ER_SYSMENU,__LINE__);

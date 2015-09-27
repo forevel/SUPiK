@@ -1,6 +1,7 @@
 #ifndef S_TABLEFIELDS_H
 #define S_TABLEFIELDS_H
 
+#define TFWARN  WARNMSG(PublicClass::ER_TFIELD,__LINE__)
 #include "s_sql.h"
 
 class s_tablefields

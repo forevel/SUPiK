@@ -10,6 +10,10 @@
 #define FSIZE 16
 #define FSIZE2 7
 
+#define DADDDBG     DBGMSG(PublicClass::ER_DIRADD,__LINE__)
+#define DADDWARN    WARNMSG(PublicClass::ER_DIRADD,__LINE__)
+#define DADDINFO(a) INFOMSG(PublicClass::ER_DIRADD,__LINE__,a)
+
 class dir_adddialog : public QDialog
 {
     Q_OBJECT

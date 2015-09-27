@@ -136,16 +136,16 @@ void sys_backuprestoredirdialog::ImpExpPBPressed()
         QApplication::restoreOverrideCursor();
         return;
     }
-    QString dirpc = sqlc.getvaluefromtablebyfield(pc.sup, "dirlist", "pc", "dirlist", cb->currentText());
+    QString dirpc = sqlc.GetValueFromTableByField(pc.sup, "dirlist", "pc", "dirlist", cb->currentText());
     vl = dirpc.split(".");
-    db = sqlc.getdb(vl.at(0));
+    db = sqlc.GetDB(vl.at(0));
     tble = vl.at(1);
-    QStringList dirColumns = sqlc.getcolumnsfromtable(db, tble);
+    QStringList dirColumns = sqlc.GetColumnsFromTable(db, tble);
     dirColumns.removeAll("id"+tble);
     dirColumns.removeAll("date");
     dirColumns.removeAll("deleted");
     dirColumns.removeAll("idpers");
-    vl = sqlc.getvaluesfromtablebyid(db, tble, dirColumns, "2");
+    vl = sqlc.GetValuesFromTableByID(db, tble, dirColumns, "2");
     if (isImport)
     {
         int sm[MAX_COL_NUM];
@@ -175,7 +175,7 @@ void sys_backuprestoredirdialog::ImpExpPBPressed()
             vl.clear();
             for (j = 0; j < fl.size(); j++)
                 vl << mainmodel->data(mainmodel->index(i, sm[j], QModelIndex()), Qt::DisplayRole).toString();
-            sqlc.insertvaluestotable(db, tble, fl, vl);
+            sqlc.InsertValuesToTable(db, tble, fl, vl);
             if (sqlc.result)
             {
                 QMessageBox::warning(this, "warning!", "Ошибка записи в БД "+tble+"!");
@@ -302,16 +302,16 @@ void sys_backuprestoredirdialog::DirChoosed(QString str)
     if (isImport)
     {
         int i;
-        QString dirpc = sqlc.getvaluefromtablebyfield(pc.sup, "dirlist", "pc", "dirlist", str);
+        QString dirpc = sqlc.GetValueFromTableByField(pc.sup, "dirlist", "pc", "dirlist", str);
         QStringList vl = dirpc.split(".");
-        QSqlDatabase db = sqlc.getdb(vl.at(0));
+        QSqlDatabase db = sqlc.GetDB(vl.at(0));
         QString tble = vl.at(1);
-        QStringList dirColumns = sqlc.getcolumnsfromtable(db, tble);
+        QStringList dirColumns = sqlc.GetColumnsFromTable(db, tble);
         dirColumns.removeAll("id"+tble);
         dirColumns.removeAll("date");
         dirColumns.removeAll("deleted");
         dirColumns.removeAll("idpers");
-        vl = sqlc.getvaluesfromtablebyid(db, tble, dirColumns, "2");
+        vl = sqlc.GetValuesFromTableByID(db, tble, dirColumns, "2");
         for (i = 0; i < MAX_COL_NUM; i++)
         {
             s_tqComboBox *cb = this->findChild<s_tqComboBox *>("fieldcb"+QString::number(i));

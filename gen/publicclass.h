@@ -1,7 +1,7 @@
 #ifndef PUBLICCLASS_H
 #define PUBLICCLASS_H
 
-#define SUPIK_VERS  "SUPiK v0.4b"
+#define SUPIK_VERS  "SUPiK v1.0"
 
 #include <QObject>
 
@@ -137,6 +137,7 @@ public:
         ER_COMP,     // cmp_compdialog
         ER_DIRADD,   // dir_adddialog
         ER_WH,       // wh_dialog
+        ER_WHED,     // wh_editor
         ER_SYS,      // sys_systemdialog
         ER_DIRMAIN,  // dir_maindialog
         ER_CHWDG,    // s_tqchoosewidget

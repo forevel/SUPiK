@@ -321,12 +321,17 @@ void dir_adddialog::WriteAndClose()
             return; // не готовы перезаписывать, значит, не будет соответствия между справочником и таблицей. Выход.
         // считываем структуру таблицы
         QStringList cmpsl = sqlc.GetColumnsFromTable(sqlc.GetDB(dirdb), tble);
+        cmpsl.removeAll("id"+tble); // убираем из сравнения ИД, если он есть
         if (sqlc.result)
         {
             DADDDBG;
             return;
         }
-        // для каждого поля "namele"
+        // убрать стандартные поля
+        cmpsl.removeAll("idpers");
+        cmpsl.removeAll("date");
+        cmpsl.removeAll("deleted");
+        // для каждого поля "cbfield"
         for (i=0; i<numfields; i++)
         {
             cbfield = this->findChild<s_tqComboBox *>("field"+QString::number(i)+"CB");
@@ -371,7 +376,7 @@ void dir_adddialog::WriteAndClose()
     }
     else if (!sqlc.result) // есть запись про таблицу
     {
-        if (QMessageBox::question(this, "Данные полного справочника существуют", "Перезаписать?", QMessageBox::Yes|QMessageBox::No,\
+        if (QMessageBox::question(this, "Данные существуют", "Данные полного справочника существуют\nПерезаписать?", QMessageBox::Yes|QMessageBox::No,\
                               QMessageBox::No) == QMessageBox::No)
             FullToWrite = false;
     }
@@ -385,7 +390,7 @@ void dir_adddialog::WriteAndClose()
         }
         else if (!sqlc.result) // есть запись про таблицу
         {
-            if (QMessageBox::question(this, "Данные сокращённого справочника существуют", "Перезаписать?", QMessageBox::Yes|QMessageBox::No,\
+            if (QMessageBox::question(this, "Данные существуют", "Данные сокращённого справочника существуют\nПерезаписать?", QMessageBox::Yes|QMessageBox::No,\
                                   QMessageBox::No) == QMessageBox::No)
                 ShortToWrite = false;
         }
@@ -413,48 +418,29 @@ void dir_adddialog::WriteAndClose()
         }
         vl.clear();
         cmpvl.clear();
-        tmpString = (lename->text() == "ИД") ? "v" : "";
-        vl << cbfield->currentText() << dirdb+"."+tble  << tmpString << lename->text() << levalue->text();
-        tmpString = QString("%1").arg(i, 2, 10, QChar('0'));
+        vl << cbfield->currentText() << dirdb+"."+tble  << "" << lename->text() << levalue->text(); // "" - на месте ключевого поля, т.к. ИД пишем далее
+        tmpString = QString("%1").arg(i+1, 2, 10, QChar('0')); // i+1, т.к. на 0-м месте должен идти ИД
         vl << tmpString << FullTblename << pc.DateTime << "0" << QString::number(pc.idPers);
         if (FullToWrite) // сначала пишем полный вариант
         {
             cmpvl << FullTblename << cbfield->currentText();
-            QString id = sqlc.GetValueFromTableByFields(sqlc.GetDB("sup"), "tablefields", "idtablefields", cmpfl, cmpvl);
-            if (sqlc.result == 1) // нет такой записи
-                sqlc.InsertValuesToTable(sqlc.GetDB("sup"), "tablefields", fl, vl);
-            else
-                sqlc.UpdateValuesInTable(sqlc.GetDB("sup"), "tablefields", fl, vl, "idtablefields", id);
-            if (sqlc.result)
-            {
-                DADDWARN;
-                return;
-            }
+            WriteToTfl(fl, vl, cmpfl, cmpvl);
         }
         if (ShortToWrite) // теперь пишем сокращённый вариант только в том случае, если установлена пометка
         {
             vl.replace(6, ShortTblename); // заменяем полное наименование на сокращённое
             cmpvl = QStringList() << ShortTblename << cbfield->currentText();
-            QString id = sqlc.GetValueFromTableByFields(sqlc.GetDB("sup"), "tablefields", "idtablefields", cmpfl, cmpvl);
             if (chb->isChecked())
-            {
-                if (sqlc.result == 1) // нет такой записи
-                    sqlc.InsertValuesToTable(sqlc.GetDB("sup"), "tablefields", fl, vl);
-                else
-                    sqlc.UpdateValuesInTable(sqlc.GetDB("sup"), "tablefields", fl, vl, "idtablefields", id);
-                if (sqlc.result)
-                {
-                    DADDWARN;
-                    return;
-                }
-            }
+                WriteToTfl(fl, vl, cmpfl, cmpvl);
             else
             {
+                sqlc.GetValueFromTableByFields(sqlc.GetDB("sup"), "tablefields", "idtablefields", cmpfl, cmpvl);
                 if (sqlc.result == 1); // нет такой записи, и хорошо
-                else // иначе надо её удалить
+                else if (!sqlc.result) // иначе надо её удалить
                 {
                     int delidx = fl.indexOf("deleted");
                     vl.replace(delidx, "1");
+                    QString id = sqlc.GetValueFromTableByFields(sqlc.GetDB("sup"), "tablefields", "idtablefields", cmpfl, cmpvl);
                     sqlc.UpdateValuesInTable(sqlc.GetDB("sup"), "tablefields", fl, vl, "idtablefields", id);
                     if (sqlc.result)
                     {
@@ -465,6 +451,24 @@ void dir_adddialog::WriteAndClose()
             }
         }
     }
+    // теперь записать id
+    vl.clear();
+    cmpvl.clear();
+    vl << "id"+tble << dirdb+"."+tble << "v" << "ИД" << "4.19..7";
+    tmpString = QString("%1").arg(0, 2, 10, QChar('0'));
+    vl << tmpString << FullTblename << pc.DateTime << "0" << QString::number(pc.idPers);
+    if (FullToWrite) // сначала пишем полный вариант
+    {
+        cmpvl << FullTblename << "id"+tble;
+        WriteToTfl(fl, vl, cmpfl, cmpvl);
+    }
+    if (ShortToWrite) // теперь пишем сокращённый вариант
+    {
+        vl.replace(6, ShortTblename); // заменяем полное наименование на сокращённое
+        cmpvl = QStringList() << ShortTblename << "id"+tble;
+        WriteToTfl(fl, vl, cmpfl, cmpvl);
+    }
+    // теперь проверим данные о справочнике в каталоге справочников
     tble = "dirlist";
     if (IsDir)
     {
@@ -498,6 +502,20 @@ void dir_adddialog::WriteAndClose()
     }
     DADDINFO("Записано успешно!");
     this->close();
+}
+
+void dir_adddialog::WriteToTfl(QStringList fl, QStringList vl, QStringList cmpfl, QStringList cmpvl)
+{
+    QString id = sqlc.GetValueFromTableByFields(sqlc.GetDB("sup"), "tablefields", "idtablefields", cmpfl, cmpvl);
+    if (sqlc.result == 1) // нет такой записи
+        sqlc.InsertValuesToTable(sqlc.GetDB("sup"), "tablefields", fl, vl);
+    else
+        sqlc.UpdateValuesInTable(sqlc.GetDB("sup"), "tablefields", fl, vl, "idtablefields", id);
+    if (sqlc.result)
+    {
+        DADDWARN;
+        return;
+    }
 }
 
 void dir_adddialog::updateTWFields(double dfn)
@@ -676,8 +694,8 @@ void dir_adddialog::TbleNameChanged(QString tblename)
         DADDDBG;
         return;
     }
-    QString tmps = dirB->currentText();
     QStringList dirColumns = sqlc.GetColumnsFromTable(sqlc.GetDB(dirBelongAliases[dirB->currentText()]), tblename);
+    dirColumns.removeAt(dirColumns.indexOf("id"+tblename)); // убираем ИД, т.к. с ним разговор особый
     if (sqlc.result)
     {
         DADDINFO("Не найдена таблица");
@@ -878,6 +896,14 @@ void dir_adddialog::fillFields()
     else
         dirAliasLE->setText(dir);
     // для редактирования таблиц (не справочников) права не нужны, они по умолчанию системные
+    for (int i=0; i<lsl.size(); i++)
+    {
+        if (lsl.at(i).at(2) == "ИД")
+        {
+            lsl.removeAt(i);
+            break;
+        }
+    }
     sb->setValue(lsl.size());
     TbleNameChanged(dirNameLE->text()); // принудительно имитируем изменение имени таблицы для заполнения комбобоксов
     for (int i = 0; i < lsl.size(); i++)

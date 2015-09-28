@@ -138,6 +138,7 @@ void Wh_Editor::SetupUI()
     gb->setTitle("Шкафы");
     mdl = new QStringListModel;
 
+
     //      Кнопка "добавить тип шкафа"
     //      "Типы шкафов", комбобокс
     //      "параметры шкафа"

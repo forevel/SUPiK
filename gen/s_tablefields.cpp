@@ -27,7 +27,7 @@ QStringList s_tablefields::htovl(QString tble, QString header)
     QString db = sl.at(0).split(".").at(0); // table = <db>.<tble>
     tble = sl.at(0).split(".").at(1);
     QStringList tmpsl = sqlc.GetValuesFromTableByColumn(sqlc.GetDB(db), tble, sl.at(1),"id"+tble,true);
-    if (sqlc.result)
+    if (sqlc.result == 2) // ошибка
     {
         result = 1;
         TFWARN;

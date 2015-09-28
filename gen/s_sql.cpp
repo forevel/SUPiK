@@ -143,17 +143,37 @@ void s_sql::CreateTable(QSqlDatabase db, QString tble, QStringList fl)
     return;
 }
 
-// удалить поля по списку DeleteList и добавить поля по списку AddList
+// удалить поля по списку DeleteList и добавить поля по списку AddList. Добавить id<tble>, если требуется
 
 void s_sql::AlterTable(QSqlDatabase db, QString tble, QStringList DeleteList, QStringList AddList)
 {
     QSqlQuery exec_db(db);
+    // сначала проверим наличие полей id<tble>,idpers,date,deleted
+    QStringList sl = GetColumnsFromTable(db, tble);
+    bool IdExist = (sl.indexOf("id"+tble) != -1);
+    bool DateExist = (sl.indexOf("date") != -1);
+    bool IdpersExist = (sl.indexOf("idpers") != -1);
+    bool DeletedExist = (sl.indexOf("deleted") != -1);
+    if (result)
+    {
+        SQLWARN;
+        return;
+    }
     QString tmpString = "ALTER TABLE `"+tble+"` ";
     QStringList lastcol = sqlc.GetColumnsFromTable(db, tble);
     QString After = lastcol.last();
-    if (!AddList.isEmpty())
+    if ((!AddList.isEmpty()) || !IdExist || !DateExist || !IdpersExist || !DeletedExist)
+        // нет одного из стандартных полей или есть что-то в списке на добавление
     {
         tmpString += "ADD COLUMN ";
+        if (!IdExist)
+            tmpString += "`id"+tble+"` int(11) NOT NULL,";
+        if (!DateExist)
+            tmpString += "`date` VARCHAR(128) DEFAULT NULL,";
+        if (!IdpersExist)
+            tmpString += "`idpers` VARCHAR(128) DEFAULT NULL,";
+        if (!DeletedExist)
+            tmpString += "`deleted` int(1) NOT NULL DEFAULT '0',";
         while (!AddList.isEmpty())
         {
             QString tmps = AddList.first();
@@ -335,13 +355,18 @@ QStringList s_sql::GetValuesFromTableByColumn(QSqlDatabase db, QString tble, QSt
     }
     tmpString += ";";
     exec_db.exec(tmpString);
+    if (!exec_db.isActive())
+    {
+        result = 2;
+        SQLWARN;
+        return QStringList();
+    }
     vl.clear();
     while (exec_db.next())
         vl << exec_db.value(0).toString();
     if (vl.isEmpty())
     {
         result=1;
-        SQLWARN;
         return QStringList();
     }
     result=0;

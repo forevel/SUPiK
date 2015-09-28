@@ -54,6 +54,7 @@ private slots:
     void ConstructLink();
     void TbleChoosed(QString, s_tqComboBox *);
     void TbleNameChanged(QString tblename);
+    void WriteToTfl (QStringList fl, QStringList vl, QStringList cmpfl, QStringList cmpvl);
 };
 
 #endif // DIR_ADDDIALOG_H

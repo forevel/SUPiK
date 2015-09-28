@@ -49,5 +49,7 @@
         <file>res/newcaty.png</file>
         <file>res/whPB-grn.png</file>
         <file>res/whPB-red.png</file>
+        <file>res/dirPB-grn.png</file>
+        <file>res/dirPB-red.png</file>
     </qresource>
 </RCC>

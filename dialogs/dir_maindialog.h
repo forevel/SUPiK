@@ -27,6 +27,7 @@ private slots:
     void EditDirDialog();
     void EditItem (QModelIndex index = QModelIndex());
     void DeleteData();
+    void DeleteDir();
     void DeleteDataUnconditional(QString id);
     void AddNew();
 

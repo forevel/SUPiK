@@ -764,8 +764,37 @@ CREATE TABLE `wh` (
 
 LOCK TABLES `wh` WRITE;
 /*!40000 ALTER TABLE `wh` DISABLE KEYS */;
-INSERT INTO `wh` VALUES (2001,'О203','стр. 9, комн. 203','2001',0,NULL,'2001'),(1,'Наименование','Местонахождение','pc.sup.personel',0,NULL,NULL),(2,'Наименование','Местонахождение','Ответственный',0,NULL,NULL),(3,'Ц6','Стр. 20, комн. 6','3',0,NULL,'2001');
+INSERT INTO `wh` VALUES (2001,'О203','стр. 9, комн. 203','2001',0,NULL,'2001'),(3,'Ц6','Стр. 20, комн. 6','3',0,'2015-09-25 22:12:29','2001'),(4,'Ц1','Цех, основное помещение','2001',0,'2015-09-25 22:12:12','2001');
 /*!40000 ALTER TABLE `wh` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `whplaces`
+--
+
+DROP TABLE IF EXISTS `whplaces`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `whplaces` (
+  `idwhplaces` int(11) NOT NULL,
+  `alias` varchar(128) DEFAULT NULL,
+  `idalias` varchar(128) DEFAULT NULL,
+  `idpers` varchar(128) DEFAULT NULL,
+  `date` varchar(128) DEFAULT NULL,
+  `deleted` int(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`idwhplaces`),
+  UNIQUE KEY `idwhplaces_UNIQUE` (`idwhplaces`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `whplaces`
+--
+
+LOCK TABLES `whplaces` WRITE;
+/*!40000 ALTER TABLE `whplaces` DISABLE KEYS */;
+INSERT INTO `whplaces` VALUES (1,'Шкаф 1','0','2001','2015-09-28 22:43:19',0),(2,'Этаж 1','1','2001','2015-09-28 22:48:12',0);
+/*!40000 ALTER TABLE `whplaces` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
@@ -777,4 +806,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-09-24 21:48:48
+-- Dump completed on 2015-09-28 22:54:03

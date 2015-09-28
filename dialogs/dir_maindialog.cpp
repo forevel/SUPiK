@@ -38,12 +38,34 @@ dir_maindialog::dir_maindialog(QString tble, QWidget *parent) :
 void dir_maindialog::SetupUI()
 {
     QVBoxLayout *lyout = new QVBoxLayout;
+    QHBoxLayout *hlyout = new QHBoxLayout;
+    s_tqPushButton *pb = new s_tqPushButton;
+    pb->setIcon(QIcon(":/res/dirPB-grn.png"));
+    connect(pb, SIGNAL(clicked()), this, SLOT(AddDirDialog()));
+    pb->setToolTip("Создать новый справочник");
+    hlyout->addWidget(pb);
+    hlyout->addSpacing(5);
+/*    pb = new s_tqPushButton;
+    pb->setIcon(QIcon(":/res/dirPB-red.png"));
+    connect(pb, SIGNAL(clicked()), this, SLOT(DeleteData()));
+    pb->setToolTip("Удалить справочник");
+    hlyout->addWidget(pb);
+    hlyout->addSpacing(5); */
+    pb = new s_tqPushButton;
+    pb->setIcon(QIcon(":/res/cross.png"));
+    connect(pb, SIGNAL(clicked()), this, SLOT(close()));
+    pb->setToolTip("Закрыть вкладку");
+    hlyout->addWidget(pb);
+
+    hlyout->addStretch(300);
     s_tqLabel *lbl = new s_tqLabel(tble);
     QFont font;
     font.setPointSize(15);
     lbl->setFont(font);
-    lyout->addWidget(lbl, 0);
-    lyout->setAlignment(lbl, Qt::AlignRight);
+    hlyout->addWidget(lbl, 0);
+    hlyout->setAlignment(lbl, Qt::AlignRight);
+    lyout->addLayout(hlyout);
+
     s_tqTreeView *SlaveTV = new s_tqTreeView;
     s_tqTableView *SlaveTbV = new s_tqTableView;
     s_tqTableView *MainTV = new s_tqTableView;
@@ -106,9 +128,6 @@ void dir_maindialog::SetupUI()
     spl->addWidget(right);
     spl->setOrientation(Qt::Horizontal);
     lyout->addWidget(spl, 90);
-    s_tqPushButton *pb = new s_tqPushButton("Выход");
-    connect(pb,SIGNAL(clicked()),this,SLOT(close()));
-    lyout->addWidget(pb);
     setLayout(lyout);
 }
 
@@ -358,6 +377,18 @@ void dir_maindialog::DeleteDataUnconditional(QString id)
         INFOMSG(PublicClass::ER_DIRMAIN,__LINE__,"Удалено успешно!");
         showDirDialog();
     }
+}
+
+void dir_maindialog::DeleteDir()
+{
+    QMessageBox msgBox;
+    msgBox.setText("Вы уверены, что хотите удалить элемент?");
+    msgBox.setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+    msgBox.setDefaultButton(QMessageBox::Cancel);
+    int res = msgBox.exec();
+    if (res == QMessageBox::Cancel)
+        return;
+    DeleteDataUnconditional(QString::number(getSlaveIndex(0).toLongLong(0,10)));
 }
 
 void dir_maindialog::AddDirDialog()

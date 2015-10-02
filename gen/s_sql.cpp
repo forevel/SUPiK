@@ -160,39 +160,36 @@ void s_sql::AlterTable(QSqlDatabase db, QString tble, QStringList DeleteList, QS
         return;
     }
     QString tmpString = "ALTER TABLE `"+tble+"` ";
-    QStringList lastcol = sqlc.GetColumnsFromTable(db, tble);
-    QString After = lastcol.last();
     if ((!AddList.isEmpty()) || !IdExist || !DateExist || !IdpersExist || !DeletedExist)
         // нет одного из стандартных полей или есть что-то в списке на добавление
     {
-        tmpString += "ADD COLUMN ";
         if (!IdExist)
-            tmpString += "`id"+tble+"` int(11) NOT NULL,";
+            tmpString += "ADD COLUMN `id"+tble+"` int(11) NOT NULL,";
         if (!DateExist)
-            tmpString += "`date` VARCHAR(128) DEFAULT NULL,";
+            tmpString += "ADD COLUMN `date` VARCHAR(128) DEFAULT NULL,";
         if (!IdpersExist)
-            tmpString += "`idpers` VARCHAR(128) DEFAULT NULL,";
+            tmpString += "ADD COLUMN `idpers` VARCHAR(128) DEFAULT NULL,";
         if (!DeletedExist)
-            tmpString += "`deleted` int(1) NOT NULL DEFAULT '0',";
+            tmpString += "ADD COLUMN `deleted` int(1) NOT NULL DEFAULT '0',";
         while (!AddList.isEmpty())
         {
             QString tmps = AddList.first();
-            tmpString += "`"+tmps+"` VARCHAR(128) NULL AFTER `" + After + "`,";
-            After = tmps;
+            tmpString += "ADD COLUMN `"+tmps+"` VARCHAR(128) NULL,";
             AddList.removeFirst();
         }
         tmpString.chop(1); // последняя запятая
+        tmpString.append(",");
     }
     if (!DeleteList.isEmpty())
     {
-        tmpString += " DROP COLUMN ";
         while (!DeleteList.isEmpty())
         {
             QString tmps = DeleteList.first();
-            tmpString += "`"+tmps+"`,";
+            tmpString += "DROP COLUMN `"+tmps+"`,";
             DeleteList.removeFirst();
         }
     }
+    tmpString.chop(1);
     tmpString += ";";
     exec_db.exec(tmpString);
     if (exec_db.isActive())
@@ -708,10 +705,21 @@ int s_sql::DeleteFromDB(QSqlDatabase db, QString tble, QString field, QString va
 
 // процедура реально удаляет строку, для которой field равно value
 
-int s_sql::RealDeleteFromDB(QSqlDatabase db, QString tble, QString field, QString value)
+int s_sql::RealDeleteFromDB(QSqlDatabase db, QString tble, QStringList fields, QStringList values)
 {
     QSqlQuery exec_db(db);
-    exec_db.exec("DELETE FROM `"+tble+"` WHERE `"+field+"`=\""+value+"\";");
+    if (fields.size() != values.size())
+    {
+        SQLWARN;
+        result = 1;
+        return 1;
+    }
+    QString tmps = "DELETE FROM `"+tble+"` WHERE ";
+    for (int i=0; i<fields.size(); i++)
+        tmps += "`"+fields.at(i)+"`=\""+values.at(i)+"\" AND ";
+    tmps.chop(5); // убрали " AND "
+    tmps += ";";
+    exec_db.exec(tmps);
     if (exec_db.isActive())
     {
         result = 0;

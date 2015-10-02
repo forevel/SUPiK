@@ -161,6 +161,7 @@ QString s_tablefields::idtov(QString links, QString id)
     }
     case FW_AUTONUM:
     case FW_NUMBER:
+    case FW_FNUMBER:
     case FW_PLAIN:
     case FW_MASKED:
     case FW_EQUAT:
@@ -310,6 +311,7 @@ QString s_tablefields::vtoid(QString links, QString value)
     }
     case FW_AUTONUM:
     case FW_NUMBER:
+    case FW_FNUMBER:
     case FW_PLAIN:
     case FW_MASKED:
     case FW_EQUAT:
@@ -562,7 +564,7 @@ void s_tablefields::Delete(QString tble, QString id)
         result = 1;
         return;
     }
-    result = sqlc.RealDeleteFromDB(sqlc.GetDB(keydbtble.at(0).split(".").at(0)), keydbtble.at(0).split(".").at(1), keydbtble.at(1), id);
+    result = sqlc.RealDeleteFromDB(sqlc.GetDB(keydbtble.at(0).split(".").at(0)), keydbtble.at(0).split(".").at(1), QStringList(keydbtble.at(1)), QStringList(id));
     if (result)
         TFWARN;
 }
@@ -630,6 +632,19 @@ QStringList s_tablefields::valuesbyfields(QString tble, QStringList fl, QStringL
     }
     result = 0;
     return tmps;
+}
+
+QStringList s_tablefields::TableColumn(QString tble, QString field)
+{
+    QStringList sl = sqlc.GetValuesFromTableByColumnAndField(sqlc.GetDB("sup"), "tablefields", field, "tablename", tble, "fieldsorder");
+    if (sqlc.result)
+    {
+        TFWARN;
+        result = 1;
+        return QStringList();
+    }
+    result = 0;
+    return sl;
 }
 
 QStringList s_tablefields::tablefields(QString tble, QString header)

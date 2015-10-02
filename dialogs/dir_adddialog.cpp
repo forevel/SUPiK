@@ -53,7 +53,7 @@ dir_adddialog::dir_adddialog(bool update, QString dirtype, QString dir, QWidget 
     FW_Links.clear();
     FW_Links << "0.Автонумерация" << "1.Фиксированное значение" << "2.Простая ссылка" << "3.Ссылка на несколько таблиц" << "4.Ссылка на дочерние элементы" << \
                 "5.Значение с макс. ИД" << "6.Форматированное поле" << "7.Вычисляемое поле" << "8.Простое поле" << "9.Права доступа" << \
-                "10.Выбор таблицы" << "11.Специальная ссылка" << "12.Ссылка на методы" << "13.Вызов диалога редактирования строки" << "14.Конструктор ссылок" << \
+                "10.Форматированное число" << "11.Специальная ссылка" << "12.Ссылка на методы" << "13.Вызов диалога редактирования строки" << "14.Конструктор ссылок" << \
                 "15.Ссылка на файл" << "16.Ссылка на каталог" << "17.Ссылка на элемент внутри файла" << "18.Выбор даты" << "19.Автодополнение нулями";
 }
 
@@ -66,7 +66,13 @@ void dir_adddialog::setupUI()
     s_tqComboBox *cb;
     s_tqSpinBox *spb;
     s_tqLineEdit *le;
-    lbl = new s_tqLabel("Редактор таблиц");
+    QString tmps;
+    if (IsDir)
+        tmps = dir.split("_").at(0);
+    else
+        tmps = dir;
+    tmps.insert(0, "Редактор справочника: ");
+    lbl = new s_tqLabel(tmps);
     QFont font;
     font.setPointSize(15);
     lbl->setFont(font);
@@ -149,11 +155,6 @@ void dir_adddialog::setupUI()
 
     QVBoxLayout *dlg2vlyout = new QVBoxLayout;
     QVBoxLayout *dlg3vlyout = new QVBoxLayout;
-/*    hlyout = new QHBoxLayout;
-    lbl = new s_tqLabel ("Учесть в кратком виде");
-    hlyout->addWidget(lbl);
-    hlyout->setAlignment(lbl, Qt::AlignRight);
-    dlg21lyout->addLayout(hlyout); */
     for (int i = 0; i < FSIZE; i++)
     {
         QList<QWidget *> wl;
@@ -170,8 +171,7 @@ void dir_adddialog::setupUI()
         wl << lbl;
         cb = new s_tqComboBox;
         cb->setObjectName("field"+QString::number(i)+"CB");
-        if (!upd)
-            cb->setEditable(true);
+        cb->setEditable(true);
         adjustFieldSize(cb, 15);
         wl << cb;
         lbl = new s_tqLabel("Описание (links):");
@@ -205,8 +205,6 @@ void dir_adddialog::setupUI()
     dlg3vlyout->addLayout(dlg3Layout);
     dlg2vlyout->addStretch(200);
     dlg3vlyout->addStretch(200);
-//    dlg21lyout->addLayout(dlg2vlyout);
-//    dlg2->setLayout(dlg21lyout);
     dlg2->setLayout(dlg2vlyout);
     dlg3->setLayout(dlg3vlyout);
     mainTW->addTab(dlg2, "Поля 1");
@@ -245,7 +243,6 @@ void dir_adddialog::WriteAndClose()
     s_tqSpinBox *sb;
     QString tmpString, FullTblename, ShortTblename;
     QStringList sl;
-    bool FullToWrite=true, ShortToWrite=true;
     dirNameLE = this->findChild<s_tqLineEdit *>("dirname");
     if (dirNameLE == 0)
     {
@@ -313,12 +310,8 @@ void dir_adddialog::WriteAndClose()
         }
         DADDINFO("Таблица справочника создана успешно");
     }
-    else if (!upd)
+    else // если таблица есть, надо проверить её на соответствие нашей структуре
     {
-        // есть такая таблица, надо спросить, не хотим ли её поменять?
-        if (QMessageBox::question(this, "Таблица существует", "Таблица для справочника уже существует\nПерезаписать?", QMessageBox::Yes|QMessageBox::No,\
-                              QMessageBox::No) == QMessageBox::No)
-            return; // не готовы перезаписывать, значит, не будет соответствия между справочником и таблицей. Выход.
         // считываем структуру таблицы
         QStringList cmpsl = sqlc.GetColumnsFromTable(sqlc.GetDB(dirdb), tble);
         cmpsl.removeAll("id"+tble); // убираем из сравнения ИД, если он есть
@@ -349,61 +342,92 @@ void dir_adddialog::WriteAndClose()
                 //      в противном случае удаляем элемент из списка непросмотренных
                 cmpsl.removeAt(cmpslidx);
         }
-        // проверяем, если остались неохваченные поля в считанной структуре
-        if (!cmpsl.isEmpty())
+        if ((sl.isEmpty()) && (cmpsl.isEmpty())); // если таблица уже соответствует нашей структуре, делать ничего не надо
+        else
         {
-            //      спрашиваем, если не удалять
-            tmpString = cmpsl.join(",");
-            tmpString = "В таблице существуют следующие поля:\n" + tmpString + "\nПерезаписать?";
-            if (QMessageBox::question(this, "Поля существуют", tmpString, QMessageBox::Yes|QMessageBox::No, QMessageBox::No) == QMessageBox::No)
-                return; // выход, ибо опять же, не будет соответствия
-        }
-        // делаем alter table с запомненным списком sl
-        sqlc.AlterTable(sqlc.GetDB(dirdb), tble, cmpsl, sl);
-        if (sqlc.result)
-        {
-            DADDWARN;
-            return;
-        }
-        DADDINFO("Таблица справочника изменена успешно");
-    }
-
-    tmpString = sqlc.GetValueFromTableByField(sqlc.GetDB("sup"), "tablefields", "header", "tablename", FullTblename);
-    if (sqlc.result == 2) // ошибка открытия таблицы
-    {
-        DADDWARN;
-        return;
-    }
-    else if (!sqlc.result) // есть запись про таблицу
-    {
-        if (QMessageBox::question(this, "Данные существуют", "Данные полного справочника существуют\nПерезаписать?", QMessageBox::Yes|QMessageBox::No,\
-                              QMessageBox::No) == QMessageBox::No)
-            FullToWrite = false;
-    }
-    if (IsDir)
-    {
-        tmpString = sqlc.GetValueFromTableByField(sqlc.GetDB("sup"), "tablefields", "header", "tablename", ShortTblename); // ищем сокращённое описание справочника
-        if (sqlc.result == 2) // ошибка открытия таблицы
-        {
-            DADDWARN;
-            return;
-        }
-        else if (!sqlc.result) // есть запись про таблицу
-        {
-            if (QMessageBox::question(this, "Данные существуют", "Данные сокращённого справочника существуют\nПерезаписать?", QMessageBox::Yes|QMessageBox::No,\
+            // есть такая таблица, надо спросить, не хотим ли её поменять?
+            if (QMessageBox::question(this, "Таблица существует", "Таблица для справочника уже существует\nПерезаписать?", QMessageBox::Yes|QMessageBox::No,\
                                   QMessageBox::No) == QMessageBox::No)
-                ShortToWrite = false;
+                return; // не готовы перезаписывать, значит, не будет соответствия между справочником и таблицей. Выход.
+            // проверяем, если остались неохваченные поля в считанной структуре
+            if (!cmpsl.isEmpty())
+            {
+                //      спрашиваем, если не удалять
+                tmpString = cmpsl.join(",");
+                tmpString = "В таблице существуют следующие поля:\n" + tmpString + "\nПерезаписать?";
+                if (QMessageBox::question(this, "Поля существуют", tmpString, QMessageBox::Yes|QMessageBox::No, QMessageBox::No) == QMessageBox::No)
+                    return; // выход, ибо опять же, не будет соответствия
+            }
+            // делаем alter table с запомненным списком sl
+            sqlc.AlterTable(sqlc.GetDB(dirdb), tble, cmpsl, sl);
+            if (sqlc.result)
+            {
+                DADDWARN;
+                return;
+            }
+            DADDINFO("Таблица справочника изменена успешно");
         }
     }
-    else
-        ShortToWrite = false; // для редактирования справочника через систему его имя уже содержится в FullTblename с необходимым суффиксом
-    if (!ShortToWrite && !FullToWrite) // если везде ответили "нет", то выходим
-        return;
     QSqlDatabase db = sqlc.GetDB("sup");
     QStringList fl, vl;
     QStringList cmpfl, cmpvl;
+    // соберём данные по столбцам tablefields для таблиц FullTbleName и ShortTbleName
+    QStringList FullTbleDeleteList = tfl.TableColumn(FullTblename,"tablefields");
+    QStringList ShortTbleDeleteList = tfl.TableColumn(ShortTblename, "tablefields");
+    FullTbleDeleteList.removeAll("id"+tble);
+    ShortTbleDeleteList.removeAll("id"+tble);
+    // теперь для каждого значения в полях levalue, cbfield сравним значения cbfield со значениями в соответствующих списках
+    for (i = 0; i < numfields; i++)
+    {
+        levalue = this->findChild<s_tqLineEdit *>("value"+QString::number(i)+"LE");
+        lename = this->findChild<s_tqLineEdit *>("name"+QString::number(i)+"LE");
+        cbfield = this->findChild<s_tqComboBox *>("field"+QString::number(i)+"CB");
+        s_tqCheckBox *chb = this->findChild<s_tqCheckBox *>("short"+QString::number(i));
+        if ((levalue == 0) || (lename == 0) || (cbfield == 0) || (chb == 0))
+        {
+            DADDDBG;
+            return;
+        }
+        // удаляем из наших списков найденное в полях значение, если хоть одно останется, значит, надо будет его удалить потом
+        FullTbleDeleteList.removeAll(cbfield->currentText());
+        if (chb->isChecked())
+            ShortTbleDeleteList.removeAll(cbfield->currentText());
+    }
+    // если есть значения на удаление
+    if (!FullTbleDeleteList.isEmpty())
+    {
+        fl = QStringList() << "tablefields" << "tablename";
+        // в цикле удаляем поля по списку
+        while (!FullTbleDeleteList.isEmpty())
+        {
+            vl = QStringList() << FullTbleDeleteList.at(0) << FullTblename;
+            sqlc.RealDeleteFromDB(sqlc.GetDB("sup"),"tablefields",fl,vl);
+            if (sqlc.result)
+            {
+                DADDWARN;
+                return;
+            }
+            FullTbleDeleteList.removeFirst();
+        }
+    }
+    if (!ShortTbleDeleteList.isEmpty())
+    {
+        fl = QStringList() << "tablefields" << "table";
+        // в цикле удаляем поля по списку
+        while (!ShortTbleDeleteList.isEmpty())
+        {
+            vl = QStringList() << ShortTbleDeleteList.at(0) << ShortTblename;
+            sqlc.RealDeleteFromDB(sqlc.GetDB("sup"),"tablefields",fl,vl);
+            if (sqlc.result)
+            {
+                DADDWARN;
+                return;
+            }
+            FullTbleDeleteList.removeFirst();
+        }
+    }
     cmpfl << "tablename" << "tablefields";
-    fl << "tablefields" << "table" << "keyfield" << "header" << "links" << "fieldsorder" << "tablename" << \
+    fl = QStringList() << "tablefields" << "table" << "keyfield" << "header" << "links" << "fieldsorder" << "tablename" << \
           "date" << "deleted" << "idpers";
     for (i = 0; i < numfields; i++)
     {
@@ -421,32 +445,26 @@ void dir_adddialog::WriteAndClose()
         vl << cbfield->currentText() << dirdb+"."+tble  << "" << lename->text() << levalue->text(); // "" - на месте ключевого поля, т.к. ИД пишем далее
         tmpString = QString("%1").arg(i+1, 2, 10, QChar('0')); // i+1, т.к. на 0-м месте должен идти ИД
         vl << tmpString << FullTblename << pc.DateTime << "0" << QString::number(pc.idPers);
-        if (FullToWrite) // сначала пишем полный вариант
-        {
-            cmpvl << FullTblename << cbfield->currentText();
+        cmpvl << FullTblename << cbfield->currentText();
+        WriteToTfl(fl, vl, cmpfl, cmpvl);
+        vl.replace(6, ShortTblename); // заменяем полное наименование на сокращённое
+        cmpvl = QStringList() << ShortTblename << cbfield->currentText();
+        if (chb->isChecked())
             WriteToTfl(fl, vl, cmpfl, cmpvl);
-        }
-        if (ShortToWrite) // теперь пишем сокращённый вариант только в том случае, если установлена пометка
+        else
         {
-            vl.replace(6, ShortTblename); // заменяем полное наименование на сокращённое
-            cmpvl = QStringList() << ShortTblename << cbfield->currentText();
-            if (chb->isChecked())
-                WriteToTfl(fl, vl, cmpfl, cmpvl);
-            else
+            sqlc.GetValueFromTableByFields(sqlc.GetDB("sup"), "tablefields", "idtablefields", cmpfl, cmpvl);
+            if (sqlc.result == 1); // нет такой записи, и хорошо
+            else if (!sqlc.result) // иначе надо её удалить
             {
-                sqlc.GetValueFromTableByFields(sqlc.GetDB("sup"), "tablefields", "idtablefields", cmpfl, cmpvl);
-                if (sqlc.result == 1); // нет такой записи, и хорошо
-                else if (!sqlc.result) // иначе надо её удалить
+                int delidx = fl.indexOf("deleted");
+                vl.replace(delidx, "1");
+                QString id = sqlc.GetValueFromTableByFields(sqlc.GetDB("sup"), "tablefields", "idtablefields", cmpfl, cmpvl);
+                sqlc.UpdateValuesInTable(sqlc.GetDB("sup"), "tablefields", fl, vl, "idtablefields", id);
+                if (sqlc.result)
                 {
-                    int delidx = fl.indexOf("deleted");
-                    vl.replace(delidx, "1");
-                    QString id = sqlc.GetValueFromTableByFields(sqlc.GetDB("sup"), "tablefields", "idtablefields", cmpfl, cmpvl);
-                    sqlc.UpdateValuesInTable(sqlc.GetDB("sup"), "tablefields", fl, vl, "idtablefields", id);
-                    if (sqlc.result)
-                    {
-                        DADDWARN;
-                        return;
-                    }
+                    DADDWARN;
+                    return;
                 }
             }
         }
@@ -457,17 +475,14 @@ void dir_adddialog::WriteAndClose()
     vl << "id"+tble << dirdb+"."+tble << "v" << "ИД" << "4.19..7";
     tmpString = QString("%1").arg(0, 2, 10, QChar('0'));
     vl << tmpString << FullTblename << pc.DateTime << "0" << QString::number(pc.idPers);
-    if (FullToWrite) // сначала пишем полный вариант
-    {
-        cmpvl << FullTblename << "id"+tble;
-        WriteToTfl(fl, vl, cmpfl, cmpvl);
-    }
-    if (ShortToWrite) // теперь пишем сокращённый вариант
-    {
-        vl.replace(6, ShortTblename); // заменяем полное наименование на сокращённое
-        cmpvl = QStringList() << ShortTblename << "id"+tble;
-        WriteToTfl(fl, vl, cmpfl, cmpvl);
-    }
+    // сначала пишем полный вариант
+    cmpvl << FullTblename << "id"+tble;
+    WriteToTfl(fl, vl, cmpfl, cmpvl);
+    // теперь пишем сокращённый вариант
+    vl.replace(6, ShortTblename); // заменяем полное наименование на сокращённое
+    cmpvl = QStringList() << ShortTblename << "id"+tble;
+    WriteToTfl(fl, vl, cmpfl, cmpvl);
+
     // теперь проверим данные о справочнике в каталоге справочников
     tble = "dirlist";
     if (IsDir)
@@ -759,25 +774,25 @@ void dir_adddialog::TbleChoosed(QString str, s_tqComboBox *ptr)
         cb2name = "fwspecialcb2";
         break;
     }
-    case FW_DLINK+20:
+    case FW_DLINK+FW_COUNT:
     {
         cb1name = "tble0";
         cb2name = "tblefield0";
         break;
     }
-    case FW_DLINK+21:
+    case FW_DLINK+FW_COUNT+1:
     {
         cb1name = "tble1";
         cb2name = "tblefield1";
         break;
     }
-    case FW_DLINK+22:
+    case FW_DLINK+FW_COUNT+2:
     {
         cb1name = "tble2";
         cb2name = "tblefield2";
         break;
     }
-    case FW_DLINK+23:
+    case FW_DLINK+FW_COUNT+3:
     {
         cb1name = "tble3";
         cb2name = "tblefield3";
@@ -1072,7 +1087,7 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
 
     lyout->addWidget(sw);
 
-    // FW_NUMBER
+    // 1. FW_NUMBER
     QVBoxLayout *vlyout = new QVBoxLayout;
     hlyout = new QHBoxLayout;
     lbl = new s_tqLabel("Число");
@@ -1088,7 +1103,7 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
     vlyout->addLayout(hlyout);
     wdgts[1]->setLayout(vlyout);
 
-    // FW_LINK
+    // 2. FW_LINK
     vlyout = new QVBoxLayout;
     hlyout = new QHBoxLayout;
     lbl = new s_tqLabel("Таблица");
@@ -1113,7 +1128,37 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
     vlyout->addLayout(hlyout);
     wdgts[2]->setLayout(vlyout);
 
-    // FW_ALLINK
+    // 3. FW_DLINK
+    vlyout = new QVBoxLayout;
+    s_tqComboBox *TbleCB, *TbleFieldsCB;
+    vls.insert(0,""); // добавление пустого элемента, ибо в DLINK возможно отсутствие значения
+    for (i = 0; i < 4; i++)
+    {
+        hlyout = new QHBoxLayout;
+        lbl = new s_tqLabel("Таблица"+QString::number(i));
+        hlyout->addWidget(lbl);
+        hlyout->setAlignment(lbl,Qt::AlignRight);
+        TbleCB = new s_tqComboBox;
+        tml = new QStringListModel;
+        tml->setStringList(vls);
+        TbleCB->setModel(tml);
+        TbleCB->setObjectName("tble"+QString::number(i));
+        TbleCB->setAData(FW_DLINK+FW_COUNT+i); // +20 - чтобы точно перекрыть диапазон возможных вариантов полей
+        connect(TbleCB,SIGNAL(textChanged(QString,s_tqComboBox*)),this,SLOT(TbleChoosed(QString,s_tqComboBox*)));
+        hlyout->addWidget(TbleCB);
+        vlyout->addLayout(hlyout);
+        hlyout = new QHBoxLayout;
+        lbl = new s_tqLabel("Поле"+QString::number(i));
+        hlyout->addWidget(lbl);
+        hlyout->setAlignment(lbl,Qt::AlignRight);
+        TbleFieldsCB = new s_tqComboBox;
+        TbleFieldsCB->setObjectName("tblefield"+QString::number(i));
+        hlyout->addWidget(TbleFieldsCB);
+        vlyout->addLayout(hlyout);
+    }
+    wdgts[3]->setLayout(vlyout);
+
+    // 4. FW_ALLINK
     vlyout = new QVBoxLayout;
     hlyout = new QHBoxLayout;
     lbl = new s_tqLabel("Таблица");
@@ -1138,33 +1183,7 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
     vlyout->addLayout(hlyout);
     wdgts[4]->setLayout(vlyout);
 
-    // FW_SPECIAL
-    vlyout = new QVBoxLayout;
-    hlyout = new QHBoxLayout;
-    lbl = new s_tqLabel("Таблица");
-    hlyout->addWidget(lbl);
-    hlyout->setAlignment(lbl,Qt::AlignRight);
-    tcb = new s_tqComboBox;
-    tcb->setObjectName("fwspecialcb");
-    tml = new QStringListModel;
-    tml->setStringList(vls);
-    tcb->setModel(tml);
-    tcb->setAData(FW_SPECIAL);
-    connect(tcb,SIGNAL(textChanged(QString,s_tqComboBox*)),this,SLOT(TbleChoosed(QString,s_tqComboBox*)));
-    hlyout->addWidget(tcb);
-    vlyout->addLayout(hlyout);
-    hlyout = new QHBoxLayout;
-    lbl = new s_tqLabel("Поле");
-    hlyout->addWidget(lbl);
-    hlyout->setAlignment(lbl,Qt::AlignRight);
-    stcb = new s_tqComboBox;
-    stcb->setObjectName("fwspecialcb2");
-    stcb->setAData(FW_SPECIAL);
-    hlyout->addWidget(stcb);
-    vlyout->addLayout(hlyout);
-    wdgts[11]->setLayout(vlyout);
-
-    // FW_MAXLINK
+    // 5. FW_MAXLINK
     vlyout = new QVBoxLayout;
     hlyout = new QHBoxLayout;
     lbl = new s_tqLabel("Таблица");
@@ -1205,37 +1224,7 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
     vlyout->addLayout(hlyout);
     wdgts[5]->setLayout(vlyout);
 
-    // FW_DLINK
-    vlyout = new QVBoxLayout;
-    s_tqComboBox *TbleCB, *TbleFieldsCB;
-    vls.insert(0,""); // добавление пустого элемента, ибо в DLINK возможно отсутствие значения
-    for (i = 0; i < 4; i++)
-    {
-        hlyout = new QHBoxLayout;
-        lbl = new s_tqLabel("Таблица"+QString::number(i));
-        hlyout->addWidget(lbl);
-        hlyout->setAlignment(lbl,Qt::AlignRight);
-        TbleCB = new s_tqComboBox;
-        tml = new QStringListModel;
-        tml->setStringList(vls);
-        TbleCB->setModel(tml);
-        TbleCB->setObjectName("tble"+QString::number(i));
-        TbleCB->setAData(FW_DLINK+20+i); // +20 - чтобы точно перекрыть диапазон возможных вариантов полей
-        connect(TbleCB,SIGNAL(textChanged(QString,s_tqComboBox*)),this,SLOT(TbleChoosed(QString,s_tqComboBox*)));
-        hlyout->addWidget(TbleCB);
-        vlyout->addLayout(hlyout);
-        hlyout = new QHBoxLayout;
-        lbl = new s_tqLabel("Поле"+QString::number(i));
-        hlyout->addWidget(lbl);
-        hlyout->setAlignment(lbl,Qt::AlignRight);
-        TbleFieldsCB = new s_tqComboBox;
-        TbleFieldsCB->setObjectName("tblefield"+QString::number(i));
-        hlyout->addWidget(TbleFieldsCB);
-        vlyout->addLayout(hlyout);
-    }
-    wdgts[3]->setLayout(vlyout);
-
-    // FW_MASKED
+    // 6. FW_MASKED
     vlyout = new QVBoxLayout;
     hlyout = new QHBoxLayout;
     lbl = new s_tqLabel("Регулярное выражение");
@@ -1248,7 +1237,7 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
     vlyout->addLayout(hlyout);
     wdgts[6]->setLayout(vlyout);
 
-    // FW_EQUAT
+    // 7. FW_EQUAT
     vlyout = new QVBoxLayout;
     hlyout = new QHBoxLayout;
     lbl = new s_tqLabel("Выражение1");
@@ -1280,7 +1269,61 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
     vlyout->addLayout(hlyout);
     wdgts[7]->setLayout(vlyout);
 
-    // FW_ID
+    // 10. FW_FNUMBER
+    vlyout = new QVBoxLayout;
+    hlyout = new QHBoxLayout;
+    lbl = new s_tqLabel("Количество знаков целой части");
+    hlyout->addWidget(lbl);
+    hlyout->setAlignment(lbl,Qt::AlignRight);
+    NumberSB = new s_tqSpinBox;
+    NumberSB->setObjectName("fnumber");
+    NumberSB->setDecimals(0);
+    NumberSB->setSingleStep(1);
+    NumberSB->setMaximum(9);
+    NumberSB->setMinimum(0);
+    hlyout->addWidget(NumberSB);
+    vlyout->addLayout(hlyout);
+    hlyout = new QHBoxLayout;
+    lbl = new s_tqLabel("Количество знаков дробной части");
+    hlyout->addWidget(lbl);
+    hlyout->setAlignment(lbl,Qt::AlignRight);
+    NumberSB = new s_tqSpinBox;
+    NumberSB->setObjectName("fnumber2");
+    NumberSB->setDecimals(0);
+    NumberSB->setSingleStep(1);
+    NumberSB->setMaximum(5);
+    NumberSB->setMinimum(0);
+    hlyout->addWidget(NumberSB);
+    vlyout->addLayout(hlyout);
+    wdgts[10]->setLayout(vlyout);
+
+    // 11. FW_SPECIAL
+    vlyout = new QVBoxLayout;
+    hlyout = new QHBoxLayout;
+    lbl = new s_tqLabel("Таблица");
+    hlyout->addWidget(lbl);
+    hlyout->setAlignment(lbl,Qt::AlignRight);
+    tcb = new s_tqComboBox;
+    tcb->setObjectName("fwspecialcb");
+    tml = new QStringListModel;
+    tml->setStringList(vls);
+    tcb->setModel(tml);
+    tcb->setAData(FW_SPECIAL);
+    connect(tcb,SIGNAL(textChanged(QString,s_tqComboBox*)),this,SLOT(TbleChoosed(QString,s_tqComboBox*)));
+    hlyout->addWidget(tcb);
+    vlyout->addLayout(hlyout);
+    hlyout = new QHBoxLayout;
+    lbl = new s_tqLabel("Поле");
+    hlyout->addWidget(lbl);
+    hlyout->setAlignment(lbl,Qt::AlignRight);
+    stcb = new s_tqComboBox;
+    stcb->setObjectName("fwspecialcb2");
+    stcb->setAData(FW_SPECIAL);
+    hlyout->addWidget(stcb);
+    vlyout->addLayout(hlyout);
+    wdgts[11]->setLayout(vlyout);
+
+    // 19. FW_ID
     vlyout = new QVBoxLayout;
     hlyout = new QHBoxLayout;
     lbl = new s_tqLabel("Размер поля");
@@ -1349,18 +1392,18 @@ void dir_adddialog::DTypeCBIndexChanged(int FD)
     case FD_CHOOSE_X:
     {
         tmpStringList << FW_Links.at(2) << FW_Links.at(3) << FW_Links.at(4) << FW_Links.at(9) << FW_Links.at(10) \
-                      << FW_Links.at(11) << FW_Links.at(12) << FW_Links.at(13) << FW_Links.at(14) << FW_Links.at(15) \
+                      << FW_Links.at(11) << FW_Links.at(13) << FW_Links.at(14) << FW_Links.at(15) \
                       << FW_Links.at(16) << FW_Links.at(17) << FW_Links.at(18);
         break;
     }
     case FD_COMBO:
     {
-        tmpStringList << FW_Links.at(2) << FW_Links.at(4) << FW_Links.at(10) << FW_Links.at(12);
+        tmpStringList << FW_Links.at(2) << FW_Links.at(4);
         break;
     }
     case FD_SPIN:
     {
-        tmpStringList << FW_Links.at(8);
+        tmpStringList << FW_Links.at(10);
         break;
     }
     default:
@@ -1397,7 +1440,10 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
         {
             s_tqSpinBox *NumberSB = this->findChild<s_tqSpinBox *>("number");
             if (NumberSB == 0)
+            {
+                DADDDBG;
                 return;
+            }
             NumberSB->setValue(links.at(3).toDouble());
         }
         break;
@@ -1408,11 +1454,17 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
         {
             s_tqComboBox *tcb = this->findChild<s_tqComboBox *>("fwlinkcb");
             if (tcb == 0)
+            {
+                DADDDBG;
                 return;
+            }
             tcb->setCurrentText(links.at(3));
             tcb = this->findChild<s_tqComboBox *>("fwlinkcb2");
             if (tcb == 0)
+            {
+                DADDDBG;
                 return;
+            }
             tcb->setCurrentText(links.at(4));
         }
         break;
@@ -1422,12 +1474,18 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
         if (links.size()>4)
         {
             s_tqComboBox *tcb = this->findChild<s_tqComboBox *>("fwspecialcb");
-            if (tcb == 0)
+            {
+                DADDDBG;
+                return;
+            }
                 return;
             tcb->setCurrentText(links.at(3));
             tcb = this->findChild<s_tqComboBox *>("fwspecialcb2");
             if (tcb == 0)
+            {
+                DADDDBG;
                 return;
+            }
             TbleChoosed(links.at(3),tcb);
             tcb->setCurrentText(links.at(4));
         }
@@ -1439,11 +1497,17 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
         {
             s_tqComboBox *tcb = this->findChild<s_tqComboBox *>("fwallinkcb");
             if (tcb == 0)
+            {
+                DADDDBG;
                 return;
+            }
             tcb->setCurrentText(links.at(3));
             tcb = this->findChild<s_tqComboBox *>("fwallinkcb2");
             if (tcb == 0)
+            {
+                DADDDBG;
                 return;
+            }
             tcb->setCurrentText(links.at(4));
         }
         break;
@@ -1460,11 +1524,17 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
             {
                 s_tqComboBox *cb = this->findChild<s_tqComboBox *>("tble"+QString::number(i));
                 if (cb == 0)
+                {
+                    DADDDBG;
                     return;
+                }
                 cb->setCurrentText(links.at(0));
                 cb = this->findChild<s_tqComboBox *>("tblefield"+QString::number(i));
                 if (cb == 0)
+                {
+                    DADDDBG;
                     return;
+                }
                 cb->setCurrentText(links.at(1));
                 links.removeFirst();
                 links.removeFirst();
@@ -1479,21 +1549,33 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
         {
             s_tqComboBox *tcb = this->findChild<s_tqComboBox *>("fwmaxlinkcb");
             if (tcb == 0)
+            {
+                DADDDBG;
                 return;
+            }
             tcb->setCurrentText(links.at(3));
             tcb = this->findChild<s_tqComboBox *>("fwmaxlinkcb2");
             if (tcb == 0)
+            {
+                DADDDBG;
                 return;
+            }
             tcb->setCurrentText(links.at(4));
             tcb = this->findChild<s_tqComboBox *>("fwmaxlinkcb3");
             if (tcb == 0)
+            {
+                DADDDBG;
                 return;
+            }
             tcb->setCurrentText(links.at(5));
             if (links.size()>6)
             {
                 s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fwmaxlinkle");
                 if (le == 0)
+                {
+                    DADDDBG;
                     return;
+                }
                 le->setText(links.at(6));
             }
         }
@@ -1505,7 +1587,10 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
         {
             s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fwmaskedle");
             if (le == 0)
+            {
+                DADDDBG;
                 return;
+            }
             QString tmps = links.at(3);
             int begidx = tmps.indexOf("\\\"^");
             if (begidx != -1)
@@ -1523,7 +1608,10 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
         {
             s_tqSpinBox *NumberSB = this->findChild<s_tqSpinBox *>("id");
             if (NumberSB == 0)
+            {
+                DADDDBG;
                 return;
+            }
             NumberSB->setValue(links.at(3).toDouble());
         }
         break;
@@ -1534,17 +1622,26 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
         {
             s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fwequatle");
             if (le == 0)
+            {
+                DADDDBG;
                 return;
+            }
             le->setText(links.at(4));
             if (links.size()>6)
             {
                 le = this->findChild<s_tqLineEdit *>("fwequatle2");
                 if (le == 0)
+                {
+                    DADDDBG;
                     return;
+                }
                 le->setText(links.at(6));
                 s_tqComboBox *cb = this->findChild<s_tqComboBox *>("fwequatcb");
                 if (cb == 0)
+                {
+                    DADDDBG;
                     return;
+                }
                 QString op = links.at(5);
                 if (op == "s")  cb->setCurrentIndex(0);
                 if (op == "r")  cb->setCurrentIndex(1);
@@ -1554,9 +1651,30 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
         }
         break;
     }
+    case FW_FNUMBER:
+    {
+        if (links.size()>3)
+        {
+            s_tqSpinBox *NumberSB = this->findChild<s_tqSpinBox *>("fnumber");
+            if (NumberSB == 0)
+            {
+                DADDDBG;
+                return;
+            }
+            NumberSB->setValue(links.at(3).count("n", Qt::CaseSensitive));
+            NumberSB = this->findChild<s_tqSpinBox *>("fnumber2");
+            if (NumberSB == 0)
+            {
+                DADDDBG;
+                return;
+            }
+            NumberSB->setValue(links.at(3).count("d", Qt::CaseSensitive));
+        }
+        break;
     }
-
-
+    default:
+        break;
+    }
 }
 
 // сборка строки ссылки из элементов выбора и выход из диалога конструктора
@@ -1778,6 +1896,27 @@ void dir_adddialog::ConstructLink()
             return;
         }
         links.append(tcb->currentText());
+        break;
+    }
+    case FW_FNUMBER:
+    {
+        QString tmps;
+        spb = this->findChild<s_tqSpinBox *>("fnumber");
+        if (spb == 0)
+        {
+            DADDDBG;
+            return;
+        }
+        tmps.fill('n', spb->value());
+        links.append(tmps);
+        spb = this->findChild<s_tqSpinBox *>("fnumber2");
+        if (spb == 0)
+        {
+            DADDDBG;
+            return;
+        }
+        tmps.fill('d', spb->value());
+        links.append(tmps);
         break;
     }
     default:

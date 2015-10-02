@@ -52,7 +52,7 @@ bool s_ntitem::setLinksData(int column, const QString &data)
 
 s_ntitem *s_ntitem::child(int row)
 {
-    if (row < childItems.size())
+    if ((row < childItems.size()) && (row != -1))
         return childItems.at(row);
     else
         return 0;

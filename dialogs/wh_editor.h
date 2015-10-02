@@ -3,6 +3,8 @@
 
 #include <QDialog>
 
+#include "../widgets/s_tqcombobox.h"
+
 #define WHEDWARN WARNMSG(PublicClass::ER_WHED, __LINE__)
 #define WHEDDBG  DBGMSG(PublicClass::ER_WHED, __LINE__)
 
@@ -20,6 +22,7 @@ private slots:
     void DeleteWh();
     void ModifyWh(QString WhName);
     void UpdateSmallTWWithNewQuantities();
+    void UpdatePlacePicture(QString txt, s_tqComboBox *ptr);
 
 protected:
     void paintEvent(QPaintEvent *);

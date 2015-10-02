@@ -303,21 +303,29 @@ int s_ntmodel::Setup(QString table)
     vl = sqlc.GetMoreValuesFromTableByField(sqlc.GetDB("sup"), "tablefields", fl, "tablename", table, "fieldsorder", true);
     if (sqlc.result)
     {
-        WARNMSG(PublicClass::ER_NTMODEL, __LINE__);
+        SNTMWARN;
         return 1;
     }
     // 2
     int idalpos=-1;
+    bool IsIdAliasExist = false, IsAliasExist = false;
     for (i = 0; i < vl.size(); i++)
     {
         if (vl.at(i).at(1) == "idalias")
         {
             idalpos = i;
-            break;
+            IsIdAliasExist = true;
         }
+        if (vl.at(i).at(1) == "alias")
+            IsAliasExist = true;
     }
-    if (idalpos == -1)
+    if (!IsIdAliasExist)
         return PublicClass::ER_NTMODEL; // не найдено поле idalias
+    if (!IsAliasExist)
+    {
+        SNTMINFO("Не найдено поле alias в таблице "+table);
+        return 1;
+    }
     // 3
     catlist = vl.at(idalpos).at(0).split("."); // catlist - таблица, из которой брать категории
     vl.removeAt(idalpos); // не включать ссылку на категорию в заголовок
@@ -327,7 +335,7 @@ int s_ntmodel::Setup(QString table)
     int res = BuildTree("0", false);
     if (res)
     {
-        WARNMSG(PublicClass::ER_NTMODEL, __LINE__);
+        SNTMWARN;
         return 1;
     }
     return 0;
@@ -348,19 +356,19 @@ int s_ntmodel::Setup(QString maintble, QString slvtble)
     QStringList tmpsl = tfl.tablefields(maintble, "ИД_а"); // взять table,tablefields,links из tablefields, где таблица maintble и заголовок ИД_а
     if (tfl.result) // нет поля idalias в таблице - это не дерево!
     {
-        WARNMSG(PublicClass::ER_NTMODEL, __LINE__);
+        SNTMWARN;
         return 1;
     }
     catlist = tmpsl.at(0).split("."); // catlist - таблица, из которой брать категории
     QStringList headers = tfl.tableheaders(slvtble);
     if (tfl.result)
     {
-        WARNMSG(PublicClass::ER_NTMODEL, __LINE__);
+        SNTMWARN;
         return 1;
     }
     if (headers.isEmpty()) // нет заголовков в подчинённой таблице
     {
-        WARNMSG(PublicClass::ER_NTMODEL, __LINE__);
+        SNTMWARN;
         return 1;
     }
     for (i = 0; i < headers.size(); i++)
@@ -369,7 +377,7 @@ int s_ntmodel::Setup(QString maintble, QString slvtble)
         tmpsl = tfl.tablefields(slvtble, headers.at(i)); // взяли table,tablefields,links из tablefields для подчинённой таблицы и данного заголовка
         if (tfl.result) // что-то не так с подчинённой таблицей нет такого заголовка
         {
-            WARNMSG(PublicClass::ER_NTMODEL, __LINE__);
+            SNTMWARN;
             return 1;
         }
         if (tmpsl.size() > 2)
@@ -379,7 +387,7 @@ int s_ntmodel::Setup(QString maintble, QString slvtble)
         }
         else // нет почему-то в возвращённом результате второго элемента
         {
-            WARNMSG(PublicClass::ER_NTMODEL, __LINE__);
+            SNTMWARN;
             return 1;
         }
     }
@@ -388,7 +396,7 @@ int s_ntmodel::Setup(QString maintble, QString slvtble)
     int res = BuildTree("0", true);
     if (res)
     {
-        WARNMSG(PublicClass::ER_NTMODEL, __LINE__);
+        SNTMWARN;
         return 1;
     }
     return 0;
@@ -412,8 +420,10 @@ int s_ntmodel::BuildTree(QString id, bool twodb)
     if (id == "0") position = 0; // для корневых элементов position д.б. равен нулю
 // строим дерево в модели model
     int set = 4;
+    bool IsThereAnythingInResult = false;
     while (get_child_from_db1.next())
     {
+        IsThereAnythingInResult = true;
         HaveChildren = true;
         tmpStringList.clear();
         tmpStringList << QString("%1").arg(get_child_from_db1.value(1).toInt(0), 7, 10, QChar('0')) << get_child_from_db1.value(0).toString();
@@ -421,10 +431,12 @@ int s_ntmodel::BuildTree(QString id, bool twodb)
         res = BuildTree(get_child_from_db1.value(1).toString(), twodb); // в качестве аргумента функции используется индекс поля idalias
         if (res)
         {
-            WARNMSG(PublicClass::ER_NTMODEL, __LINE__);
+            SNTMWARN;
             return 1;
         }
     }
+    if (!IsThereAnythingInResult) // запрос не дал результатов
+        return 0;
     if (twodb)
     {
         res = addTreeSlvItem(position, id); // добавляем таблицу из подчинённой таблицы
@@ -432,7 +444,7 @@ int s_ntmodel::BuildTree(QString id, bool twodb)
             HaveChildren = true;
         else if (res != -1) // если не нет потомков, а просто ошибка
         {
-            WARNMSG(PublicClass::ER_NTMODEL, __LINE__);
+            SNTMWARN;
             return 1;
         }
     }

@@ -92,11 +92,11 @@ QT_END_NAMESPACE
 #define FW_DLINK    3 // ссылка на две таблицы
 #define FW_ALLINK   4 // ссылка на alias в таблице
 #define FW_MAXLINK  5 // ссылка на значение в столбце таблицы с максимальным ИД
-#define FW_MASKED   6 // форматированное число
+#define FW_MASKED   6 // форматированная строка
 #define FW_EQUAT    7 // арифметическое выражение
 #define FW_PLAIN    8 // простое поле, без изысков
 #define FW_RIGHTS   9 // поле с бинарным отображением и организации делегата FD_CHOOSE с диалогом rights
-#define FW_TLINK    10 // ссылка на таблицу в списке таблиц
+#define FW_FNUMBER  10 // форматированное число для делегата-счётчика
 #define FW_SPECIAL  11 // сложная ссылка. Подробнее см. "СУПиК РП"
 #define FW_SMETHOD  12 // ссылка на метод СУПиКа
 #define FW_2CD      13 // отображение диалога редактирования строки таблицы (2cdialog)

@@ -1,5 +1,4 @@
 #include "wh_editor.h"
-#include "../widgets/s_tqcombobox.h"
 #include "../widgets/s_tqlabel.h"
 #include "../widgets/s_tqlineedit.h"
 #include "../widgets/s_tqpushbutton.h"
@@ -92,18 +91,32 @@ void Wh_Editor::SetupUI()
     hlyout->addStretch(1);
     //      "Шкафы", спин, "шт", "Стеллажи", спин, "шт", "Коробки(мешки)", спин, "шт"
     vlyout->addLayout(hlyout);
-    hlyout = new QHBoxLayout;
-    lbl = new s_tqLabel("Шкафы:");
-    hlyout->addWidget(lbl);
-    s_tqSpinBox *spb = new s_tqSpinBox;
-    spb->setDecimals(0);
-    spb->setMinimum(0);
-    spb->setMaximum(10);
-    spb->setValue(0);
-    spb->setObjectName("cabinetspb");
-    connect(spb,SIGNAL(valueChanged(double)),this,SLOT(UpdateSmallTWWithNewQuantities()));
-    hlyout->addWidget(spb);
-    lbl = new s_tqLabel("шт., Стеллажи:");
+    QStringList PlacesNames = QStringList() << "Шкаф" << "Стеллаж" << "Коробка" << "Пакет" << "Ячейка";
+    QStringListModel *PlacesModel = new QStringListModel;
+    PlacesModel->setStringList(PlacesNames);
+    for (int i=0; i<5; i++)
+    {
+        hlyout = new QHBoxLayout;
+        QVBoxLayout *BoxLayout = new QVBoxLayout;
+        lbl = new s_tqLabel;
+        lbl->setObjectName("place"+QString::number(i));
+        BoxLayout->addWidget(lbl);
+        s_tqComboBox *cb = new s_tqComboBox;
+        cb->setAData(i);
+        cb->setModel(PlacesModel);
+        connect(cb,SIGNAL(textChanged(QString,s_tqComboBox*)),this,SLOT(UpdatePlacePicture(QString,s_tqComboBox*)));
+        BoxLayout->addWidget(cb);
+        hlyout->addLayout(BoxLayout);
+        s_tqSpinBox *spb = new s_tqSpinBox;
+        spb->setDecimals(0);
+        spb->setMinimum(0);
+        spb->setMaximum(10);
+        spb->setValue(0);
+        spb->setObjectName("cabinetspb");
+        connect(spb,SIGNAL(valueChanged(double)),this,SLOT(UpdateSmallTWWithNewQuantities()));
+        hlyout->addWidget(spb);
+    }
+/*    lbl = new s_tqLabel("шт., Стеллажи:");
     hlyout->addWidget(lbl);
     spb = new s_tqSpinBox;
     spb->setDecimals(0);
@@ -116,7 +129,7 @@ void Wh_Editor::SetupUI()
     lbl = new s_tqLabel("шт.");
     hlyout->addWidget(lbl);
     hlyout->addStretch(1);
-    vlyout->addLayout(hlyout);
+    vlyout->addLayout(hlyout); */
     //      Табвиджет по кол-ву шкафов, стеллажей, коробок с именами типа "Шкаф 1", "Стеллаж 5" и т.д.
     S_ColorTabWidget *smctw = new S_ColorTabWidget;
     smctw->setObjectName("smctw");
@@ -149,6 +162,7 @@ void Wh_Editor::SetupUI()
     //      "параметры стеллажа"
     //      "Кол-во рядов", спин
     //      "Кол-во полок", спин
+    lyout->addWidget(ctw);
     lyout->addStretch(1);
     setLayout(lyout);
 }
@@ -171,6 +185,21 @@ void Wh_Editor::UpdateSmallTWWithNewQuantities()
     //          "Количество ячеек/мешков на одной полке", спин
     //      в каждой вкладке коробки:
     //          "Имя коробки", поле ввода
+}
+
+void Wh_Editor::UpdatePlacePicture(QString txt, s_tqComboBox *ptr)
+{
+    QStringList PlacesNames = QStringList() << "Шкаф" << "Стеллаж" << "Коробка" << "Пакет" << "Ячейка";
+    int PlacesNamesIndex = ptr->getAData().toInt();
+    QString PlaceName;
+    if (PlacesNamesIndex < PlacesNames.size())
+        PlaceName = PlacesNames.at(PlacesNamesIndex);
+    else
+    {
+        WHEDDBG;
+        return;
+    }
+//    QStringList vl = tfl.valuesbyfield("")
 }
 
 void Wh_Editor::AddNewWh()

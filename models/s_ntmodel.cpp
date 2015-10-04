@@ -371,6 +371,8 @@ int s_ntmodel::Setup(QString maintble, QString slvtble)
         SNTMWARN;
         return 1;
     }
+    slvtblefields.clear();
+    slvtblelinks.clear();
     for (i = 0; i < headers.size(); i++)
     {
         setHeaderData(i, Qt::Horizontal, headers.at(i), Qt::EditRole);
@@ -393,6 +395,7 @@ int s_ntmodel::Setup(QString maintble, QString slvtble)
     }
     this->slvtble = tmpsl.at(0); // имя таблицы - в переменную
     // 4
+    FirstPass = true;
     int res = BuildTree("0", true);
     if (res)
     {
@@ -420,10 +423,9 @@ int s_ntmodel::BuildTree(QString id, bool twodb)
     if (id == "0") position = 0; // для корневых элементов position д.б. равен нулю
 // строим дерево в модели model
     int set = 4;
-    bool IsThereAnythingInResult = false;
     while (get_child_from_db1.next())
     {
-        IsThereAnythingInResult = true;
+        FirstPass = false;
         HaveChildren = true;
         tmpStringList.clear();
         tmpStringList << QString("%1").arg(get_child_from_db1.value(1).toInt(0), 7, 10, QChar('0')) << get_child_from_db1.value(0).toString();
@@ -435,8 +437,6 @@ int s_ntmodel::BuildTree(QString id, bool twodb)
             return 1;
         }
     }
-    if (!IsThereAnythingInResult) // запрос не дал результатов
-        return 0;
     if (twodb)
     {
         res = addTreeSlvItem(position, id); // добавляем таблицу из подчинённой таблицы
@@ -450,7 +450,7 @@ int s_ntmodel::BuildTree(QString id, bool twodb)
     }
     position--; // после добавления всех детишек уровень понижается
     if (HaveChildren);
-    else // не имеет потомков
+    else if (!FirstPass) // не имеет потомков и это не первый проход
     {
         s_ntitem *item = parents.last()->child(parents.last()->childCount()-1); // текущий элемент
         for (int i=0; i<item->columnCount(); i++)

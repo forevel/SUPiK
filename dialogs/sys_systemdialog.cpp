@@ -16,6 +16,7 @@
 #include "../widgets/s_tqstackedwidget.h"
 #include "../widgets/s_tqwidget.h"
 #include "sysdlg/sysmenueditor.h"
+#include "sysdlg/sysdireditor.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -27,6 +28,7 @@
 #include <QStackedWidget>
 #include <QAction>
 #include <QMenu>
+#include <QMessageBox>
 
 sys_systemdialog::sys_systemdialog(QWidget *parent) :
     QDialog(parent)
@@ -38,6 +40,7 @@ sys_systemdialog::sys_systemdialog(QWidget *parent) :
     pf["sysmenueditor"] = &sys_systemdialog::SystemMenuEditor;
     pf["sysdireditor"] = &sys_systemdialog::SystemDirEditor;
     pf["tableseditor"] = &sys_systemdialog::TablesEditor;
+    pf["direditor"] = &sys_systemdialog::DirEditor;
 }
 
 void sys_systemdialog::paintEvent(QPaintEvent *event)
@@ -54,12 +57,20 @@ void sys_systemdialog::SetupUI()
     QWidget *mainwidget = new QWidget;
     sw->setObjectName("stw");
     QVBoxLayout *lyout = new QVBoxLayout;
+    QHBoxLayout *hlyout = new QHBoxLayout;
+    s_tqPushButton *pb = new s_tqPushButton;
+    pb->setIcon(QIcon(":/res/cross.png"));
+    connect(pb, SIGNAL(clicked()), this, SLOT(close()));
+    pb->setToolTip("Закрыть вкладку");
+    hlyout->addWidget(pb);
+    hlyout->addStretch(300);
     s_tqLabel *lbl = new s_tqLabel("Структура системы");
     QFont font;
     font.setPointSize(15);
     lbl->setFont(font);
-    lyout->addWidget(lbl, 0);
-    lyout->setAlignment(lbl, Qt::AlignRight);
+    hlyout->addWidget(lbl, 0);
+    hlyout->setAlignment(lbl, Qt::AlignRight);
+    lyout->addLayout(hlyout);
     s_tqTreeView *MainTV = new s_tqTreeView;
     s_tqStackedWidget *wdgt = new s_tqStackedWidget;
     connect(this,SIGNAL(closeslvdlg()),this,SLOT(RemoveWidget()));
@@ -101,7 +112,7 @@ void sys_systemdialog::SetSysTree()
     s_tqTreeView *MainTV = this->findChild<s_tqTreeView *>("MainTV");
     if (MainTV == 0)
     {
-        DBGMSG(PublicClass::ER_SYS, __LINE__);
+        SYSSDBG;
         return;
     }
     MainTV->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -138,7 +149,7 @@ void sys_systemdialog::SetSlave()
     s_tqTreeView *MainTV = this->findChild<s_tqTreeView *>("MainTV");
     if (MainTV == 0)
     {
-        DBGMSG(PublicClass::ER_SYS, __LINE__);
+        SYSSDBG;
         return;
     }
     if (MainTV->model()->rowCount(MainTV->currentIndex()) != 0); // ветви, имеющие потомков, не имеют своего дочернего дерева
@@ -148,14 +159,14 @@ void sys_systemdialog::SetSlave()
         QStringList tmpsl = tfl.htovlc("Системное меню_полн","Вызываемая функция","Наименование",tmpString); // получить имя вызываемой функции
         if (tfl.result)
         {
-            WARNMSG(PublicClass::ER_SYS, __LINE__);
+            SYSSWARN;
             return;
         }
         tmpString = tmpsl.at(0);
         tmpString = sqlc.GetValueFromTableByField(sqlc.GetDB("sup"),"sysmenumethods","sysmenumethods","idsysmenumethods",tmpString);
         if (sqlc.result)
         {
-            WARNMSG(PublicClass::ER_SYS, __LINE__);
+            SYSSWARN;
             return;
         }
         if (tmpString == "")
@@ -279,7 +290,7 @@ QString sys_systemdialog::getMainIndex(int column)
     s_tqTreeView *MainTV = this->findChild<s_tqTreeView *>("MainTV");
     if (MainTV == 0)
     {
-        DBGMSG(PublicClass::ER_SYS, __LINE__);
+        SYSSDBG;
         return QString();
     }
     QString tmpString = MainTV->model()->index(MainTV->currentIndex().row(), column, MainTV->model()->parent(MainTV->currentIndex())).data(Qt::DisplayRole).toString();
@@ -293,7 +304,7 @@ void sys_systemdialog::MainMenuEditor()
     s_tqStackedWidget *wdgt = this->findChild<s_tqStackedWidget *>("sw");
     if (wdgt == 0)
     {
-        DBGMSG(PublicClass::ER_SYS, __LINE__);
+        SYSSDBG;
         return;
     }
     SysmenuEditor *dlg = new SysmenuEditor;
@@ -309,7 +320,7 @@ void sys_systemdialog::SystemMenuEditor()
     s_tqStackedWidget *wdgt = this->findChild<s_tqStackedWidget *>("sw");
     if (wdgt == 0)
     {
-        DBGMSG(PublicClass::ER_SYS, __LINE__);
+        SYSSDBG;
         return;
     }
     SysmenuEditor *dlg = new SysmenuEditor;
@@ -325,7 +336,7 @@ void sys_systemdialog::SystemDirEditor()
     QStackedWidget *sw = this->findChild<QStackedWidget *>("stw");
     if (sw == 0)
     {
-        DBGMSG(PublicClass::ER_SYS, __LINE__);
+        SYSSDBG;
         return;
     }
     dir_maindialog *dird = new dir_maindialog("Справочники системные");
@@ -341,7 +352,7 @@ void sys_systemdialog::TablesEditor()
     s_tqStackedWidget *wdgt = this->findChild<s_tqStackedWidget *>("sw");
     if (wdgt == 0)
     {
-        DBGMSG(PublicClass::ER_SYS, __LINE__);
+        SYSSDBG;
         return;
     }
     s_tqWidget *wdt = this->findChild<s_tqWidget *>("tableseditorwidget");
@@ -403,11 +414,15 @@ void sys_systemdialog::TablesEditorContextMenu(QPoint pt)
     QAction *EditTable = new QAction ("Редактировать таблицу", this);
     EditTable->setSeparator(false);
     connect(EditTable, SIGNAL(triggered()), this, SLOT(EditTable()));
+    QAction *DeleteTable = new QAction ("Удалить таблицу", this);
+    DeleteTable->setSeparator(false);
+    connect(DeleteTable, SIGNAL(triggered()), this, SLOT(DeleteTable()));
     QMenu *ContextMenu = new QMenu;
     ContextMenu->setTitle("Context menu");
     ContextMenu->addAction(NewTableEditor);
     ContextMenu->addAction(EditTable);
-    ContextMenu->exec(QCursor::pos()); // если есть права на удаление, на изменение тоже должны быть
+    ContextMenu->addAction(DeleteTable);
+    ContextMenu->exec(QCursor::pos());
 }
 
 void sys_systemdialog::RemoveWidget()
@@ -415,7 +430,7 @@ void sys_systemdialog::RemoveWidget()
     s_tqStackedWidget *wdgt = this->findChild<s_tqStackedWidget *>("sw");
     if (wdgt == 0)
     {
-        DBGMSG(PublicClass::ER_SYS, __LINE__);
+        SYSSDBG;
         return;
     }
     wdgt->removeWidget(wdgt->currentWidget());
@@ -426,7 +441,7 @@ void sys_systemdialog::NewTable()
     QStackedWidget *sw = this->findChild<QStackedWidget *>("stw");
     if (sw == 0)
     {
-        DBGMSG(PublicClass::ER_SYS, __LINE__);
+        SYSSDBG;
         return;
     }
     dir_adddialog *dlg = new dir_adddialog(false,"");
@@ -446,18 +461,62 @@ void sys_systemdialog::EditTable(QModelIndex idx)
     s_tqTableView *tv = this->findChild<s_tqTableView *>("tabletv");
     if (tv == 0)
     {
-        DBGMSG(PublicClass::ER_SYS, __LINE__);
+        SYSSDBG;
         return;
     }
     QString tblename = tv->model()->data(tv->model()->index(tv->currentIndex().row(),1,QModelIndex()),Qt::DisplayRole).toString();
     QStackedWidget *sw = this->findChild<QStackedWidget *>("stw");
     if (sw == 0)
     {
-        DBGMSG(PublicClass::ER_SYS, __LINE__);
+        SYSSDBG;
         return;
     }
     dir_adddialog *dlg = new dir_adddialog(true,"",tblename);
     sw->addWidget(dlg);
     sw->setCurrentWidget(dlg);
     repaint();
+}
+
+void sys_systemdialog::DeleteTable()
+{
+    s_tqTableView *tv = this->findChild<s_tqTableView *>("tabletv");
+    if (tv == 0)
+    {
+        SYSSDBG;
+        return;
+    }
+    QString tblename = tv->model()->data(tv->model()->index(tv->currentIndex().row(),1,QModelIndex()),Qt::DisplayRole).toString();
+    QStringList TableHeaders = tfl.tableheaders(tblename);
+    if (tfl.result)
+        return;
+    if (QMessageBox::question(this, "Уверены?", "Вы уверены, что хотите удалить все сведения о таблице?", QMessageBox::Yes|QMessageBox::No,\
+                          QMessageBox::No) == QMessageBox::No)
+        return;
+    for (int i=0; i<TableHeaders.size(); i++)
+    {
+        QStringList fl = QStringList() << "tablename" << "header";
+        QStringList vl = QStringList() << tblename << TableHeaders.at(i);
+        sqlc.RealDeleteFromDB(sqlc.GetDB("sup"),"tablefields",fl,vl);
+        if (sqlc.result)
+        {
+            SYSSWARN;
+            return;
+        }
+    }
+    SYSSINFO("Удалено успешно!");
+    SetSlave();
+}
+
+void sys_systemdialog::DirEditor()
+{
+    s_tqStackedWidget *wdgt = this->findChild<s_tqStackedWidget *>("sw");
+    if (wdgt == 0)
+    {
+        SYSSDBG;
+        return;
+    }
+    SysDirEditor *dlg = new SysDirEditor;
+    connect(this,SIGNAL(closeslvdlg()),dlg,SLOT(close()));
+    wdgt->addWidget(dlg);
+    wdgt->repaint();
 }

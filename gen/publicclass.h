@@ -143,6 +143,7 @@ public:
         ER_CHWDG,    // s_tqchoosewidget
         ER_CMPMAIN,  // cmp_maindialog
         ER_SYSMENU,  // sysmenueditor
+        ER_SYSDIR,   // sysdireditor
         ER_2TDLG,    // 2tdialog
         ER_2CTDLG,   // 2ctdialog
         ER_2CDLG,    // 2cdialog

@@ -493,8 +493,8 @@ void dir_adddialog::WriteAndClose()
             tmpdir.chop(5);
         fl.clear();
         vl.clear();
-        fl << "dirlist" << "access" << "deleted";
-        vl << tmpdir << dirAccessCW->Value().toString() << "0";
+        fl << "dirlist" << "access" << "deleted" << "date" << "idpers";
+        vl << tmpdir << dirAccessCW->Value().toString() << "0" << pc.DateTime << QString::number(pc.idPers);
         tmpString = sqlc.GetValueFromTableByField(db, tble, "dirlist", "dirlist", tmpdir);
         if (tmpString.isEmpty())
         {

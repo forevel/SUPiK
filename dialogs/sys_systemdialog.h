@@ -7,6 +7,10 @@
 #include <QPaintEvent>
 #include <QModelIndex>
 
+#define SYSSDBG     DBGMSG(PublicClass::ER_SYS, __LINE__)
+#define SYSSWARN    WARNMSG(PublicClass::ER_SYS,__LINE__)
+#define SYSSINFO(a) INFOMSG(PublicClass::ER_SYS,__LINE__,a)
+
 class sys_systemdialog : public QDialog
 {
     Q_OBJECT
@@ -33,6 +37,7 @@ private:
     void SystemMenuEditor();
     void SystemDirEditor();
     void TablesEditor();
+    void DirEditor();
 
 protected:
     void paintEvent(QPaintEvent *event);
@@ -43,6 +48,7 @@ private slots:
     void EditTable(QModelIndex);
     void EditTable();
     void NewTable();
+    void DeleteTable();
     void RemoveWidget();
     void TablesEditorContextMenu(QPoint);
 };

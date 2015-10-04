@@ -62,6 +62,7 @@ private:
     QStringList catlist;
     QString slvtble;
     QStringList slvtblefields, slvtblelinks;
+    bool FirstPass; // флаг, определяющий, не пустое ли дерево
 
     int BuildTree (QString id, bool twodb);
     s_ntitem *addTreeCat (QString catlistid);

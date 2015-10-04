@@ -82,31 +82,30 @@ void Wh_Editor::SetupUI()
     lyout->addWidget(line);
     // Табвиджет.
     S_ColorTabWidget *ctw = new S_ColorTabWidget;
-    s_tqWidget *wdgt = new s_tqWidget;
+    s_tqWidget *wdgt = new s_tqWidget(":/res/WhWallpaper.jpg");
     hlyout = new QHBoxLayout;
-    // Первая вкладка "Склад". Надпись "На складе имеются:"
-    lbl = new s_tqLabel("Состав склада");
-    lbl->setFont(font);
-    hlyout->addWidget(lbl, 0);
-    hlyout->addStretch(1);
-    //      "Шкафы", спин, "шт", "Стеллажи", спин, "шт", "Коробки(мешки)", спин, "шт"
-    vlyout->addLayout(hlyout);
-    QStringList PlacesNames = QStringList() << "Шкаф" << "Стеллаж" << "Коробка" << "Пакет" << "Ячейка";
+    // Первая вкладка "Склад"
+    QList<QStringList> Places = tfl.tbvll("Склады типы размещения_сокращ");
+    QStringList headers = Places.at(0);
     QStringListModel *PlacesModel = new QStringListModel;
-    PlacesModel->setStringList(PlacesNames);
+//    PlacesModel->setStringList(PlacesNames);
     for (int i=0; i<5; i++)
     {
         hlyout = new QHBoxLayout;
-        QVBoxLayout *BoxLayout = new QVBoxLayout;
+//        QVBoxLayout *BoxLayout = new QVBoxLayout;
         lbl = new s_tqLabel;
-        lbl->setObjectName("place"+QString::number(i));
-        BoxLayout->addWidget(lbl);
+        lbl->setMinimumHeight(80);
+        lbl->setObjectName("place"+QString::number(i)); // метка для вывода картинки изображения места хранения
+//        BoxLayout->addWidget(lbl);
+        hlyout->addWidget(lbl,0);
         s_tqComboBox *cb = new s_tqComboBox;
         cb->setAData(i);
         cb->setModel(PlacesModel);
+        cb->setCurrentIndex(-1);
         connect(cb,SIGNAL(textChanged(QString,s_tqComboBox*)),this,SLOT(UpdatePlacePicture(QString,s_tqComboBox*)));
-        BoxLayout->addWidget(cb);
-        hlyout->addLayout(BoxLayout);
+//        BoxLayout->addWidget(cb);
+//        hlyout->addLayout(BoxLayout);
+        hlyout->addWidget(cb,1);
         s_tqSpinBox *spb = new s_tqSpinBox;
         spb->setDecimals(0);
         spb->setMinimum(0);
@@ -114,44 +113,15 @@ void Wh_Editor::SetupUI()
         spb->setValue(0);
         spb->setObjectName("cabinetspb");
         connect(spb,SIGNAL(valueChanged(double)),this,SLOT(UpdateSmallTWWithNewQuantities()));
-        hlyout->addWidget(spb);
+        hlyout->addWidget(spb,1);
+        vlyout->addLayout(hlyout);
     }
-/*    lbl = new s_tqLabel("шт., Стеллажи:");
-    hlyout->addWidget(lbl);
-    spb = new s_tqSpinBox;
-    spb->setDecimals(0);
-    spb->setMinimum(0);
-    spb->setMaximum(10);
-    spb->setValue(0);
-    spb->setObjectName("rackspb");
-    connect(spb,SIGNAL(valueChanged(double)),this,SLOT(UpdateSmallTWWithNewQuantities()));
-    hlyout->addWidget(spb);
-    lbl = new s_tqLabel("шт.");
-    hlyout->addWidget(lbl);
-    hlyout->addStretch(1);
-    vlyout->addLayout(hlyout); */
-    //      Табвиджет по кол-ву шкафов, стеллажей, коробок с именами типа "Шкаф 1", "Стеллаж 5" и т.д.
-    S_ColorTabWidget *smctw = new S_ColorTabWidget;
-    smctw->setObjectName("smctw");
-    vlyout->addWidget(smctw);
     wdgt->setLayout(vlyout);
-    ctw->addTab(wdgt, "Склад");
-    ctw->tabBar()->setTabData(0, QVariant(TW_WH));
-    // Вторая вкладка "Типы мест хранения"
-    wdgt = new s_tqWidget;
-    vlyout = new QVBoxLayout;
-    hlyout = new QHBoxLayout;
-    lbl = new s_tqLabel("Типы мест хранения");
-    lbl->setFont(font);
-    hlyout->addWidget(lbl, 0);
-    hlyout->addStretch(1);
-    vlyout->addLayout(hlyout);
-    //      групбокс "Шкафы"
-    s_tqGroupBox *gb = new s_tqGroupBox;
-    gb->setTitle("Шкафы");
-    mdl = new QStringListModel;
-
-
+    int idx = ctw->addTab(wdgt, "Состав склада");
+    ctw->tabBar()->setTabData(idx, TW_WH);
+    ctw->tabBar()->tabButton(idx,QTabBar::RightSide)->hide();
+    ctw->tabBar()->setCurrentIndex(idx  );
+    ctw->repaint();
     //      Кнопка "добавить тип шкафа"
     //      "Типы шкафов", комбобокс
     //      "параметры шкафа"
@@ -189,7 +159,7 @@ void Wh_Editor::UpdateSmallTWWithNewQuantities()
 
 void Wh_Editor::UpdatePlacePicture(QString txt, s_tqComboBox *ptr)
 {
-    QStringList PlacesNames = QStringList() << "Шкаф" << "Стеллаж" << "Коробка" << "Пакет" << "Ячейка";
+/*    QStringList PlacesNames = QStringList() << "Шкаф" << "Стеллаж" << "Коробка" << "Пакет" << "Ячейка";
     int PlacesNamesIndex = ptr->getAData().toInt();
     QString PlaceName;
     if (PlacesNamesIndex < PlacesNames.size())
@@ -198,8 +168,17 @@ void Wh_Editor::UpdatePlacePicture(QString txt, s_tqComboBox *ptr)
     {
         WHEDDBG;
         return;
+    } */
+    QStringList vl = tfl.valuesbyfield("Склады типы типов размещения_полн",QStringList("Картинка"),"Наименование",txt);
+    if (vl.isEmpty())
+        WHEDWARN;
+    s_tqLabel *lbl = this->findChild<s_tqLabel *>("place"+QString::number(ptr->getAData().toInt()));
+    if (lbl == 0)
+    {
+        WHEDDBG;
+        return;
     }
-//    QStringList vl = tfl.valuesbyfield("")
+    lbl->setPixmap(QPixmap(":/res/" + vl.at(0) + ".png"));
 }
 
 void Wh_Editor::AddNewWh()

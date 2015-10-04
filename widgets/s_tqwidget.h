@@ -8,7 +8,7 @@ class s_tqWidget : public QWidget
 {
     Q_OBJECT
 public:
-    explicit s_tqWidget(QWidget *parent = 0);
+    explicit s_tqWidget(QString pic="", QWidget *parent = 0);
     QVariant getAData();
     void setAData(QVariant dat);
 signals:
@@ -20,6 +20,7 @@ protected:
 
 private:
     QVariant adata;
+    QString pic;
 };
 
 #endif // S_TQWIDGET_H

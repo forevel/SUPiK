@@ -2,7 +2,7 @@
 #include "../widgets/s_tqlabel.h"
 #include "../widgets/s_tqlineedit.h"
 #include "../widgets/s_tqpushbutton.h"
-#include "../widgets/s_colortabwidget.h"
+#include "../widgets/s_tqstackedwidget.h"
 #include "../widgets/s_tqspinbox.h"
 #include "../widgets/s_tqgroupbox.h"
 #include "../widgets/s_tqwidget.h"
@@ -81,12 +81,11 @@ void Wh_Editor::SetupUI()
     line->setFrameShadow(QFrame::Sunken);
     lyout->addWidget(line);
     // Табвиджет.
-    S_ColorTabWidget *ctw = new S_ColorTabWidget;
-    s_tqWidget *wdgt = new s_tqWidget(":/res/WhWallpaper.jpg");
+    s_tqStackedWidget *stw = new s_tqStackedWidget;
+    stw->setObjectName("stw");
+    s_tqWidget *wdgt = new s_tqWidget;
     hlyout = new QHBoxLayout;
     // Первая вкладка "Склад"
-    QList<QStringList> Places = tfl.tbvll("Склады типы размещения_сокращ");
-    QStringList headers = Places.at(0);
     QStringListModel *PlacesModel = new QStringListModel;
 //    PlacesModel->setStringList(PlacesNames);
     for (int i=0; i<5; i++)
@@ -117,11 +116,8 @@ void Wh_Editor::SetupUI()
         vlyout->addLayout(hlyout);
     }
     wdgt->setLayout(vlyout);
-    int idx = ctw->addTab(wdgt, "Состав склада");
-    ctw->tabBar()->setTabData(idx, TW_WH);
-    ctw->tabBar()->tabButton(idx,QTabBar::RightSide)->hide();
-    ctw->tabBar()->setCurrentIndex(idx  );
-    ctw->repaint();
+    stw->addWidget(wdgt);
+    stw->repaint();
     //      Кнопка "добавить тип шкафа"
     //      "Типы шкафов", комбобокс
     //      "параметры шкафа"
@@ -132,15 +128,15 @@ void Wh_Editor::SetupUI()
     //      "параметры стеллажа"
     //      "Кол-во рядов", спин
     //      "Кол-во полок", спин
-    lyout->addWidget(ctw);
+    lyout->addWidget(stw);
     lyout->addStretch(1);
     setLayout(lyout);
 }
 
 void Wh_Editor::UpdateSmallTWWithNewQuantities()
 {
-    S_ColorTabWidget *ctw = this->findChild<S_ColorTabWidget *>("smctw");
-    if (ctw == 0)
+    s_tqStackedWidget *stw = this->findChild<s_tqStackedWidget *>("stw");
+    if (stw == 0)
     {
         WHEDDBG;
         return;

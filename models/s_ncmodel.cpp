@@ -364,8 +364,8 @@ void s_ncmodel::fillModel()
                 setData(index(rcount, j, QModelIndex()), QVariant(""), Qt::EditRole);
             else
             {
-                // значения в DataToWrite уже подготовлены в процедурах setup
-                vl = DataToWrite.at(j).at(i);
+                // перевод из ИД элемента в его значение с использованием ссылки, заданной ранее процедурой setcolumnlinks или аналогичной
+                vl = tfl.idtov(data(index(rcount, j, QModelIndex()), Qt::UserRole).toString(), DataToWrite.at(j).at(i));
                 if (vl.isEmpty())
                     continue;
                 if (vl.at(0) == '_') // идентификатор составного значения - номер таблицы и само значение
@@ -628,7 +628,7 @@ void s_ncmodel::setup(QString tble, QString id)
     for (i = 0; i < headers.size(); i++)
     {
         tmpString = tfl.tov(tble,headers.at(i),id);
-        tmpString = tfl.idtov(links.at(i), tmpString);
+//        tmpString = tfl.idtov(links.at(i), tmpString);
         if (!tfl.result)
             tmpsl << tmpString;
         else

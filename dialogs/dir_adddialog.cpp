@@ -423,7 +423,7 @@ void dir_adddialog::WriteAndClose()
                 DADDWARN;
                 return;
             }
-            FullTbleDeleteList.removeFirst();
+            ShortTbleDeleteList.removeFirst();
         }
     }
     cmpfl << "tablename" << "tablefields";

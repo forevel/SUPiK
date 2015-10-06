@@ -57,5 +57,6 @@
         <file>res/stellazh.png</file>
         <file>res/yacheyka.png</file>
         <file>res/oblachko.png</file>
+        <file>res/EmptyCell.png</file>
     </qresource>
 </RCC>

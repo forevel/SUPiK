@@ -1,23 +1,19 @@
-#include "s_duniversal.h"
-#include "../widgets/s_tqchoosewidget.h"
-#include <QPainter>
-#include <QRect>
+#include "placedelegate.h"
+#include "../widgets/s_tqpushbutton.h"
+#include "../widgets/s_tqlabel.h"
+#include "../widgets/s_tqwidget.h"
 
-s_duniversal::s_duniversal(QObject *parent) :
-    QStyledItemDelegate(parent)
+PlaceDelegate::PlaceDelegate(QObject *parent) : QStyledItemDelegate(parent)
 {
+
 }
 
 QWidget* s_duniversal::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
     Q_UNUSED(option);
-    QString links = index.data(Qt::UserRole).toString();
-    ff = pc.getFFfromLinks(links);
-    if ((ff.delegate == FD_DISABLED) || (ff.delegate == FD_SIMPLE) || (ff.delegate == FD_SIMGRID))
-        return 0;
-    QString hdr=index.data(Qt::UserRole+1).toString(); // в UserRole+1 должна содержаться aData, в которой находится подзаголовок диалога редактирования, вызываемого по кнопке в делегате
-    wdgt = new s_tqChooseWidget(false,parent);
-    wdgt->Setup(links,hdr);
+    s_tqWidget *wdgt = new s_tqWidget(parent);
+    s_tqPushButton *pb = new s_tqPushButton("Состав размещения");
+    s_tqPushButton *pb = new s_tqPushButton("Компоненты, находящиеся в размещении");
     return wdgt;
 }
 

@@ -2,6 +2,8 @@
 #define PLACEDELEGATE_H
 
 #include <QStyledItemDelegate>
+#include "../gen/publicclass.h"
+#include "../widgets/s_tqpushbutton.h"
 
 class PlaceDelegate : public QStyledItemDelegate
 {
@@ -14,8 +16,17 @@ public:
     void setModelData (QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const;
     virtual void paint (QPainter *painter, const QStyleOptionViewItem& option, const QModelIndex& index ) const;
 
+private:
+    bool Changed;
+
 private slots:
     void CommitChanges(QVariant);
+
+public slots:
+    void buttonPressed(s_tqPushButton *ptr);
+
+protected:
+    bool eventFilter(QObject *object, QEvent *event);
 
 };
 

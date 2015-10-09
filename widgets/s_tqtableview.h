@@ -2,6 +2,7 @@
 #define S_TQTABLEVIEW_H
 
 #include <QTableView>
+#include <QPaintEvent>
 
 class s_tqTableView : public QTableView
 {
@@ -21,6 +22,7 @@ private:
     QVariant adata;
 
 protected:
+    bool eventFilter(QObject *o, QEvent *e);
 };
 
 #endif // S_TQTABLEVIEW_H

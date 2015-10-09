@@ -785,6 +785,8 @@ CREATE TABLE `whplaces` (
   `description` varchar(128) DEFAULT NULL,
   `name` varchar(128) DEFAULT NULL,
   `wh` varchar(128) DEFAULT NULL,
+  `whnum` varchar(128) DEFAULT NULL,
+  `placetype` varchar(128) DEFAULT NULL,
   PRIMARY KEY (`idwhplaces`),
   UNIQUE KEY `idwhplaces_UNIQUE` (`idwhplaces`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -796,7 +798,7 @@ CREATE TABLE `whplaces` (
 
 LOCK TABLES `whplaces` WRITE;
 /*!40000 ALTER TABLE `whplaces` DISABLE KEYS */;
-INSERT INTO `whplaces` VALUES (1,'Шкаф 1','0','2001','2015-10-05 21:53:33',0,'Шкаф Ольги Ивановны','A1','2001'),(2,'Этаж 1','1','2001','2015-09-28 22:48:12',0,NULL,NULL,NULL);
+INSERT INTO `whplaces` VALUES (1,'Склад 203','0','2001','2015-10-05 21:53:33',0,'Склад в 203-й комнате','A1','2001',NULL,NULL);
 /*!40000 ALTER TABLE `whplaces` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -857,7 +859,7 @@ CREATE TABLE `whplacetypes` (
 
 LOCK TABLES `whplacetypes` WRITE;
 /*!40000 ALTER TABLE `whplacetypes` DISABLE KEYS */;
-INSERT INTO `whplacetypes` VALUES (1,'Шкаф офисный','5','1','1','2001','2015-10-05 19:40:43',1),(2,'Шкаф_1х5','5','1','1','2001','2015-10-05 21:29:01',0);
+INSERT INTO `whplacetypes` VALUES (1,'Шкаф офисный','5','1','1','2001','2015-10-05 19:40:43',1),(2,'Шкаф_1х5','5','1','1','2001','2015-10-05 21:29:01',0),(3,'Пусто','0','0','7','2001','2015-10-09 15:26:49',0);
 /*!40000 ALTER TABLE `whplacetypes` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -870,4 +872,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-10-05 22:55:09
+-- Dump completed on 2015-10-09 20:06:48

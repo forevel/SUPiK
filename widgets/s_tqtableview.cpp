@@ -2,11 +2,14 @@
 #include <QDialog>
 #include <QScrollBar>
 #include <QHeaderView>
+#include <QPainter>
 
 s_tqTableView::s_tqTableView(QWidget *parent) :
     QTableView(parent)
 {
     setAttribute(Qt::WA_TranslucentBackground, true);
+    viewport()->setMouseTracking(true);
+    viewport()->installEventFilter(this);
     setAttribute(Qt::WA_NoSystemBackground, true);
     setStyleSheet("QTableView {background-color: rgba(0,0,0,0);}");
     setFrameStyle(QFrame::NoFrame);
@@ -33,4 +36,9 @@ void s_tqTableView::dataChanged()
 {
     emit datachanged();
     resizeColumnsToContents();
+}
+
+bool s_tqTableView::eventFilter(QObject *o, QEvent *e)
+{
+    return QTableView::eventFilter(o, e);
 }

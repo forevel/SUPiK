@@ -1,68 +1,98 @@
 #include "placedelegate.h"
-#include "../widgets/s_tqpushbutton.h"
 #include "../widgets/s_tqlabel.h"
 #include "../widgets/s_tqwidget.h"
 
+#include <QPainter>
+#include <QPushButton>
+#include <QApplication>
+#include <QEvent>
+#include <QKeyEvent>
+
 PlaceDelegate::PlaceDelegate(QObject *parent) : QStyledItemDelegate(parent)
 {
-
+    Changed = false;
 }
 
-QWidget* s_duniversal::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
+QWidget* PlaceDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
     Q_UNUSED(option);
+/*    QString PlaceID = index.data(Qt::UserRole).toString(); // достаём ИД размещения по БД whplaces
     s_tqWidget *wdgt = new s_tqWidget(parent);
-    s_tqPushButton *pb = new s_tqPushButton("Состав размещения");
+    wdgt->setAData(PlaceID); // присваиваем данному виджету ИД размещения для обработки в слоте */
+    s_tqPushButton* pb = new s_tqPushButton( index.data().toString(), parent );
+    pb->setAutoDefault( true );
+    pb->setAData(index.data(Qt::UserRole));
+    connect( pb, SIGNAL( clicked(s_tqPushButton *) ), this, SLOT( buttonPressed(s_tqPushButton*)) );
+    emit pb->clicked(pb);
+    return pb;
+/*    s_tqPushButton *pb = new s_tqPushButton("Состав размещения");
     s_tqPushButton *pb = new s_tqPushButton("Компоненты, находящиеся в размещении");
-    return wdgt;
+    return wdgt; */
 }
 
-void s_duniversal::setEditorData(QWidget *editor, const QModelIndex &index) const
+void PlaceDelegate::setEditorData(QWidget *editor, const QModelIndex &index) const
 {
-    if ((ff.delegate == FD_DISABLED) || (ff.delegate == FD_SIMPLE) || (ff.delegate == FD_SIMGRID))
-        return;
-    s_tqChooseWidget *wdgt = static_cast<s_tqChooseWidget *>(editor);
-    connect(wdgt,SIGNAL(textchanged(QVariant)),this,SLOT(CommitChanges(QVariant)));
-    wdgt->SetData(index.data(Qt::EditRole));
+    Q_UNUSED(editor);
+    Q_UNUSED(index);
 }
 
-void s_duniversal::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const
+void PlaceDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const
 {
-    if ((ff.delegate == FD_DISABLED) || (ff.delegate == FD_SIMPLE) || (ff.delegate == FD_SIMGRID))
-        return;
-    s_tqChooseWidget *wdgt = static_cast<s_tqChooseWidget *>(editor);
-    model->setData(index,wdgt->Data(),Qt::EditRole);
+    Q_UNUSED(editor);
+    Q_UNUSED(index);
+    Q_UNUSED(model);
 }
 
-void s_duniversal::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
+void PlaceDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-    QStyledItemDelegate::paint(painter, option, index);
-    painter->save();
-    if (index.isValid())
+//    painter->save();
+    QStyleOptionButton opt;
+    opt.rect = option.rect;
+    opt.text = index.data().toString();
+    if (QWidget *w = dynamic_cast<QWidget *>(painter->device()))
     {
-        QRect rct = option.rect;
-        PublicClass::fieldformat tmpff = pc.getFFfromLinks(index.data(Qt::UserRole).toString());
-        if (option.state & QStyle::State_Selected)
-        {
-            painter->setPen(Qt::SolidLine);
-            painter->setPen(QColor(Qt::darkGreen));
-            painter->drawRoundedRect(rct, 3, 3);
-            painter->restore();
-            return;
-        }
-        if (tmpff.delegate != FD_SIMPLE)
-        {
-            painter->setPen(Qt::SolidLine);
-            painter->setPen(QColor(Qt::darkGray));
-            painter->drawRoundedRect(rct, 3, 3);
-        }
+        if (Changed)
+            opt.state |= QStyle::State_Sunken;
+        if (w->isEnabled())
+            opt.state |= QStyle::State_Enabled;
+        if (w->window()->isActiveWindow())
+            opt.state |= QStyle::State_Active;
     }
-    painter->restore();
+    else
+    {
+        opt.state |= QStyle::State_Enabled;
+    }
+    QApplication::style()->drawControl(QStyle::CE_PushButton, &opt, painter);
+//    painter->restore();
 }
 
-void s_duniversal::CommitChanges(QVariant v)
+bool PlaceDelegate::eventFilter( QObject* o, QEvent* e )
+{
+    if (e->type() == QEvent::HoverEnter)
+    {
+        Changed = true;
+    }
+    if (e->type() == QEvent::HoverLeave)
+        Changed = false;
+    if( e->type() == QEvent::FocusOut )
+    {
+        return false;
+    }
+    return QStyledItemDelegate::eventFilter( o, e );
+}
+
+void PlaceDelegate::CommitChanges(QVariant v)
 {
     Q_UNUSED(v);
-    emit commitData(wdgt);
-    emit closeEditor(wdgt);
+}
+
+void PlaceDelegate::buttonPressed(s_tqPushButton *ptr)
+{
+    Q_UNUSED(ptr);
+    QString AData;
+    s_tqPushButton *pb = static_cast<s_tqPushButton *>(sender());
+    if (pb != 0)
+        AData = pb->getAData().toString();
+    AData = AData;
+    return;
 }

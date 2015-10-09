@@ -318,13 +318,15 @@ QStringList s_sql::GetValuesFromTableByField(QSqlDatabase db, QString tble, QStr
     tmpString = tmpString.left(tmpString.size()-1); // удаляем последнюю запятую
     tmpString += " FROM `" + tble + "` WHERE `" + cmpfield + "`=\"" + cmpvalue + "\" AND `deleted`=0;";
     exec_db.exec(tmpString);
-    exec_db.next();
-    if (exec_db.isValid())
+    if (exec_db.isActive())
     {
-        vl.clear();
-        i = 0;
-        while (i < fields.size())
-            vl << exec_db.value(i++).toString();
+        while (exec_db.next())
+        {
+            vl.clear();
+            i = 0;
+            while (i < fields.size())
+                vl << exec_db.value(i++).toString();
+        }
         result=0;
         return vl;
     }
@@ -544,17 +546,13 @@ QStringList s_sql::GetValuesFromTableByFields (QSqlDatabase db, QString tble, QS
         SQLWARN;
         return QStringList();
     }
-    exec_db.next();
-    if (exec_db.isValid())
+    while (exec_db.next())
     {
         for (i = 0; i < fields.size(); i++)
             vl << exec_db.value(i).toString();
-        result = 0;
-        return vl;
     }
-    result = 1;
-    SQLWARN;
-    return QStringList();
+    result = 0;
+    return vl;
 }
 
 // процедура берёт из таблицы последнюю запись, в которой cmpfield=cmpvalue, по полю field и возвращает значение поля

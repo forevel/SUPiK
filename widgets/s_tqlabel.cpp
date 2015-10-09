@@ -35,3 +35,9 @@ QVariant s_tqLabel::getData()
 {
     return this->data;
 }
+
+void s_tqLabel::mousePressEvent (QMouseEvent *event)
+{
+    Q_UNUSED(event);
+    emit clicked();
+}

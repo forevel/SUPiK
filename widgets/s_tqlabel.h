@@ -3,6 +3,7 @@
 
 #include <QLabel>
 #include <QVariant>
+#include <QMouseEvent>
 
 QT_BEGIN_NAMESPACE
 class QVariant;
@@ -18,15 +19,18 @@ public:
     QVariant getData();
 
 signals:
+    void clicked();
 
 public slots:
 
 private:
     QVariant data;
 
+private slots:
+
 protected:
     void paintEvent(QPaintEvent *event);
-
+    void mousePressEvent(QMouseEvent *e);
 };
 
 #endif // S_TQLABEL_H

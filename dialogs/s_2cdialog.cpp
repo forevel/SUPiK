@@ -151,7 +151,6 @@ void s_2cdialog::setupUI()
     s_tqTableView *mainTV = new s_tqTableView; // autoResize = true
     mainTV->setObjectName("mainTV");
     s_duniversal *uniDelegate = new s_duniversal;
-    connect(uniDelegate,SIGNAL(error(int,int)),this,SIGNAL(error(int,int)));
     s_tqPushButton *pbOk = new s_tqPushButton("Ага");
     s_tqPushButton *pbCancel = new s_tqPushButton("Неа");
     s_tqLabel *lbl = new s_tqLabel;

@@ -25,8 +25,8 @@ public:
     QStringList tableheaders (QString tble);
     QStringList tablelinks (QString tble);
     bool tableistree (QString tble);
-    QStringList valuesbyfield(QString tble, QStringList fl, QString cmpfield, QString cmpvalue);
-    QStringList valuesbyfields(QString tble, QStringList fl, QStringList cmpfields, QStringList cmpvalues);
+    QStringList valuesbyfield(QString tble, QStringList fl, QString cmpfield, QString cmpvalue, bool Warn=true);
+    QStringList valuesbyfields(QString tble, QStringList fl, QStringList cmpfields, QStringList cmpvalues, bool Warn=true);
     QStringList TableColumn(QString tble, QString field); // взять значения поля field, где tablename=tble
 
     int result;

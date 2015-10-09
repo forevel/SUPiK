@@ -569,7 +569,7 @@ void s_tablefields::Delete(QString tble, QString id)
         TFWARN;
 }
 
-QStringList s_tablefields::valuesbyfield(QString tble, QStringList fl, QString cmpfield, QString cmpvalue)
+QStringList s_tablefields::valuesbyfield(QString tble, QStringList fl, QString cmpfield, QString cmpvalue, bool Warn)
 {
     QStringList sl = tfl.tablefields(tble,cmpfield);
     if (result)
@@ -591,7 +591,7 @@ QStringList s_tablefields::valuesbyfield(QString tble, QStringList fl, QString c
         fl.replace(i, sl.at(1)); // заменяем русское наименование поля на его реальное название
     }
     sl = sqlc.GetValuesFromTableByField(sqlc.GetDB(cmpdb),cmptble,fl,cmpfield,cmpvalue);
-    if (sqlc.result)
+    if ((sqlc.result) && (Warn))
     {
         TFWARN;
         result = 1;
@@ -601,7 +601,7 @@ QStringList s_tablefields::valuesbyfield(QString tble, QStringList fl, QString c
     return sl;
 }
 
-QStringList s_tablefields::valuesbyfields(QString tble, QStringList fl, QStringList cmpfields, QStringList cmpvalues)
+QStringList s_tablefields::valuesbyfields(QString tble, QStringList fl, QStringList cmpfields, QStringList cmpvalues, bool Warn)
 {
     if ((cmpfields.size() != cmpvalues.size()) || cmpfields.size() == 0)
     {
@@ -624,7 +624,7 @@ QStringList s_tablefields::valuesbyfields(QString tble, QStringList fl, QStringL
     QString cmpdb = tmpsl.at(0).split(".").at(0); // реальное имя БД
     QString cmptble = tmpsl.at(0).split(".").at(1); // реальное название таблицы
     QStringList tmps = sqlc.GetValuesFromTableByFields(sqlc.GetDB(cmpdb),cmptble,fl,cmpfl,cmpvalues);
-    if (sqlc.result)
+    if ((sqlc.result) && (Warn))
     {
         TFWARN;
         result = 1;

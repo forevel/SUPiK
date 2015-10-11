@@ -1,5 +1,4 @@
 #include "wh_editor.h"
-#include "../widgets/s_tqlabel.h"
 #include "../widgets/s_tqlineedit.h"
 #include "../widgets/s_tqpushbutton.h"
 #include "../widgets/s_tqstackedwidget.h"
@@ -12,7 +11,6 @@
 #include "../gen/publicclass.h"
 #include "../models/placedelegate.h"
 
-#include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QIcon>
 #include <QFont>
@@ -38,7 +36,7 @@ void Wh_Editor::SetupUI()
 {
     // Кнопки "создать новый", "расформировать и удалить", "выход" и надпись "Редактор складов"
     QVBoxLayout *lyout = new QVBoxLayout;
-    QVBoxLayout *vlyout = new QVBoxLayout;
+//    QVBoxLayout *vlyout = new QVBoxLayout;
     QHBoxLayout *hlyout = new QHBoxLayout;
 
     s_tqPushButton *pb = new s_tqPushButton;
@@ -57,6 +55,7 @@ void Wh_Editor::SetupUI()
     pb->setIcon(QIcon(":/res/cross.png"));
     connect(pb, SIGNAL(clicked()), this, SLOT(close()));
     pb->setToolTip("Закрыть вкладку");
+    connect(pb,SIGNAL(clicked()),this,SIGNAL(CloseAllWidgets())); // по нажатию кнопки "Закрыть вкладку" закрыть и удалить все виджеты
     hlyout->addWidget(pb);
 
     hlyout->addStretch(300);
@@ -88,41 +87,70 @@ void Wh_Editor::SetupUI()
     s_tqStackedWidget *stw = new s_tqStackedWidget;
     stw->setObjectName("stw");
     s_tqWidget *wdgt = new s_tqWidget;
-    hlyout = new QHBoxLayout;
-    IDs.push(0); // первоначальный ID - корневой
+    wdgt->setAttribute(Qt::WA_DeleteOnClose);
+    connect(pb,SIGNAL(clicked()),wdgt,SLOT(close())); // по нажатию кнопки "Закрыть вкладку" закрыть и удалить "корневой" виджет
+    IDs.push(vl.at(0).toInt()); // первоначальный ID - корневой склада первого по списку
     Columns.push(MAXCOLS); // первоначальное значение количества столбцов
     Rows.push(MAXROWS); // первоначальное значение количества строк
-    SetCells(&vlyout);
-    wdgt->setLayout(vlyout);
-    stw->addWidget(wdgt);
-    stw->repaint();
     lyout->addWidget(stw);
     lyout->addStretch(1);
     setLayout(lyout);
     cb->setCurrentIndex(0); // принудительный вызов загрузки данных в окно
 }
 
-void Wh_Editor::SetCells(QLayout &lyout)
+void Wh_Editor::SetRootWidget()
 {
-    for (int i = 0; i < MAXROWS; i++)
+    s_tqStackedWidget *stw = this->findChild<s_tqStackedWidget *>("stw");
+    if (stw == 0)
     {
-        hlyout = new QHBoxLayout;
-        for (int j = 0; j < MAXCOLS; j++)
+        WHEDDBG;
+        return;
+    }
+    s_tqWidget *wdgt = new s_tqWidget;
+    wdgt->setAttribute(Qt::WA_DeleteOnClose);
+    connect(this,SIGNAL(CloseAllWidgets()),wdgt,SLOT(close()));
+    QVBoxLayout *vlyout = new QVBoxLayout;
+    SetCells(vlyout);
+    QHBoxLayout *hlyout = new QHBoxLayout;
+    s_tqPushButton *pb = new s_tqPushButton("Записать и закрыть");
+    pb->setIcon(QIcon(":/res/icon_zap.png"));
+    connect(pb, SIGNAL(clicked()), this, SLOT(WriteAndClose()));
+    connect(pb, SIGNAL(clicked()), this,SIGNAL(CloseAllWidgets()));
+    hlyout->addWidget(pb);
+    pb = new s_tqPushButton("Отмена");
+    pb->setIcon(QIcon(":/res/cross.png"));
+    connect(pb, SIGNAL(clicked()), this,SIGNAL(CloseAllWidgets()));
+    connect(pb,SIGNAL(clicked()),this,SLOT(PopIDs()));
+    hlyout->addWidget(pb);
+    vlyout->addLayout(hlyout);
+    wdgt->setLayout(vlyout);
+    stw->addWidget(wdgt);
+    stw->repaint();
+}
+
+void Wh_Editor::SetCells(QVBoxLayout *lyout)
+{
+    for (int i = 0; i < Rows.top(); i++)
+    {
+        QHBoxLayout *hlyout = new QHBoxLayout;
+        for (int j = 0; j < Columns.top(); j++)
         {
+            int index = i*Columns.top()+j;
             QVBoxLayout *v2lyout = new QVBoxLayout;
-            lbl = new s_tqLabel;
-//            lbl->setPixmap(QPixmap(":/res/EmptyCell.png"));
-            lbl->setObjectName("cell"+QString::number(IDs.top())+"."+QString::number(i)+"."+QString::number(j));
-            connect(lbl,SIGNAL(clicked()),this,SLOT(UpdatePlace()));
-            v2lyout->addWidget(lbl);
-            v2lyout->setAlignment(lbl, Qt::AlignCenter);
-            lbl = new s_tqLabel("");
-            lbl->setObjectName("celllbl."+QString::number(IDs.top())+"."+QString::number(i)+"."+QString::number(j));
+            s_tqLabel *celllbl = new s_tqLabel;
+            celllbl->setObjectName(QString::number(IDs.top())+"."+QString::number(index));
+            connect(celllbl,SIGNAL(clicked()),this,SLOT(UpdatePlace()));
+            v2lyout->addWidget(celllbl);
+            v2lyout->setAlignment(celllbl, Qt::AlignCenter);
+            s_tqLabel *lbl = new s_tqLabel("");
+            lbl->setObjectName("celllbl."+QString::number(IDs.top())+"."+QString::number(index));
             v2lyout->addWidget(lbl);
             v2lyout->setAlignment(lbl,Qt::AlignCenter);
             hlyout->addLayout(v2lyout);
-            UpdatePlacePicture(i, j);
-            IndexIsPresent.push(false); // сначала все размещения на складе пустые, заполним их по загрузке данных
+            if (UpdatePlacePicture(celllbl))
+                celllbl->setData(index); // есть размещение в данном месте
+            else
+                celllbl->setData(-1); // нет такого размещения
         }
         lyout->addLayout(hlyout);
     }
@@ -130,34 +158,28 @@ void Wh_Editor::SetCells(QLayout &lyout)
 
 void Wh_Editor::UpdatePlace()
 {
-    int row, column, id;
-
     // вытащим номера столбца и строки из наименования источника сигнала
     QStringList CellNames = sender()->objectName().split(".");
-    if (CellNames.size() < 4) // 0 - "cell", 1 - ID, 2 - row, 3 - column
+    if (CellNames.size() < 2) // 0 - ID, 2 - index
     {
         WHEDDBG;
         return;
     }
-    QString CellName = CellNames.at(0);
-    if (CellName == "cell")
+    int id = CellNames.at(0).toInt();
+    int PlaceIndex = CellNames.at(1).toInt(); // текущий индекс элемента
+    s_tqLabel *lbl = static_cast<s_tqLabel *>(sender());
+    if (lbl == 0)
     {
-        id = CellNames.at(1).toInt();
-        row = CellNames.at(2).toInt();
-        column = CellNames.at(3).toInt();
-    }
-    else
-    {
-        WHEDWARN;
+        WHEDDBG;
         return;
     }
-    int PlaceIndex = row * Columns.top() + column; // текущий индекс элемента
-    if (IndexIsPresent.at(PlaceIndex)) // если размещение имеется
+    int DataIndex = lbl->getData().toInt(); // если DataIndex == -1, размещения в данном месте нет, иначе DataIndex - то же самое, что и PlaceIndex
+    if (DataIndex != -1) // если размещение имеется
     {
         // возьмём ID элемента размещения по "Склады размещение" и положим его в стек
         QStringList fl = QStringList() << "ИД" << "Тип размещения";
         QStringList cmpfl = QStringList() << "Номер" << "ИД_а";
-        QStringList cmpvl = QStringList() << QString::number(PlaceIndex) << QString::number(IDs.top());
+        QStringList cmpvl = QStringList() << QString::number(PlaceIndex) << QString::number(id);
         QStringList PlaceID = tfl.valuesbyfields("Склады размещение_полн",fl,cmpfl, cmpvl);
         if (tfl.result) // нет такого размещения в нашем "шкафу", значит, при записи когда-то был косяк, выход
         {
@@ -170,6 +192,7 @@ void Wh_Editor::UpdatePlace()
         QStringList PlaceColumnsCount = tfl.valuesbyfield("Склады типы размещения_полн",fl,"Наименование",PlaceID.at(1));
         if (tfl.result)
         {
+            PopIDs();
             WHEDWARN;
             return;
         }
@@ -178,11 +201,35 @@ void Wh_Editor::UpdatePlace()
         s_tqStackedWidget *stw = this->findChild<s_tqStackedWidget *>("stw");
         if (stw == 0)
         {
+            PopIDs();
+            Columns.pop();
+            Rows.pop();
             WHEDDBG;
             return;
         }
+        SetChildWidget(lbl);
+    }
+}
+
+void Wh_Editor::PopIDs()
+{
+    if (!IDs.isEmpty())
+        IDs.pop();
+}
+
+void Wh_Editor::SetChildWidget(s_tqLabel *celllbl)
+{
+    s_tqStackedWidget *stw = this->findChild<s_tqStackedWidget *>("stw");
+    if (stw == 0)
+    {
+        WHEDDBG;
+        return;
     }
     s_tqWidget *wdgt = new s_tqWidget;
+    wdgt->setAttribute(Qt::WA_DeleteOnClose);
+    connect(this,SIGNAL(CloseAllWidgets()),wdgt,SLOT(close()));
+    QVBoxLayout *vlyout = new QVBoxLayout;
+
     s_tqLabel *lbl = new s_tqLabel("Тип размещения:");
     QVBoxLayout *lyout = new QVBoxLayout;
     QHBoxLayout *hlyout = new QHBoxLayout;
@@ -190,49 +237,28 @@ void Wh_Editor::UpdatePlace()
     hlyout->setAlignment(lbl,Qt::AlignRight);
     s_tqChooseWidget *cw = new s_tqChooseWidget(true);
     cw->Setup(("2.2..Склады типы размещения_сокращ.Наименование"));
-    cw->setObjectName(QString::number(IDs.top())+"."+QString::number(row)+"."+QString::number(column)); // оставляем только номер строки и столбца
+    QString tmps = QString::number(IDs.top())+"."+QString::number(Rows.top())+"."+QString::number(Columns.top());
+    cw->setObjectName(tmps); // оставляем только номер строки и столбца
     connect(cw,SIGNAL(textchanged(QVariant)),this,SLOT(UpdatePicture(QVariant)));
     hlyout->addWidget(cw);
-    lyout->addLayout(hlyout);
-    lbl = static_cast<s_tqLabel *>(sender());
+    vlyout->addLayout(hlyout);
+    int DataIndex = celllbl->getData().toInt();
     s_tqLabel *PlacePic = new s_tqLabel;
-    PlacePic->setObjectName("pp");
-    QPixmap pm = *(lbl->pixmap());
-    PlacePic->setPixmap(pm);
+    PlacePic->setObjectName(tmps);
+    PlacePic->setPixmap(*(celllbl->pixmap()));
     lyout->addWidget(PlacePic);
-    if (IndexIsPresent.at(PlaceIndex)) // если размещение имеется
-    {
+    if (DataIndex != -1) // если размещение имеется
         // рисуем размещения по строкам и столбцам
-        for (int i=0; i<Rows.top(); i++)
-        {
-            hlyout = new QHBoxLayout;
-            for (int j=0; j<Columns.top(); j++)
-            {
-                QVBoxLayout *v2lyout = new QVBoxLayout;
-                lbl = new s_tqLabel;
-                lbl->setPixmap(QPixmap(":/res/EmptyCell.png"));
-                lbl->setObjectName("cell."+QString::number(i)+"."+QString::number(j));
-                connect(lbl,SIGNAL(clicked()),this,SLOT(UpdatePlace()));
-                v2lyout->addWidget(lbl);
-                v2lyout->setAlignment(lbl, Qt::AlignCenter);
-                lbl = new s_tqLabel("");
-                lbl->setObjectName("celllbl."+QString::number(i)+"."+QString::number(j));
-                v2lyout->addWidget(lbl);
-                v2lyout->setAlignment(lbl,Qt::AlignCenter);
-                hlyout->addLayout(v2lyout);
-                UpdatePlacePicture(i, j);
-            }
-            lyout->addLayout(hlyout);
-        }
-    }
+        SetCells(lyout);
     hlyout = new QHBoxLayout;
     s_tqPushButton *pb = new s_tqPushButton("Записать и закрыть");
     pb->setIcon(QIcon(":/res/icon_zap.png"));
     connect(pb, SIGNAL(clicked()), this, SLOT(WriteAndClose()));
+    connect(pb, SIGNAL(clicked()), this,SIGNAL(CloseAllWidgets()));
     hlyout->addWidget(pb);
     pb = new s_tqPushButton("Отмена");
     pb->setIcon(QIcon(":/res/cross.png"));
-    connect(pb, SIGNAL(clicked()), wdgt, SLOT(close()));
+    connect(pb, SIGNAL(clicked()), this,SIGNAL(CloseAllWidgets()));
     connect(pb,SIGNAL(clicked()),this,SLOT(PopIDs()));
     hlyout->addWidget(pb);
     lyout->addLayout(hlyout);
@@ -243,11 +269,7 @@ void Wh_Editor::UpdatePlace()
     stw->repaint();
 }
 
-void Wh_Editor::PopIDs()
-{
-    if (!IDs.isEmpty())
-        IDs.pop();
-}
+// обновление картинки типа размещения
 
 void Wh_Editor::UpdatePicture(QVariant value)
 {
@@ -260,12 +282,11 @@ void Wh_Editor::UpdatePicture(QVariant value)
         WHEDDBG;
         return;
     }
-    int id = CellNames.at(0).toInt();
     row = CellNames.at(1).toInt();
     column = CellNames.at(2).toInt();
     if ((row != -1) && (column != -1))
     {
-        s_tqLabel *lbl = this->findChild<s_tqLabel *>("pp");
+        s_tqLabel *lbl = this->findChild<s_tqLabel *>(sender()->objectName()); // имя ChooseWidget-а и имя строки совпадают
         if (lbl == 0)
         {
             WHEDDBG;
@@ -292,47 +313,43 @@ void Wh_Editor::UpdatePicture(QVariant value)
     }
 }
 
-void Wh_Editor::UpdatePlacePicture(int row, int column)
+bool Wh_Editor::UpdatePlacePicture(s_tqLabel *lbl)
 {
-    if ((row > (MAXROWS-1)) || (column > (MAXCOLS-1)))
+/*    s_tqLabel *lbl = this->findChild<s_tqLabel *>(QString::number(IDs.top())+"."+QString::number(index));
+    if (lbl == 0)
     {
         WHEDDBG;
-        return;
-    }
-    int index = row*Columns.top()+column; // абсолютный индекс
+        return false;
+    } */
+    int index = lbl->objectName().split(".").at(1).toInt();
     QStringList fl = QStringList() << "Тип размещения";
     QStringList cmpfl = QStringList() << "Номер" << "ИД_а";
     QStringList cmpvl = QStringList() << QString::number(index) << QString::number(IDs.top());
-    QStringList PlaceType = tfl.valuesbyfields("Склады размещение_полн",fl,cmpfl, cmpvl,false);
+    QStringList PlaceType = tfl.valuesbyfields("Склады размещение_полн", fl, cmpfl, cmpvl, false);
     if (PlaceType.isEmpty())
     {
         lbl->setPixmap(QPixmap(":/res/EmptyCell.png"));
-        return; // пусто
+        return false; // пусто
     }
     QStringList PlaceTank = tfl.valuesbyfield("Склады типы размещения_полн", QStringList("Тип размещения"), "ИД", PlaceType.at(0));
     if (tfl.result)
     {
         WHEDWARN;
-        return;
+        return false;
     }
     QStringList PlacePicture = tfl.valuesbyfield("Склады ёмкости размещения_полн", QStringList("Картинка"), "ИД", PlaceTank.at(0));
     if (tfl.result)
     {
         WHEDWARN;
-        return;
-    }
-    s_tqLabel *lbl = this->findChild<s_tqLabel *>(QString::number(IDs.top())+"."+QString::number(row)+"."+QString::number(column));
-    if (lbl == 0)
-    {
-        WHEDDBG;
-        return;
+        return false;
     }
     lbl->setPixmap(QPixmap(PlacePicture.at(0)));
+    return true;
 }
 
 void Wh_Editor::WriteAndClose()
 {
-    UpdatePlacePicture(0, 0); // подставить сюда row и column
+//    UpdatePlacePicture(0); // подставить сюда row и column
 }
 
 void Wh_Editor::AddNewWh()
@@ -347,7 +364,7 @@ void Wh_Editor::DeleteWh()
 
 void Wh_Editor::CheckIndexes()
 {
-    for (int i=0; i<Rows.top(); i++)
+/*    for (int i=0; i<Rows.top(); i++)
     {
         for (int j=0; j<Columns.top(); j++)
         {
@@ -363,13 +380,37 @@ void Wh_Editor::CheckIndexes()
             // теперь надо установить текущую картинку
             UpdatePlacePicture(row, column);
         }
-    }
+    } */
 }
 
 void Wh_Editor::ModifyWh(QString str)
 {
     // достанем индекс склада по имени str из wh
-    // затем достанем индекс размещения данного склада
-    // и положим его на верхушку стека
-    // обновим индексы
+    QStringList WHID = tfl.valuesbyfield("Склады_полн", QStringList("ИД"), "Наименование", str);
+    if (tfl.result)
+    {
+        WHEDWARN;
+        return;
+    }
+    // затем достанем индекс ID размещения данного склада
+    QStringList cmpfl = QStringList() << "ИД_а" << "Склад";
+    QStringList cmpvl = QStringList() << "0" << WHID.at(0); // у "корневого" склада idalias всегда равен 0, т.е. это корень для остальных
+    QStringList PlaceID = tfl.valuesbyfields("Склады размещение_полн", QStringList("ИД"), cmpfl, cmpvl, false);
+/*    if (tfl.result)
+    {
+        WHEDWARN;
+        return;
+    } */
+    // обнулим стеки IDs, Rows, Columns
+    IDs.clear();
+    Rows.clear();
+    Columns.clear();
+    // положим ID на верхушку стека IDs, MAXROWS и MAXCOLS в соотв. стеки
+    IDs.push(PlaceID.at(0).toInt());
+    Rows.push(MAXROWS);
+    Columns.push(MAXCOLS);
+    // закроем все открытые виджеты, включая "корневой"
+    emit CloseAllWidgets();
+    // создадим новый корневой виджет и положим его в stw, вызовем SetCells для нового ID
+    SetRootWidget();
 }

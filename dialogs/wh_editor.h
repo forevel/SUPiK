@@ -3,8 +3,11 @@
 
 #include <QDialog>
 #include <QStack>
+#include <QPixmap>
+#include <QVBoxLayout>
 
 #include "../widgets/s_tqcombobox.h"
+#include "../widgets/s_tqlabel.h"
 
 #define WHEDWARN WARNMSG(PublicClass::ER_WHED, __LINE__)
 #define WHEDDBG  DBGMSG(PublicClass::ER_WHED, __LINE__)
@@ -18,15 +21,19 @@ class Wh_Editor : public QDialog
 public:
     explicit Wh_Editor(QWidget *parent=0);
 
+signals:
+    void CloseAllWidgets();
+
 private:
     QStack<int> IDs;
-    QStack<bool> IndexIsPresent;
     QStack<int> Columns;
     QStack<int> Rows;
 
     void SetupUI();
-    void UpdatePlacePicture(int row, int column);
-    void SetCells(QLayout &lyout);
+    bool UpdatePlacePicture(s_tqLabel *lbl); // обновление картинки в выбранной позиции. Возвращает false, если картинка "пусто" и нет такого размещения
+    void SetCells(QVBoxLayout *lyout);
+    void SetRootWidget();
+    void SetChildWidget(s_tqLabel *celllbl);
     void CheckIndexes();
 
 private slots:

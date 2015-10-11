@@ -603,7 +603,7 @@ QStringList s_tablefields::valuesbyfield(QString tble, QStringList fl, QString c
 
 QStringList s_tablefields::valuesbyfields(QString tble, QStringList fl, QStringList cmpfields, QStringList cmpvalues, bool Warn)
 {
-    if ((cmpfields.size() != cmpvalues.size()) || cmpfields.size() == 0)
+    if ((cmpfields.size() != cmpvalues.size()) || (cmpfields.size() == 0) || (fl.size() == 0))
     {
         result = 1;
         TFWARN;
@@ -620,6 +620,16 @@ QStringList s_tablefields::valuesbyfields(QString tble, QStringList fl, QStringL
             return QStringList();
         }
         cmpfl << tmpsl.at(1);
+    }
+    for (int i = 0; i < fl.size(); i++)
+    {
+        QStringList sl = tablefields(tble,fl.at(i));
+        if (result)
+        {
+            TFWARN;
+            return QStringList();
+        }
+        fl.replace(i, sl.at(1)); // заменяем русское наименование поля на его реальное название
     }
     QString cmpdb = tmpsl.at(0).split(".").at(0); // реальное имя БД
     QString cmptble = tmpsl.at(0).split(".").at(1); // реальное название таблицы

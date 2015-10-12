@@ -8,6 +8,7 @@
 
 #include "../widgets/s_tqcombobox.h"
 #include "../widgets/s_tqlabel.h"
+#include "../models/whplacestreemodel.h"
 
 #define WHEDWARN WARNMSG(PublicClass::ER_WHED, __LINE__)
 #define WHEDDBG  DBGMSG(PublicClass::ER_WHED, __LINE__)
@@ -28,12 +29,15 @@ private:
     QStack<int> IDs;
     QStack<int> Columns;
     QStack<int> Rows;
+    WhPlacesTreeModel *WhModel;
 
     void SetupUI();
     bool UpdatePlacePicture(s_tqLabel *lbl); // обновление картинки в выбранной позиции. Возвращает false, если картинка "пусто" и нет такого размещения
     void SetCells(QVBoxLayout *lyout);
     void SetRootWidget();
     void SetChildWidget(s_tqLabel *celllbl);
+    void UpdateChildWidget();
+    void PushNewPlaceOnStacks(int ID, int Index); // ID - ИД размещения по таблице whplaces, Index - номер размещения whnum по той же таблице
     void CheckIndexes();
 
 private slots:

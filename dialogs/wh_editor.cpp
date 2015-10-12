@@ -36,7 +36,6 @@ void Wh_Editor::SetupUI()
 {
     // Кнопки "создать новый", "расформировать и удалить", "выход" и надпись "Редактор складов"
     QVBoxLayout *lyout = new QVBoxLayout;
-//    QVBoxLayout *vlyout = new QVBoxLayout;
     QHBoxLayout *hlyout = new QHBoxLayout;
 
     s_tqPushButton *pb = new s_tqPushButton;
@@ -73,6 +72,7 @@ void Wh_Editor::SetupUI()
     mdl->setStringList(vl);
     s_tqComboBox *cb = new s_tqComboBox;
     cb->setModel(mdl);
+    cb->setCurrentIndex(-1);
     connect(cb,SIGNAL(currentIndexChanged(QString)),this,SLOT(ModifyWh(QString)));
     lbl = new s_tqLabel("Редактируемый склад:");
     hlyout->addWidget(lbl, 0);
@@ -175,40 +175,34 @@ void Wh_Editor::UpdatePlace()
     }
     int DataIndex = lbl->getData().toInt(); // если DataIndex == -1, размещения в данном месте нет, иначе DataIndex - то же самое, что и PlaceIndex
     if (DataIndex != -1) // если размещение имеется
+        PushNewPlaceOnStacks(id, PlaceIndex);
+    SetChildWidget(lbl);
+}
+
+void Wh_Editor::PushNewPlaceOnStacks(int ID, int Index)
+{
+    // возьмём ID элемента размещения по "Склады размещение" и положим его в стек
+    QStringList fl = QStringList() << "ИД" << "Тип размещения";
+    QStringList cmpfl = QStringList() << "Номер" << "ИД_а";
+    QStringList cmpvl = QStringList() << QString::number(Index) << QString::number(ID);
+    QStringList PlaceID = tfl.valuesbyfields("Склады размещение_полн",fl,cmpfl, cmpvl);
+    if (tfl.result) // нет такого размещения в нашем "шкафу", значит, при записи когда-то был косяк, выход
     {
-        // возьмём ID элемента размещения по "Склады размещение" и положим его в стек
-        QStringList fl = QStringList() << "ИД" << "Тип размещения";
-        QStringList cmpfl = QStringList() << "Номер" << "ИД_а";
-        QStringList cmpvl = QStringList() << QString::number(PlaceIndex) << QString::number(id);
-        QStringList PlaceID = tfl.valuesbyfields("Склады размещение_полн",fl,cmpfl, cmpvl);
-        if (tfl.result) // нет такого размещения в нашем "шкафу", значит, при записи когда-то был косяк, выход
-        {
-            WHEDWARN;
-            return;
-        }
-        IDs.push(PlaceID.at(0).toInt());
-        // по типу размещения найдём количество столбцов в размещении
-        fl = QStringList() << "Кол-во рядов" << "Кол-во столбцов";
-        QStringList PlaceColumnsCount = tfl.valuesbyfield("Склады типы размещения_полн",fl,"Наименование",PlaceID.at(1));
-        if (tfl.result)
-        {
-            PopIDs();
-            WHEDWARN;
-            return;
-        }
-        Columns.push(PlaceColumnsCount.at(0).toInt()); // положили количество столбцов в стек
-        Rows.push(PlaceColumnsCount.at(1).toInt()); // и количество строк в свой стек
-        s_tqStackedWidget *stw = this->findChild<s_tqStackedWidget *>("stw");
-        if (stw == 0)
-        {
-            PopIDs();
-            Columns.pop();
-            Rows.pop();
-            WHEDDBG;
-            return;
-        }
-        SetChildWidget(lbl);
+        WHEDWARN;
+        return;
     }
+    IDs.push(PlaceID.at(0).toInt());
+    // по типу размещения найдём количество столбцов в размещении
+    fl = QStringList() << "Кол-во рядов" << "Кол-во столбцов";
+    QStringList PlaceColumnsCount = tfl.valuesbyfield("Склады типы размещения_полн",fl,"Наименование",PlaceID.at(1));
+    if (tfl.result)
+    {
+        PopIDs();
+        WHEDWARN;
+        return;
+    }
+    Columns.push(PlaceColumnsCount.at(0).toInt()); // положили количество столбцов в стек
+    Rows.push(PlaceColumnsCount.at(1).toInt()); // и количество строк в свой стек
 }
 
 void Wh_Editor::PopIDs()
@@ -228,7 +222,6 @@ void Wh_Editor::SetChildWidget(s_tqLabel *celllbl)
     s_tqWidget *wdgt = new s_tqWidget;
     wdgt->setAttribute(Qt::WA_DeleteOnClose);
     connect(this,SIGNAL(CloseAllWidgets()),wdgt,SLOT(close()));
-    QVBoxLayout *vlyout = new QVBoxLayout;
 
     s_tqLabel *lbl = new s_tqLabel("Тип размещения:");
     QVBoxLayout *lyout = new QVBoxLayout;
@@ -241,15 +234,20 @@ void Wh_Editor::SetChildWidget(s_tqLabel *celllbl)
     cw->setObjectName(tmps); // оставляем только номер строки и столбца
     connect(cw,SIGNAL(textchanged(QVariant)),this,SLOT(UpdatePicture(QVariant)));
     hlyout->addWidget(cw);
-    vlyout->addLayout(hlyout);
+    lyout->addLayout(hlyout);
     int DataIndex = celllbl->getData().toInt();
     s_tqLabel *PlacePic = new s_tqLabel;
     PlacePic->setObjectName(tmps);
     PlacePic->setPixmap(*(celllbl->pixmap()));
     lyout->addWidget(PlacePic);
-    if (DataIndex != -1) // если размещение имеется
+    QVBoxLayout *vlyout = new QVBoxLayout;
+    s_tqWidget *w = new s_tqWidget;
+    w->setObjectName("chw"+QString::number(IDs.top()));
+//    if (DataIndex != -1) // если размещение имеется
         // рисуем размещения по строкам и столбцам
-        SetCells(lyout);
+        SetCells(vlyout);
+    w->setLayout(vlyout);
+    lyout->addWidget(w);
     hlyout = new QHBoxLayout;
     s_tqPushButton *pb = new s_tqPushButton("Записать и закрыть");
     pb->setIcon(QIcon(":/res/icon_zap.png"));
@@ -286,12 +284,6 @@ void Wh_Editor::UpdatePicture(QVariant value)
     column = CellNames.at(2).toInt();
     if ((row != -1) && (column != -1))
     {
-        s_tqLabel *lbl = this->findChild<s_tqLabel *>(sender()->objectName()); // имя ChooseWidget-а и имя строки совпадают
-        if (lbl == 0)
-        {
-            WHEDDBG;
-            return;
-        }
         QStringList PlaceTank = tfl.valuesbyfield("Склады типы размещения_полн", QStringList("Тип размещения"), "Наименование", value.toString());
         if (tfl.result)
         {
@@ -304,7 +296,14 @@ void Wh_Editor::UpdatePicture(QVariant value)
             WHEDWARN;
             return;
         }
+        s_tqLabel *lbl = this->findChild<s_tqLabel *>(sender()->objectName()); // имя ChooseWidget-а и имя строки совпадают
+        if (lbl == 0)
+        {
+            WHEDDBG;
+            return;
+        }
         lbl->setPixmap(QPixmap(":/res/"+PlacePicture.at(0)+".png"));
+        UpdateChildWidget();
     }
     else
     {
@@ -313,14 +312,24 @@ void Wh_Editor::UpdatePicture(QVariant value)
     }
 }
 
-bool Wh_Editor::UpdatePlacePicture(s_tqLabel *lbl)
+void Wh_Editor::UpdateChildWidget()
 {
-/*    s_tqLabel *lbl = this->findChild<s_tqLabel *>(QString::number(IDs.top())+"."+QString::number(index));
-    if (lbl == 0)
+    s_tqWidget *w = this->findChild<s_tqWidget *>("chw"+QString::number(IDs.top()));
+    if (w == 0)
     {
         WHEDDBG;
-        return false;
-    } */
+        return;
+    }
+    QVBoxLayout *lyout = new QVBoxLayout;
+    QLayout *l = w->layout();
+    if (l != 0)
+        delete l;
+    SetCells(lyout);
+    w->setLayout(lyout);
+}
+
+bool Wh_Editor::UpdatePlacePicture(s_tqLabel *lbl)
+{
     int index = lbl->objectName().split(".").at(1).toInt();
     QStringList fl = QStringList() << "Тип размещения";
     QStringList cmpfl = QStringList() << "Номер" << "ИД_а";
@@ -411,6 +420,14 @@ void Wh_Editor::ModifyWh(QString str)
     Columns.push(MAXCOLS);
     // закроем все открытые виджеты, включая "корневой"
     emit CloseAllWidgets();
+    // построим модель от данного корневого ИД склада
+    if (WhModel != 0)
+        delete WhModel;
+    if (WhModel->Setup("Склады размещение_полн", PlaceID.at(0).toInt()))
+    {
+        WHEDWARN;
+        return;
+    }
     // создадим новый корневой виджет и положим его в stw, вызовем SetCells для нового ID
     SetRootWidget();
 }

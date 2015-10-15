@@ -9,21 +9,14 @@ public:
     WhPlacesTreeItem(WhPlacesTreeItem *parent=0);
     ~WhPlacesTreeItem();
 
-    QString data(int column) const;
-    bool setData(int column, const QString &value);
-    WhPlacesTreeItem *parent();
-    WhPlacesTreeItem *child(int row);
-    int childCount() const;
-    int columnCount() const;
-    WhPlacesTreeItem *insertChild(int position, int columns);
-    bool removeChildren(int position, int count);
-    bool removeColumns(int position, int columns);
-    int row() const;
+    QString Alias; // наименование размещения
+    int IdAlias; // ссылка на корневой элемент размещения (-1 -> нет размещения)
+    QString Name; // обозначение размещения в документах
+    QString Description; // описание размещения
+    int WhNum; // номер размещения на складе
+    int WhPlaceTypeID; // тип размещения по "Склады типы размещения"
 
 private:
-    QStringList itemData;
-    WhPlacesTreeItem *parentItem;
-    QList<WhPlacesTreeItem *> childItems;
 };
 
 #endif // WHPLACESTREEITEM_H

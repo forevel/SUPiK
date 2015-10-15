@@ -120,7 +120,7 @@ void Wh_Editor::SetRootWidget()
     pb = new s_tqPushButton("Отмена");
     pb->setIcon(QIcon(":/res/cross.png"));
     connect(pb, SIGNAL(clicked()), this,SIGNAL(CloseAllWidgets()));
-    connect(pb,SIGNAL(clicked()),this,SLOT(PopIDs()));
+//    connect(pb,SIGNAL(clicked()),this,SLOT(PopIDs()));
     hlyout->addWidget(pb);
     vlyout->addLayout(hlyout);
     wdgt->setLayout(vlyout);

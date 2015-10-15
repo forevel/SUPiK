@@ -21,7 +21,7 @@ int WhPlacesTreeModel::columnCount(const QModelIndex &parent) const
     return rootItem->columnCount();
 }
 
-QVariant WhPlacesTreeModel::data(const QModelIndex &index, int role) const
+WhPlacesTreeItem WhPlacesTreeModel::data(int index)
 {
     Q_UNUSED(role);
     if (!index.isValid())
@@ -30,7 +30,7 @@ QVariant WhPlacesTreeModel::data(const QModelIndex &index, int role) const
     return item->data(index.column());
 }
 
-bool WhPlacesTreeModel::setData(const QModelIndex &index, const QVariant &value, int role)
+int WhPlacesTreeModel::setData(int index, WhPlacesTreeItem value)
 {
     Q_UNUSED(role);
     if (index.isValid())
@@ -61,14 +61,14 @@ QVariant WhPlacesTreeModel::headerData(int section, Qt::Orientation orientation,
     return QVariant();
 }
 
-QModelIndex WhPlacesTreeModel::index(int row, int column, const QModelIndex &parent) const
+int WhPlacesTreeModel::index(QString name)
 {
     if (parent.isValid() && parent.column() != 0)
         return QModelIndex();
     WhPlacesTreeItem *parentItem=getItem(parent);
-    WhPlacesTreeItem *childItem = parentItem->child(row);
+    WhPlacesTreeItem *childItem = parentItem->child(name);
     if (childItem)
-        return createIndex(row, column, childItem);
+        return createIndex(name, column, childItem);
     else
         return QModelIndex();
 }
@@ -169,7 +169,7 @@ void WhPlacesTreeModel::addRow(int position, QModelIndex &parent)
 
 // процедура инициализации модели данными из таблицы table в tablefields и построение дерева по полям alias и idalias
 
-int WhPlacesTreeModel::Setup(QString table, int index)
+int WhPlacesTreeModel::Load(QString table, int index)
 {
     ClearModel();
     // 1. взять столбцы tablefields из tablefields, где tablename=table
@@ -204,6 +204,7 @@ int WhPlacesTreeModel::Setup(QString table, int index)
     for (i = 0; i < vl.size(); i++)
         setHeaderData(i, Qt::Horizontal, vl.at(i).at(2), Qt::EditRole);
     // 4
+    position = -1; // при первом прибавлении в BuildTree будет как раз ноль
     int res = BuildTree(QString::number(index));
     if (res)
         return 1;
@@ -213,7 +214,7 @@ int WhPlacesTreeModel::Setup(QString table, int index)
 // процедура построения дерева
 // на входе catlist (ссылка на таблицу категорий с полем idalias) и slvtble (название таблицы в chooselists, из которой брать записи категорий)
 
-int WhPlacesTreeModel::BuildTree(QString id)
+int WhPlacesTreeModel::BuildTree(int Index)
 {
     int res;
     QStringList tmpStringList;
@@ -223,11 +224,10 @@ int WhPlacesTreeModel::BuildTree(QString id)
     tmpString = "SELECT ";
     for (int i=0; i<vlsize; i++)
         tmpString += "`" + vl.at(1).at(i) + "`,";
-    tmpString += "` FROM `"+catlist.at(1)+"` WHERE `idalias`=\""+id+"\" AND `deleted`=0 ORDER BY `id"+catlist.at(1)+"` ASC;";
+    tmpString += "` FROM `"+catlist.at(1)+"` WHERE `idalias`=\""+Index+"\" AND `deleted`=0 ORDER BY `id"+catlist.at(1)+"` ASC;";
     get_child_from_db1.exec(tmpString);
     // увеличиваем уровень дерева
     position++;
-    if (id == "0") position = 0; // для корневых элементов position д.б. равен нулю
 // строим дерево в модели model
     while (get_child_from_db1.next())
     {
@@ -235,7 +235,7 @@ int WhPlacesTreeModel::BuildTree(QString id)
         for (int i=0; i<get_child_from_db1.record().count(); i++)
             tmpStringList << get_child_from_db1.value(i).toString();
         additemtotree(position, tmpStringList);
-        if (vlidalpos < get_child_from_db1.record().count())
+        if (vlidalpos < get_child_from_db1.record().count()) // просто чтобы не нарваться на exception
             res = BuildTree(get_child_from_db1.value(vlidalpos).toString()); // в качестве аргумента функции используется индекс поля idalias
         if (res)
             return 1;
@@ -276,7 +276,8 @@ void WhPlacesTreeModel::ClearModel()
 
 }
 
-void WhPlacesTreeModel::Load(QString table, int index)
+void WhPlacesTreeModel::Save(QString table, int index)
 {
-    //
+    // аналогично Load пробегаем по всем ветвям
+    // ищем сначала элемент с такими
 }

@@ -88,10 +88,10 @@ void Wh_Editor::SetupUI()
     stw->setObjectName("stw");
     s_tqWidget *wdgt = new s_tqWidget;
     wdgt->setAttribute(Qt::WA_DeleteOnClose);
-    connect(pb,SIGNAL(clicked()),wdgt,SLOT(close())); // по нажатию кнопки "Закрыть вкладку" закрыть и удалить "корневой" виджет
-    IDs.push(vl.at(0).toInt()); // первоначальный ID - корневой склада первого по списку
+    connect(this,SIGNAL(CloseAllWidgets()),wdgt,SLOT(close())); // по нажатию кнопки "Закрыть вкладку" закрыть и удалить "корневой" виджет
+/*    IDs.push(vl.at(0).toInt()); // первоначальный ID - корневой склада первого по списку
     Columns.push(MAXCOLS); // первоначальное значение количества столбцов
-    Rows.push(MAXROWS); // первоначальное значение количества строк
+    Rows.push(MAXROWS); // первоначальное значение количества строк */
     lyout->addWidget(stw);
     lyout->addStretch(1);
     setLayout(lyout);
@@ -423,7 +423,7 @@ void Wh_Editor::ModifyWh(QString str)
     // построим модель от данного корневого ИД склада
     if (WhModel != 0)
         delete WhModel;
-    if (WhModel->Setup("Склады размещение_полн", PlaceID.at(0).toInt()))
+    if (WhModel->Load("Склады размещение_полн", PlaceID.at(0).toInt()))
     {
         WHEDWARN;
         return;

@@ -28,7 +28,8 @@ public:
     void addRow(int position, QModelIndex &parent = QModelIndex());
     QModelIndex getIndex(WhPlacesTreeItem *item) const;
     WhPlacesTreeItem *getItem(const QModelIndex &index) const;
-    int Setup (QString table, int index);
+    int Load (QString table, int index);
+    int Save (QString table, int index);
     void ClearModel();
 
 private:

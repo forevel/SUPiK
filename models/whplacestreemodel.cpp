@@ -275,3 +275,8 @@ void WhPlacesTreeModel::ClearModel()
     endResetModel();
 
 }
+
+void WhPlacesTreeModel::Load(QString table, int index)
+{
+    //
+}

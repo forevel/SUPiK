@@ -331,6 +331,8 @@ void Wh_Editor::UpdateChildWidget()
 bool Wh_Editor::UpdatePlacePicture(s_tqLabel *lbl)
 {
     int index = lbl->objectName().split(".").at(1).toInt();
+    QList<int> PlaceChildren = WhModel->Children(IDs.top());
+
     QStringList fl = QStringList() << "Тип размещения";
     QStringList cmpfl = QStringList() << "Номер" << "ИД_а";
     QStringList cmpvl = QStringList() << QString::number(index) << QString::number(IDs.top());
@@ -423,7 +425,7 @@ void Wh_Editor::ModifyWh(QString str)
     // построим модель от данного корневого ИД склада
     if (WhModel != 0)
         delete WhModel;
-    if (WhModel->Load("Склады размещение_полн", PlaceID.at(0).toInt()))
+    if (WhModel->Load(PlaceID.at(0).toInt()))
     {
         WHEDWARN;
         return;

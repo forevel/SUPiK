@@ -4,208 +4,65 @@
 
 #include <QSqlRecord>
 
-WhPlacesTreeModel::WhPlacesTreeModel(QObject *parent) :
-    QAbstractItemModel(parent)
+WhPlacesTreeModel::WhPlacesTreeModel()
 {
 
 }
 
 WhPlacesTreeModel::~WhPlacesTreeModel()
 {
-    delete rootItem;
+    ClearModel();
 }
 
-int WhPlacesTreeModel::columnCount(const QModelIndex &parent) const
+WhPlacesTreeModel::WhPlacesTreeItem *WhPlacesTreeModel::Data(int Index)
 {
-    Q_UNUSED(parent);
-    return rootItem->columnCount();
+    if (Items.keys().contains(Index))
+        return Items.value(Index);
+    else
+        return NULL;
 }
 
-WhPlacesTreeItem WhPlacesTreeModel::data(int index)
+void WhPlacesTreeModel::SetData(int Index, WhPlacesTreeItem *Value)
 {
-    Q_UNUSED(role);
-    if (!index.isValid())
-        return QString();
-    WhPlacesTreeItem *item=getItem(index);
-    return item->data(index.column());
-}
-
-int WhPlacesTreeModel::setData(int index, WhPlacesTreeItem value)
-{
-    Q_UNUSED(role);
-    if (index.isValid())
+    if (Items.keys().contains(Index))
     {
-        WhPlacesTreeItem *item=getItem(index);
-        bool result = item->setData(index.column(), value.toString());
-        if (result)
-            emit dataChanged(index, index);
-        return result;
+        WhPlacesTreeItem *item = Items.value(Index);
+        delete item;
     }
-    else
-        return false;
+    Items[Index] = Value;
 }
 
-Qt::ItemFlags WhPlacesTreeModel::flags(const QModelIndex &index) const
+int WhPlacesTreeModel::Index(QString Alias)
 {
-    if (!index.isValid())
-        return Qt::NoItemFlags;
-    return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
-}
-
-QVariant WhPlacesTreeModel::headerData(int section, Qt::Orientation orientation,
-                               int role) const
-{
-    Q_UNUSED(section);
-    Q_UNUSED(orientation);
-    Q_UNUSED(role);
-    return QVariant();
-}
-
-int WhPlacesTreeModel::index(QString name)
-{
-    if (parent.isValid() && parent.column() != 0)
-        return QModelIndex();
-    WhPlacesTreeItem *parentItem=getItem(parent);
-    WhPlacesTreeItem *childItem = parentItem->child(name);
-    if (childItem)
-        return createIndex(name, column, childItem);
-    else
-        return QModelIndex();
-}
-
-bool WhPlacesTreeModel::insertRows(int position, int rows, const QModelIndex &parent)
-{
-    bool success;
-    WhPlacesTreeItem *parentItem=getItem(parent);
-    beginInsertRows(parent, position, position + rows - 1);
-    for (int i = 0; i < rows; i++)
+    for (int i=0; i<Items.size(); i++)
     {
-        WhPlacesTreeItem *child = parentItem->insertChild(position, rootItem->columnCount());
-        if (child)
-            success = true;
-        else
-            success = false;
+        if (Items.value(Items.keys().at(i))->Alias == Alias)
+            return i;
     }
-    endInsertRows();
-    return success;
+    return -1;
 }
 
-QModelIndex WhPlacesTreeModel::parent(const QModelIndex &index) const
+/*int WhPlacesTreeModel::InsertChild(int ParentIndex, WhPlacesTreeItem Value)
 {
-    if (!index.isValid())
-        return QModelIndex();
-    WhPlacesTreeItem *childItem=getItem(index);
-    WhPlacesTreeItem *parentItem = childItem->parent();
-    if (parentItem == rootItem)
-        return QModelIndex();
-    return createIndex(parentItem->row(), 0, parentItem);
+
 }
-
-bool WhPlacesTreeModel::removeColumns(int position, int columns, const QModelIndex &parent)
-{
-    bool success;
-    beginRemoveColumns(parent, position, position + columns - 1);
-    success = rootItem->removeColumns(position, columns);
-    endRemoveColumns();
-    if (rootItem->columnCount() == 0)
-        removeRows(0, rowCount());
-    return success;
-}
-
-bool WhPlacesTreeModel::removeRows(int position, int rows, const QModelIndex &parent)
-{
-    WhPlacesTreeItem *parentItem=getItem(parent);
-    bool success = true;
-    beginRemoveRows(parent, position, position + rows - 1);
-    success = parentItem->removeChildren(position, rows);
-    endRemoveRows();
-    return success;
-}
-
-int WhPlacesTreeModel::rowCount(const QModelIndex &parent) const
-{
-    WhPlacesTreeItem *parentItem=getItem(parent);
-    return parentItem->childCount();
-}
-
-bool WhPlacesTreeModel::setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role)
-{
-    Q_UNUSED(role);
-    bool result = rootItem->setData(section, value.toString());
-    if (result)
-        emit headerDataChanged(orientation, section, section);
-    return result;
-}
-
-// свои методы
-
-QModelIndex WhPlacesTreeModel::getIndex(WhPlacesTreeItem *item) const
-{
-    if (item == rootItem)
-        return QModelIndex();
-    QModelIndex parentIdx;
-    WhPlacesTreeItem *parentItem = item->parent();
-    if (parentItem == rootItem)
-        parentIdx = QModelIndex();
-    else
-        parentIdx = index(parentItem->row(), 0, QModelIndex());
-    return index(item->row(), 0, parentIdx);
-}
-
-WhPlacesTreeItem *WhPlacesTreeModel::getItem(const QModelIndex &index) const
-{
-    WhPlacesTreeItem *item;
-    if (index.isValid())
-        item = static_cast<WhPlacesTreeItem*>(index.internalPointer());
-    else
-        item = rootItem;
-    return item;
-}
-
-void WhPlacesTreeModel::addRow(int position, QModelIndex &parent)
-{
-    insertRows(position, 1, parent);
-}
-
+*/
 // процедура инициализации модели данными из таблицы table в tablefields и построение дерева по полям alias и idalias
 
-int WhPlacesTreeModel::Load(QString table, int index)
+int WhPlacesTreeModel::Load(int Index)
 {
     ClearModel();
-    // 1. взять столбцы tablefields из tablefields, где tablename=table
-    // 2. найти среди них столбцы <db>.<tble>.alias и <db>.<tble>.idalias. Если нет - это не дерево, выход
-    // 3. взять значения столбцов alias и idalias из таблицы <db>.<tble>
-    // 4. построить по ним дерево
-
-    // 1
-    int i;
-    QStringList fl = QStringList() << "table" << "tablefields" << "header";
-    vl = sqlc.GetMoreValuesFromTableByField(sqlc.GetDB("sup"), "tablefields", fl, "tablename", table, "fieldsorder", true);
+    QStringList fl = QStringList() << "table" << "tablefields";
+    vl = sqlc.GetMoreValuesFromTableByField(sqlc.GetDB("sup"), "tablefields", fl, "tablename", "Склады размещение_полн", "fieldsorder", true);
     if (sqlc.result)
         return 1;
-    // 2
-    vlidalpos=-1;
-    bool IsIdAliasExist = false, IsAliasExist = false;
-    for (i = 0; i < vl.size(); i++)
-    {
-        if (vl.at(i).at(1) == "idalias")
-        {
-            vlidalpos = i;
-            IsIdAliasExist = true;
-        }
-        if (vl.at(i).at(1) == "alias")
-            IsAliasExist = true;
-    }
-    if (!IsIdAliasExist || !IsAliasExist)
+    if (vl.at(2).at(1) != "idalias")
         return 1;
-    // 3
-    catlist = vl.at(vlidalpos).at(0).split("."); // catlist - таблица, из которой брать категории
+    if (vl.at(1).at(1) != "alias")
+        return 1;
+    catlist = vl.at(2).at(0).split("."); // catlist - таблица, из которой брать категории
     vlsize = vl.at(1).size();
-    for (i = 0; i < vl.size(); i++)
-        setHeaderData(i, Qt::Horizontal, vl.at(i).at(2), Qt::EditRole);
-    // 4
-    position = -1; // при первом прибавлении в BuildTree будет как раз ноль
-    int res = BuildTree(QString::number(index));
+    int res = Build(Index);
     if (res)
         return 1;
     return 0;
@@ -214,7 +71,7 @@ int WhPlacesTreeModel::Load(QString table, int index)
 // процедура построения дерева
 // на входе catlist (ссылка на таблицу категорий с полем idalias) и slvtble (название таблицы в chooselists, из которой брать записи категорий)
 
-int WhPlacesTreeModel::BuildTree(int Index)
+int WhPlacesTreeModel::Build(int Index)
 {
     int res;
     QStringList tmpStringList;
@@ -226,58 +83,66 @@ int WhPlacesTreeModel::BuildTree(int Index)
         tmpString += "`" + vl.at(1).at(i) + "`,";
     tmpString += "` FROM `"+catlist.at(1)+"` WHERE `idalias`=\""+Index+"\" AND `deleted`=0 ORDER BY `id"+catlist.at(1)+"` ASC;";
     get_child_from_db1.exec(tmpString);
-    // увеличиваем уровень дерева
-    position++;
-// строим дерево в модели model
+    // строим дерево в модели model
     while (get_child_from_db1.next())
     {
         tmpStringList.clear();
         for (int i=0; i<get_child_from_db1.record().count(); i++)
             tmpStringList << get_child_from_db1.value(i).toString();
-        additemtotree(position, tmpStringList);
-        if (vlidalpos < get_child_from_db1.record().count()) // просто чтобы не нарваться на exception
-            res = BuildTree(get_child_from_db1.value(vlidalpos).toString()); // в качестве аргумента функции используется индекс поля idalias
+        AddItem(tmpStringList);
+        if (get_child_from_db1.record().count() > 1) // просто чтобы не нарваться на exception
+        {
+            int tmpi = get_child_from_db1.value(2).toInt();
+            if (tmpi != -1)
+                res = Build(tmpi); // в качестве аргумента функции используется индекс поля idalias
+        }
         if (res)
             return 1;
     }
-    position--; // после добавления всех детишек уровень понижается
     return 0;
 }
 
-void WhPlacesTreeModel::additemtotree(int position, QStringList sl)
+void WhPlacesTreeModel::AddItem(QStringList sl)
 {
-    if (position > indentations.last()) {
-        // The last child of the current parent is now the new parent
-        // unless the current parent has no children.
-
-        if (parents.last()->childCount() > 0) {
-            parents << parents.last()->child(parents.last()->childCount()-1);
-            indentations << position;
-        }
-    } else {
-        while (position < indentations.last() && parents.count() > 0) {
-            parents.pop_back();
-            indentations.pop_back();
-        }
-    }
-    WhPlacesTreeItem *parent = parents.last();
-    QModelIndex parentIndex = getIndex(parent);
-    addRow(parent->childCount(), parentIndex);
-    for (int column = 0; column < sl.size(); ++column)
-        setData(index(parent->childCount()-1, column, parentIndex), sl.at(column), Qt::EditRole);
+    if (sl.size() < WHITEMSIZE)
+        return;
+    WhPlacesTreeItem *item = new WhPlacesTreeItem;
+    item->Alias = sl.at(1);
+    item->Description = sl.at(3);
+    item->IdAlias = sl.at(2).toInt();
+    item->Name = sl.at(4);
+    item->WhNum = sl.at(6).toInt();
+    item->WhPlaceTypeID = sl.at(7).toInt();
+    item->WhID = sl.at(5).toInt();
+    SetData(sl.at(0).toInt(), item);
 }
 
 void WhPlacesTreeModel::ClearModel()
 {
-    beginResetModel();
-    while (rowCount() > 0)
-        removeRows(0, 1);
-    endResetModel();
-
+    while (!Items.isEmpty())
+    {
+        int key = Items.keys().at(0);
+        WhPlacesTreeItem *item = Items.value(key);
+        delete item;
+        Items.remove(key);
+    }
 }
 
-void WhPlacesTreeModel::Save(QString table, int index)
+int WhPlacesTreeModel::Save()
 {
     // аналогично Load пробегаем по всем ветвям
     // ищем сначала элемент с такими
+    return 0;
+}
+
+QList<int> WhPlacesTreeModel::Children(int Index)
+{
+    QList<int> sl;
+    for (int i=0; i<Items.size(); i++)
+    {
+        int tmpi = Items.keys.at(i);
+        if (Items.value(tmpi)->IdAlias == Index)
+            sl << tmpi;
+    }
+    return sl;
 }

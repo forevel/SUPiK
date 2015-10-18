@@ -13,6 +13,7 @@ public:
 
     struct WhPlacesTreeItem
     {
+        int Id; // ИД размещения, копия key
         QString Alias; // наименование размещения
         int IdAlias; // ссылка на корневой элемент размещения (-1 -> нет размещения)
         QString Name; // обозначение размещения в документах
@@ -24,18 +25,21 @@ public:
 
     WhPlacesTreeItem *Data(int Index);
     void SetData(int Index, WhPlacesTreeItem *Value);
-    int Index(QString Alias);
 //    int InsertChild(int ParentIndex, WhPlacesTreeItem Value);
     int Load (int Index);
     int Save ();
     void ClearModel();
     QList<int> Children(int Index); // выдать индексы всех дочерних элементов для данного элемента
+    int Find(quint8 mask, QStringList cmpvl); // инициировать поиск элемента, у которого элементы с номерами по маске mask равны элементам списка cmpvl. Mask начинается с элемента Alias (не с Id!)
+    WhPlacesTreeItem *Next(); // продолжить поиск после Find (или перебрать все элементы с начала)
 
 private:
     QMap<int,WhPlacesTreeItem *> Items;
     int vlsize;
-    QStringList catlist;
+    quint8 mask;
+    QStringList catlist, CmpValues;
     QList<QStringList> vl;
+    int CurIndex; // индекс элемента, с которого надо продолжать поиск в функции Next
 
     int Build (int Index);
     void AddItem (QStringList sl);

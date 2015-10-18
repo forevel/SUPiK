@@ -6,7 +6,7 @@
 
 WhPlacesTreeModel::WhPlacesTreeModel()
 {
-
+    Items[0] = NULL;
 }
 
 WhPlacesTreeModel::~WhPlacesTreeModel()
@@ -30,16 +30,7 @@ void WhPlacesTreeModel::SetData(int Index, WhPlacesTreeItem *Value)
         delete item;
     }
     Items[Index] = Value;
-}
-
-int WhPlacesTreeModel::Index(QString Alias)
-{
-    for (int i=0; i<Items.size(); i++)
-    {
-        if (Items.value(Items.keys().at(i))->Alias == Alias)
-            return i;
-    }
-    return -1;
+    Items[Index]->Id = Index;
 }
 
 /*int WhPlacesTreeModel::InsertChild(int ParentIndex, WhPlacesTreeItem Value)
@@ -140,9 +131,79 @@ QList<int> WhPlacesTreeModel::Children(int Index)
     QList<int> sl;
     for (int i=0; i<Items.size(); i++)
     {
-        int tmpi = Items.keys.at(i);
+        int tmpi = Items.keys().at(i);
         if (Items.value(tmpi)->IdAlias == Index)
             sl << tmpi;
     }
     return sl;
+}
+
+int WhPlacesTreeModel::Find(quint8 mask, QStringList cmpvl)
+{
+    if ((cmpvl.isEmpty()) || !(mask & 0x7F))
+        return 1;
+    this->mask = mask & 0x7F;
+    CmpValues = cmpvl;
+    CurIndex = 0;
+    return 0;
+}
+
+WhPlacesTreeModel::WhPlacesTreeItem *WhPlacesTreeModel::Next()
+{
+    while (CurIndex < Items.size())
+    {
+        int tmpi = Items.keys().at(CurIndex);
+        CurIndex++;
+        int cmpvlindex = 0;
+        if (mask & 0x01)
+        {
+            if (Items.value(tmpi)->Alias == CmpValues.at(cmpvlindex));
+            else
+                continue;
+            cmpvlindex++;
+        }
+        if (mask & 0x02)
+        {
+            if (Items.value(tmpi)->IdAlias == CmpValues.at(cmpvlindex).toInt());
+            else
+                continue;
+            cmpvlindex++;
+        }
+        if (mask & 0x04)
+        {
+            if (Items.value(tmpi)->Name == CmpValues.at(cmpvlindex));
+            else
+                continue;
+            cmpvlindex++;
+        }
+        if (mask & 0x08)
+        {
+            if (Items.value(tmpi)->Description == CmpValues.at(cmpvlindex));
+            else
+                continue;
+            cmpvlindex++;
+        }
+        if (mask & 0x10)
+        {
+            if (Items.value(tmpi)->WhID == CmpValues.at(cmpvlindex).toInt());
+            else
+                continue;
+            cmpvlindex++;
+        }
+        if (mask & 0x20)
+        {
+            if (Items.value(tmpi)->WhNum == CmpValues.at(cmpvlindex).toInt());
+            else
+                continue;
+            cmpvlindex++;
+        }
+        if (mask & 0x40)
+        {
+            if (Items.value(tmpi)->WhPlaceTypeID == CmpValues.at(cmpvlindex).toInt());
+            else
+                continue;
+        }
+        return Items.value(tmpi);
+    }
+    return NULL;
 }

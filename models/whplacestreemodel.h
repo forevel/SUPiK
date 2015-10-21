@@ -5,6 +5,8 @@
 
 #define WHITEMSIZE  8
 
+#define WHPLACES    "Склады размещение_полн"
+
 class WhPlacesTreeModel
 {
 public:
@@ -25,7 +27,7 @@ public:
 
     WhPlacesTreeItem *Data(int Index);
     void SetData(int Index, WhPlacesTreeItem *Value);
-//    int InsertChild(int ParentIndex, WhPlacesTreeItem Value);
+    int Insert(WhPlacesTreeItem *Value);
     int Load (int Index);
     int Save ();
     void ClearModel();

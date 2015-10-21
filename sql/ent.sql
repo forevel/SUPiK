@@ -798,7 +798,7 @@ CREATE TABLE `whplaces` (
 
 LOCK TABLES `whplaces` WRITE;
 /*!40000 ALTER TABLE `whplaces` DISABLE KEYS */;
-INSERT INTO `whplaces` VALUES (1,'Склад 203','0','2001','2015-10-05 21:53:33',0,'Склад в 203-й комнате','A1','2001',NULL,NULL);
+INSERT INTO `whplaces` VALUES (1,'Комната 203','0','2001','2015-10-11 22:31:35',0,'Склад в 203-й комнате','A1','2001','',''),(2,'Цех основной','0','2001','2015-10-11 22:31:03',0,'','','4','',''),(3,'Цех 6','0','2001','2015-10-11 22:31:57',0,'','','3','','');
 /*!40000 ALTER TABLE `whplaces` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -872,4 +872,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-10-09 20:06:48
+-- Dump completed on 2015-10-21 23:38:18

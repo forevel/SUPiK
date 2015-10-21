@@ -33,18 +33,25 @@ void WhPlacesTreeModel::SetData(int Index, WhPlacesTreeItem *Value)
     Items[Index]->Id = Index;
 }
 
-/*int WhPlacesTreeModel::InsertChild(int ParentIndex, WhPlacesTreeItem Value)
-{
+// добавляем элемент с новым ИД в модель
 
+int WhPlacesTreeModel::Insert(WhPlacesTreeItem *Value)
+{
+    // сначала ищем первый свободный ИД в таблице Склады размещение
+    QString NewID = tfl.insert(WHPLACES);
+    if (tfl.result)
+        return 1;
+    // затем добавляем элемент
+    SetData(NewID.toInt(), Value);
 }
-*/
+
 // процедура инициализации модели данными из таблицы table в tablefields и построение дерева по полям alias и idalias
 
 int WhPlacesTreeModel::Load(int Index)
 {
     ClearModel();
     QStringList fl = QStringList() << "table" << "tablefields";
-    vl = sqlc.GetMoreValuesFromTableByField(sqlc.GetDB("sup"), "tablefields", fl, "tablename", "Склады размещение_полн", "fieldsorder", true);
+    vl = sqlc.GetMoreValuesFromTableByField(sqlc.GetDB("sup"), "tablefields", fl, "tablename", WHPLACES, "fieldsorder", true);
     if (sqlc.result)
         return 1;
     if (vl.at(2).at(1) != "idalias")

@@ -210,6 +210,12 @@ void Wh_Editor::UpdatePlace()
     int DataIndex = lbl->getData().toInt(); // если DataIndex == -1, размещения в данном месте нет, иначе DataIndex - то же самое, что и PlaceIndex
     if (DataIndex != -1) // если размещение имеется
         PushNewPlaceOnStacks(id, PlaceIndex);
+    else
+    {
+        IDs.push(-1);
+        Columns.push(-1);
+        Rows.push(-1);
+    }
     SetChildWidget(lbl);
 }
 
@@ -308,7 +314,7 @@ void Wh_Editor::SetChildWidget(s_tqLabel *celllbl)
 
 void Wh_Editor::UpdatePicture(QVariant value)
 {
-    int row, column;
+/*    int row, column;
 
     // вытащим номера столбца и строки из наименования источника сигнала
     QStringList CellNames = sender()->objectName().split(".");
@@ -320,33 +326,38 @@ void Wh_Editor::UpdatePicture(QVariant value)
     row = CellNames.at(1).toInt();
     column = CellNames.at(2).toInt();
     if ((row != -1) && (column != -1))
-    {
-        QStringList PlaceTank = tfl.valuesbyfield("Склады типы размещения_полн", QStringList("Тип размещения"), "Наименование", value.toString());
-        if (tfl.result)
-        {
-            WHEDWARN;
-            return;
-        }
-        QStringList PlacePicture = tfl.valuesbyfield("Склады ёмкости размещения_полн", QStringList("Картинка"), "ИД", PlaceTank.at(0));
-        if (tfl.result)
-        {
-            WHEDWARN;
-            return;
-        }
-        s_tqLabel *lbl = this->findChild<s_tqLabel *>(sender()->objectName()); // имя ChooseWidget-а и имя строки совпадают
-        if (lbl == 0)
-        {
-            WHEDDBG;
-            return;
-        }
-        lbl->setPixmap(QPixmap(":/res/"+PlacePicture.at(0)+".png"));
-        UpdateChildWidget();
-    }
-    else
+    {*/
+    QStringList fl = QStringList() << "Тип размещения" << "Кол-во этажей" << "Кол-во рядов";
+    QStringList PlaceTank = tfl.valuesbyfield("Склады типы размещения_полн", fl, "Наименование", value.toString());
+    if (tfl.result)
     {
         WHEDWARN;
         return;
     }
+    QStringList PlacePicture = tfl.valuesbyfield("Склады ёмкости размещения_полн", QStringList("Картинка"), "ИД", PlaceTank.at(0));
+    if (tfl.result)
+    {
+        WHEDWARN;
+        return;
+    }
+    s_tqLabel *lbl = this->findChild<s_tqLabel *>(sender()->objectName()); // имя ChooseWidget-а и имя строки совпадают
+    if (lbl == 0)
+    {
+        WHEDDBG;
+        return;
+    }
+    // добавляем строку с новым ИД в модель
+    WhPlacesTreeModel::WhPlacesTreeItem *item = new WhPlacesTreeModel::WhPlacesTreeItem;
+    item->WhPlaceTypeID = PlaceTank.at(0).toInt();
+    item->
+    lbl->setPixmap(QPixmap(":/res/"+PlacePicture.at(0)+".png"));
+    UpdateChildWidget();
+/*    }
+    else
+    {
+        WHEDWARN;
+        return;
+    } */
 }
 
 void Wh_Editor::UpdateChildWidget()

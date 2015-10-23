@@ -33,19 +33,33 @@ void WhPlacesTreeModel::SetData(int Index, WhPlacesTreeItem *Value)
     Items[Index]->Id = Index;
 }
 
+void WhPlacesTreeModel::Update(int Index, WhPlacesTreeItem *Value)
+{
+    if (Items.keys().contains(Index))
+    {
+        Items[Index] = Value;
+        Items[Index]->Id = Index;
+    }
+    else
+        SetData(Index, Value);
+}
+
 // добавляем элемент с новым ИД в модель
 
 int WhPlacesTreeModel::Insert(WhPlacesTreeItem *Value)
 {
     // сначала ищем первый свободный ИД в таблице Склады размещение
-    QString NewID = tfl.insert(WHPLACES);
+    QString NewID = tfl.NewID(WHPLACES);
     if (tfl.result)
-        return 1;
+        return -1;
     // затем добавляем элемент
-    SetData(NewID.toInt(), Value);
+    int tmpi = NewID.toInt();
+    SetData(tmpi, Value);
+    return tmpi;
 }
 
 // процедура инициализации модели данными из таблицы table в tablefields и построение дерева по полям alias и idalias
+// index - ИД записи по таблице whplaces
 
 int WhPlacesTreeModel::Load(int Index)
 {
@@ -58,8 +72,8 @@ int WhPlacesTreeModel::Load(int Index)
         return 1;
     if (vl.at(1).at(1) != "alias")
         return 1;
-    catlist = vl.at(2).at(0).split("."); // catlist - таблица, из которой брать категории
-    vlsize = vl.at(1).size();
+    catlist = vl.at(0).at(0).split("."); // catlist - таблица, из которой брать категории
+    vlsize = vl.size();
     int res = Build(Index);
     if (res)
         return 1;
@@ -78,8 +92,9 @@ int WhPlacesTreeModel::Build(int Index)
     QSqlQuery get_child_from_db1 (sqlc.GetDB(catlist.at(0)));
     tmpString = "SELECT ";
     for (int i=0; i<vlsize; i++)
-        tmpString += "`" + vl.at(1).at(i) + "`,";
-    tmpString += "` FROM `"+catlist.at(1)+"` WHERE `idalias`=\""+Index+"\" AND `deleted`=0 ORDER BY `id"+catlist.at(1)+"` ASC;";
+        tmpString += "`" + vl.at(i).at(1) + "`,";
+    tmpString.chop(1);
+    tmpString += " FROM `"+catlist.at(1)+"` WHERE `id"+catlist.at(1)+"`=\""+QString::number(Index)+"\" AND `deleted`=0 ORDER BY `id"+catlist.at(1)+"` ASC;";
     get_child_from_db1.exec(tmpString);
     // строим дерево в модели model
     while (get_child_from_db1.next())
@@ -112,6 +127,7 @@ void WhPlacesTreeModel::AddItem(QStringList sl)
     item->WhNum = sl.at(6).toInt();
     item->WhPlaceTypeID = sl.at(7).toInt();
     item->WhID = sl.at(5).toInt();
+    item->UpdIns = WHP_UNCHANGED;
     SetData(sl.at(0).toInt(), item);
 }
 
@@ -147,9 +163,9 @@ QList<int> WhPlacesTreeModel::Children(int Index)
 
 int WhPlacesTreeModel::Find(quint8 mask, QStringList cmpvl)
 {
-    if ((cmpvl.isEmpty()) || !(mask & 0x7F))
+    if ((cmpvl.isEmpty()) || !(mask & 0xFF))
         return 1;
-    this->mask = mask & 0x7F;
+    this->mask = mask & 0xFF;
     CmpValues = cmpvl;
     CurIndex = 0;
     return 0;
@@ -207,6 +223,12 @@ WhPlacesTreeModel::WhPlacesTreeItem *WhPlacesTreeModel::Next()
         if (mask & 0x40)
         {
             if (Items.value(tmpi)->WhPlaceTypeID == CmpValues.at(cmpvlindex).toInt());
+            else
+                continue;
+        }
+        if (mask & 0x80)
+        {
+            if (Items.value(tmpi)->UpdIns == CmpValues.at(cmpvlindex).toInt());
             else
                 continue;
         }

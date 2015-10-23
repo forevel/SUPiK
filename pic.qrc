@@ -58,5 +58,6 @@
         <file>res/yacheyka.png</file>
         <file>res/oblachko.png</file>
         <file>res/EmptyCell.png</file>
+        <file>res/back.png</file>
     </qresource>
 </RCC>

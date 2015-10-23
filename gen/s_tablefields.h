@@ -19,6 +19,7 @@ public:
     QStringList idtovl (QString links); // взять все значения по ссылке в зависимости от типа
     void idtois (QString tble, QStringList header, QStringList values);
     QString insert(QString tble);
+    QString NewID(QString tble);
     void remove(QString tble, QString id); // "удаление" элемента из таблицы
     void Delete(QString tble, QString id); // реальное удаление из таблицы
     QStringList tablefields (QString tble, QString header);

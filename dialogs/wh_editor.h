@@ -27,27 +27,36 @@ signals:
 
 private:
     QStack<int> IDs;
-    QStack<int> Columns;
-    QStack<int> Rows;
+    int Wh;
     WhPlacesTreeModel *WhModel;
+    int CurID;
+    struct IDProperties
+    {
+        QString Picture;
+        QString ChoosePlaceString;
+        int PlaceType;
+        QString PlacePrefix;
+        int Rows;
+        int Columns;
+    };
+    IDProperties CurIDProperties;
 
     void SetupUI();
-    bool UpdatePlacePicture(s_tqLabel *lbl); // обновление картинки в выбранной позиции. Возвращает false, если картинка "пусто" и нет такого размещения
-    void SetCells(QVBoxLayout *lyout);
-    void SetRootWidget();
-    void SetChildWidget(s_tqLabel *celllbl);
-    void UpdateChildWidget();
-    void PushNewPlaceOnStacks(int ID, int Index); // ID - ИД размещения по таблице whplaces, Index - номер размещения whnum по той же таблице
-    void CheckIndexes();
+    void SetCells(QWidget *w);
+    void BuildWorkspace(int ID, bool IsWarehouse); // отобразить рабочее поле (размещения внутри размещения с данным ID). IsWarehouse - признак "корня"
+    void UpdatePlace();
+    void Disband(int ID); // расформирование единицы размещения
+    QStringList NameAndPicture(int ID); // вытащить картинку по ИД размещения
+    void ClearLayout (QLayout *lyout);
 
 private slots:
-    void AddNewWh();
-    void DeleteWh();
-    void UpdatePlace();
-    void UpdatePicture(QVariant value);
+    void AddNewPlace();
+    void ChangePlace(QVariant PlaceName);
+    void GoToPlace();
+    void GoBack();
     void WriteAndClose();
-    void ModifyWh(QString);
-    void PopIDs();
+    void CancelAndClose();
+    void ChangeWh(QString);
 
 protected:
     void paintEvent(QPaintEvent *);

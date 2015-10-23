@@ -527,6 +527,31 @@ QString s_tablefields::insert(QString tble)
     return newid;
 }
 
+// newid - найти первый свободный ИД в таблице
+// возвращает индекс новой строки
+
+QString s_tablefields::NewID(QString tble)
+{
+    QStringList cmpfl = QStringList() << "tablename" << "keyfield";
+    QStringList cmpvl = QStringList() << tble << "v";
+    QString keydbtble = sqlc.GetValueFromTableByFields(sqlc.GetDB("sup"), "tablefields", "table", cmpfl, cmpvl);
+    if (sqlc.result)
+    {
+        result = 1;
+        TFWARN;
+        return QString();
+    }
+    int newid = sqlc.GetNextFreeIndex(sqlc.GetDB(keydbtble.split(".").at(0)), keydbtble.split(".").at(1));
+    if (sqlc.result)
+    {
+        result = 1;
+        TFWARN;
+        return QString();
+    }
+    result = 0;
+    return QString::number(newid);
+}
+
 // remove - "удаление" записи с индексом id из таблицы tble
 // важно: здесь не удаляются ссылки на данную запись, которая будет удалена, проверку "дохлых" ссылок на записи, у которых deleted=1, необходимо
 // проводить и исправлять при старте СУПиКа или при "обновлении проблем"

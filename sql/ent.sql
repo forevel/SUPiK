@@ -798,7 +798,7 @@ CREATE TABLE `whplaces` (
 
 LOCK TABLES `whplaces` WRITE;
 /*!40000 ALTER TABLE `whplaces` DISABLE KEYS */;
-INSERT INTO `whplaces` VALUES (1,'Комната 203','0','2001','2015-10-11 22:31:35',0,'Склад в 203-й комнате','A1','2001','',''),(2,'Цех основной','0','2001','2015-10-11 22:31:03',0,'','','4','',''),(3,'Цех 6','0','2001','2015-10-11 22:31:57',0,'','','3','','');
+INSERT INTO `whplaces` VALUES (1,'Комната 203','0','2001','2015-10-11 22:31:35',0,'Склад в 203-й комнате','A1','2001','','4'),(2,'Цех основной','0','2001','2015-10-11 22:31:03',0,'','','4','','4'),(3,'Цех 6','0','2001','2015-10-11 22:31:57',0,'','','3','','4');
 /*!40000 ALTER TABLE `whplaces` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -859,7 +859,7 @@ CREATE TABLE `whplacetypes` (
 
 LOCK TABLES `whplacetypes` WRITE;
 /*!40000 ALTER TABLE `whplacetypes` DISABLE KEYS */;
-INSERT INTO `whplacetypes` VALUES (1,'Шкаф офисный','5','1','1','2001','2015-10-05 19:40:43',1),(2,'Шкаф_1х5','5','1','1','2001','2015-10-05 21:29:01',0),(3,'Пусто','0','0','7','2001','2015-10-09 15:26:49',0);
+INSERT INTO `whplacetypes` VALUES (1,'Шкаф офисный','5','1','1','2001','2015-10-05 19:40:43',1),(2,'Шкаф_1х5','5','1','1','2001','2015-10-05 21:29:01',0),(3,'Пусто','0','0','0','2001','2015-10-09 15:26:49',0),(4,'Склад','2','6','0',NULL,NULL,0);
 /*!40000 ALTER TABLE `whplacetypes` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -872,4 +872,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-10-21 23:38:18
+-- Dump completed on 2015-10-23 18:56:15

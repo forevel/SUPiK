@@ -1,30 +1,52 @@
-#ifndef S_ERMODEL_H
-#define S_ERMODEL_H
+#ifndef ERRORPROTOCOLWIDGET_H
+#define ERRORPROTOCOLWIDGET_H
 
-#define MAX_MSG     1000
+#include <QWidget>
 
 #include <QAbstractTableModel>
+#include <QWidget>
 #include "../gen/publicclass.h"
 
-class s_ermodel : public QAbstractTableModel
+#define ERPROTCLR   "rgba(248,214,255,255)"
+#define MAX_MSG     1000
+
+class ErrorProtocolModel : public QAbstractTableModel
 {
     Q_OBJECT
 public:
-    explicit s_ermodel(QObject *parent = 0);
+    explicit ErrorProtocolModel(QObject *parent = 0);
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
     bool setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role);
     QVariant data (const QModelIndex &index, int role) const;
     Qt::ItemFlags flags(const QModelIndex &index) const;
     int rowCount(const QModelIndex &index = QModelIndex()) const;
     int columnCount(const QModelIndex &index = QModelIndex()) const;
-
-    void AddRow(PublicClass::ermsg msg);
+    void AddRow(PublicClass::ermsg ermsg);
 
 private:
     QList<QStringList> erdata;
     QList<PublicClass::ermsgtype> ertypedata;
     QStringList hdr;
     int MsgCount;
+
+private slots:
 };
 
-#endif // S_ERMODEL_H
+class ErrorProtocolWidget : public QWidget
+{
+    Q_OBJECT
+public:
+    explicit ErrorProtocolWidget(QWidget *parent = 0);
+    ~ErrorProtocolWidget();
+
+    void AddRowToProt(PublicClass::ermsg ermsg);
+signals:
+
+public slots:
+
+private slots:
+
+protected:
+};
+
+#endif // ERRORPROTOCOLWIDGET_H

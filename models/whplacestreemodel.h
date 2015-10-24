@@ -34,6 +34,7 @@ public:
     WhPlacesTreeItem *Data(int Index);
     void SetData(int Index, WhPlacesTreeItem *Value);
     int Insert(WhPlacesTreeItem *Value);
+    int DeleteNew();
     int Load (int Index);
     int Save ();
     void Update(int Index, WhPlacesTreeItem *Value);

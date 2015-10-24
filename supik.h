@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 #include <QPaintEvent>
+#include <QCloseEvent>
+#include <QResizeEvent>
 #include "gen/publicclass.h"
 
 #define SUPIKMENUBAR_BG "transparent"
@@ -26,6 +28,9 @@ signals:
 public slots:
 
 private:
+    bool ERHide, ERTimerIsOn;
+    QTimer *ERTimer;
+    QRect ERGeometry;
     int WarningActionIndex;
     QHash <QString, void (supik::*)()> pf;
     void SetSupikMenuBar();
@@ -51,8 +56,7 @@ private:
     void Quarantine();
     void Dummy();
     void SysDirectories();
-
-    void showEvent(QShowEvent *event);
+    void ShowOrHideSlideER();
 
 private slots:
     void ExecuteSub();
@@ -60,6 +64,14 @@ private slots:
     void updateprobsnumberintabtext();
     void periodic1s();
     void periodicxm();
+    void MouseMove();
+    void UpdateErrorProtocol();
+    void HideErrorProtocol();
+
+protected:
+    void showEvent(QShowEvent *event);
+    //void closeEvent(QCloseEvent *e);
+    void resizeEvent(QResizeEvent *e);
 };
 
 #endif // SUPIK_H

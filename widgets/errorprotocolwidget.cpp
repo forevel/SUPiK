@@ -1,19 +1,84 @@
-#include "s_ermodel.h"
+#include <QVBoxLayout>
+#include <QHeaderView>
+#include "s_tqtableview.h"
+#include "s_tqlabel.h"
+#include "errorprotocolwidget.h"
 
-s_ermodel::s_ermodel(QObject *parent) :
-    QAbstractTableModel(parent)
+ErrorProtocolWidget::ErrorProtocolWidget(QWidget *parent) : QWidget(parent)
+{
+    QVBoxLayout *lyout = new QVBoxLayout;
+    QWidget *w = new QWidget;
+    QString ErrWss = "QWidget {background-color: "+QString(ERPROTCLR)+";}";
+    w->setStyleSheet(ErrWss);
+    s_tqTableView *tv = new s_tqTableView;
+    ErrorProtocolModel *erm = new ErrorProtocolModel;
+    erm->setHeaderData(0, Qt::Horizontal, "Номер",Qt::EditRole);
+    erm->setHeaderData(1, Qt::Horizontal, "Дата/время",Qt::EditRole);
+    erm->setHeaderData(2, Qt::Horizontal, "Номер сообщения",Qt::EditRole);
+    erm->setHeaderData(3, Qt::Horizontal, "Тип сообщения",Qt::EditRole);
+    erm->setHeaderData(4, Qt::Horizontal, "Сообщение",Qt::EditRole);
+    tv->setModel(erm);
+    tv->resizeColumnsToContents();
+    connect(erm,SIGNAL(dataChanged(QModelIndex,QModelIndex)),tv,SLOT(resizeColumnsToContents()));
+    tv->horizontalHeader()->setStretchLastSection(true);
+    tv->horizontalHeader()->setEnabled(false);
+    tv->verticalHeader()->setVisible(false);
+    tv->verticalHeader()->setDefaultSectionSize(tv->verticalHeader()->fontMetrics().height()+2);
+    tv->setGridStyle(Qt::SolidLine);
+    tv->setShowGrid(true);
+    tv->setObjectName("ertv");
+//    tv->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Preferred);
+    QFrame* line = new QFrame;
+    line->setFrameShape(QFrame::HLine);
+    line->setFrameShadow(QFrame::Sunken);
+    QHBoxLayout *upperLayout = new QHBoxLayout;
+    upperLayout->addWidget(line,2);
+    s_tqLabel *lbl = new s_tqLabel("Протокол работы СУПиК");
+    lbl->setEnabled(false);
+    upperLayout->addWidget(lbl,0);
+    upperLayout->setAlignment(lbl,Qt::AlignCenter);
+    line = new QFrame;
+    line->setFrameShape(QFrame::HLine);
+    line->setFrameShadow(QFrame::Sunken);
+    upperLayout->addWidget(line,2);
+    lyout->addLayout(upperLayout,0);
+    lyout->addWidget(tv,5);
+    w->setLayout(lyout);
+    QVBoxLayout *l = new QVBoxLayout;
+    l->addWidget(w);
+    setLayout(l);
+}
+
+ErrorProtocolWidget::~ErrorProtocolWidget()
+{
+
+}
+
+void ErrorProtocolWidget::AddRowToProt(PublicClass::ermsg ermsg)
+{
+    s_tqTableView *tv = this->findChild<s_tqTableView *>("ertv");
+    if (tv == 0)
+    {
+        DBGMSG(PublicClass::ER_SUPIK,__LINE__);
+        return;
+    }
+    ErrorProtocolModel *erm = static_cast<ErrorProtocolModel *>(tv->model());
+    erm->AddRow(ermsg);
+}
+
+ErrorProtocolModel::ErrorProtocolModel(QObject *parent) : QAbstractTableModel (parent)
 {
     MsgCount = 1;
 }
 
-QVariant s_ermodel::headerData(int section, Qt::Orientation orientation, int role) const
+QVariant ErrorProtocolModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if ((orientation == Qt::Horizontal) && (role == Qt::DisplayRole || role == Qt::EditRole) && (section < hdr.size()))
         return hdr.at(section);
     return QVariant();
 }
 
-bool s_ermodel::setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role)
+bool ErrorProtocolModel::setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role)
 {
     if (orientation == Qt::Horizontal)
     {
@@ -27,7 +92,7 @@ bool s_ermodel::setHeaderData(int section, Qt::Orientation orientation, const QV
     return QAbstractTableModel::setHeaderData(section, orientation, value, role);
 }
 
-QVariant s_ermodel::data(const QModelIndex &index, int role) const
+QVariant ErrorProtocolModel::data(const QModelIndex &index, int role) const
 {
     if (index.isValid())
     {
@@ -79,48 +144,30 @@ QVariant s_ermodel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
-Qt::ItemFlags s_ermodel::flags(const QModelIndex &index) const
+Qt::ItemFlags ErrorProtocolModel::flags(const QModelIndex &index) const
 {
     return QAbstractItemModel::flags(index) | Qt::ItemIsEnabled | Qt::ItemIsSelectable;
 }
 
-/*bool s_ermodel::removeRows(int position, int rows, const QModelIndex &index)
-{
-    beginRemoveRows(index, position, position + rows - 1);
-    if ((position+rows) > maindata.size())
-        return false;
-    for (int i = 0; i < rows; i++)
-    {
-        s_ncitem *item = maindata.at(position);
-        maindata.removeAt(position);
-        delete item;
-    }
-    if (rcount)
-        rcount--;
-    endRemoveRows();
-    return true;
-}*/
-
-int s_ermodel::rowCount(const QModelIndex &index) const
+int ErrorProtocolModel::rowCount(const QModelIndex &index) const
 {
     Q_UNUSED(index);
     return erdata.size();
 }
 
-int s_ermodel::columnCount(const QModelIndex &index) const
+int ErrorProtocolModel::columnCount(const QModelIndex &index) const
 {
     Q_UNUSED(index);
-    return 5;
+    return 4;
 }
-// ########################## СВОИ МЕТОДЫ ########################
 
-void s_ermodel::AddRow(PublicClass::ermsg msg)
+void ErrorProtocolModel::AddRow(PublicClass::ermsg msg)
 {
     beginResetModel();
     if (rowCount()<MAX_MSG)
         insertRows(0,1,QModelIndex());
-    QStringList tmpsl;
-    tmpsl << "#"+QString::number(MsgCount) << msg.DateTime << "0x"+QString::number(msg.ernum,16) << "0x"+QString::number(msg.ersubnum,16) << msg.msg;
+    QStringList tmpsl = QStringList() << "#"+QString::number(MsgCount) << "0x"+QString::number(msg.ernum,16) << \
+             "0x"+QString::number(msg.ersubnum,16) << msg.msg;
     MsgCount++;
     erdata.insert(0,tmpsl);
     if (erdata.size() >= MAX_MSG)

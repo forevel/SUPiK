@@ -19,6 +19,7 @@
 #include <QPaintEvent>
 #include <QStringListModel>
 #include <QStandardItemModel>
+#include <QScrollArea>
 #include <QMessageBox>
 
 Wh_Editor::Wh_Editor(QWidget *parent) : QDialog(parent)
@@ -104,9 +105,13 @@ void Wh_Editor::WriteAndClose()
 void Wh_Editor::CancelAndClose()
 {
     // удалим новосозданные элементы из таблицы
-    WhModel->Find(0x80, WHP_CREATENEW);
-
+    if (WhModel->DeleteNew())
+    {
+        WHEDWARN;
+        return;
+    }
     emit CloseAllWidgets();
+    this->close();
 }
 
 void Wh_Editor::AddNewPlace()
@@ -188,7 +193,7 @@ void Wh_Editor::BuildWorkspace(int ID, bool IsWarehouse)
     PlaceNameString.insert(0, ":"); // ":" - обозначение "корня"
     s_tqLabel *lbl = new s_tqLabel(PlaceNameString);
     vlyout->addWidget(lbl);
-    QHBoxLayout *hlyout;
+    QHBoxLayout *hlyout = new QHBoxLayout;
     // если текущий ID относится не к корневому месту размещения (складу), то рисуем дополнительные виджеты выбора типа места размещения
     if (!IsWarehouse)
     {
@@ -207,14 +212,14 @@ void Wh_Editor::BuildWorkspace(int ID, bool IsWarehouse)
         pb->setToolTip("Создать новый тип размещения");
         hlyout->addWidget(pb);
         vlyout->addLayout(hlyout);
-        s_tqLabel *PlacePic = new s_tqLabel;
-        PlacePic->setObjectName("placepic");
-        PlacePic->setPixmap(QPixmap(":/res/EmptyCell.png"));
-        vlyout->addWidget(PlacePic);
+        hlyout = new QHBoxLayout;
     }
+    QScrollArea *area = new QScrollArea;
     s_tqWidget *CellW = new s_tqWidget;
-    CellW->setObjectName("cellwidget");
-    vlyout->addWidget(CellW); // подготовка виджета для отображения мест размещения
+    area->setWidget(CellW);
+    area->setWidgetResizable(true);
+    CellW->setObjectName("cellwidget"); // подготовка виджета для отображения мест размещения
+    vlyout->addWidget(area, 1);
     hlyout = new QHBoxLayout;
     s_tqPushButton *pb = new s_tqPushButton("Назад");
     pb->setIcon(QIcon(":/res/back.png"));
@@ -342,15 +347,16 @@ void Wh_Editor::SetCells(QWidget *w)
         {
             QVBoxLayout *v2lyout = new QVBoxLayout;
             s_tqLabel *celllbl = new s_tqLabel;
+            celllbl->setMaximumHeight(50);
             int index = (ChildrenIndex < ChildrenSize) ? Children.at(ChildrenIndex) : 0;
             ChildrenIndex++;
             celllbl->setObjectName(QString::number(index));
             connect(celllbl,SIGNAL(clicked()),this,SLOT(GoToPlace()));
             v2lyout->addWidget(celllbl);
             v2lyout->setAlignment(celllbl, Qt::AlignCenter);
-            s_tqLabel *lbl = new s_tqLabel;
-            v2lyout->addWidget(lbl);
-            v2lyout->setAlignment(lbl,Qt::AlignCenter);
+            s_tqLineEdit *le = new s_tqLineEdit;
+            v2lyout->addWidget(le);
+            v2lyout->setAlignment(le,Qt::AlignCenter);
             hlyout->addLayout(v2lyout);
             if (index != 0)
             {
@@ -358,22 +364,24 @@ void Wh_Editor::SetCells(QWidget *w)
                 if (sl.size() > 1)
                 {
                     celllbl->setPixmap(QPixmap(sl.at(1)));
-                    lbl->setText(sl.at(0));
+                    le->setText(sl.at(0));
                 }
                 else
                 {
                     celllbl->setPixmap(QPixmap(":/res/EmptyCell.png"));
-                    lbl->setText("");
+                    le->setText(QString::number(i+10, 36)+QString::number(j+1));
                 }
             }
             else
             {
                 celllbl->setPixmap(QPixmap(":/res/EmptyCell.png"));
-                lbl->setText("");
+                le->setText(QString::number(i+10, 36).toUpper()+QString::number(j+1).toUpper());
             }
         }
+        hlyout->addStretch(1);
         lyout->addLayout(hlyout);
     }
+    lyout->addSpacing(50);
     w->setLayout(lyout);
 }
 
@@ -399,7 +407,7 @@ void Wh_Editor::GoToPlace()
             WHEDWARN;
             return;
         }
-        sender()->setObjectName(QString::number(ID));
+//        sender()->setObjectName(QString::number(ID));
     }
     IDs.push(ID);
     BuildWorkspace(ID, false);

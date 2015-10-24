@@ -49,13 +49,33 @@ void WhPlacesTreeModel::Update(int Index, WhPlacesTreeItem *Value)
 int WhPlacesTreeModel::Insert(WhPlacesTreeItem *Value)
 {
     // сначала ищем первый свободный ИД в таблице Склады размещение
-    QString NewID = tfl.NewID(WHPLACES);
+    QString NewID = tfl.insert(WHPLACES);
     if (tfl.result)
         return -1;
     // затем добавляем элемент
     int tmpi = NewID.toInt();
     SetData(tmpi, Value);
     return tmpi;
+}
+
+int WhPlacesTreeModel::DeleteNew()
+{
+    WhPlacesTreeItem *item;
+    Find(0x80, QStringList(QString::number(WHP_CREATENEW)));
+    while ((item = Next()) != NULL)
+    {
+        tfl.Delete(WHPLACES, QString::number(item->Id));
+        if (tfl.result)
+            return 1;
+    }
+    Find(0x80, QStringList(QString::number(WHP_UPDATENEW)));
+    while ((item = Next()) != NULL)
+    {
+        tfl.Delete(WHPLACES, QString::number(item->Id));
+        if (tfl.result)
+            return 1;
+    }
+    return 0;
 }
 
 // процедура инициализации модели данными из таблицы table в tablefields и построение дерева по полям alias и idalias

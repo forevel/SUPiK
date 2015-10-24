@@ -828,7 +828,7 @@ CREATE TABLE `whplacetanks` (
 
 LOCK TABLES `whplacetanks` WRITE;
 /*!40000 ALTER TABLE `whplacetanks` DISABLE KEYS */;
-INSERT INTO `whplacetanks` VALUES (1,'Шкаф','shkaf','2001','2015-10-04 22:37:50',0,'0'),(2,'Ячейка','yacheyka','2001','2015-10-04 22:40:16',0,'1'),(3,'Пакет','packet','2001','2015-10-05 22:32:16',0,'3'),(4,'Стеллаж','stellazh','2001','2015-10-04 22:39:29',0,'0'),(5,'Коробка','korobka','2001','2015-10-04 22:39:40',0,'1'),(6,'Мешок','meshok','2001','2015-10-04 22:40:08',0,'2'),(7,'Место размещения','oblachko','2001','2015-10-05 22:32:43',0,'4');
+INSERT INTO `whplacetanks` VALUES (1,'Шкаф','shkaf','2001','2015-10-04 22:37:50',0,'0'),(2,'Ячейка','yacheyka','2001','2015-10-04 22:40:16',0,'1'),(3,'Пакет','packet','2001','2015-10-05 22:32:16',0,'3'),(4,'Стеллаж','stellazh','2001','2015-10-04 22:39:29',0,'0'),(5,'Коробка','korobka','2001','2015-10-04 22:39:40',0,'1'),(6,'Мешок','meshok','2001','2015-10-04 22:40:08',0,'2'),(7,'Место размещения','oblachko','2001','2015-10-05 22:32:43',0,'4'),(8,'Пусто','EmptyCell','2001',NULL,0,'4');
 /*!40000 ALTER TABLE `whplacetanks` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -859,7 +859,7 @@ CREATE TABLE `whplacetypes` (
 
 LOCK TABLES `whplacetypes` WRITE;
 /*!40000 ALTER TABLE `whplacetypes` DISABLE KEYS */;
-INSERT INTO `whplacetypes` VALUES (1,'Шкаф офисный','5','1','1','2001','2015-10-05 19:40:43',1),(2,'Шкаф_1х5','5','1','1','2001','2015-10-05 21:29:01',0),(3,'Пусто','0','0','0','2001','2015-10-09 15:26:49',0),(4,'Склад','2','6','0',NULL,NULL,0);
+INSERT INTO `whplacetypes` VALUES (1,'Шкаф офисный','5','1','1','2001','2015-10-05 19:40:43',1),(2,'Шкаф_1х5','5','1','1','2001','2015-10-05 21:29:01',0),(3,'Пусто','0','0','8','2001','2015-10-09 15:26:49',0),(4,'Склад','2','6','0',NULL,NULL,0);
 /*!40000 ALTER TABLE `whplacetypes` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -872,4 +872,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-10-23 18:56:15
+-- Dump completed on 2015-10-24 21:11:18

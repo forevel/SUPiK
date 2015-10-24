@@ -186,7 +186,9 @@ void Wh_Editor::BuildWorkspace(int ID, bool IsWarehouse)
             WHEDWARN;
             return;
         }
-        QString tmps = "\\" + item->Alias + " " + item->Name; // формируем имя места размещения как "alias name", например: "Мешок А5"
+        QString tmps = "\\" + item->Alias;
+        if (item->IdAlias != 0)
+            tmps += " " + item->Name; // формируем имя места размещения как "alias name", например: "Мешок А5"
         PlaceNameString.insert(0, tmps);
         ID = item->IdAlias;
     }
@@ -269,7 +271,7 @@ void Wh_Editor::UpdatePlace()
         return;
     }
     if (CurIDProperties.PlaceType == 0) // текущее размещение - склад (корневой элемент)
-        CurIDProperties.PlacePrefix = "Склад";
+        CurIDProperties.PlacePrefix = item->Alias;
     else
     {
         fl = QStringList() << "Наименование" << "Картинка";
@@ -288,7 +290,7 @@ void Wh_Editor::UpdatePlace()
             return;
         }
         cw->SetData(CurIDProperties.ChoosePlaceString);
-        // сначала в метке PlacePic отображаем картинку для места размещения
+/*        // сначала в метке PlacePic отображаем картинку для места размещения
         s_tqLabel *lbl = this->findChild<s_tqLabel *>("placepic");
         if (lbl != 0)
         {
@@ -300,10 +302,9 @@ void Wh_Editor::UpdatePlace()
             else
                 tmps = ":/res/EmptyCell.png";
             lbl->setPixmap(QPixmap(tmps));
-        }
+        } */
     }
-    if (item->IdAlias != 0)
-        item->Alias = CurIDProperties.PlacePrefix;
+    item->Alias = CurIDProperties.PlacePrefix;
     item->WhID = Wh;
 //    WhModel->Update(item->Id, item);
     // затем для данного curID отображаем места размещения
@@ -348,13 +349,14 @@ void Wh_Editor::SetCells(QWidget *w)
             QVBoxLayout *v2lyout = new QVBoxLayout;
             s_tqLabel *celllbl = new s_tqLabel;
             celllbl->setMaximumHeight(50);
-            int index = (ChildrenIndex < ChildrenSize) ? Children.at(ChildrenIndex) : 0;
+            int index = (ChildrenIndex < ChildrenSize) ? Children.at(ChildrenIndex) : (MAXPLACES+i*CurIDProperties.Columns+j);
             ChildrenIndex++;
             celllbl->setObjectName(QString::number(index));
             connect(celllbl,SIGNAL(clicked()),this,SLOT(GoToPlace()));
             v2lyout->addWidget(celllbl);
             v2lyout->setAlignment(celllbl, Qt::AlignCenter);
             s_tqLineEdit *le = new s_tqLineEdit;
+            le->setObjectName(QString::number(index));
             v2lyout->addWidget(le);
             v2lyout->setAlignment(le,Qt::AlignCenter);
             hlyout->addLayout(v2lyout);
@@ -368,8 +370,9 @@ void Wh_Editor::SetCells(QWidget *w)
                 }
                 else
                 {
+                    // создать новое пустое размещение с родителем idalias = CurID
                     celllbl->setPixmap(QPixmap(":/res/EmptyCell.png"));
-                    le->setText(QString::number(i+10, 36)+QString::number(j+1));
+                    le->setText(QString::number(i+10, 36).toUpper()+QString::number(j+1));
                 }
             }
             else
@@ -393,11 +396,17 @@ void Wh_Editor::GoToPlace()
         WHEDWARN;
         return;
     }
-    if (ID == 0) // нет размещения - надо создать новое
+    s_tqLineEdit *le = this->findChild<s_tqLineEdit *>(QString::number(ID));
+    if (le == 0)
+    {
+        WHEDDBG;
+        return;
+    }
+    if (ID >= MAXPLACES) // нет размещения - надо создать новое
     {
         WhPlacesTreeModel::WhPlacesTreeItem *item = new WhPlacesTreeModel::WhPlacesTreeItem;
         item->Alias = "";
-        item->Name = "";
+        item->Name = le->text();
         item->IdAlias = IDs.top();
         item->UpdIns = WHP_CREATENEW;
         item->WhPlaceTypeID = 0;
@@ -430,6 +439,11 @@ void Wh_Editor::ChangePlace(QVariant PlaceName)
     if (PlaceName == CurIDProperties.ChoosePlaceString) // если ничего не поменялось, выход
         return;
     WhPlacesTreeModel::WhPlacesTreeItem *item = WhModel->Data(CurID);
+    if (item == NULL)
+    {
+        WHEDDBG;
+        return;
+    }
     QStringList vl;
     // проверяем, нет ли размещения в БД
     QStringList PlaceType = tfl.valuesbyfield("Склады размещение_полн", QStringList("Наименование"), "ИД", QString::number(item->Id), false);
@@ -484,19 +498,24 @@ void Wh_Editor::Disband(int ID)
 
 QStringList Wh_Editor::NameAndPicture(int ID)
 {
-    QStringList fl = QStringList() << "Наименование" << "Обозначение" << "Тип размещения";
-    QStringList PlaceProp = tfl.valuesbyfield("Склады размещение_полн", fl, "ИД", QString::number(ID), false);
-    if ((tfl.result) || (PlaceProp.size()<3))
-        return QStringList(); // пустое размещение
-    QString tmps = PlaceProp.at(0) + " " + PlaceProp.at(1);
+    WhPlacesTreeModel::WhPlacesTreeItem *item = WhModel->Data(ID);
+    if (item == NULL)
+        return QStringList();
+//    QStringList fl = QStringList() << "Наименование" << "Обозначение" << "Тип размещения";
+//    QStringList PlaceProp = tfl.valuesbyfield("Склады размещение_полн", fl, "ИД", QString::number(ID), false);
+//    if ((tfl.result) || (PlaceProp.size()<3))
+//        return QStringList(); // пустое размещение
+//    QString tmps = PlaceProp.at(0) + " " + PlaceProp.at(1);
+    QString tmps = item->Alias + " " + item->Name;
     QStringList sl;
     sl << tmps;
-    fl = QStringList() << "Тип размещения";
-    QStringList PlaceTank = tfl.valuesbyfield("Склады типы размещения_полн", fl, "ИД", PlaceProp.at(2));
-    if (tfl.result)
+//    fl = QStringList() << "Тип размещения";
+//    QStringList PlaceTank = tfl.valuesbyfield("Склады типы размещения_полн", fl, "ИД", PlaceProp.at(2));
+    QStringList PlaceTank = tfl.valuesbyfield("Склады типы размещения_полн", QStringList("Тип размещения"), "ИД", QString::number(item->WhPlaceTypeID));
+    if ((tfl.result) || (PlaceTank.size() < 1))
     {
-        WHEDWARN;
-        return QStringList();
+//        WHEDWARN;
+        return QStringList(); // размещение ещё пустое (нет ссылки на элемент размещения)
     }
     QStringList PlacePicture = tfl.valuesbyfield("Склады ёмкости размещения_полн", QStringList("Картинка"), "ИД", PlaceTank.at(0));
     if (tfl.result)

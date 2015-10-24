@@ -16,6 +16,8 @@
 #define MAXROWS 2
 #define MAXCOLS 6
 
+#define MAXPLACES   999999
+
 class Wh_Editor : public QDialog
 {
     Q_OBJECT

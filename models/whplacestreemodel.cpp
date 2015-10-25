@@ -84,6 +84,7 @@ int WhPlacesTreeModel::DeleteNew()
 int WhPlacesTreeModel::Load(int Index)
 {
     ClearModel();
+    RootIndexID = Index;
     QStringList fl = QStringList() << "table" << "tablefields";
     vl = sqlc.GetMoreValuesFromTableByField(sqlc.GetDB("sup"), "tablefields", fl, "tablename", WHPLACES, "fieldsorder", true);
     if (sqlc.result)
@@ -94,7 +95,7 @@ int WhPlacesTreeModel::Load(int Index)
         return 1;
     catlist = vl.at(0).at(0).split("."); // catlist - таблица, из которой брать категории
     vlsize = vl.size();
-    int res = Build(Index);
+    int res = Build(Index, true);
     if (res)
         return 1;
     return 0;
@@ -103,7 +104,7 @@ int WhPlacesTreeModel::Load(int Index)
 // процедура построения дерева
 // на входе catlist (ссылка на таблицу категорий с полем idalias) и slvtble (название таблицы в chooselists, из которой брать записи категорий)
 
-int WhPlacesTreeModel::Build(int Index)
+int WhPlacesTreeModel::Build(int Index, bool root)
 {
     int res;
     QStringList tmpStringList;
@@ -114,7 +115,10 @@ int WhPlacesTreeModel::Build(int Index)
     for (int i=0; i<vlsize; i++)
         tmpString += "`" + vl.at(i).at(1) + "`,";
     tmpString.chop(1);
-    tmpString += " FROM `"+catlist.at(1)+"` WHERE `id"+catlist.at(1)+"`=\""+QString::number(Index)+"\" AND `deleted`=0 ORDER BY `id"+catlist.at(1)+"` ASC;";
+    if (root)
+        tmpString += " FROM `"+catlist.at(1)+"` WHERE `id"+catlist.at(1)+"`=\""+QString::number(Index)+"\" AND `deleted`=0 ORDER BY `id"+catlist.at(1)+"` ASC;";
+    else
+        tmpString += " FROM `"+catlist.at(1)+"` WHERE `idalias`=\""+QString::number(Index)+"\" AND `deleted`=0 ORDER BY `id"+catlist.at(1)+"` ASC;";
     get_child_from_db1.exec(tmpString);
     // строим дерево в модели model
     while (get_child_from_db1.next())
@@ -125,9 +129,9 @@ int WhPlacesTreeModel::Build(int Index)
         AddItem(tmpStringList);
         if (get_child_from_db1.record().count() > 1) // просто чтобы не нарваться на exception
         {
-            int tmpi = get_child_from_db1.value(2).toInt();
+            int tmpi = get_child_from_db1.value(0).toInt();
             if (tmpi != -1)
-                res = Build(tmpi); // в качестве аргумента функции используется индекс поля idalias
+                res = Build(tmpi, false); // в качестве аргумента функции используется индекс поля idalias
         }
         if (res)
             return 1;
@@ -164,8 +168,27 @@ void WhPlacesTreeModel::ClearModel()
 
 int WhPlacesTreeModel::Save()
 {
-    // аналогично Load пробегаем по всем ветвям
-    // ищем сначала элемент с такими
+    // получить список заголовков по таблице WHPLACES
+    QStringList fl = tfl.tableheaders(WHPLACES);
+    if (tfl.result)
+        return 1;
+    // для каждого элемента из Items
+    for (int i=0; i<Items.keys().size(); i++)
+    {
+        int CurKey = Items.keys().at(i);
+        WhPlacesTreeItem *item = Data(CurKey);
+        // если его UpdIns содержит NEW, то элемент всё равно уже есть в БД, т.к. записан процедурой Insert
+        if ((item->UpdIns == WHP_CREATENEW) || (item->UpdIns == WHP_UPDATENEW) || (item->UpdIns == WHP_UPDATE))
+        {
+            QStringList vl = QStringList() << QString::number(item->Id) << item->Alias << QString::number(item->IdAlias) << \
+                                              item->Description << item->Name << QString::number(item->WhID) << QString::number(item->WhNum) << \
+                                              QString::number(item->WhPlaceTypeID);
+            tfl.idtois(WHPLACES, fl, vl);
+            if (tfl.result)
+                return 1;
+        }
+    }
+    // иначе ничего делать не надо
     return 0;
 }
 

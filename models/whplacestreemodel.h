@@ -48,10 +48,11 @@ private:
     int vlsize;
     quint8 mask;
     QStringList catlist, CmpValues;
+    int RootIndexID;
     QList<QStringList> vl;
     int CurIndex; // индекс элемента, с которого надо продолжать поиск в функции Next
 
-    int Build (int Index);
+    int Build (int Index, bool root);
     void AddItem (QStringList sl);
 };
 

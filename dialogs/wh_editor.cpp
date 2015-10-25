@@ -98,7 +98,10 @@ void Wh_Editor::SetupUI()
 
 void Wh_Editor::WriteAndClose()
 {
-//    UpdatePlacePicture(0); // подставить сюда row и column
+    if (WhModel->Save())
+        return;
+    else
+        WHEDINFO("Записано успешно!");
     emit CloseAllWidgets();
 }
 
@@ -349,7 +352,7 @@ void Wh_Editor::SetCells(QWidget *w)
             QVBoxLayout *v2lyout = new QVBoxLayout;
             s_tqLabel *celllbl = new s_tqLabel;
             celllbl->setMaximumHeight(50);
-            int index = (ChildrenIndex < ChildrenSize) ? Children.at(ChildrenIndex) : (MAXPLACES+i*CurIDProperties.Columns+j);
+            int index = (ChildrenIndex < ChildrenSize) ? Children.at(ChildrenIndex) : 0;
             ChildrenIndex++;
             celllbl->setObjectName(QString::number(index));
             connect(celllbl,SIGNAL(clicked()),this,SLOT(GoToPlace()));
@@ -360,25 +363,32 @@ void Wh_Editor::SetCells(QWidget *w)
             v2lyout->addWidget(le);
             v2lyout->setAlignment(le,Qt::AlignCenter);
             hlyout->addLayout(v2lyout);
-            if (index != 0)
+            sl = NameAndPicture(index);
+            if (sl.size() > 1)
             {
-                sl = NameAndPicture(index);
-                if (sl.size() > 1)
-                {
-                    celllbl->setPixmap(QPixmap(sl.at(1)));
-                    le->setText(sl.at(0));
-                }
-                else
-                {
-                    // создать новое пустое размещение с родителем idalias = CurID
-                    celllbl->setPixmap(QPixmap(":/res/EmptyCell.png"));
-                    le->setText(QString::number(i+10, 36).toUpper()+QString::number(j+1));
-                }
+                celllbl->setPixmap(QPixmap(sl.at(1)));
+                le->setText(sl.at(0));
             }
             else
             {
                 celllbl->setPixmap(QPixmap(":/res/EmptyCell.png"));
-                le->setText(QString::number(i+10, 36).toUpper()+QString::number(j+1).toUpper());
+                le->setText(QString::number(i+10, 36).toUpper()+QString::number(j+1));
+                if (index == 0)
+                {
+                    // создать новое пустое размещение с родителем idalias = CurID
+                    WhPlacesTreeModel::WhPlacesTreeItem *item = new WhPlacesTreeModel::WhPlacesTreeItem;
+                    item->Alias = "";
+                    item->Name = le->text();
+                    item->IdAlias = CurID;
+                    item->UpdIns = WHP_CREATENEW;
+                    item->WhPlaceTypeID = 0;
+                    item->Description = "";
+                    item->WhID = Wh;
+                    item->WhNum = i*CurIDProperties.Columns + j;
+                    index = WhModel->Insert(item);
+                    celllbl->setObjectName(QString::number(index));
+                    le->setObjectName(QString::number(index));
+                }
             }
         }
         hlyout->addStretch(1);
@@ -402,7 +412,7 @@ void Wh_Editor::GoToPlace()
         WHEDDBG;
         return;
     }
-    if (ID >= MAXPLACES) // нет размещения - надо создать новое
+/*    if (ID >= MAXPLACES) // нет размещения - надо создать новое
     {
         WhPlacesTreeModel::WhPlacesTreeItem *item = new WhPlacesTreeModel::WhPlacesTreeItem;
         item->Alias = "";
@@ -416,8 +426,7 @@ void Wh_Editor::GoToPlace()
             WHEDWARN;
             return;
         }
-//        sender()->setObjectName(QString::number(ID));
-    }
+    } */
     IDs.push(ID);
     BuildWorkspace(ID, false);
 }

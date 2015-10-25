@@ -6,4 +6,4 @@ mysql -uanton -p"bIt*rAD()" solidworks < sol.sql
 mysql -uanton -p"bIt*rAD()" schemagee < sch.sql
 mysql -uanton -p"bIt*rAD()" devices < dev.sql
 mysql -uanton -p"bIt*rAD()" tb < tb.sql
-mysql -uanton -p"bIt*rAD()" sys < sys.sql
+mysql -uanton -p"bIt*rAD()" sysadm < sys.sql

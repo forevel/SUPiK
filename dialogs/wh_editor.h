@@ -33,6 +33,7 @@ private:
     int Wh;
     WhPlacesTreeModel *WhModel;
     int CurID;
+    bool SomethingChanged;
     struct IDProperties
     {
         QString Picture;
@@ -45,12 +46,14 @@ private:
     IDProperties CurIDProperties;
 
     void SetupUI();
+    void UpdateWhComboBox();
     void SetCells(QWidget *w);
     void BuildWorkspace(int ID, bool IsWarehouse); // отобразить рабочее поле (размещения внутри размещения с данным ID). IsWarehouse - признак "корня"
     void UpdatePlace();
     void Disband(int ID); // расформирование единицы размещения
     QStringList NameAndPicture(int ID); // вытащить картинку по ИД размещения
     void ClearLayout (QLayout *lyout);
+    bool CheckPriorities (QString PlaceName);
 
 private slots:
     void AddNewPlace();
@@ -60,6 +63,7 @@ private slots:
     void WriteAndClose();
     void CancelAndClose();
     void ChangeWh(QString);
+    void AddNewWh();
 
 protected:
     void paintEvent(QPaintEvent *);

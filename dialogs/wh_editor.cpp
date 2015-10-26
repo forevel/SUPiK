@@ -24,6 +24,7 @@
 
 Wh_Editor::Wh_Editor(QWidget *parent) : QDialog(parent)
 {
+    SomethingChanged = false;
     WhModel = 0;
     setAttribute(Qt::WA_DeleteOnClose);
     SetupUI();
@@ -72,11 +73,12 @@ void Wh_Editor::SetupUI()
     hlyout = new QHBoxLayout;
     // Комбобокс с наименованиями складов из wh
     QStringListModel *mdl = new QStringListModel;
-    QStringList vl = tfl.htovl("Склады_сокращ", "Наименование");
-    mdl->setStringList(vl);
+//    QStringList vl = tfl.htovl("Склады_сокращ", "Наименование");
+//    mdl->setStringList(vl);
     s_tqComboBox *cb = new s_tqComboBox;
+    cb->setObjectName("whcb");
     cb->setModel(mdl);
-    cb->setCurrentIndex(-1);
+//    cb->setCurrentIndex(-1);
     connect(cb,SIGNAL(currentIndexChanged(QString)),this,SLOT(ChangeWh(QString)));
     lbl = new s_tqLabel("Редактируемый склад:");
     hlyout->addWidget(lbl, 0);
@@ -93,7 +95,36 @@ void Wh_Editor::SetupUI()
     lyout->addWidget(stw);
     lyout->addStretch(1);
     setLayout(lyout);
+    UpdateWhComboBox();
     cb->setCurrentIndex(0); // принудительный вызов загрузки данных в окно
+}
+
+void Wh_Editor::AddNewWh()
+{
+    QString newID = tfl.insert(WHPLACES);
+    QStringList fl = QStringList() << "ИД" << "ИД_а" << "Склад" << "Тип размещения";
+    QStringList vl = QStringList() << newID << "0" << newID << "4";
+    tfl.idtois(WHPLACES, fl, vl);
+    s_2cdialog *dlg = new s_2cdialog("Склады::Добавить");
+    dlg->setup(WHPLACES, MODE_EDITNEW, newID);
+    if (dlg->result)
+        WHEDWARN;
+    else
+        dlg->exec();
+    UpdateWhComboBox();
+}
+
+void Wh_Editor::UpdateWhComboBox()
+{
+    s_tqComboBox *cb = this->findChild<s_tqComboBox *>("whcb");
+    if (cb == 0)
+    {
+        WHEDDBG;
+        return;
+    }
+    QStringListModel *mdl = qobject_cast<QStringListModel *>(cb->model());
+    QStringList vl = tfl.htovlc(WHPLACES, "Наименование", "ИД_а", "0");
+    mdl->setStringList(vl);
 }
 
 void Wh_Editor::WriteAndClose()
@@ -130,18 +161,8 @@ void Wh_Editor::AddNewPlace()
 
 void Wh_Editor::ChangeWh(QString str)
 {
-    // достанем индекс склада по имени str из wh
-    QStringList WhID = tfl.valuesbyfield("Склады_полн", QStringList("ИД"), "Наименование", str);
-    if ((tfl.result) || (WhID.isEmpty()))
-    {
-        WHEDWARN;
-        return;
-    }
-    Wh = WhID.at(0).toInt();
-    // затем достанем индекс ID размещения данного склада
-    QStringList cmpfl = QStringList() << "ИД_а" << "Склад";
-    QStringList cmpvl = QStringList() << "0" << WhID.at(0); // у корневого места размещения idalias всегда равен 0, т.е. это корень для остальных
-    QStringList PlaceID = tfl.valuesbyfields(WHPLACES, QStringList("ИД"), cmpfl, cmpvl, false);
+    // достанем индекс склада по имени str из whplaces
+    QStringList PlaceID = tfl.valuesbyfield(WHPLACES, QStringList("ИД"), "Наименование", str, false);
     if (tfl.result)
     {
         WHEDWARN;
@@ -151,9 +172,20 @@ void Wh_Editor::ChangeWh(QString str)
     emit CloseAllWidgets();
     // построим модель от данного корневого ИД склада
     if (WhModel != 0)
+    {
+        if (SomethingChanged)
+        {
+            if (QMessageBox::question(this, "Данные были изменены", "Сохранить изменения?", QMessageBox::Yes|QMessageBox::No,\
+                                  QMessageBox::Yes) == QMessageBox::Yes)
+                WhModel->Save(); // если модель уже существует, надо сохранить данные в БД, чтобы не потерялись
+            else
+                WhModel->DeleteNew();
+        }
         delete WhModel;
+    }
     WhModel = new WhPlacesTreeModel;
     int ID = PlaceID.at(0).toInt();
+    Wh = ID;
     if (WhModel->Load(ID))
     {
         WHEDWARN;
@@ -161,6 +193,7 @@ void Wh_Editor::ChangeWh(QString str)
     }
     IDs.clear();
     IDs.push(ID);
+    SomethingChanged = false;
     // создадим новый корневой виджет и положим его в stw, вызовем SetCells для нового ID
     BuildWorkspace(ID, true);
 }
@@ -260,10 +293,7 @@ void Wh_Editor::UpdatePlace()
     QStringList fl = QStringList() << "Тип размещения" << "Наименование" << "Кол-во рядов" << "Кол-во этажей";
     QStringList vl = tfl.valuesbyfield("Склады типы размещения_полн", fl, "ИД", QString::number(item->WhPlaceTypeID));
     if ((tfl.result) || (vl.size() < 4)) // нет размещения в БД
-    {
-        WHEDWARN;
         return;
-    }
     CurIDProperties.PlaceType = vl.at(0).toInt();
     CurIDProperties.ChoosePlaceString = vl.at(1);
     CurIDProperties.Columns = vl.at(2).toInt();
@@ -293,23 +323,9 @@ void Wh_Editor::UpdatePlace()
             return;
         }
         cw->SetData(CurIDProperties.ChoosePlaceString);
-/*        // сначала в метке PlacePic отображаем картинку для места размещения
-        s_tqLabel *lbl = this->findChild<s_tqLabel *>("placepic");
-        if (lbl != 0)
-        {
-            QString tmps;
-            if (CurIDProperties.PlaceType != 0) // непустое размещение
-            {
-                tmps = ":/res/" + CurIDProperties.Picture + ".png";
-            }
-            else
-                tmps = ":/res/EmptyCell.png";
-            lbl->setPixmap(QPixmap(tmps));
-        } */
     }
     item->Alias = CurIDProperties.PlacePrefix;
     item->WhID = Wh;
-//    WhModel->Update(item->Id, item);
     // затем для данного curID отображаем места размещения
     s_tqWidget *w = this->findChild<s_tqWidget *>("cellwidget");
     if (w == 0)
@@ -386,6 +402,7 @@ void Wh_Editor::SetCells(QWidget *w)
                     item->WhID = Wh;
                     item->WhNum = i*CurIDProperties.Columns + j;
                     index = WhModel->Insert(item);
+                    SomethingChanged = true;
                     celllbl->setObjectName(QString::number(index));
                     le->setObjectName(QString::number(index));
                 }
@@ -412,21 +429,6 @@ void Wh_Editor::GoToPlace()
         WHEDDBG;
         return;
     }
-/*    if (ID >= MAXPLACES) // нет размещения - надо создать новое
-    {
-        WhPlacesTreeModel::WhPlacesTreeItem *item = new WhPlacesTreeModel::WhPlacesTreeItem;
-        item->Alias = "";
-        item->Name = le->text();
-        item->IdAlias = IDs.top();
-        item->UpdIns = WHP_CREATENEW;
-        item->WhPlaceTypeID = 0;
-        ID = WhModel->Insert(item);
-        if (ID == -1)
-        {
-            WHEDWARN;
-            return;
-        }
-    } */
     IDs.push(ID);
     BuildWorkspace(ID, false);
 }
@@ -447,6 +449,11 @@ void Wh_Editor::ChangePlace(QVariant PlaceName)
 {
     if (PlaceName == CurIDProperties.ChoosePlaceString) // если ничего не поменялось, выход
         return;
+    if (!CheckPriorities(PlaceName.toString()))
+    {
+        WHEDINFO("Невозможно создать размещение, не соблюдены правила вложенности");
+        return;
+    }
     WhPlacesTreeModel::WhPlacesTreeItem *item = WhModel->Data(CurID);
     if (item == NULL)
     {
@@ -489,9 +496,59 @@ void Wh_Editor::ChangePlace(QVariant PlaceName)
         return;
     }
     item->WhPlaceTypeID = vl.at(0).toInt();
-//    WhModel->Update(item->Id, item);
+    SomethingChanged = true;
     UpdatePlace();
     return;
+}
+
+// проверка возможности создания в размещении CurID->idalias элемента с именем PlaceName
+
+bool Wh_Editor::CheckPriorities(QString PlaceName)
+{
+    // вытаскиваем по PlaceName приоритет размещения PrNew
+    QStringList vl = tfl.valuesbyfield("Склады типы размещения_полн", QStringList("Тип размещения"), "Наименование", PlaceName);
+    if ((tfl.result) || (vl.size() < 1))
+    {
+        WHEDWARN;
+        return false;
+    }
+    vl = tfl.valuesbyfield("Склады ёмкости размещения_полн", QStringList("Приоритет вложенности"), "ИД", vl.at(0));
+    if ((tfl.result) || (vl.size() < 1))
+    {
+        WHEDWARN;
+        return false;
+    }
+    int PrNew = vl.at(0).toInt();
+    // вытаскиваем по CurID->idalias приоритет размещения PrParent
+    WhPlacesTreeModel::WhPlacesTreeItem *item = WhModel->Data(CurID);
+    int IdAlias = item->IdAlias;
+    vl = tfl.valuesbyfield(WHPLACES,QStringList("Тип размещения"),"ИД",QString::number(IdAlias));
+    if ((tfl.result) || (vl.size() < 1))
+    {
+        WHEDWARN;
+        return false;
+    }
+    vl = tfl.valuesbyfield("Склады типы размещения_полн", QStringList("Тип размещения"), "ИД", vl.at(0));
+    if ((tfl.result) || (vl.size() < 1))
+    {
+        WHEDWARN;
+        return false;
+    }
+    vl = tfl.valuesbyfield("Склады ёмкости размещения_полн", QStringList("Приоритет вложенности"), "ИД", vl.at(0));
+    if ((tfl.result) || (vl.size() < 1))
+    {
+        WHEDWARN;
+        return false;
+    }
+    int PrParent = vl.at(0).toInt();
+    // если PrParent > PrNew, то нельзя создать размещение
+    if (PrParent > PrNew)
+        return false;
+    // если PrParent = PrNew и это 0, то нельзя создать размещение
+    if (PrNew = 0) // склад создаётся другими способами
+        return false;
+    // в противном случае можно
+    return true;
 }
 
 void Wh_Editor::Disband(int ID)

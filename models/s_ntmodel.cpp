@@ -5,6 +5,7 @@
 #include <QSqlDatabase>
 #include <QSqlQuery>
 #include <QMap>
+#include <QSortFilterProxyModel>
 
 s_ntmodel::s_ntmodel(QObject *parent) :
     QAbstractItemModel(parent)
@@ -41,6 +42,7 @@ s_ntmodel::s_ntmodel(QObject *parent) :
     parents << rootItem;
     indentations << 0;
     expandedIndexes.clear();
+    qRegisterMetaType();
 }
 
 s_ntmodel::~s_ntmodel()
@@ -261,11 +263,12 @@ void s_ntmodel::addExpandedIndex(const QModelIndex &index)
     {
         if (!expandedIndexes.contains(index))
         {
-            s_ntitem *item = getItem(index);
+            QModelIndex sourceindex = QSortFilterProxyModel::mapToSource(index);
+            s_ntitem *item = getItem(sourceindex);
             if (item->childCount())
             {
                 item->setIcon(0, icons[4]);
-                expandedIndexes.append(index);
+                expandedIndexes.append(sourceindex);
             }
         }
     }
@@ -277,11 +280,12 @@ void s_ntmodel::removeExpandedIndex(const QModelIndex &index)
 {
     if (index.isValid())
     {
-        int idx = expandedIndexes.indexOf(index);
+        QModelIndex sourceindex = QSortFilterProxyModel::mapToSource(index);
+        int idx = expandedIndexes.indexOf(sourceindex);
         if (idx != -1)
         {
             expandedIndexes.removeAt(idx);
-            s_ntitem *item=getItem(index);
+            s_ntitem *item=getItem(sourceindex);
             item->setIcon(0, icons[3]);
         }
     }

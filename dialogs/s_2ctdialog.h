@@ -5,6 +5,9 @@
 #include <QSortFilterProxyModel>
 #include "../models/s_ntmodel.h"
 
+#define CT2WARN WARNMSG(PublicClass::ER_2CTDLG, __LINE__)
+#define CT2DBG  DBGMSG(PublicClass::ER_2CTDLG, __LINE__)
+
 class s_2ctdialog : public QDialog
 {
     Q_OBJECT
@@ -23,6 +26,7 @@ signals:
 public slots:
 
 private:
+    QMetaObject::Connection ExpandHandle, CollapseHandle;
     s_ntmodel *mainmodel;
     QSortFilterProxyModel *pmainmodel;
     bool DialogIsNeedToBeResized;
@@ -37,6 +41,7 @@ private slots:
     void cancelled();
     void resizemainTV(QModelIndex, QModelIndex);
     void updatedialogsize();
+    void Filter();
 
 protected:
     void paintEvent(QPaintEvent *e);

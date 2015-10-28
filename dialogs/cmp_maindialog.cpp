@@ -159,7 +159,7 @@ void cmp_maindialog::SetupUI(int CompType, int CompTable, int CompID)
               "RevNotes" << "Discontinued" << "Description" << "Notes" << "Modify Date" << "Creator" << "prefix" << "isSMD" << \
               "Nominal" << "Unit" << "par4" << "par5";
         QStringList vl = sqlc.GetValuesFromTableByField(sqlc.GetDB(CompDb),CompTble,fl,"id",CompId);
-        if (sqlc.result); // новый элемент, ещё нет в БД
+        if ((sqlc.result) || (vl.size() == 0)); // новый элемент, ещё нет в БД
         else
             FillAltDialog(vl);
         break;
@@ -833,6 +833,7 @@ void cmp_maindialog::CancelAndClose()
                               QMessageBox::No) == QMessageBox::No)
             return;
     }
+    emit cancelled();
     this->close();
 }
 

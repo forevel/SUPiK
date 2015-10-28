@@ -28,6 +28,7 @@
 #include "../gen/publicclass.h"
 #include "../gen/s_tablefields.h"
 #include "cmp_maindialog.h"
+#include "cmp_newsubsection.h"
 
 // --------------------------------------
 // Конструктор
@@ -226,7 +227,13 @@ void cmp_compdialog::StartCompDialog(QString Id, bool ByExisting)
     dlg->SetupUI(CompType,CompTble,Id.toInt());
     if (ByExisting)
         dlg->SetID();
+    connect(dlg,SIGNAL(cancelled()),this,SLOT(EditCancelled()));
     dlg->exec();
+}
+
+void cmp_compdialog::EditCancelled()
+{
+    Cancelled = true;
 }
 
 // --------------------------------------
@@ -255,9 +262,11 @@ void cmp_compdialog::AddNewItem()
         COMPWARN;
         return;
     }
+    Cancelled = false;
     StartCompDialog(QString::number(CompID));
     // теперь добавим в перечень номенклатуры, если такового ещё нет
-    CheckNkAndAdd(CompID);
+    if (!Cancelled)
+        CheckNkAndAdd(CompID);
 }
 
 void cmp_compdialog::AddNewOnExistingItem()
@@ -269,8 +278,10 @@ void cmp_compdialog::AddNewOnExistingItem()
         return;
     }
     QString CompIDs = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole).toString();
+    Cancelled = false;
     StartCompDialog(CompIDs,true); // создаём на базе компонента CompIDs компонент с новым индексом
-    CheckNkAndAdd(CompIDs.toInt());
+    if (!Cancelled)
+        CheckNkAndAdd(CompIDs.toInt());
 }
 
 void cmp_compdialog::DeleteItem()
@@ -416,6 +427,8 @@ void cmp_compdialog::CheckNkAndAdd(int id)
 
 void cmp_compdialog::AddNewSubsection()
 {
+    cmp_newsubsection *dlg = new cmp_newsubsection;
+    dlg->exec();
     // 1. Спросить имя
     // 2. Создать таблицу в соотв. БД (например, relay в altium)
     // 3. Создать категорию

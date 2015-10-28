@@ -42,12 +42,14 @@ private slots:
     void DeleteItem();
     void StartCompDialog(QString Id, bool ByExisting = false);
     void SlaveContextMenu(QPoint);
+    void EditCancelled();
 
 protected:
     void paintEvent(QPaintEvent *);
 
 private:
     QString CompLetter, CompDb, CompTbles;
+    bool Cancelled;
     int CompType, CompTble;
     s_ncmodel *slavemodel;
 

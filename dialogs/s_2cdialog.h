@@ -12,6 +12,10 @@
 
 #define CD_ERROR    0x0200
 
+#define CD2WARN WARNMSG(PublicClass::ER_2CDLG, __LINE__)
+#define CD2DBG  DBGMSG(PublicClass::ER_2CDLG, __LINE__)
+#define CD2INFO(a)  INFOMSG(PublicClass::ER_2CDLG, __LINE__, a)
+
 class s_2cdialog : public QDialog
 {
     Q_OBJECT
@@ -34,7 +38,6 @@ public:
 
 signals:
     void changeshasbeenMade(QString);
-    void error(int,int);
 
 public slots:
 
@@ -53,6 +56,7 @@ private slots:
     void accepted();
     void cancelled();
     void resizemainTV(QModelIndex, QModelIndex);
+    void Filter();
 
 protected:
     void paintEvent(QPaintEvent *e);

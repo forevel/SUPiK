@@ -2,6 +2,7 @@
 #include "../models/s_duniversal.h"
 #include "../widgets/s_tqtableview.h"
 #include "../widgets/s_tqpushbutton.h"
+#include "../widgets/s_tqlineedit.h"
 #include "../widgets/s_tqlabel.h"
 #include "../gen/s_sql.h"
 #include "../gen/publicclass.h"
@@ -34,7 +35,6 @@ s_2cdialog::s_2cdialog(QString caption, QWidget *parent) :
 {
     this->caption = caption;
     setAttribute(Qt::WA_DeleteOnClose);
-    setupUI();
 }
 
 void s_2cdialog::setup(QString tble, int Mode, QString id, QString matchtext, bool isQuarantine)
@@ -43,6 +43,7 @@ void s_2cdialog::setup(QString tble, int Mode, QString id, QString matchtext, bo
     this->tble.append(tble);
     this->Mode = Mode;
     this->Id = id;
+    setupUI();
     switch (Mode)
     {
     case MODE_CHOOSE:
@@ -51,7 +52,7 @@ void s_2cdialog::setup(QString tble, int Mode, QString id, QString matchtext, bo
         if (mainmodel->result)
         {
             result=1;
-            WARNMSG(PublicClass::ER_2CDLG,__LINE__);
+            CD2WARN;
             return;
         }
         mainmodel->isEditable = false;
@@ -63,7 +64,7 @@ void s_2cdialog::setup(QString tble, int Mode, QString id, QString matchtext, bo
         mainmodel->setup(tble, id);
         if (mainmodel->result)
         {
-            result=PublicClass::ER_2CDLG+mainmodel->result+0x12;
+            CD2WARN;
             return;
         }
         mainmodel->isEditable = true;
@@ -72,7 +73,7 @@ void s_2cdialog::setup(QString tble, int Mode, QString id, QString matchtext, bo
     }
     default:
     {
-        result=PublicClass::ER_2CDLG+0x13;
+        CD2WARN;
         return;
     }
     }
@@ -88,13 +89,15 @@ void s_2cdialog::SetupFile(QString Filename, QString StringToFind, QString str)
     QString tmpString;
     char *tmpChar;
     int filepos = 0;
+    Mode = MODE_CHOOSE;
+    setupUI();
 
     tmpList.clear();
     QFile file;
     file.setFileName(Filename);
     if (!file.open(QIODevice::ReadOnly))
     {
-        emit error(PublicClass::ER_2CDLG,0x21);
+        CD2WARN;
         return;
     }
 
@@ -124,7 +127,6 @@ void s_2cdialog::SetupFile(QString Filename, QString StringToFind, QString str)
         tmpList << tmpString;
     }
     file.close();
-    Mode = MODE_CHOOSE;
     QList<QStringList> tmpsl;
     tmpsl.append(tmpList);
     QList<int> il;
@@ -135,7 +137,7 @@ void s_2cdialog::SetupFile(QString Filename, QString StringToFind, QString str)
     mainmodel->fillModel();
     if (mainmodel->result)
     {
-        emit error(PublicClass::ER_2CDLG+mainmodel->result,0x22);
+        CD2WARN;
         return;
     }
     fillModelAdata();
@@ -152,19 +154,25 @@ void s_2cdialog::setupUI()
     mainTV->setObjectName("mainTV");
     s_duniversal *uniDelegate = new s_duniversal;
     s_tqPushButton *pbOk = new s_tqPushButton("Ага");
+    pbOk->setIcon(QIcon(":/res/ok.png"));
     s_tqPushButton *pbCancel = new s_tqPushButton("Неа");
+    pbCancel->setIcon(QIcon(":/res/cross.png"));
     s_tqLabel *lbl = new s_tqLabel;
-    mainmodel = new s_ncmodel;
     lbl->setText(caption);
     QFont font;
     font.setPointSize(10);
     lbl->setFont(font);
     pbLayout->addWidget(pbOk, 0);
     pbLayout->addWidget(pbCancel, 0);
-//    pmainmodel = new QSortFilterProxyModel;
-  //  pmainmodel->setSourceModel(mainmodel);
+    mainmodel = new s_ncmodel;
+    pmainmodel = new QSortFilterProxyModel;
+    pmainmodel->setSourceModel(mainmodel);
+    pmainmodel->setFilterKeyColumn(1);
+    pmainmodel->setFilterCaseSensitivity(Qt::CaseInsensitive);
     connect(mainmodel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(resizemainTV(QModelIndex,QModelIndex)));
-    mainTV->setModel(mainmodel);
+//    mainTV->setModel(mainmodel);
+    mainTV->setModel(pmainmodel);
+    mainTV->setSortingEnabled(true);
     mainTV->setEditTriggers(QAbstractItemView::AllEditTriggers);
     mainTV->verticalHeader()->setVisible(false);
     mainTV->horizontalHeader()->setVisible(false);
@@ -172,6 +180,21 @@ void s_2cdialog::setupUI()
     mainTV->resizeColumnsToContents();
     mainTV->resizeRowsToContents();
     mainLayout->addWidget(lbl, 0, Qt::AlignRight);
+    if (Mode == MODE_CHOOSE)
+    {
+        QHBoxLayout *hlyout = new QHBoxLayout;
+        lbl = new s_tqLabel("Фильтр:");
+        s_tqLineEdit *le = new s_tqLineEdit;
+        le->setObjectName("filterle");
+        s_tqPushButton *pb = new s_tqPushButton;
+        pb->setIcon(QIcon(":/res/lupa.gif"));
+        connect(le,SIGNAL(returnPressed()),this,SLOT(Filter()));
+        connect(pb,SIGNAL(clicked()),this,SLOT(Filter()));
+        hlyout->addWidget(lbl);
+        hlyout->addWidget(le, 1);
+        hlyout->addWidget(pb);
+        mainLayout->addLayout(hlyout);
+    }
     mainLayout->addWidget(mainTV);
     mainLayout->addLayout(pbLayout);
     setLayout(mainLayout);
@@ -186,7 +209,7 @@ void s_2cdialog::AddTable(QString tble)
     mainmodel->setup(tble);
     if (mainmodel->result)
     {
-        result=PublicClass::ER_2CDLG+0x11+mainmodel->result;
+        CD2WARN;
         return;
     }
     result = 0;
@@ -197,7 +220,10 @@ void s_2cdialog::resizemainTV(QModelIndex, QModelIndex)
 {
     s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
     if (tv == 0)
+    {
+        CD2DBG;
         return;
+    }
     tv->resizeColumnsToContents();
     int wdth = 0;
     for (int i = 0; i < tv->model()->columnCount(); i++)
@@ -251,16 +277,16 @@ void s_2cdialog::accepted()
         tfl.idtois(tble.at(0), headers, values);
         if (tfl.result)
         {
-            emit error(PublicClass::ER_2CDLG+tfl.result,0x31);
+            CD2WARN;
             return;
         }
-        INFOMSG(PublicClass::ER_DIRMAIN,__LINE__,"Записано успешно!");
+        CD2INFO("Записано успешно!");
         if (IsQuarantine)
         {
             tfl.remove(oldtble, oldid); // при успешной записи в некарантин, из карантина старую надо удалить
             if (tfl.result)
             {
-                emit error(PublicClass::ER_2CDLG+tfl.result,0x32);
+                CD2WARN;
                 return;
             }
         }
@@ -270,7 +296,7 @@ void s_2cdialog::accepted()
         s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
         if (tv == 0)
         {
-            emit error(PublicClass::ER_2CDLG,0x23);
+            CD2DBG;
             return;
         }
         tmpString = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole).toString();
@@ -288,7 +314,7 @@ void s_2cdialog::cancelled()
 
 void s_2cdialog::sortModel()
 {
-//    pmainmodel->sort(0, Qt::AscendingOrder);
+    pmainmodel->sort(0, Qt::AscendingOrder);
 }
 
 void s_2cdialog::fillModelAdata()
@@ -319,8 +345,22 @@ void s_2cdialog::SetTvCurrentText(QString str)
 {
     s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
     if (tv == 0)
+    {
+        CD2DBG;
         return;
+    }
     QList<QModelIndex> item = tv->model()->match(tv->model()->index(0, 0), Qt::DisplayRole, QVariant::fromValue(str), 1, Qt::MatchExactly);
     if (!item.isEmpty())
         tv->setCurrentIndex(item.at(0));
+}
+
+void s_2cdialog::Filter()
+{
+    s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("filterle");
+    if (le == 0)
+    {
+        CD2DBG;
+        return;
+    }
+    pmainmodel->setFilterWildcard("*"+le->text()+"*");
 }

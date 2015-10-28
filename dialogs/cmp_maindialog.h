@@ -27,6 +27,7 @@ public:
 public slots:
 
 signals:
+    void cancelled();
 
 private:
     QString CompDb, CompTble, CompId, CompType;

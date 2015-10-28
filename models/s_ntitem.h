@@ -43,5 +43,5 @@ private:
     QList<QFont> itemFont;
     QList<QIcon> itemIcon;
 };
-
+Q_DECLARE_METATYPE(s_ntitem *)
 #endif // S_NTITEM_H

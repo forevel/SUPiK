@@ -135,13 +135,14 @@ public:
     {
         ER_SUPIK,    // supik
         ER_COMP,     // cmp_compdialog
+        ER_CMPMAIN,  // cmp_maindialog
+        ER_CMPNS,    // cmp_newsubsection
         ER_DIRADD,   // dir_adddialog
         ER_WH,       // wh_dialog
         ER_WHED,     // wh_editor
         ER_SYS,      // sys_systemdialog
         ER_DIRMAIN,  // dir_maindialog
         ER_CHWDG,    // s_tqchoosewidget
-        ER_CMPMAIN,  // cmp_maindialog
         ER_SYSMENU,  // sysmenueditor
         ER_SYSDIR,   // sysdireditor
         ER_2TDLG,    // 2tdialog

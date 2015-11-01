@@ -4,12 +4,6 @@
 #include <QDialog>
 #include <QPaintEvent>
 
-#define CTYPE_ALT   1
-#define CTYPE_SCH   2
-#define CTYPE_SOL   3
-#define CTYPE_CON   4
-#define CTYPE_DEV   5
-
 #define CMPWARN WARNMSG(PublicClass::ER_CMPMAIN,__LINE__)
 #define CMPDBG  DBGMSG(PublicClass::ER_CMPMAIN,__LINE__)
 

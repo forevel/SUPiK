@@ -30,6 +30,13 @@ QT_END_NAMESPACE
 #define INFOMSG(...)   pc.AddErrMsg(PublicClass::INFO_MSG,__VA_ARGS__)
 #define WARNMSG(...)   pc.AddErrMsg(PublicClass::WARN_MSG,__VA_ARGS__)
 
+// тип редактируемого компонента (для cmp_...)
+#define CTYPE_ALT   1
+#define CTYPE_SCH   2
+#define CTYPE_SOL   3
+#define CTYPE_CON   4
+#define CTYPE_DEV   5
+
 // диалоговые окна в СУПиКе
 #define TW_SET      0x100 // настройки (Settings)
 #define TW_SYSST    0x101 // SysStructEdit - редактор структуры системы

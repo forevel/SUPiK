@@ -9,6 +9,10 @@
 #include "../models/s_ntmodel.h"
 #include "../models/s_ncmodel.h"
 
+#define DIRMDBG         DBGMSG(PublicClass::ER_DIRMAIN,__LINE__)
+#define DIRMWARN        WARNMSG(PublicClass::ER_DIRMAIN,__LINE__)
+#define DIRMINFO(a)     INFOMSG(PublicClass::ER_DIRMAIN,__LINE__,a)
+
 class dir_maindialog : public QDialog
 {
     Q_OBJECT
@@ -25,7 +29,7 @@ private slots:
     void showDirDialog(QModelIndex idx = QModelIndex());
     void AddDirDialog();
     void EditDirDialog();
-    void EditItem (QModelIndex index = QModelIndex());
+    void EditItem ();
     void DeleteData();
     void DeleteDir();
     void DeleteDataUnconditional(QString id);
@@ -35,7 +39,7 @@ private:
     bool MainTVIsTree, SlaveTVIsTree, IsQuarantine;
     bool firstShow, twodb, isNewID;
     QSqlDatabase db;
-    QString tble,slvtble;
+    QString tble,slvtble, SlaveParentTableName;
     int SlaveTVAccess;
     s_ntmodel *SlaveTreeModel;
     s_ncmodel *MainTableModel, *SlaveTableModel;

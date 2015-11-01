@@ -232,7 +232,7 @@ void s_2cdialog::resizemainTV(QModelIndex, QModelIndex)
     int hgth = 0;
     for (int i = 0; i < tv->model()->rowCount(); i++)
         hgth += tv->rowHeight(i);
-    int tmpi = QApplication::desktop()->availableGeometry().height()-150; // -150 - чтобы высота диалога не выходила за пределы видимой части экрана
+    int tmpi = QApplication::desktop()->availableGeometry().height()-350; // -350 - чтобы высота диалога не выходила за пределы видимой части экрана
     hgth = (hgth > tmpi) ? tmpi : hgth;
     tv->setMinimumHeight(hgth+10);
 }

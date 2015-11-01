@@ -480,6 +480,11 @@ void s_tablefields::idtois(QString tble, QStringList headers, QStringList values
             while (i < headers.size())
             {
                 dbtble = tablefields(tble, headers.at(i));
+                if (dbtble.size() == 0)
+                {
+                    TFWARN;
+                    return;
+                }
                 if (dbtble.at(0) == tmpdbtble) // здесь проверка на дефис не нужна, т.к. сравнение ведётся с tmpdbtble, который уже проверен ранее
                 {
                     tmptablefields << dbtble.at(1);

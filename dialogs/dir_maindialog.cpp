@@ -108,9 +108,9 @@ void dir_maindialog::SetupUI()
     connect(SlaveTV, SIGNAL(expanded(QModelIndex)), SlaveTreeModel, SLOT(addExpandedIndex(QModelIndex)));
     connect(SlaveTV, SIGNAL(collapsed(QModelIndex)), SlaveTreeModel, SLOT(removeExpandedIndex(QModelIndex)));
     connect (SlaveTV, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(SystemSlaveContextMenu(QPoint)));
-    connect (SlaveTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(EditItem(QModelIndex)));
+    connect (SlaveTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(EditItem()));
     connect (SlaveTbV, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(SystemSlaveContextMenu(QPoint)));
-    connect (SlaveTbV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(EditItem(QModelIndex)));
+    connect (SlaveTbV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(EditItem()));
 
     leftlyout->addWidget(MainTV);
     left->setFrameStyle(QFrame::Panel | QFrame::Sunken);
@@ -196,6 +196,7 @@ void dir_maindialog::ShowSlaveTree(QString str)
         {
             if (!values.at(1).isEmpty()) // есть родительские категории у справочника
             {
+                SlaveParentTableName = values.at(1);
                 twodb = true;
                 res = SlaveTreeModel->Setup(values.at(1)+"_сокращ",values.at(0)+"_сокращ");
             }
@@ -240,7 +241,7 @@ void dir_maindialog::ShowSlaveTree(QString str)
             ERMSG(PublicClass::ER_DIRMAIN,__LINE__,"Недостаточно прав для работы со справочником!");
     }
     else
-        WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
+        DIRMWARN;
     QApplication::restoreOverrideCursor();
 }
 
@@ -249,7 +250,7 @@ QString dir_maindialog::getMainIndex(int column)
     s_tqTableView *MainTV = this->findChild<s_tqTableView *>("MainTV");
     if (MainTV == 0)
     {
-        DBGMSG(PublicClass::ER_DIRMAIN, __LINE__);
+        DIRMDBG;
         return QString();
     }
     QString tmpString = MainTV->model()->index(MainTV->currentIndex().row(), column, QModelIndex()).data(Qt::DisplayRole).toString();
@@ -266,7 +267,7 @@ QString dir_maindialog::getSlaveIndex(int column)
         s_tqTreeView *SlaveTV = this->findChild<s_tqTreeView *>("SlaveTV");
         if (SlaveTV == 0)
         {
-            DBGMSG(PublicClass::ER_DIRMAIN, __LINE__);
+            DIRMDBG;
             return QString();
         }
         tmpString = SlaveTV->model()->index(SlaveTV->currentIndex().row(), column, SlaveTV->model()->parent(SlaveTV->currentIndex())).data(Qt::DisplayRole).toString();
@@ -276,7 +277,7 @@ QString dir_maindialog::getSlaveIndex(int column)
         s_tqTableView *SlaveTbV = this->findChild<s_tqTableView *>("SlaveTbV");
         if (SlaveTbV == 0)
         {
-           DBGMSG(PublicClass::ER_DIRMAIN, __LINE__);
+           DIRMDBG;
            return QString();
         }
         tmpString = SlaveTbV->model()->index(SlaveTbV->currentIndex().row(),column,QModelIndex()).data(Qt::DisplayRole).toString();
@@ -286,17 +287,17 @@ QString dir_maindialog::getSlaveIndex(int column)
     return tmpString;
 }
 
-void dir_maindialog::EditItem(QModelIndex index)
+void dir_maindialog::EditItem()
 {
-    Q_UNUSED(index);
     if (SlaveTVIsTree)
     {
         s_tqTreeView *SlaveTV = this->findChild<s_tqTreeView *>("SlaveTV");
         if (SlaveTV == 0)
         {
-            DBGMSG(PublicClass::ER_DIRMAIN, __LINE__);
+            DIRMDBG;
             return;
         }
+        QModelIndex index = SlaveTV->model()->index(SlaveTV->currentIndex().row(), 1, SlaveTV->model()->parent(SlaveTV->currentIndex()));
         s_ntmodel *mdl = static_cast<s_ntmodel *>(SlaveTV->model());
         if (twodb) // если имеем дело с двумя таблицами
         {
@@ -315,7 +316,7 @@ void dir_maindialog::EditItem(QModelIndex index)
     if (!tmpString.isEmpty())
         EditItem(tmpString);
     else
-        WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
+        DIRMWARN;
 }
 
 void dir_maindialog::EditItem(QString str)
@@ -323,14 +324,14 @@ void dir_maindialog::EditItem(QString str)
     QString tmps = getMainIndex(1);
     if (tmps.isEmpty())
     {
-        WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
+        DIRMWARN;
         return;
     }
     s_2cdialog *newdialog = new s_2cdialog(tble+":"+tmps);
     int Mode = (isNewID) ? MODE_EDITNEW : MODE_EDIT;
     newdialog->setup(tmps+"_полн",Mode,str);
     if (newdialog->result)
-        WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
+        DIRMWARN;
     else
         newdialog->exec();
     ShowSlaveTree(slvtble);
@@ -342,11 +343,45 @@ void dir_maindialog::AddNew()
     QString newID = tfl.insert(slvtble+"_полн");
     QString tmpString = getSlaveIndex(0);
     QStringList fl, vl;
-    if ((!tmpString.isEmpty()) && (SlaveTVIsTree))
+    if ((!tmpString.isEmpty()) && (SlaveTVIsTree) && (!twodb)) // если из двух таблиц, то создавать элемент надо в подчиннённой таблице
     {
         fl << "ИД" << "ИД_а";
         vl << newID << tmpString;
         tfl.idtois(slvtble+"_полн",fl,vl);
+    }
+    else if (twodb)
+    {
+        QString ParentID = getSlaveIndex(0); // берём ИД "родительского" элемента
+        QString SlaveHeader;
+        QSqlQuery GetTableFields(sqlc.GetDB("sup"));
+        GetTableFields.exec("SELECT `header` FROM `tablefields` WHERE `tablename`=\"" + slvtble + "_полн\" AND `links` LIKE \"%" \
+                            + SlaveParentTableName + "%\";");
+        if (GetTableFields.isActive())
+        {
+            GetTableFields.next();
+            SlaveHeader = GetTableFields.value(0).toString();
+            if (!SlaveHeader.isEmpty())
+            {
+                fl = QStringList() << "ИД" << SlaveHeader;
+                vl = QStringList() << newID << ParentID;
+                tfl.idtois(slvtble+"_полн", fl, vl);
+                if (tfl.result)
+                {
+                    DIRMWARN;
+                    return;
+                }
+            }
+            else
+            {
+                DIRMWARN;
+                return;
+            }
+        }
+        else
+        {
+            DIRMWARN;
+            return;
+        }
     }
     EditItem(newID);
     isNewID = false;
@@ -369,7 +404,7 @@ void dir_maindialog::DeleteDataUnconditional(QString id)
     tfl.remove(slvtble+"_полн", id);
     if (tfl.result)
     {
-        WARNMSG(PublicClass::ER_DIRMAIN, __LINE__);
+        DIRMWARN;
         return;
     }
     else

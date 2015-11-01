@@ -47,7 +47,7 @@ void s_2ctdialog::setupUI()
     connect (pbOk, SIGNAL(clicked()), this, SLOT(accepted()));
     connect (pbCancel, SIGNAL(clicked()), this, SLOT(cancelled()));
     connect(mainTV, SIGNAL(datachanged()), this, SLOT(updatedialogsize()));
-    pmainmodel = new QSortFilterProxyModel;
+    pmainmodel = new ProxyModel;
     pmainmodel->setSourceModel(mainmodel);
     pmainmodel->setFilterKeyColumn(1);
     pmainmodel->setFilterCaseSensitivity(Qt::CaseInsensitive);
@@ -58,7 +58,7 @@ void s_2ctdialog::setupUI()
     mainTV->header()->setVisible(false);
     mainTV->setItemDelegate(uniDelegate);
     mainTV->setIndentation(2);
-    connect(mainmodel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(resizemainTV(QModelIndex,QModelIndex)));
+    connect(pmainmodel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(resizemainTV(QModelIndex,QModelIndex)));
     mainLayout->addWidget(lbl, 0, Qt::AlignRight);
     QHBoxLayout *hlyout = new QHBoxLayout;
     lbl = new s_tqLabel("Фильтр:");
@@ -80,8 +80,8 @@ void s_2ctdialog::setupUI()
     mainLayout->addLayout(pbLayout);
     constheight=lbl->minimumSizeHint().height()+pbOk->minimumSizeHint().height();
 //    mainTV->updateTVGeometry();
-    ExpandHandle = connect(mainTV, SIGNAL(expanded(QModelIndex)), mainmodel, SLOT(addExpandedIndex(QModelIndex)));
-    CollapseHandle = connect(mainTV, SIGNAL(collapsed(QModelIndex)), mainmodel, SLOT(removeExpandedIndex(QModelIndex)));
+    ExpandHandle = connect(mainTV, SIGNAL(expanded(QModelIndex)), this, SLOT(SetExpandIndex(QModelIndex)));
+    CollapseHandle = connect(mainTV, SIGNAL(collapsed(QModelIndex)), this, SLOT(UnsetExpandIndex(QModelIndex)));
     connect(mainTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(accepted(QModelIndex)));
     setLayout(mainLayout);
 }
@@ -234,8 +234,32 @@ void s_2ctdialog::Filter()
             CT2DBG;
             return;
         }
-        ExpandHandle = connect(tv, SIGNAL(expanded(QModelIndex)), mainmodel, SLOT(addExpandedIndex(QModelIndex)));
-        CollapseHandle = connect(tv, SIGNAL(collapsed(QModelIndex)), mainmodel, SLOT(removeExpandedIndex(QModelIndex)));
+        ExpandHandle = connect(tv, SIGNAL(expanded(QModelIndex)), this, SLOT(SetExpandIndex(QModelIndex)));
+        CollapseHandle = connect(tv, SIGNAL(collapsed(QModelIndex)), this, SLOT(UnsetExpandIndex(QModelIndex)));
     }
     pmainmodel->setFilterWildcard("*"+le->text()+"*");
+}
+
+void s_2ctdialog::SetExpandIndex(QModelIndex idx)
+{
+    s_tqTreeView *tv = this->findChild<s_tqTreeView *>("mainTV");
+    if (tv == 0)
+    {
+        CT2DBG;
+        return;
+    }
+    QModelIndex ModelIndex = tv->model()->index(idx.row(),idx.column(), QModelIndex());
+    pmainmodel->addExpandedIndex(ModelIndex);
+}
+
+void s_2ctdialog::UnsetExpandIndex(QModelIndex idx)
+{
+    s_tqTreeView *tv = this->findChild<s_tqTreeView *>("mainTV");
+    if (tv == 0)
+    {
+        CT2DBG;
+        return;
+    }
+    QModelIndex ModelIndex = tv->model()->index(idx.row(),idx.column(), QModelIndex());
+    pmainmodel->removeExpandedIndex(ModelIndex);
 }

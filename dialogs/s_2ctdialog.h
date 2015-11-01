@@ -2,7 +2,7 @@
 #define S_2CTDIALOG_H
 
 #include <QDialog>
-#include <QSortFilterProxyModel>
+#include "../models/proxymodel.h"
 #include "../models/s_ntmodel.h"
 
 #define CT2WARN WARNMSG(PublicClass::ER_2CTDLG, __LINE__)
@@ -28,7 +28,7 @@ public slots:
 private:
     QMetaObject::Connection ExpandHandle, CollapseHandle;
     s_ntmodel *mainmodel;
-    QSortFilterProxyModel *pmainmodel;
+    ProxyModel *pmainmodel;
     bool DialogIsNeedToBeResized;
     QString hdr;
     int constheight;
@@ -42,6 +42,8 @@ private slots:
     void resizemainTV(QModelIndex, QModelIndex);
     void updatedialogsize();
     void Filter();
+    void SetExpandIndex(QModelIndex idx);
+    void UnsetExpandIndex(QModelIndex idx);
 
 protected:
     void paintEvent(QPaintEvent *e);

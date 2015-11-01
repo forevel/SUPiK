@@ -42,7 +42,6 @@ s_ntmodel::s_ntmodel(QObject *parent) :
     parents << rootItem;
     indentations << 0;
     expandedIndexes.clear();
-    qRegisterMetaType();
 }
 
 s_ntmodel::~s_ntmodel()
@@ -263,12 +262,11 @@ void s_ntmodel::addExpandedIndex(const QModelIndex &index)
     {
         if (!expandedIndexes.contains(index))
         {
-            QModelIndex sourceindex = QSortFilterProxyModel::mapToSource(index);
-            s_ntitem *item = getItem(sourceindex);
+            s_ntitem *item = getItem(index);
             if (item->childCount())
             {
                 item->setIcon(0, icons[4]);
-                expandedIndexes.append(sourceindex);
+                expandedIndexes.append(index);
             }
         }
     }
@@ -280,12 +278,11 @@ void s_ntmodel::removeExpandedIndex(const QModelIndex &index)
 {
     if (index.isValid())
     {
-        QModelIndex sourceindex = QSortFilterProxyModel::mapToSource(index);
-        int idx = expandedIndexes.indexOf(sourceindex);
+        int idx = expandedIndexes.indexOf(index);
         if (idx != -1)
         {
             expandedIndexes.removeAt(idx);
-            s_ntitem *item=getItem(sourceindex);
+            s_ntitem *item=getItem(index);
             item->setIcon(0, icons[3]);
         }
     }

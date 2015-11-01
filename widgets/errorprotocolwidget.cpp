@@ -158,7 +158,7 @@ int ErrorProtocolModel::rowCount(const QModelIndex &index) const
 int ErrorProtocolModel::columnCount(const QModelIndex &index) const
 {
     Q_UNUSED(index);
-    return 4;
+    return 5;
 }
 
 void ErrorProtocolModel::AddRow(PublicClass::ermsg msg)
@@ -166,7 +166,7 @@ void ErrorProtocolModel::AddRow(PublicClass::ermsg msg)
     beginResetModel();
     if (rowCount()<MAX_MSG)
         insertRows(0,1,QModelIndex());
-    QStringList tmpsl = QStringList() << "#"+QString::number(MsgCount) << "0x"+QString::number(msg.ernum,16) << \
+    QStringList tmpsl = QStringList() << "#"+QString::number(MsgCount) << msg.DateTime << "0x"+QString::number(msg.ernum,16) << \
              "0x"+QString::number(msg.ersubnum,16) << msg.msg;
     MsgCount++;
     erdata.insert(0,tmpsl);

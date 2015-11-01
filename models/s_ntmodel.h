@@ -54,6 +54,11 @@ public slots:
     void removeExpandedIndex(const QModelIndex &index);
 
 private:
+    enum Roles
+    {
+        MyItemRole = Qt::UserRole+1
+    };
+
     s_ntitem *rootItem;
     QList<s_ntitem*> parents;
     QList<int> indentations;
@@ -65,7 +70,6 @@ private:
     bool FirstPass; // флаг, определяющий, не пустое ли дерево
 
     int BuildTree (QString id, bool twodb);
-    s_ntitem *addTreeCat (QString catlistid);
     int addTreeSlvItem(int position, QString id);
     void additemtotree(int position, QStringList sl, int set);
 };

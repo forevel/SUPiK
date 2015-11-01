@@ -1,5 +1,4 @@
 #include "cmp_compdialog.h"
-//#include <QStringListModel>
 #include <QAction>
 #include <QMenu>
 #include <QIcon>
@@ -11,7 +10,7 @@
 #include <QPainter>
 #include <QPaintEvent>
 #include <QApplication>
-#include <QSortFilterProxyModel>
+#include "../models/proxymodel.h"
 #include "../models/s_duniversal.h"
 #include "../widgets/s_tqgroupbox.h"
 #include "../widgets/s_tqlabel.h"
@@ -109,7 +108,7 @@ void cmp_compdialog::SetupUI()
     MainTV->horizontalHeader()->setVisible(true);
     MainTV->verticalHeader()->setVisible(false);
     s_ncmodel *mainmodel = new s_ncmodel;
-    QSortFilterProxyModel *mainproxymodel = new QSortFilterProxyModel;
+    ProxyModel *mainproxymodel = new ProxyModel;
     mainmodel->setup(CompLetter+"Компоненты_описание_сокращ");
     if (mainmodel->result)
     {
@@ -138,7 +137,7 @@ void cmp_compdialog::SetupUI()
     s_tqTableView *SlaveTV = new s_tqTableView;
     SlaveTV->setItemDelegate(gridItemDelegate);
     slavemodel = new s_ncmodel;
-    QSortFilterProxyModel *slaveproxymodel = new QSortFilterProxyModel;
+    ProxyModel *slaveproxymodel = new ProxyModel;
     slaveproxymodel->setSourceModel(slavemodel);
     SlaveTV->setModel(slaveproxymodel);
     SlaveTV->setObjectName("stv");
@@ -429,12 +428,6 @@ void cmp_compdialog::AddNewSubsection()
 {
     cmp_newsubsection *dlg = new cmp_newsubsection;
     dlg->exec();
-    // 1. Спросить имя
-    // 2. Создать таблицу в соотв. БД (например, relay в altium)
-    // 3. Создать категорию
-    // 4. Если надо, задать подкатегории ("чип", "защитные" и т.п.)
-    // 4. Задать имена и единицы измерения параметров
-    // 5. Создать соответствующие записи в unitset и parameters
 }
 
 // --------------------------------------

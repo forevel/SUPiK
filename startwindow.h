@@ -4,7 +4,7 @@
 #include <QMainWindow>
 
 #include "supik.h"
-#include "dialogs/sys_settingsdialog.h"
+#include "dialogs/sys/sys_settingsdialog.h"
 #include "gen/publicclass.h"
 #include "gen/publiclang.h"
 

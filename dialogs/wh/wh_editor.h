@@ -6,9 +6,9 @@
 #include <QPixmap>
 #include <QVBoxLayout>
 
-#include "../widgets/s_tqcombobox.h"
-#include "../widgets/s_tqlabel.h"
-#include "../models/whplacestreemodel.h"
+#include "../../widgets/s_tqcombobox.h"
+#include "../../widgets/s_tqlabel.h"
+#include "../../models/whplacestreemodel.h"
 
 #define WHEDWARN    WARNMSG(PublicClass::ER_WHED, __LINE__)
 #define WHEDDBG     DBGMSG(PublicClass::ER_WHED, __LINE__)

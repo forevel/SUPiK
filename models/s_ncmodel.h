@@ -62,6 +62,7 @@ public:
         return map;
     }
     void setup(QString tble);
+    void Add(QString tble);
     void setup(QString tble, QString id);
     void setupcolumn(QString tble, QString header);
     void setDataToWrite(QList<QStringList> sl);

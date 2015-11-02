@@ -6,26 +6,26 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QHeaderView>
-#include <QMessageBox>
 #include <QPainter>
 #include <QPaintEvent>
 #include <QApplication>
-#include "../models/proxymodel.h"
-#include "../models/s_duniversal.h"
-#include "../widgets/s_tqgroupbox.h"
-#include "../widgets/s_tqlabel.h"
-#include "../widgets/s_tqlineedit.h"
-#include "../widgets/s_tqcombobox.h"
-#include "../widgets/s_tqpushbutton.h"
-#include "../widgets/s_tqcheckbox.h"
-#include "../widgets/s_tqtreeview.h"
-#include "../widgets/s_tqtableview.h"
-#include "../widgets/s_tqframe.h"
-#include "../widgets/s_tqsplitter.h"
-#include "../widgets/s_colortabwidget.h"
-#include "../widgets/s_tqwidget.h"
-#include "../gen/publicclass.h"
-#include "../gen/s_tablefields.h"
+#include "../../models/proxymodel.h"
+#include "../../models/s_duniversal.h"
+#include "../../widgets/s_tqgroupbox.h"
+#include "../../widgets/s_tqlabel.h"
+#include "../../widgets/s_tqlineedit.h"
+#include "../../widgets/s_tqcombobox.h"
+#include "../../widgets/s_tqpushbutton.h"
+#include "../../widgets/s_tqcheckbox.h"
+#include "../../widgets/s_tqtreeview.h"
+#include "../../widgets/s_tqtableview.h"
+#include "../../widgets/s_tqframe.h"
+#include "../../widgets/s_tqsplitter.h"
+#include "../../widgets/s_colortabwidget.h"
+#include "../../widgets/s_tqwidget.h"
+#include "../../gen/publicclass.h"
+#include "../../gen/s_tablefields.h"
+#include "../messagebox.h"
 #include "cmp_maindialog.h"
 #include "cmp_newsubsection.h"
 
@@ -285,8 +285,7 @@ void cmp_compdialog::AddNewOnExistingItem()
 
 void cmp_compdialog::DeleteItem()
 {
-    if (QMessageBox::question(this, "Удалить элемент", "Вы уверены, что хотите удалить элемент?", QMessageBox::Yes|QMessageBox::No,\
-                          QMessageBox::No) == QMessageBox::No)
+    if (!(MessageBox::question(this, "Удалить элемент", "Вы уверены, что хотите удалить элемент?")))
         return;
     s_tqTableView *tv = this->findChild<s_tqTableView *>("stv");
     if (tv == 0)
@@ -395,8 +394,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
             if (nkidsl.at(1) == QString::number(id)) // проверяем, ссылка на тот же компонент?
                 // есть уже точно такая же запись, ничего не делаем и выходим
                 return;
-            else if (QMessageBox::question(this, "Запись найдена", "В БД номенклатуры есть такой элемент,\nно с другой ссылкой ("+nkidsl.at(1)+"). Перезаписать?", \
-                                          QMessageBox::Yes|QMessageBox::No, QMessageBox::No) == QMessageBox::No)
+            else if (!(MessageBox::question(this, "Запись найдена", "В БД номенклатуры есть такой элемент,\nно с другой ссылкой ("+nkidsl.at(1)+"). Перезаписать?")))
                 return;
         }
         // нет ссылки или она неправильная, записываем её методом обновления
@@ -426,7 +424,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
 
 void cmp_compdialog::AddNewSubsection()
 {
-    cmp_newsubsection *dlg = new cmp_newsubsection;
+    cmp_newsubsection *dlg = new cmp_newsubsection(CompType);
     dlg->exec();
 }
 

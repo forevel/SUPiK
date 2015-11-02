@@ -2,22 +2,21 @@
 #include <QTabWidget>
 #include <QPainter>
 #include <QStringListModel>
-#include <QMessageBox>
-#include "../widgets/s_tqlabel.h"
-#include "../widgets/s_tqwidget.h"
-#include "../widgets/s_tqlineedit.h"
-#include "../widgets/s_tqgroupbox.h"
-#include "../widgets/s_tqpushbutton.h"
-#include "../widgets/s_tqchoosewidget.h"
-#include "../widgets/s_tqcombobox.h"
-#include "../widgets/s_tqcheckbox.h"
-#include "../models/s_ntmodel.h"
-#include "../models/s_ncmodel.h"
-#include "../gen/s_sql.h"
-#include "../gen/publicclass.h"
-#include "../gen/s_tablefields.h"
-#include "s_2cdialog.h"
-
+#include "../../widgets/s_tqlabel.h"
+#include "../../widgets/s_tqwidget.h"
+#include "../../widgets/s_tqlineedit.h"
+#include "../../widgets/s_tqgroupbox.h"
+#include "../../widgets/s_tqpushbutton.h"
+#include "../../widgets/s_tqchoosewidget.h"
+#include "../../widgets/s_tqcombobox.h"
+#include "../../widgets/s_tqcheckbox.h"
+#include "../../models/s_ntmodel.h"
+#include "../../models/s_ncmodel.h"
+#include "../../gen/s_sql.h"
+#include "../../gen/publicclass.h"
+#include "../../gen/s_tablefields.h"
+#include "../s_2cdialog.h"
+#include "../messagebox.h"
 #include <QVBoxLayout>
 #include <QFont>
 
@@ -829,8 +828,7 @@ void cmp_maindialog::CancelAndClose()
 {
     if (Changed)
     {
-        if (QMessageBox::question(this, "Выйти?", "Данные были изменены\nВсё равно выйти?", QMessageBox::Yes|QMessageBox::No,\
-                              QMessageBox::No) == QMessageBox::No)
+        if (!(MessageBox::question(this, "Выйти?", "Данные были изменены\nВсё равно выйти?")))
             return;
     }
     emit cancelled();

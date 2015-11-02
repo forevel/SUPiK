@@ -12,17 +12,17 @@
 #include <QFileDialog>
 #include <QHeaderView>
 #include <QComboBox>
-#include "../widgets/s_tqcalendarwidget.h"
+#include "../../widgets/s_tqcalendarwidget.h"
 
 #include "wh_dialog.h"
-#include "../widgets/s_tqlabel.h"
-#include "../widgets/s_tqlineedit.h"
-#include "../widgets/s_tqpushbutton.h"
-#include "../widgets/s_tqtableview.h"
-#include "../gen/publicclass.h"
-#include "../gen/s_sql.h"
-#include "../models/s_duniversal.h"
-#include "s_2cdialog.h"
+#include "../../widgets/s_tqlabel.h"
+#include "../../widgets/s_tqlineedit.h"
+#include "../../widgets/s_tqpushbutton.h"
+#include "../../widgets/s_tqtableview.h"
+#include "../../gen/publicclass.h"
+#include "../../gen/s_sql.h"
+#include "../../models/s_duniversal.h"
+#include "../s_2cdialog.h"
 
 wh_dialog::wh_dialog(int Reason, QString id, QWidget *parent) :
     QDialog(parent)

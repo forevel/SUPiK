@@ -600,6 +600,30 @@ void s_ncmodel::setup(QString tble)
     return;
 }
 
+void s_ncmodel::Add(QString tble)
+{
+    int i;
+    result = 0;
+    QStringList headers, links;
+    DataToWrite.clear();
+    DataToWrite = tfl.tbvll(tble);
+    if (tfl.result)
+    {
+        result=1;
+        WARNMSG(PublicClass::ER_NCMODEL,__LINE__);
+        return;
+    }
+    // в lsl.at(1) содержатся links, в lsl.at(0) - заголовки
+    headers = DataToWrite.at(0);
+    links = DataToWrite.at(1); // links для новой таблицы не имеет значения - используются links из основной
+    DataToWrite.removeAt(0);
+    DataToWrite.removeAt(0);
+    if (columnCount() < headers.size()) // при добавлении кол-во столбцов в новой таблице должно быть не больше, чем в основной
+        return;
+    fillModel();
+    return;
+}
+
 // процедура заполнения модели значениями headers и по table:tablefields из таблицы tble в sup.tablefields по одному id
 // предназначена для диалога редактирования справочников (s_2cdialog)
 

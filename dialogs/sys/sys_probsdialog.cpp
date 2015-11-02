@@ -6,12 +6,12 @@
 #include <QApplication>
 
 #include "sys_probsdialog.h"
-#include "../widgets/s_tqlabel.h"
-#include "../widgets/s_tqtableview.h"
-#include "../gen/publicclass.h"
-#include "../gen/s_sql.h"
-#include "../widgets/s_tqpushbutton.h"
-#include "../widgets/s_tqcombobox.h"
+#include "../../widgets/s_tqlabel.h"
+#include "../../widgets/s_tqtableview.h"
+#include "../../gen/publicclass.h"
+#include "../../gen/s_sql.h"
+#include "../../widgets/s_tqpushbutton.h"
+#include "../../widgets/s_tqcombobox.h"
 
 sys_probsdialog::sys_probsdialog(QWidget *parent) :
     QDialog(parent)

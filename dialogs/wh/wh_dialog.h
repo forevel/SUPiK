@@ -21,8 +21,8 @@
 #include <QDialog>
 #include <QSqlDatabase>
 #include <QDate>
-#include "../models/s_ncmodel.h"
-#include "../widgets/s_tqtableview.h"
+#include "../../models/s_ncmodel.h"
+#include "../../widgets/s_tqtableview.h"
 
 QT_BEGIN_NAMESPACE
 class QVBoxLayout;

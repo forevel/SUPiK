@@ -3,13 +3,13 @@
 
 #include <QDialog>
 #include <QIcon>
-#include "../gen/publicclass.h"
-#include "../gen/publiclang.h"
-#include "../widgets/s_tqlabel.h"
-#include "../widgets/s_tqlineedit.h"
-#include "../widgets/s_tqpushbutton.h"
-#include "../widgets/s_tqcombobox.h"
-#include "../widgets/s_tqspinbox.h"
+#include "../../gen/publicclass.h"
+#include "../../gen/publiclang.h"
+#include "../../widgets/s_tqlabel.h"
+#include "../../widgets/s_tqlineedit.h"
+#include "../../widgets/s_tqpushbutton.h"
+#include "../../widgets/s_tqcombobox.h"
+#include "../../widgets/s_tqspinbox.h"
 
 QT_BEGIN_NAMESPACE
 class QGridLayout;

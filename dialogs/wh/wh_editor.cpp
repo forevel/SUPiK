@@ -1,16 +1,17 @@
 #include "wh_editor.h"
-#include "../widgets/s_tqlineedit.h"
-#include "../widgets/s_tqpushbutton.h"
-#include "../widgets/s_tqstackedwidget.h"
-#include "../widgets/s_tqspinbox.h"
-#include "../widgets/s_tqgroupbox.h"
-#include "../widgets/s_tqwidget.h"
-#include "../widgets/s_tqchoosewidget.h"
-#include "../widgets/s_tqtableview.h"
-#include "../gen/s_tablefields.h"
-#include "../gen/publicclass.h"
-#include "../models/placedelegate.h"
-#include "s_2cdialog.h"
+#include "../../widgets/s_tqlineedit.h"
+#include "../../widgets/s_tqpushbutton.h"
+#include "../../widgets/s_tqstackedwidget.h"
+#include "../../widgets/s_tqspinbox.h"
+#include "../../widgets/s_tqgroupbox.h"
+#include "../../widgets/s_tqwidget.h"
+#include "../../widgets/s_tqchoosewidget.h"
+#include "../../widgets/s_tqtableview.h"
+#include "../../gen/s_tablefields.h"
+#include "../../gen/publicclass.h"
+#include "../../models/placedelegate.h"
+#include "../messagebox.h"
+#include "../s_2cdialog.h"
 
 #include <QHBoxLayout>
 #include <QIcon>
@@ -20,7 +21,6 @@
 #include <QStringListModel>
 #include <QStandardItemModel>
 #include <QScrollArea>
-#include <QMessageBox>
 
 Wh_Editor::Wh_Editor(QWidget *parent) : QDialog(parent)
 {
@@ -175,8 +175,7 @@ void Wh_Editor::ChangeWh(QString str)
     {
         if (SomethingChanged)
         {
-            if (QMessageBox::question(this, "Данные были изменены", "Сохранить изменения?", QMessageBox::Yes|QMessageBox::No,\
-                                  QMessageBox::Yes) == QMessageBox::Yes)
+            if (MessageBox::question(this, "Данные были изменены", "Сохранить изменения?"))
                 WhModel->Save(); // если модель уже существует, надо сохранить данные в БД, чтобы не потерялись
             else
                 WhModel->DeleteNew();
@@ -467,8 +466,7 @@ void Wh_Editor::ChangePlace(QVariant PlaceName)
     {
         if (PlaceType.at(0).toInt() != 0) // непустое размещение
         {
-            if (QMessageBox::question(this, "Размещение уже имеется", "Вы уверены, что хотите расформировать старое размещение?", QMessageBox::Yes|QMessageBox::No,\
-                                  QMessageBox::No) == QMessageBox::No)
+            if (!(MessageBox::question(this, "Размещение уже имеется", "Вы уверены, что хотите расформировать старое размещение?")))
                 return;
             Disband(CurID);
         }
@@ -479,8 +477,7 @@ void Wh_Editor::ChangePlace(QVariant PlaceName)
         QList<int> tmpl = WhModel->Children(item->Id);
         if (!tmpl.isEmpty()) // есть размещение
         {
-            if (QMessageBox::question(this, "Размещение уже имеется", "Вы уверены, что хотите расформировать старое размещение?", QMessageBox::Yes|QMessageBox::No,\
-                                  QMessageBox::No) == QMessageBox::No)
+            if (!(QMessageBox::question(this, "Размещение уже имеется", "Вы уверены, что хотите расформировать старое размещение?")))
                 return;
             Disband(CurID);
         }

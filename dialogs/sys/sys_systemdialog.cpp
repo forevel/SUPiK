@@ -1,22 +1,23 @@
 #include "sys_systemdialog.h"
-#include "s_2cdialog.h"
-#include "dir_maindialog.h"
-#include "dir_adddialog.h"
-#include "../gen/s_sql.h"
-#include "../gen/publicclass.h"
-#include "../gen/s_tablefields.h"
-#include "../models/s_ntmodel.h"
-#include "../models/s_ncmodel.h"
-#include "../models/s_duniversal.h"
-#include "../widgets/s_tqtreeview.h"
-#include "../widgets/s_tqtableview.h"
-#include "../widgets/s_tqframe.h"
-#include "../widgets/s_tqlabel.h"
-#include "../widgets/s_tqsplitter.h"
-#include "../widgets/s_tqstackedwidget.h"
-#include "../widgets/s_tqwidget.h"
-#include "sysdlg/sysmenueditor.h"
-#include "sysdlg/sysdireditor.h"
+#include "../s_2cdialog.h"
+#include "../messagebox.h"
+#include "../dir/dir_maindialog.h"
+#include "../dir/dir_adddialog.h"
+#include "../../gen/s_sql.h"
+#include "../../gen/publicclass.h"
+#include "../../gen/s_tablefields.h"
+#include "../../models/s_ntmodel.h"
+#include "../../models/s_ncmodel.h"
+#include "../../models/s_duniversal.h"
+#include "../../widgets/s_tqtreeview.h"
+#include "../../widgets/s_tqtableview.h"
+#include "../../widgets/s_tqframe.h"
+#include "../../widgets/s_tqlabel.h"
+#include "../../widgets/s_tqsplitter.h"
+#include "../../widgets/s_tqstackedwidget.h"
+#include "../../widgets/s_tqwidget.h"
+#include "sysmenueditor.h"
+#include "sysdireditor.h"
 
 #include <QVBoxLayout>
 #include <QHBoxLayout>
@@ -489,8 +490,7 @@ void sys_systemdialog::DeleteTable()
     QStringList TableHeaders = tfl.tableheaders(tblename);
     if (tfl.result)
         return;
-    if (QMessageBox::question(this, "Уверены?", "Вы уверены, что хотите удалить все сведения о таблице?", QMessageBox::Yes|QMessageBox::No,\
-                          QMessageBox::No) == QMessageBox::No)
+    if (!(MessageBox::question(this, "Уверены?", "Вы уверены, что хотите удалить все сведения о таблице?")))
         return;
     for (int i=0; i<TableHeaders.size(); i++)
     {

@@ -4,7 +4,6 @@
 #include <QMenu>
 #include <QInputDialog>
 #include <QVBoxLayout>
-#include <QMessageBox>
 #include "sysmenueditor.h"
 #include "../../widgets/s_tqtreeview.h"
 #include "../../models/s_ncmodel.h"
@@ -13,7 +12,8 @@
 #include "../../gen/s_tablefields.h"
 #include "../../gen/publicclass.h"
 #include "../../gen/s_sql.h"
-#include "../../dialogs/s_2cdialog.h"
+#include "../messagebox.h"
+#include "../s_2cdialog.h"
 
 SysmenuEditor::SysmenuEditor(QWidget *parent) :
     QDialog(parent)
@@ -144,9 +144,7 @@ void SysmenuEditor::Delete()
     sl = sqlc.GetValuesFromTableByField(sqlc.GetDB(tmpdb), tmptble, sl, "idalias", tmpString);
     if (!sqlc.result) // есть записи с данным idalias
     {
-        if (QMessageBox::question(this, "Вы уверены?", \
-                                  "Категория содержит подкатегории.\nВы уверены, что хотите удалить её?", \
-                                  QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes)
+        if (MessageBox::question(this, "Вы уверены?", "Категория содержит подкатегории.\nВы уверены, что хотите удалить её?"))
         {
             tfl.remove(tble+"_полн", tmpString);
             if (tfl.result)
@@ -165,9 +163,7 @@ void SysmenuEditor::Delete()
     }
     else
     {
-        if (QMessageBox::question(this, "Вы уверены?", \
-                                  "Вы уверены?", \
-                                  QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes)
+        if (MessageBox::question(this, "Вы уверены?", "Вы уверены?"))
         {
             tfl.remove(tble+"_полн", tmpString);
             if (tfl.result)

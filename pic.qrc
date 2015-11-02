@@ -59,5 +59,6 @@
         <file>res/oblachko.png</file>
         <file>res/EmptyCell.png</file>
         <file>res/back.png</file>
+        <file>res/crossgray.png</file>
     </qresource>
 </RCC>

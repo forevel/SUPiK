@@ -11,13 +11,13 @@
 #include <QApplication>
 #include <QtXlsx/xlsxdocument.h>
 #include "sys_backuprestoredirdialog.h"
-#include "../widgets/s_tqlabel.h"
-#include "../widgets/s_tqlineedit.h"
-#include "../widgets/s_tqpushbutton.h"
-#include "../widgets/s_tqtableview.h"
-#include "../widgets/s_tqcombobox.h"
-#include "../gen/publicclass.h"
-#include "../gen/s_sql.h"
+#include "../../widgets/s_tqlabel.h"
+#include "../../widgets/s_tqlineedit.h"
+#include "../../widgets/s_tqpushbutton.h"
+#include "../../widgets/s_tqtableview.h"
+#include "../../widgets/s_tqcombobox.h"
+#include "../../gen/publicclass.h"
+#include "../../gen/s_sql.h"
 
 sys_backuprestoredirdialog::sys_backuprestoredirdialog(bool isImport, QWidget *parent) :
     QDialog(parent)

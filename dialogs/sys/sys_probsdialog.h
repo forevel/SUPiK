@@ -5,7 +5,7 @@
 #include <QPoint>
 #include <QStringListModel>
 
-#include "../models/s_ncmodel.h"
+#include "../../models/s_ncmodel.h"
 
 class sys_probsdialog : public QDialog
 {

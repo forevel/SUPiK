@@ -3,9 +3,9 @@
 
 #include <QDialog>
 #include <QGridLayout>
-#include "../widgets/s_tqpushbutton.h"
-#include "../widgets/s_tqcombobox.h"
-#include "../widgets/s_tqlineedit.h"
+#include "../../widgets/s_tqpushbutton.h"
+#include "../../widgets/s_tqcombobox.h"
+#include "../../widgets/s_tqlineedit.h"
 
 #define FSIZE 16
 #define FSIZE2 7

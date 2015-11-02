@@ -6,8 +6,8 @@
 #include <QPoint>
 #include <QSqlDatabase>
 
-#include "../models/s_ntmodel.h"
-#include "../models/s_ncmodel.h"
+#include "../../models/s_ntmodel.h"
+#include "../../models/s_ncmodel.h"
 
 #define DIRMDBG         DBGMSG(PublicClass::ER_DIRMAIN,__LINE__)
 #define DIRMWARN        WARNMSG(PublicClass::ER_DIRMAIN,__LINE__)

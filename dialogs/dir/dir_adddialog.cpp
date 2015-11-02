@@ -6,23 +6,23 @@
 #include <QHBoxLayout>
 #include <QStringListModel>
 #include <QFontMetrics>
-#include <QMessageBox>
 #include <QInputDialog>
 #include <QHeaderView>
-#include "../widgets/s_tqlabel.h"
-#include "../widgets/s_tqcheckbox.h"
-#include "../widgets/s_tqspinbox.h"
-#include "../widgets/s_tqtreeview.h"
-#include "../widgets/s_tqtableview.h"
-#include "../widgets/s_tqwidget.h"
-#include "../widgets/s_tqstackedwidget.h"
-#include "s_accessdialog.h"
-#include "../gen/s_sql.h"
-#include "../gen/publicclass.h"
-#include "../gen/s_tablefields.h"
-#include "../models/s_ntmodel.h"
-#include "../models/s_ncmodel.h"
-#include "../models/s_duniversal.h"
+#include "../../widgets/s_tqlabel.h"
+#include "../../widgets/s_tqcheckbox.h"
+#include "../../widgets/s_tqspinbox.h"
+#include "../../widgets/s_tqtreeview.h"
+#include "../../widgets/s_tqtableview.h"
+#include "../../widgets/s_tqwidget.h"
+#include "../../widgets/s_tqstackedwidget.h"
+#include "../s_accessdialog.h"
+#include "../messagebox.h"
+#include "../../gen/s_sql.h"
+#include "../../gen/publicclass.h"
+#include "../../gen/s_tablefields.h"
+#include "../../models/s_ntmodel.h"
+#include "../../models/s_ncmodel.h"
+#include "../../models/s_duniversal.h"
 
 dir_adddialog::dir_adddialog(bool update, QString dirtype, QString dir, QWidget *parent) :
     QDialog(parent) // dirtype - имя таблицы из tablefields, где искать информацию о справочнике (dirlist, dirsyslist и т.д.)
@@ -346,8 +346,7 @@ void dir_adddialog::WriteAndClose()
         else
         {
             // есть такая таблица, надо спросить, не хотим ли её поменять?
-            if (QMessageBox::question(this, "Таблица существует", "Таблица для справочника уже существует\nПерезаписать?", QMessageBox::Yes|QMessageBox::No,\
-                                  QMessageBox::No) == QMessageBox::No)
+            if (!(QMessageBox::question(this, "Таблица существует", "Таблица для справочника уже существует\nПерезаписать?")))
                 return; // не готовы перезаписывать, значит, не будет соответствия между справочником и таблицей. Выход.
             // проверяем, если остались неохваченные поля в считанной структуре
             if (!cmpsl.isEmpty())
@@ -355,7 +354,7 @@ void dir_adddialog::WriteAndClose()
                 //      спрашиваем, если не удалять
                 tmpString = cmpsl.join(",");
                 tmpString = "В таблице существуют следующие поля:\n" + tmpString + "\nПерезаписать?";
-                if (QMessageBox::question(this, "Поля существуют", tmpString, QMessageBox::Yes|QMessageBox::No, QMessageBox::No) == QMessageBox::No)
+                if (!(MessageBox::question(this, "Поля существуют", tmpString)))
                     return; // выход, ибо опять же, не будет соответствия
             }
             // делаем alter table с запомненным списком sl

@@ -12,8 +12,8 @@
 
 #include <QDialog>
 
-#include "../models/s_ncmodel.h"
-#include "../models/s_ntmodel.h"
+#include "../../models/s_ncmodel.h"
+#include "../../models/s_ntmodel.h"
 
 class cmp_compdialog : public QDialog
 {

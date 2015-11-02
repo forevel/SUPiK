@@ -89,8 +89,9 @@ void s_2cdialog::SetupFile(QString Filename, QString StringToFind, QString str)
     QString tmpString;
     char *tmpChar;
     int filepos = 0;
-    Mode = MODE_CHOOSE;
+    Mode = MODE_FILE;
     setupUI();
+    Mode = MODE_CHOOSE;
 
     tmpList.clear();
     QFile file;
@@ -183,16 +184,22 @@ void s_2cdialog::setupUI()
     if (Mode == MODE_CHOOSE)
     {
         QHBoxLayout *hlyout = new QHBoxLayout;
-        lbl = new s_tqLabel("Фильтр:");
-        s_tqLineEdit *le = new s_tqLineEdit;
-        le->setObjectName("filterle");
         s_tqPushButton *pb = new s_tqPushButton;
         pb->setIcon(QIcon(":/res/lupa.gif"));
-        connect(le,SIGNAL(returnPressed()),this,SLOT(Filter()));
-        connect(pb,SIGNAL(clicked()),this,SLOT(Filter()));
-        hlyout->addWidget(lbl);
-        hlyout->addWidget(le, 1);
+        pb->setToolTip("Поиск");
+        connect(pb,SIGNAL(clicked()),this,SLOT(ShowFilterLineEdit()));
         hlyout->addWidget(pb);
+        pb = new s_tqPushButton;
+        pb->setToolTip("Сбросить фильтр");
+        pb->setIcon(QIcon(":/res/crossgray.png"));
+        connect(pb,SIGNAL(clicked()),this,SLOT(Unfilter()));
+        hlyout->addWidget(pb);
+        pb = new s_tqPushButton;
+        pb->setToolTip("Создать новый элемент");
+        pb->setIcon(QIcon(":/res/newdocy.png"));
+        connect(pb,SIGNAL(clicked()),this,SLOT(AddItem()));
+        hlyout->addWidget(pb);
+        hlyout->addStretch(1);
         mainLayout->addLayout(hlyout);
     }
     mainLayout->addWidget(mainTV);
@@ -203,10 +210,74 @@ void s_2cdialog::setupUI()
     connect (pbCancel, SIGNAL(clicked()), this, SLOT(cancelled()));
 }
 
+void s_2cdialog::ShowFilterLineEdit()
+{
+    QDialog *dlg = new QDialog(this);
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
+    QPushButton *pb = qobject_cast<QPushButton *>(sender());
+    dlg->move(pb->mapToGlobal(pb->pos()));
+    QHBoxLayout *hlyout = new QHBoxLayout;
+    s_tqLabel *lbl = new s_tqLabel("Фильтр:");
+    s_tqLineEdit *le = new s_tqLineEdit;
+    le->setObjectName("filterle");
+    pb = new s_tqPushButton;
+    pb->setIcon(QIcon(":/res/cross.png"));
+    connect(le,SIGNAL(returnPressed()),this,SLOT(Filter()));
+    connect(pb,SIGNAL(clicked()),dlg,SLOT(close()));
+    hlyout->addWidget(lbl);
+    hlyout->addWidget(le, 1);
+    hlyout->addWidget(pb);
+    dlg->setLayout(hlyout);
+    dlg->exec();
+}
+
+void s_2cdialog::AddItem()
+{
+    QString tmptble = tble.at(0);
+    tmptble.remove("_полн");
+    tmptble.remove("_сокращ");
+    tmptble.append("_полн");
+    QString newID = tfl.insert(tmptble);
+    if (tfl.result)
+    {
+        CD2WARN;
+        return;
+    }
+    tfl.idtois(tmptble,QStringList("ИД"),QStringList(newID));
+    if (!tfl.result)
+    {
+        s_2cdialog *newdialog = new s_2cdialog(tble.at(0));
+        newdialog->setup(tmptble, MODE_EDITNEW, newID);
+        if (!newdialog->result)
+        {
+            newdialog->setModal(true);
+            newdialog->exec();
+            Update();
+        }
+        else
+        {
+            CD2WARN;
+            return;
+        }
+    }
+    else
+        CD2WARN;
+}
+
+void s_2cdialog::Update()
+{
+    mainmodel->setup(tble.at(0));
+    if (mainmodel->result)
+    {
+        CD2WARN;
+        return;
+    }
+}
+
 void s_2cdialog::AddTable(QString tble)
 {
     this->tble.append(tble);
-    mainmodel->setup(tble);
+    mainmodel->Add(tble);
     if (mainmodel->result)
     {
         CD2WARN;
@@ -363,4 +434,9 @@ void s_2cdialog::Filter()
         return;
     }
     pmainmodel->setFilterWildcard("*"+le->text()+"*");
+}
+
+void s_2cdialog::Unfilter()
+{
+    pmainmodel->setFilterWildcard("*");
 }

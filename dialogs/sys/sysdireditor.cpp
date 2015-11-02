@@ -4,13 +4,13 @@
 #include "../../gen/publicclass.h"
 #include "../../models/s_duniversal.h"
 #include "../../models/s_ncmodel.h"
-#include "../../dialogs/s_2cdialog.h"
+#include "../s_2cdialog.h"
+#include "../messagebox.h"
 
 #include <QVBoxLayout>
 #include <QHeaderView>
 #include <QAction>
 #include <QMenu>
-#include <QMessageBox>
 
 SysDirEditor::SysDirEditor(QWidget *parent) :
     QDialog(parent)
@@ -113,8 +113,7 @@ void SysDirEditor::DeleteDir()
         return;
     }
     QString dirname = tv->model()->data(tv->model()->index(tv->currentIndex().row(),1,QModelIndex()),Qt::DisplayRole).toString();
-    if (QMessageBox::question(this, "Уверены?", "Вы уверены, что хотите удалить все сведения о справочнике?", QMessageBox::Yes|QMessageBox::No,\
-                          QMessageBox::No) == QMessageBox::No)
+    if (!(MessageBox::question(this, "Уверены?", "Вы уверены, что хотите удалить все сведения о справочнике?")))
         return;
     QStringList fl = QStringList() << "dirlist";
     QStringList vl = QStringList() << dirname;

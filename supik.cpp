@@ -67,7 +67,7 @@ void supik::SetSupikWindow()
     ErrorProtocolUpdateTimer->setInterval(1000);
     connect(ErrorProtocolUpdateTimer,SIGNAL(timeout()),this,SLOT(UpdateErrorProtocol()));
     ErrorProtocolUpdateTimer->start();
-    setWindowTitle("Супик :: главное окно");
+    setWindowTitle(PROGNAME);
     resize (984, 688);
     QIcon SupikIcon;
     SupikIcon.addFile(QString::fromUtf8(":/res/supik.png"), QSize(), QIcon::Normal, QIcon::Off);
@@ -75,9 +75,31 @@ void supik::SetSupikWindow()
     setStyleSheet("background-color: rgb(204, 204, 204);");
     QVBoxLayout *mainLayout = new QVBoxLayout;
     QHBoxLayout *upperLayout = new QHBoxLayout;
+
+    s_tqPushButton *pb = new s_tqPushButton;
+    pb->setIcon(QIcon(":/res/kniga_logo.png"));
+    connect(pb, SIGNAL(clicked()), this, SLOT(Directories()));
+    pb->setToolTip("Редактор справочников");
+    upperLayout->addWidget(pb);
+    pb = new s_tqPushButton;
+    pb->setIcon(QIcon(":/res/microshema.png"));
+    connect(pb, SIGNAL(clicked()), this, SLOT(Components()));
+    pb->setToolTip("Редактор компонентов");
+    upperLayout->addWidget(pb);
+    pb = new s_tqPushButton;
+    pb->setIcon(QIcon(":/res/whPB.png"));
+    connect(pb, SIGNAL(clicked()), this, SLOT(WhEditor()));
+    pb->setToolTip("Редактор складов");
+    upperLayout->addWidget(pb);
+    pb = new s_tqPushButton;
+    pb->setIcon(QIcon(":/res/cross.png"));
+    connect(pb, SIGNAL(clicked()), this, SLOT(close()));
+    pb->setToolTip("Выход из программы");
+    upperLayout->addWidget(pb);
+
+    upperLayout->addStretch(99);
     s_tqLabel *datetime = new s_tqLabel;
     datetime->setObjectName("datetime");
-    upperLayout->addStretch(99);
     upperLayout->addWidget(datetime, 0);
     mainLayout->addLayout(upperLayout, 0);
     S_ColorTabWidget *MainTW = new S_ColorTabWidget;
@@ -617,7 +639,7 @@ void supik::MouseMove()
         if (ERHide)
             ShowOrHideSlideER();
     }
-    else
+    else if ((abs(curPos.y() - height()) > 120) && (curPos.x() > 0) && (curPos.x() < width()))
     {
         if ((!ERHide) && (!ERTimerIsOn))
             ShowOrHideSlideER();

@@ -649,14 +649,11 @@ void cmp_maindialog::FillAltDialog(QStringList vl)
     SetLEData("markingle",vl.at(9));
     SetParLE(0,vl.at(10));
     SetParLE(1,vl.at(11));
-/*    SetLEData("par0le",vl.at(10));
-    SetLEData("par1le",vl.at(11)); */
     SetLEData("accuracyle",vl.at(12));
     SetLEData("mintemple",vl.at(13));
     SetLEData("maxtemple",vl.at(14));
     SetLEData("maxpowerle",vl.at(15));
     SetLEData("tkcle",vl.at(16));
-//    SetLEData("par2le",vl.at(17));
     SetParLE(2,vl.at(17));
     QString tmps = vl.at(18);
     tmps.replace("\\","/");
@@ -678,8 +675,6 @@ void cmp_maindialog::FillAltDialog(QStringList vl)
     // Unit = 28
     SetParLE(3,vl.at(29));
     SetParLE(4,vl.at(30));
-/*    SetLEData("par3le",vl.at(29));
-    SetLEData("par4le",vl.at(30)); */
     EnablePartNumberCreator(vl.at(6)); // принудительно вызываем включение формирователя поля PartNumber, если вдруг производитель оказался "НКП"
                                         // в конце - т.к. prefix формируется так же на основании isSMD
 }
@@ -710,16 +705,12 @@ QStringList cmp_maindialog::GetAltData()
     vl.append(LEData("markingle"));
     vl.append(ParLE(0));
     vl.append(ParLE(1));
-/*    vl.append(LEData("par0le"));
-    vl.append(LEData("par1le")); */
     vl.append(LEData("accuracyle"));
     vl.append(LEData("mintemple"));
     vl.append(LEData("maxtemple"));
     vl.append(LEData("maxpowerle"));
     vl.append(LEData("tkcle"));
     vl.append(ParLE(2));
-//    vl.append(LEData("par2le"));
-//    vl.append(CWData("dsheetcw"));
     QString tmps = CWData("dsheetcw");
     tmps.replace("/","\\\\");
     vl.append(tmps);
@@ -731,12 +722,14 @@ QStringList cmp_maindialog::GetAltData()
     vl.append(QString::number(pc.idPers));
     vl.append(""); // Prefix = 25
     vl.append(ChBData("issmdchb"));
-    vl.append(""); // Nominal = 27
-    vl.append(""); // Unit = 28
+    vl.append(LEData("par0le")); // Nominal = 27
+    QStringList sl = tfl.valuesbyfield("Единицы измерения_полн",QStringList("ИД"),"Наименование",CBData("par0le"));
+    if (sl.size() > 0)
+        vl.append(sl.at(0)); // Unit = 28
+    else
+        vl.append("");
     vl.append(ParLE(3));
     vl.append(ParLE(4));
-/*    vl.append(LEData("par3le"));
-    vl.append(LEData("par4le")); */
     return vl;
 }
 
@@ -875,7 +868,7 @@ void cmp_maindialog::WriteAndClose()
         CMPWARN;
         return;
     }
-    INFOMSG(PublicClass::ER_CMPMAIN,__LINE__,"Записано успешно!");
+    CMPINFO("Записано успешно!");
     this->close();
 }
 

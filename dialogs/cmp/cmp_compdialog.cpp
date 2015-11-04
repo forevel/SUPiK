@@ -185,7 +185,7 @@ void cmp_compdialog::MainItemChoosed(QModelIndex idx)
     CompTbles = sl.at(0);
     slavemodel->setupraw(CompDb,CompTbles,fl,"id"); // строим таблицу с сортировкой по ИД
     if (slavemodel->result)
-        WARNMSG(PublicClass::ER_DIRMAIN, __LINE__, "Проблемы при построении таблицы "+CompTbles);
+        COMPINFO("Проблемы при построении таблицы "+CompTbles);
     tv = this->findChild<s_tqTableView *>("stv");
     if (tv == 0)
     {
@@ -214,7 +214,7 @@ void cmp_compdialog::SlaveItemChoosed(QModelIndex idx)
     QString CompIDs = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole).toString();
     if (CompTble == 0) // не была задана таблица компонентов (раздел)
     {
-        INFOMSG(PublicClass::ER_DIRMAIN,__LINE__,"Не выбран раздел в левой части");
+        COMPINFO("Не выбран раздел в левой части");
         return;
     }
     StartCompDialog(CompIDs);
@@ -244,7 +244,7 @@ void cmp_compdialog::AddNewItem()
     // В CompDb содержится выбранная БД, соответствующая типу компонентов
     if ((CompDb == 0) || (CompTble == 0))
     {
-        INFOMSG(PublicClass::ER_DIRMAIN,__LINE__,"Не выбран раздел в левой части");
+        COMPINFO("Не выбран раздел в левой части");
         return;
     }
     QStringList fl = QStringList() << "Наименование";
@@ -302,7 +302,7 @@ void cmp_compdialog::DeleteItem()
     }
     else
     {
-        INFOMSG(PublicClass::ER_DIRMAIN,__LINE__,"Удалено успешно!");
+        COMPINFO("Удалено успешно!");
         MainItemChoosed(QModelIndex());
     }
 }

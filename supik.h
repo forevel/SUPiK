@@ -16,6 +16,8 @@
 
 #define SYSSTYLESHEET "background-image: url(:/res/SysWallpaper.png);"
 
+#define PROGNAME    "Супик 1.0.284"
+
 class supik : public QMainWindow
 {
     Q_OBJECT
@@ -42,8 +44,6 @@ private:
 
     void SetSupikWindow();
     void ExitSupik ();
-    void Components();
-    void Directories();
     void BackupDir();
     void RestoreDir();
     void SysStructEdit ();
@@ -52,7 +52,6 @@ private:
     void WhIncome();
     void WhOutgoing();
     void WhSearch();
-    void WhEditor();
     void Quarantine();
     void Dummy();
     void SysDirectories();
@@ -67,6 +66,10 @@ private slots:
     void MouseMove();
     void UpdateErrorProtocol();
     void HideErrorProtocol();
+
+    void Components();
+    void Directories();
+    void WhEditor();
 
 protected:
     void showEvent(QShowEvent *event);

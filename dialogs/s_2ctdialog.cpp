@@ -1,4 +1,5 @@
 #include "s_2ctdialog.h"
+#include "s_2cdialog.h"
 #include "../models/s_duniversal.h"
 #include "../widgets/s_tqtreeview.h"
 #include "../widgets/s_tqpushbutton.h"
@@ -6,6 +7,7 @@
 #include "../widgets/s_tqlineedit.h"
 #include "../gen/s_sql.h"
 #include "../gen/publicclass.h"
+#include "../gen/s_tablefields.h"
 
 #include <QHBoxLayout>
 #include <QPaintEvent>
@@ -19,7 +21,6 @@ s_2ctdialog::s_2ctdialog(QString hdr, QWidget *parent) :
     QDialog(parent)
 {
     this->hdr=hdr;
-    DialogIsNeedToBeResized = false;
     setStyleSheet("QDialog {background-color: rgba(204,204,153);}");
     setAttribute(Qt::WA_DeleteOnClose);
     QSizePolicy fixed(QSizePolicy::Fixed, QSizePolicy::Fixed);
@@ -46,14 +47,12 @@ void s_2ctdialog::setupUI()
     pbLayout->addWidget(pbCancel, 0);
     connect (pbOk, SIGNAL(clicked()), this, SLOT(accepted()));
     connect (pbCancel, SIGNAL(clicked()), this, SLOT(cancelled()));
-    connect(mainTV, SIGNAL(datachanged()), this, SLOT(updatedialogsize()));
     pmainmodel = new ProxyModel;
     pmainmodel->setSourceModel(mainmodel);
     pmainmodel->setFilterKeyColumn(1);
     pmainmodel->setFilterCaseSensitivity(Qt::CaseInsensitive);
     mainTV->setModel(pmainmodel);
     mainTV->setSortingEnabled(true);
-//    mainTV->setModel(mainmodel);
     mainTV->setEditTriggers(QAbstractItemView::AllEditTriggers);
     mainTV->header()->setVisible(false);
     mainTV->setItemDelegate(uniDelegate);
@@ -61,16 +60,22 @@ void s_2ctdialog::setupUI()
     connect(pmainmodel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(resizemainTV(QModelIndex,QModelIndex)));
     mainLayout->addWidget(lbl, 0, Qt::AlignRight);
     QHBoxLayout *hlyout = new QHBoxLayout;
-    lbl = new s_tqLabel("Фильтр:");
-    s_tqLineEdit *le = new s_tqLineEdit;
-    le->setObjectName("filterle");
     s_tqPushButton *pb = new s_tqPushButton;
     pb->setIcon(QIcon(":/res/lupa.gif"));
-    connect(le,SIGNAL(returnPressed()),this,SLOT(Filter()));
-    connect(pb,SIGNAL(clicked()),this,SLOT(Filter()));
-    hlyout->addWidget(lbl);
-    hlyout->addWidget(le, 1);
+    pb->setToolTip("Поиск");
+    connect(pb,SIGNAL(clicked()),this,SLOT(ShowFilterLineEdit()));
     hlyout->addWidget(pb);
+    pb = new s_tqPushButton;
+    pb->setToolTip("Сбросить фильтр");
+    pb->setIcon(QIcon(":/res/crossgray.png"));
+    connect(pb,SIGNAL(clicked()),this,SLOT(Unfilter()));
+    hlyout->addWidget(pb);
+    pb = new s_tqPushButton;
+    pb->setToolTip("Создать новый элемент");
+    pb->setIcon(QIcon(":/res/newdocy.png"));
+    connect(pb,SIGNAL(clicked()),this,SLOT(AddItem()));
+    hlyout->addWidget(pb);
+    hlyout->addStretch(1);
     mainLayout->addLayout(hlyout);
     mainLayout->addWidget(mainTV, 100, Qt::AlignLeft);
     s_tqPushButton *rootpb = new s_tqPushButton("Корневой");
@@ -78,8 +83,6 @@ void s_2ctdialog::setupUI()
     if (RootNeeded)
         mainLayout->addWidget(rootpb);
     mainLayout->addLayout(pbLayout);
-    constheight=lbl->minimumSizeHint().height()+pbOk->minimumSizeHint().height();
-//    mainTV->updateTVGeometry();
     ExpandHandle = connect(mainTV, SIGNAL(expanded(QModelIndex)), this, SLOT(SetExpandIndex(QModelIndex)));
     CollapseHandle = connect(mainTV, SIGNAL(collapsed(QModelIndex)), this, SLOT(UnsetExpandIndex(QModelIndex)));
     connect(mainTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(accepted(QModelIndex)));
@@ -88,15 +91,14 @@ void s_2ctdialog::setupUI()
 
 // процедура подготавливает дерево выбора tble по таблице tablefields
 
-int s_2ctdialog::setup(QString tble, bool RootNeeded)
+void s_2ctdialog::setup(QString tble, bool RootNeeded)
 {
+    this->tble = tble;
     mainmodel = new s_ntmodel;
     mainmodel->Setup(tble);
     this->RootNeeded = RootNeeded;
     setupUI();
     resizemainTV(QModelIndex(),QModelIndex());
-    DialogIsNeedToBeResized = true;
-    return 0;
 }
 
 void s_2ctdialog::resizemainTV(QModelIndex index1, QModelIndex index2)
@@ -118,7 +120,6 @@ void s_2ctdialog::paintEvent(QPaintEvent *e)
 {
     QPainter painter(this);
     painter.drawPixmap(rect(), QPixmap(":/res/2cWallPaper.png"));
-//    setFixedSize(minimumSizeHint());
     e->accept();
 }
 
@@ -157,52 +158,14 @@ void s_2ctdialog::cancelled()
     this->close();
 }
 
-void s_2ctdialog::updatedialogsize()
-{
-    DialogIsNeedToBeResized = true;
-}
-
-/*QSize s_2ctdialog::minimumSizeHint()
-{
-    if (DialogIsNeedToBeResized)
-    {
-        int curwidth = QApplication::desktop()->screenGeometry(this).width();
-        int curheight = QApplication::desktop()->screenGeometry(this).height();
-        int f2 = 0;
-        s_tqTreeView *tv = this->findChild<s_tqTreeView *>("mainTV");
-        for (int i = 0; i < tv->header()->count(); i++)
-            f2 += tv->columnWidth(i)+20;
-        if (f2 > curwidth)
-            f2 = curwidth;
-        if (f2 < 300) // диалоги слишком узкие нам не нужны
-            f2 = 300;
-        int f1 = constheight+tv->minimumSizeHint().height();
-        if (f1>curheight)
-            f1 = curheight;
-        DialogIsNeedToBeResized = false;
-//        return QSize(f2, this->size().height());
-        return QSize(f2,f1);
-    }
-    else
-        return this->size();
-} */
-
-void s_2ctdialog::sortModel()
-{
-//    pmainmodel->sort(0, Qt::AscendingOrder);
-}
-
 void s_2ctdialog::setTvCurrentText(QString text)
 {
+    if (text.isEmpty())
+        return;
     s_tqTreeView *tv = this->findChild<s_tqTreeView *>("mainTV");
     if (tv == 0)
     {
         CT2DBG;
-        return;
-    }
-    if (text.isEmpty())
-    {
-        CT2WARN;
         return;
     }
     QList<QModelIndex> item = tv->model()->match(tv->model()->index(0, 0), Qt::DisplayRole, QVariant::fromValue(text), 1, Qt::MatchRecursive);
@@ -262,4 +225,74 @@ void s_2ctdialog::UnsetExpandIndex(QModelIndex idx)
     }
     QModelIndex ModelIndex = tv->model()->index(idx.row(),idx.column(), QModelIndex());
     pmainmodel->removeExpandedIndex(ModelIndex);
+}
+
+void s_2ctdialog::ShowFilterLineEdit()
+{
+    QDialog *dlg = new QDialog(this);
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
+    QPushButton *pb = qobject_cast<QPushButton *>(sender());
+    dlg->move(pb->mapToGlobal(pb->pos()));
+    QHBoxLayout *hlyout = new QHBoxLayout;
+    s_tqLabel *lbl = new s_tqLabel("Фильтр:");
+    s_tqLineEdit *le = new s_tqLineEdit;
+    le->setObjectName("filterle");
+    pb = new s_tqPushButton;
+    pb->setIcon(QIcon(":/res/cross.png"));
+    connect(le,SIGNAL(returnPressed()),this,SLOT(Filter()));
+    connect(pb,SIGNAL(clicked()),dlg,SLOT(close()));
+    hlyout->addWidget(lbl);
+    hlyout->addWidget(le, 1);
+    hlyout->addWidget(pb);
+    dlg->setLayout(hlyout);
+    dlg->exec();
+}
+
+void s_2ctdialog::Unfilter()
+{
+    pmainmodel->setFilterWildcard("*");
+}
+
+void s_2ctdialog::AddItem()
+{
+    QString tmptble = tble;
+    tmptble.remove("_полн");
+    tmptble.remove("_сокращ");
+    QString Caption = tmptble;
+    tmptble.append("_полн");
+    QString newID = tfl.insert(tmptble);
+    if (tfl.result)
+    {
+        CT2WARN;
+        return;
+    }
+    tfl.idtois(tmptble,QStringList("ИД"),QStringList(newID)); // добавление полей idpers, deleted, date
+    if (!tfl.result)
+    {
+        s_2cdialog *newdialog = new s_2cdialog(Caption);
+        newdialog->setup(tmptble, MODE_EDITNEW, newID);
+        if (!newdialog->result)
+        {
+            newdialog->setModal(true);
+            newdialog->exec();
+            Update();
+        }
+        else
+        {
+            CT2WARN;
+            return;
+        }
+    }
+    else
+        CT2WARN;
+}
+
+void s_2ctdialog::Update()
+{
+    if (mainmodel->Setup(tble))
+    {
+        CT2WARN;
+        return;
+    }
+    resizemainTV(QModelIndex(),QModelIndex());
 }

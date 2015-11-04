@@ -122,16 +122,39 @@ QStringList s_sql::GetColumnsFromTable(QSqlDatabase db, QString tble)
     return sl;
 }
 
+// процедура возвращает true в случае наличия таблицы в БД, иначе false
+
+bool s_sql::CheckForTable(QSqlDatabase db, QString tble)
+{
+    QSqlQuery exec_db (db);
+    exec_db.exec("SELECT * FROM `" + tble + "`;");
+    if (!exec_db.isActive())
+    {
+        result = 1;
+        return false;
+    }
+    result=0;
+    return true;
+}
+
 // процедура создаёт новую таблицу, в fl имена столбцов
 
-void s_sql::CreateTable(QSqlDatabase db, QString tble, QStringList fl)
+void s_sql::CreateTable(QSqlDatabase db, QString tble, QStringList fl, bool Simple)
 {
     QSqlQuery exec_db(db);
-    QString tmpString = "CREATE TABLE `"+tble+"` (`id"+tble+"` int(11) NOT NULL,";
+    QString tmpString;
+    if (Simple)
+        tmpString = "CREATE TABLE `"+tble+"` (`id` int(11) NOT NULL,";
+    else
+        tmpString = "CREATE TABLE `"+tble+"` (`id"+tble+"` int(11) NOT NULL,";
     for (int i = 0; i < fl.size(); i++)
         tmpString += "`"+fl.at(i)+"` varchar(128) DEFAULT NULL,";
-    tmpString += "`idpers` varchar(128) DEFAULT NULL,`date` VARCHAR(128) DEFAULT NULL,`deleted` int(1) NOT NULL DEFAULT '0',"
-            "PRIMARY KEY (`id"+tble+"`),UNIQUE KEY `id"+tble+"_UNIQUE` (`id"+tble+"`)) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
+    if (Simple)
+        tmpString += "`idpers` varchar(128) DEFAULT NULL,`date` VARCHAR(128) DEFAULT NULL,`deleted` int(1) NOT NULL DEFAULT '0',"
+                "PRIMARY KEY (`id`),UNIQUE KEY `id_UNIQUE` (`id`)) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
+    else
+        tmpString += "`idpers` varchar(128) DEFAULT NULL,`date` VARCHAR(128) DEFAULT NULL,`deleted` int(1) NOT NULL DEFAULT '0',"
+                "PRIMARY KEY (`id"+tble+"`),UNIQUE KEY `id"+tble+"_UNIQUE` (`id"+tble+"`)) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
     exec_db.exec(tmpString);
     if (exec_db.isActive())
     {

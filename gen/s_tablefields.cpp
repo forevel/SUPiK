@@ -599,6 +599,28 @@ void s_tablefields::Delete(QString tble, QString id)
         TFWARN;
 }
 
+bool s_tablefields::Check(QString tble, QString cmpfield, QString cmpvalue)
+{
+    QStringList sl = tfl.tablefields(tble,cmpfield);
+    if (result)
+    {
+        TFWARN;
+        return false;
+    }
+    QString cmpdb = sl.at(0).split(".").at(0); // реальное имя БД
+    QString cmptble = sl.at(0).split(".").at(1); // реальное название таблицы
+    cmpfield = sl.at(1); // реальное название поля сравнения
+    sl = sqlc.GetColumnsFromTable(sqlc.GetDB(cmpdb),cmptble);
+    sl = sqlc.GetValuesFromTableByField(sqlc.GetDB(cmpdb),cmptble,sl,cmpfield,cmpvalue);
+    if (sqlc.result)
+    {
+        result = 1;
+        return false;
+    }
+    result = 0;
+    return true;
+}
+
 QStringList s_tablefields::valuesbyfield(QString tble, QStringList fl, QString cmpfield, QString cmpvalue, bool Warn)
 {
     QStringList sl = tfl.tablefields(tble,cmpfield);

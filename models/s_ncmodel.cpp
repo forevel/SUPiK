@@ -420,7 +420,7 @@ QString s_ncmodel::value(int row, int column)
     if (tfl.result)
     {
         result=1;
-        WARNMSG(PublicClass::ER_NCMODEL,__LINE__);
+        NCMWARN;
         return QString(); // если произошла ошибка при получении ИД по значению, добавляем пустую строку
     }
     return vl;
@@ -580,7 +580,7 @@ void s_ncmodel::setup(QString tble)
     if (tfl.result)
     {
         result=1;
-        WARNMSG(PublicClass::ER_NCMODEL,__LINE__);
+        NCMWARN;
         return;
     }
     // в DataToWrite.at(1) содержатся links, в DataToWrite.at(0) - заголовки
@@ -602,7 +602,6 @@ void s_ncmodel::setup(QString tble)
 
 void s_ncmodel::Add(QString tble)
 {
-    int i;
     result = 0;
     QStringList headers, links;
     DataToWrite.clear();
@@ -610,7 +609,7 @@ void s_ncmodel::Add(QString tble)
     if (tfl.result)
     {
         result=1;
-        WARNMSG(PublicClass::ER_NCMODEL,__LINE__);
+        NCMWARN;
         return;
     }
     // в lsl.at(1) содержатся links, в lsl.at(0) - заголовки
@@ -636,14 +635,14 @@ void s_ncmodel::setup(QString tble, QString id)
     if (tfl.result)
     {
         result=1;
-        WARNMSG(PublicClass::ER_NCMODEL,__LINE__);
+        NCMWARN;
         return;
     }
     QStringList links = tfl.tablelinks(tble);
     if (tfl.result)
     {
         result=1;
-        WARNMSG(PublicClass::ER_NCMODEL,__LINE__);
+        NCMWARN;
         return;
     }
     QString tmpString;
@@ -652,7 +651,6 @@ void s_ncmodel::setup(QString tble, QString id)
     for (i = 0; i < headers.size(); i++)
     {
         tmpString = tfl.tov(tble,headers.at(i),id);
-//        tmpString = tfl.idtov(links.at(i), tmpString);
         if (!tfl.result)
             tmpsl << tmpString;
         else
@@ -676,7 +674,7 @@ void s_ncmodel::setupcolumn(QString tble, QString header)
     QStringList tmpsl = tfl.htovl(tble, header);
     if (tfl.result)
     {
-        WARNMSG(PublicClass::ER_NCMODEL,__LINE__);
+        NCMWARN;
         return;
     }
     DataToWrite.append(tmpsl);
@@ -699,16 +697,16 @@ int s_ncmodel::setupraw(QString db, QString tble, QStringList fl, QString orderf
         fl = sqlc.GetColumnsFromTable(sqlc.GetDB(db), tble);
         if (sqlc.result)
         {
-            WARNMSG(PublicClass::ER_NCMODEL,__LINE__);
+            NCMWARN;
             return 1;
         }
     }
     for (int i = 0; i < fl.size(); i++)
     {
         QStringList tmpsl = sqlc.GetValuesFromTableByColumn(sqlc.GetDB(db), tble, fl.at(i),orderfield,true);
-        if (sqlc.result)
+        if (sqlc.result == 2) // ошибка при запросе
         {
-            WARNMSG(PublicClass::ER_NCMODEL,__LINE__);
+            NCMWARN;
             return 1;
         }
         DataToWrite.append(tmpsl);

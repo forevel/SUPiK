@@ -56,7 +56,8 @@ void cmp_newsubsection::SetupUI()
     hlyout = new QHBoxLayout;
     lbl = new s_tqLabel("Группа параметров:");
     s_tqChooseWidget *cw = new s_tqChooseWidget(true);
-    cw->Setup("2.2..Наборы параметров_сокращ.Наименование");
+    cw->setObjectName("cwpar");
+    cw->Setup("2.2..Наборы параметров_сокращ.Наименование","Набор параметров");
     connect(cw,SIGNAL(textchanged(QVariant)),this,SLOT(SetSomethingChanged()));
     hlyout->addWidget(lbl);
     hlyout->addWidget(cw, 1);
@@ -101,87 +102,84 @@ void cmp_newsubsection::Cancel()
     {
         if (MessageBox::question(this,"Данные были изменены","Данные были изменены, всё равно выйти?"))
             this->close();
+        else
+            return;
     }
+    this->close();
 }
 
 void cmp_newsubsection::Ok()
 {
     s_tqLineEdit *le1 = this->findChild<s_tqLineEdit *>("name");
     s_tqLineEdit *le2 = this->findChild<s_tqLineEdit *>("tblename");
-    if ((le1 == 0) || (le2 == 0))
+    s_tqChooseWidget *cw = this->findChild<s_tqChooseWidget *>("cwpar");
+    if ((le1 == 0) || (le2 == 0) || (cw == 0))
     {
         CMPNSDBG;
         return;
     }
+    QString desc = le2->text().toLower(); // наименование таблицы компонентов строчными буквами
+    QString descfull = le1->text().toLower();
+    QString descfull1 = descfull.left(1).toUpper();
+    descfull.replace(0,1,descfull1); // делаем первую букву прописной
     // 2. Создать таблицу в соотв. БД (например, relay в altium)
     // сначала проверим наличие такой таблицы
     QStringList sl = QStringList() << "" << "А" << "З" << "Э" << "К" << "У";
     QStringList dbsl = QStringList() << "" << "alt" << "sch" << "sol" << "con" << "dev";
     QStringList Fields, Values;
-    QStringList tmpsl = sqlc.GetColumnsFromTable(sqlc.GetDB(dbsl.at(CompType)), le2->text());
-    if ((sqlc.result) || (tmpsl.size() == 0)); // нет такой таблицы, продолжаем
+    if (!(sqlc.CheckForTable(sqlc.GetDB(dbsl.at(CompType)), desc))) // нет такой таблицы
+    {
+        switch(CompType)
+        {
+        case CTYPE_ALT:
+        {
+            // создаём таблицу
+            Fields = QStringList() << "Library Ref" << "Footprint Ref" << "Sim Description" << "Sim File" << \
+                                      "Sim Model Name" << "Sim Parameters" << "Manufacturer" << "PartNumber" << "Package" << "Marking" << "NominalValue" << \
+                                      "NominalVoltage" << "Tolerance" << "OpTemperaturen" << "OpTemperaturem" << "Pmax" << "TC" << "Comment" << "HelpURL" << \
+                                      "RevNotes" << "Discontinued" << "Description" << "Notes" << "Modify Date" << "Creator" << "prefix" << "isSMD" << \
+                                      "Nominal" << "Unit" << "par4" << "par5";
+            break;
+        }
+        }
+        sqlc.CreateTable(sqlc.GetDB(dbsl.at(CompType)), desc, Fields, true); // Simple=true, т.е. id без имени таблицы
+        if (sqlc.result)
+        {
+            CMPNSWARN;
+            return;
+        }
+    }
     else
-    {
-        CMPNSINFO("Таблица "+le2->text()+" уже имеется в БД!");
-        return;
-    }
-    switch(CompType)
-    {
-    case CTYPE_ALT:
-    {
-        // создаём таблицу
-        Fields = QStringList() << "Library Ref" << "Footprint Ref" << "Sim Description" << "Sim File" << \
-                                  "Sim Model Name" << "Sim Parameters" << "Manufacturer" << "PartNumber" << "Package" << "Marking" << "NominalValue" << \
-                                  "NominalVoltage" << "Tolerance" << "OpTemperaturen" << "OpTemperaturem" << "Pmax" << "TC" << "Comment" << "HelpURL" << \
-                                  "RevNotes" << "Discontinued" << "Description" << "Notes" << "Modify Date" << "Creator" << "prefix" << "isSMD" << \
-                                  "Nominal" << "Unit" << "par4" << "par5";
-        break;
-    }
-    }
-    sqlc.CreateTable(sqlc.GetDB(dbsl.at(CompType)), le2->text(), Fields);
-    if (sqlc.result)
-    {
-        CMPNSWARN;
-        return;
-    }
+        CMPNSINFO("Таблица "+desc+" уже имеется в БД!");
     // создаём её описание в description
     // сначала проверяем, нет ли такой записи
     Fields = QStringList() << "description" << "descriptionfull";
-    Values = QStringList() << le1->text() << le2->text();
-    QString tmps = sqlc.GetValueFromTableByFields(sqlc.GetDB(dbsl.at(CompType)), "description", "iddescription", Fields, Values);
+    Values = QStringList() << desc << descfull;
+    QString TableName = sl.at(CompType)+"Компоненты_описание_полн";
+    QString newID = sqlc.GetValueFromTableByFields(sqlc.GetDB(dbsl.at(CompType)), "description", "iddescription", Fields, Values);
     if (sqlc.result) // нет такой записи
     {
         // создаём запись
-        sqlc.InsertValuesToTable(sqlc.GetDB(dbsl.at(CompType)), "description", Fields, Values);
-        if (sqlc.result)
+        newID = tfl.insert(TableName);
+        if (tfl.result)
+        {
             CMPNSINFO("Ошибка добавления записи в таблицу description");
-    }
-    else // есть такая запись
-    {
-        sqlc.UpdateValuesInTable(sqlc.GetDB(dbsl.at(CompType)), "description", Fields, Values, "iddescription", tmps);
-        if (sqlc.result)
-            CMPNSINFO("Ошибка обновления записи в таблице description");
-    }
-    QString TableName = sl.at(CompType)+"Компоненты_полн";
-    QString newID = tfl.insert(TableName);
-    if (tfl.result)
-    {
-        CMPNSWARN;
-        return;
+            return;
+        }
     }
     QStringList fl = QStringList() << "ИД" << "Наименование" << "Описание";
-    QStringList vl = QStringList() << newID << le2->text() << le1->text();
+    QStringList vl = QStringList() << newID << desc << descfull;
     tfl.idtois(TableName,fl,vl);
     if (tfl.result)
     {
-        CMPNSWARN;
+        tfl.Delete(TableName, newID);
+        CMPNSINFO("Ошибка обновления записи в таблице description");
         return;
     }
 
     // 3. Создать категорию, если её ещё нет
     TableName = "Категории_полн";
-    tmpsl = tfl.valuesbyfield(TableName,QStringList("ИД"),"Наименование",le1->text(), false);
-    if (tmpsl.isEmpty()) // нет такой категории, пишем в БД
+    if (!(tfl.Check(TableName,"Наименование",descfull))) // нет такой категории, пишем в БД
     {
         newID = tfl.insert(TableName);
         if (tfl.result)
@@ -189,14 +187,16 @@ void cmp_newsubsection::Ok()
             CMPNSWARN;
             return;
         }
-        QStringList fl = QStringList() << "ИД" << "Наименование" << "ИД_а";
-        QStringList vl = QStringList() << newID << le2->text() << "0";
+        QStringList fl = QStringList() << "ИД" << "Наименование" << "ИД_а" << "Параметры";
+        QStringList vl = QStringList() << newID << descfull << "0" << cw->Value().toString();
         tfl.idtois(TableName,fl,vl);
         if (tfl.result)
         {
+            tfl.Delete(TableName, newID);
             CMPNSWARN;
             return;
         }
     }
-    // 4. Создать соответствующие записи в unitset и parameters
+    this->close();
+    CMPNSINFO("Записано успешно!");
 }

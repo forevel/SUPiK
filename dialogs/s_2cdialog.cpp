@@ -22,17 +22,18 @@
 // Диалог, состоящий из двух столбцов
 // Предназначен для организации списков выбора либо для редактирования полей различных таблиц
 // Списки выбора представляют собой таблицы (не деревья! для деревьев есть s_2ctdialog)
-// Режим задаётся в Mode (MODE_CHOOSE для режима выбора и MODE_EDIT - для режима редактирования)
+// Режим задаётся в Mode (MODE_CHOOSE для режима выбора, MODE_EDIT - для режима редактирования и MODE_EDITNEW для режима редактирования нового элемента)
 // В режиме выбора пользователь имеет возможность только выбрать из предлагаемой таблицы одно значение (строку), и слот
 // accepted() вернёт в сигнале "datachanged" значение нулевой колонки по выбранной строке
 // В режиме редактирования диалог представляет в первой колонке имена полей, а во второй - значения, причём значения
 // редактируются в зависимости от выбранного делегата. В этом случае слот accepted() осуществляет запись в базу новых значений
-//
+// В режиме MODE_EDITNEW при закрытии диалога удаляется новосозданный элемент, если была нажата кнопка отмены
 // режим редактирования карантинных таблиц - особый, для него accepted() должен вызывать специальный обработчик
 
 s_2cdialog::s_2cdialog(QString caption, QWidget *parent) :
     QDialog(parent)
 {
+    Cancelled = false;
     this->caption = caption;
     setAttribute(Qt::WA_DeleteOnClose);
 }
@@ -171,7 +172,6 @@ void s_2cdialog::setupUI()
     pmainmodel->setFilterKeyColumn(1);
     pmainmodel->setFilterCaseSensitivity(Qt::CaseInsensitive);
     connect(mainmodel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(resizemainTV(QModelIndex,QModelIndex)));
-//    mainTV->setModel(mainmodel);
     mainTV->setModel(pmainmodel);
     mainTV->setSortingEnabled(true);
     mainTV->setEditTriggers(QAbstractItemView::AllEditTriggers);
@@ -236,6 +236,7 @@ void s_2cdialog::AddItem()
     QString tmptble = tble.at(0);
     tmptble.remove("_полн");
     tmptble.remove("_сокращ");
+    QString Caption = tmptble;
     tmptble.append("_полн");
     QString newID = tfl.insert(tmptble);
     if (tfl.result)
@@ -243,10 +244,10 @@ void s_2cdialog::AddItem()
         CD2WARN;
         return;
     }
-    tfl.idtois(tmptble,QStringList("ИД"),QStringList(newID));
+    tfl.idtois(tmptble,QStringList("ИД"),QStringList(newID)); // добавление полей idpers, deleted, date
     if (!tfl.result)
     {
-        s_2cdialog *newdialog = new s_2cdialog(tble.at(0));
+        s_2cdialog *newdialog = new s_2cdialog(Caption);
         newdialog->setup(tmptble, MODE_EDITNEW, newID);
         if (!newdialog->result)
         {
@@ -338,9 +339,7 @@ void s_2cdialog::accepted()
             tmph = headers.indexOf("ИД");
             if (tmph != -1)
             oldid = values.at(tmph);
-            int posq = newtble.indexOf(" карантин");
-            if (posq != -1)
-                newtble.remove(posq, 9); // убираем " карантин", т.к. пишем в некарантинную таблицу
+            newtble.remove(" карантин"); // убираем " карантин", т.к. пишем в некарантинную таблицу
             newid = tfl.insert(newtble);
             values.replace(tmph, newid); // создаём новую запись в некарантинной таблице
             tble.replace(0, newtble); // подготовка к следующему оператору
@@ -378,14 +377,15 @@ void s_2cdialog::accepted()
 
 void s_2cdialog::cancelled()
 {
-    if (Mode == MODE_EDITNEW) // для ввода нового - удалить из БД текущую запись
-        tfl.Delete(tble.at(0), Id);
+    Cancelled = true;
     this->close();
 }
 
-void s_2cdialog::sortModel()
+void s_2cdialog::closeEvent(QCloseEvent *e)
 {
-    pmainmodel->sort(0, Qt::AscendingOrder);
+    if (Cancelled && (Mode == MODE_EDITNEW)) // для ввода нового при нажатии отмены - удалить из БД текущую запись
+        tfl.Delete(tble.at(0), Id);
+    e->accept();
 }
 
 void s_2cdialog::fillModelAdata()

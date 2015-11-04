@@ -31,7 +31,6 @@ public:
     // void setup(QStringList sl, QStringList links=QStringList(), QString str="");
     // функция добавления к существующей таблице ещё одной - для FW_DLINK
     void AddTable(QString tble);
-    void sortModel();
     void SetTvCurrentText(QString str);
     bool IsQuarantine;
     int Mode,result;
@@ -47,7 +46,7 @@ private:
     QString Id;
     s_ncmodel *mainmodel;
     QSortFilterProxyModel *pmainmodel;
-    bool DialogIsNeedToBeResized;
+    bool Cancelled;
     int constheight;
     void fillModelAdata();
     void setupUI();
@@ -65,6 +64,7 @@ private slots:
 
 protected:
     void paintEvent(QPaintEvent *e);
+    void closeEvent(QCloseEvent *e);
 };
 
 #endif // S_GENERAL2COLUMNSDIALOG_H

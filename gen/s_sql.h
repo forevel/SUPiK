@@ -20,7 +20,8 @@ public:
     QStringList GetDBFromSQL(); // вернуть все БД, к которым есть доступ
     QStringList GetTablesFromDB(QSqlDatabase db); // вернуть все таблицы, содержащиеся в БД
     QStringList GetColumnsFromTable (QSqlDatabase db, QString tble); // вернуть все поля из таблицы tble БД db
-    void CreateTable(QSqlDatabase db, QString tble, QStringList fl); // создать таблицу с заданными в списке строк fl полями
+    bool CheckForTable (QSqlDatabase db, QString tble); // проверить таблицу на существование
+    void CreateTable(QSqlDatabase db, QString tble, QStringList fl, bool Simple=false); // создать таблицу с заданными в списке строк fl полями
     void AlterTable(QSqlDatabase db, QString tble, QStringList DeleteList, QStringList AddList); // удалить поля по списку DeleteList и добавить поля по списку AddList
     void DropTable(QSqlDatabase db, QString tble); // удалить таблицу из БД
     void AddColumn(QSqlDatabase db, QString tble, QString col, QString def = "NULL"); // добавить поле col в таблицу tble БД db со значением по умолчанию def

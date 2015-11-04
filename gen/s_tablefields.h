@@ -22,6 +22,7 @@ public:
     QString NewID(QString tble);
     void remove(QString tble, QString id); // "удаление" элемента из таблицы
     void Delete(QString tble, QString id); // реальное удаление из таблицы
+    bool Check(QString tble, QString cmpfield, QString cmpvalue); // проверка наличия записи в таблице
     QStringList tablefields (QString tble, QString header);
     QStringList tableheaders (QString tble);
     QStringList tablelinks (QString tble);

@@ -4,8 +4,9 @@
 #include <QDialog>
 #include <QPaintEvent>
 
-#define CMPWARN WARNMSG(PublicClass::ER_CMPMAIN,__LINE__)
-#define CMPDBG  DBGMSG(PublicClass::ER_CMPMAIN,__LINE__)
+#define CMPWARN     WARNMSG(PublicClass::ER_CMPMAIN,__LINE__)
+#define CMPDBG      DBGMSG(PublicClass::ER_CMPMAIN,__LINE__)
+#define CMPINFO(a)  INFOMSG(PublicClass::ER_CMPMAIN,__LINE__,a)
 
 class cmp_maindialog : public QDialog
 {

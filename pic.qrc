@@ -60,5 +60,7 @@
         <file>res/EmptyCell.png</file>
         <file>res/back.png</file>
         <file>res/crossgray.png</file>
+        <file>res/microshema.png</file>
+        <file>res/whPB.png</file>
     </qresource>
 </RCC>

@@ -1,9 +1,11 @@
 #include "cmp_newsubsection.h"
 
+#include <QCoreApplication>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QMessageBox>
 #include <QPainter>
+#include "../../widgets/waitwidget.h"
 #include "../../gen/publicclass.h"
 #include "../../gen/s_sql.h"
 #include "../../gen/s_tablefields.h"
@@ -110,6 +112,16 @@ void cmp_newsubsection::Cancel()
 
 void cmp_newsubsection::Ok()
 {
+    // временное
+    WaitWidget *w = new WaitWidget();
+    w->show();
+    w->Start();
+    QTime tmr;
+    tmr.start();
+    while (tmr.elapsed() < 5000)
+        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+    w->Stop();
+    // временное
     s_tqLineEdit *le1 = this->findChild<s_tqLineEdit *>("name");
     s_tqLineEdit *le2 = this->findChild<s_tqLineEdit *>("tblename");
     s_tqChooseWidget *cw = this->findChild<s_tqChooseWidget *>("cwpar");

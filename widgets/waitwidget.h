@@ -29,6 +29,7 @@ private:
     WaitThread *thr;
     QString Message;
     float gamma;
+    float vel1, vel2, vel3, vel4, vel5;
 
 protected:
     void paintEvent(QPaintEvent *e);

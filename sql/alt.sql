@@ -197,6 +197,7 @@ CREATE TABLE `description` (
   `iddescription` int(11) NOT NULL,
   `description` varchar(64) DEFAULT NULL,
   `descriptionfull` varchar(64) DEFAULT NULL,
+  `url` varchar(128) DEFAULT NULL,
   `deleted` varchar(1) NOT NULL DEFAULT '0',
   `idpers` varchar(45) DEFAULT NULL,
   `date` varchar(45) DEFAULT NULL,
@@ -210,7 +211,7 @@ CREATE TABLE `description` (
 
 LOCK TABLES `description` WRITE;
 /*!40000 ALTER TABLE `description` DISABLE KEYS */;
-INSERT INTO `description` VALUES (1,'capasitors','Конденсаторы','0',NULL,NULL),(2,'connections','Соединения','0',NULL,NULL),(3,'connectors','Разъёмы','0',NULL,NULL),(4,'diodes','Диоды','0',NULL,NULL),(5,'gdts','Разрядники','0',NULL,NULL),(6,'ic_adcdac','М/сх АЦП и ЦАП','0',NULL,NULL),(7,'ic_anmixed','М/сх аналоговые','0',NULL,NULL),(8,'ic_answitch','М/сх аналоговые ключи','0',NULL,NULL),(9,'ic_interface','М/сх интерфейсные','0',NULL,NULL),(10,'ic_isolator','М/сх изоляторы','0',NULL,NULL),(11,'ic_microcontroller','М/сх микроконтроллеры','0',NULL,NULL),(12,'ic_memory','М/сх память','0',NULL,NULL),(13,'ic_opamp','М/сх операционные усилители','0',NULL,NULL),(14,'ic_opto','М/сх оптоэлектроника','0',NULL,NULL),(15,'ic_powermgmt','М/сх управления питанием','0',NULL,NULL),(16,'ic_protection','М/сх защитные','0',NULL,NULL),(17,'ic_vreference','М/сх источников напряжения','0',NULL,NULL),(18,'inductors','Индуктивности','0',NULL,NULL),(19,'mechanical','Механические компоненты','0',NULL,NULL),(20,'modules','Модули','0',NULL,NULL),(21,'opto','Оптоэлектроника','0',NULL,NULL),(22,'oscillators','Генераторы, кварцы','0',NULL,NULL),(23,'posistors','Предохранители самовосстанавливающиеся','0',NULL,NULL),(24,'power','Источники питания','0',NULL,NULL),(25,'qaltium','Карантин','0',NULL,NULL),(26,'resistors','Резисторы','0',NULL,NULL),(27,'switches','Устройства коммутации','0',NULL,NULL),(28,'symbols','Символы','0',NULL,NULL),(29,'transform','Трансформаторы','0',NULL,NULL),(30,'transistors','Транзисторы','0',NULL,NULL),(31,'tvs','Защитные диоды','0',NULL,NULL),(32,'varistors','Варисторы','0',NULL,NULL),(33,'ic_logic','М/сх логика','0',NULL,NULL);
+INSERT INTO `description` VALUES (1,'capasitors','Конденсаторы','/','0',NULL,NULL),(2,'connections','Соединения','/','0',NULL,NULL),(3,'connectors','Разъёмы','/','0',NULL,NULL),(4,'diodes','Диоды','/','0',NULL,NULL),(5,'gdts','Разрядники','/','0',NULL,NULL),(6,'ic_adcdac','М/сх АЦП и ЦАП','/ic/','0',NULL,NULL),(7,'ic_anmixed','М/сх аналоговые','/ic/','0',NULL,NULL),(8,'ic_answitch','М/сх аналоговые ключи','/ic/','0',NULL,NULL),(9,'ic_interface','М/сх интерфейсные','/ic/','0',NULL,NULL),(10,'ic_isolator','М/сх изоляторы','/ic/','0',NULL,NULL),(11,'ic_microcontroller','М/сх микроконтроллеры','/ic/','0',NULL,NULL),(12,'ic_memory','М/сх память','/ic/','0',NULL,NULL),(13,'ic_opamp','М/сх операционные усилители','/ic/','0',NULL,NULL),(14,'ic_opto','М/сх оптоэлектроника','/ic/','0',NULL,NULL),(15,'ic_powermgmt','М/сх управления питанием','/ic/','0',NULL,NULL),(16,'ic_protection','М/сх защитные','/ic/','0',NULL,NULL),(17,'ic_vreference','М/сх источников напряжения','/ic/','0',NULL,NULL),(18,'inductors','Индуктивности','/','0',NULL,NULL),(19,'mechanical','Механические компоненты','/','0',NULL,NULL),(20,'modules','Модули','/','0',NULL,NULL),(21,'opto','Оптоэлектроника','/','0',NULL,NULL),(22,'oscillators','Генераторы, кварцы','/','0',NULL,NULL),(23,'posistors','Предохранители самовосстанавливающиеся','/','0',NULL,NULL),(24,'power','Источники питания','/','0',NULL,NULL),(25,'qaltium','Карантин','/','0',NULL,NULL),(26,'resistors','Резисторы','/','0',NULL,NULL),(27,'switches','Устройства коммутации','/','0',NULL,NULL),(28,'symbols','Символы','/','0',NULL,NULL),(29,'transform','Трансформаторы','/','0',NULL,NULL),(30,'transistors','Транзисторы','/','0',NULL,NULL),(31,'tvs','Защитные диоды','/','0',NULL,NULL),(32,'varistors','Варисторы','/','0',NULL,NULL),(33,'ic_logic','М/сх логика','/ic/','0','2001','2015-11-04 21:16:37'),(34,'relay','Реле','/','0','2001','2015-11-04 21:07:21');
 /*!40000 ALTER TABLE `description` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -663,6 +664,63 @@ LOCK TABLES `ic_linear` WRITE;
 /*!40000 ALTER TABLE `ic_linear` DISABLE KEYS */;
 INSERT INTO `ic_linear` VALUES (1,'LTC4357','\\\\fserver\\pcad\\Altium\\Libs\\Symbols\\ic_linear.SchLib','MSOP8','\\\\fserver\\pcad\\Altium\\Libs\\Footprints\\ic_linear.PcbLib','','','','','Linear Technology','LTC4357IMS8#PBF','MSOP8','LTCXD','80V','80V','','-40','85','0.245','',2001,'2014-01-16 20:44:04','LTC4357','\\\\fserver\\pcad\\Altium\\Libs\\DSheet\\IC\\Linear Technology\\Power\\4357fd.pdf',2,0,'LTC4357IMS8','LTC4357HMS8, LTC4357MPMS8',0,'');
 /*!40000 ALTER TABLE `ic_linear` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `ic_logic`
+--
+
+DROP TABLE IF EXISTS `ic_logic`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `ic_logic` (
+  `id` int(11) NOT NULL,
+  `Library Ref` varchar(128) DEFAULT NULL,
+  `Footprint Ref` varchar(128) DEFAULT NULL,
+  `Sim Description` varchar(128) DEFAULT NULL,
+  `Sim File` varchar(128) DEFAULT NULL,
+  `Sim Model Name` varchar(128) DEFAULT NULL,
+  `Sim Parameters` varchar(128) DEFAULT NULL,
+  `Manufacturer` varchar(128) DEFAULT NULL,
+  `PartNumber` varchar(128) DEFAULT NULL,
+  `Package` varchar(128) DEFAULT NULL,
+  `Marking` varchar(128) DEFAULT NULL,
+  `NominalValue` varchar(128) DEFAULT NULL,
+  `NominalVoltage` varchar(128) DEFAULT NULL,
+  `Tolerance` varchar(128) DEFAULT NULL,
+  `OpTemperaturen` varchar(128) DEFAULT NULL,
+  `OpTemperaturem` varchar(128) DEFAULT NULL,
+  `Pmax` varchar(128) DEFAULT NULL,
+  `TC` varchar(128) DEFAULT NULL,
+  `Comment` varchar(128) DEFAULT NULL,
+  `HelpURL` varchar(128) DEFAULT NULL,
+  `RevNotes` varchar(128) DEFAULT NULL,
+  `Discontinued` varchar(128) DEFAULT NULL,
+  `Description` varchar(128) DEFAULT NULL,
+  `Notes` varchar(128) DEFAULT NULL,
+  `Modify Date` varchar(128) DEFAULT NULL,
+  `Creator` varchar(128) DEFAULT NULL,
+  `prefix` varchar(128) DEFAULT NULL,
+  `isSMD` varchar(128) DEFAULT NULL,
+  `Nominal` varchar(128) DEFAULT NULL,
+  `Unit` varchar(128) DEFAULT NULL,
+  `par4` varchar(128) DEFAULT NULL,
+  `par5` varchar(128) DEFAULT NULL,
+  `idpers` varchar(128) DEFAULT NULL,
+  `date` varchar(128) DEFAULT NULL,
+  `deleted` int(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id_UNIQUE` (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `ic_logic`
+--
+
+LOCK TABLES `ic_logic` WRITE;
+/*!40000 ALTER TABLE `ic_logic` DISABLE KEYS */;
+/*!40000 ALTER TABLE `ic_logic` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -1624,6 +1682,63 @@ LOCK TABLES `qaltium` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `relay`
+--
+
+DROP TABLE IF EXISTS `relay`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `relay` (
+  `id` int(11) NOT NULL,
+  `Library Ref` varchar(128) DEFAULT NULL,
+  `Footprint Ref` varchar(128) DEFAULT NULL,
+  `Sim Description` varchar(128) DEFAULT NULL,
+  `Sim File` varchar(128) DEFAULT NULL,
+  `Sim Model Name` varchar(128) DEFAULT NULL,
+  `Sim Parameters` varchar(128) DEFAULT NULL,
+  `Manufacturer` varchar(128) DEFAULT NULL,
+  `PartNumber` varchar(128) DEFAULT NULL,
+  `Package` varchar(128) DEFAULT NULL,
+  `Marking` varchar(128) DEFAULT NULL,
+  `NominalValue` varchar(128) DEFAULT NULL,
+  `NominalVoltage` varchar(128) DEFAULT NULL,
+  `Tolerance` varchar(128) DEFAULT NULL,
+  `OpTemperaturen` varchar(128) DEFAULT NULL,
+  `OpTemperaturem` varchar(128) DEFAULT NULL,
+  `Pmax` varchar(128) DEFAULT NULL,
+  `TC` varchar(128) DEFAULT NULL,
+  `Comment` varchar(128) DEFAULT NULL,
+  `HelpURL` varchar(128) DEFAULT NULL,
+  `RevNotes` varchar(128) DEFAULT NULL,
+  `Discontinued` varchar(128) DEFAULT NULL,
+  `Description` varchar(128) DEFAULT NULL,
+  `Notes` varchar(128) DEFAULT NULL,
+  `Modify Date` varchar(128) DEFAULT NULL,
+  `Creator` varchar(128) DEFAULT NULL,
+  `prefix` varchar(128) DEFAULT NULL,
+  `isSMD` varchar(128) DEFAULT NULL,
+  `Nominal` varchar(128) DEFAULT NULL,
+  `Unit` varchar(128) DEFAULT NULL,
+  `par4` varchar(128) DEFAULT NULL,
+  `par5` varchar(128) DEFAULT NULL,
+  `idpers` varchar(128) DEFAULT NULL,
+  `date` varchar(128) DEFAULT NULL,
+  `deleted` int(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id_UNIQUE` (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `relay`
+--
+
+LOCK TABLES `relay` WRITE;
+/*!40000 ALTER TABLE `relay` DISABLE KEYS */;
+/*!40000 ALTER TABLE `relay` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `resistors`
 --
 
@@ -1790,7 +1905,7 @@ CREATE TABLE `symbols` (
 
 LOCK TABLES `symbols` WRITE;
 /*!40000 ALTER TABLE `symbols` DISABLE KEYS */;
-INSERT INTO `symbols` VALUES (2,'AGND','\\\\Fserver\\pcad\\Altium\\Libs\\Symbols\\symbols.SchLib','','\\\\Fserver\\pcad\\Altium\\Libs\\Footprints\\symbols.PcbLib','','','','','Analog Devices','AGND','','','','','','','','','',2001,'2014-01-15 12:59:23',NULL,'',1,0,'AGND','',1,'',NULL,NULL,NULL,NULL,NULL),(3,'DGND','\\\\Fserver\\pcad\\Altium\\Libs\\Symbols\\symbols.SchLib','','\\\\Fserver\\pcad\\Altium\\Libs\\Footprints\\symbols.PcbLib','','','','','Analog Devices','DGND','','','','','','','','','',2001,'2014-01-15 12:59:37',NULL,'',1,0,'DGND','',1,'',NULL,NULL,NULL,NULL,NULL);
+INSERT INTO `symbols` VALUES (2,'AGND','\\\\Fserver\\pcad\\Altium\\Libs\\Symbols\\symbols.SchLib','','\\\\Fserver\\pcad\\Altium\\Libs\\Footprints\\symbols.PcbLib','','','','','Analog Devices','AGND','','','','','','','','','',2001,'2014-01-15 12:59:23',NULL,'',1,0,'AGND','',0,'',NULL,NULL,NULL,NULL,NULL),(3,'DGND','\\\\Fserver\\pcad\\Altium\\Libs\\Symbols\\symbols.SchLib','','\\\\Fserver\\pcad\\Altium\\Libs\\Footprints\\symbols.PcbLib','','','','','Analog Devices','DGND','','','','','','','','','',2001,'2014-01-15 12:59:37',NULL,'',1,0,'DGND','',0,'',NULL,NULL,NULL,NULL,NULL);
 /*!40000 ALTER TABLE `symbols` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2031,4 +2146,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-11-01 23:18:29
+-- Dump completed on 2015-11-08 23:04:07

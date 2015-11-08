@@ -316,6 +316,16 @@ QStringList s_sql::GetValuesFromTableByID(QSqlDatabase db, QString tble, QString
     return vl;
 }
 
+// процедура берёт из таблицы запись № id по полям fields и возвращает значения полей
+
+QStringList s_sql::GetValuesFromTableByIDSimple(QSqlDatabase db, QString tble, QStringList fields, QString id)
+{
+    QStringList vl;
+
+    vl = GetValuesFromTableByField(db, tble, fields, "id", id);
+    return vl;
+}
+
 // процедура берёт из таблицы запись № id<tble> по полю field и возвращает значение поля
 
 QString s_sql::GetValueFromTableByID(QSqlDatabase db, QString tble, QString field, QString id)

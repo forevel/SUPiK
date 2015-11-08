@@ -112,7 +112,7 @@ void cmp_newsubsection::Cancel()
 
 void cmp_newsubsection::Ok()
 {
-    // временное
+/*    // временное
     WaitWidget *w = new WaitWidget();
     w->show();
     w->Start();
@@ -121,7 +121,7 @@ void cmp_newsubsection::Ok()
     while (tmr.elapsed() < 5000)
         QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
     w->Stop();
-    // временное
+    // временное */
     s_tqLineEdit *le1 = this->findChild<s_tqLineEdit *>("name");
     s_tqLineEdit *le2 = this->findChild<s_tqLineEdit *>("tblename");
     s_tqChooseWidget *cw = this->findChild<s_tqChooseWidget *>("cwpar");

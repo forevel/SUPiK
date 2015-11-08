@@ -1,5 +1,6 @@
 #include "s_duniversal.h"
 #include "../widgets/s_tqchoosewidget.h"
+#include "../widgets/waitwidget.h"
 #include <QPainter>
 #include <QRect>
 
@@ -14,7 +15,9 @@ QWidget* s_duniversal::createEditor(QWidget *parent, const QStyleOptionViewItem 
     QString links = index.data(Qt::UserRole).toString();
     ff = pc.getFFfromLinks(links);
     if ((ff.delegate == FD_DISABLED) || (ff.delegate == FD_SIMPLE) || (ff.delegate == FD_SIMGRID))
+    {
         return 0;
+    }
     QString hdr=index.data(Qt::UserRole+1).toString(); // в UserRole+1 должна содержаться aData, в которой находится подзаголовок диалога редактирования, вызываемого по кнопке в делегате
     wdgt = new s_tqChooseWidget(false,parent);
     wdgt->Setup(links,hdr);

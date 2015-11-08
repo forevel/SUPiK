@@ -2,6 +2,7 @@
 #include <QTimer>
 #include <QPropertyAnimation>
 #include "supik.h"
+#include "dialogs/dev/dev_docdialog.h"
 #include "dialogs/sys/sys_settingsdialog.h"
 #include "dialogs/sys/sys_systemdialog.h"
 #include "dialogs/dir/dir_maindialog.h"
@@ -26,7 +27,7 @@ supik::supik()
     SetSupikWindow();
     SetSupikStatusBar();
     pc.supikprocs << "ExitSupik" << "SysStructEdit" << "SettingsEdit" << "Components" << "Directories" << "BackupDir" << "RestoreDir" << "ProbCheck";
-    pc.supikprocs << "WhIncome" << "WhOutgoing" << "WhSearch" << "DocView" << "Quarantine" << "";
+    pc.supikprocs << "WhIncome" << "WhOutgoing" << "WhSearch" << "DevDoc" << "Quarantine" << "";
     pf["ExitSupik"] = &supik::ExitSupik;
     pf["SysStructEdit"] = &supik::SysStructEdit;
     pf["SettingsEdit"] = &supik::SettingsEdit;
@@ -41,6 +42,7 @@ supik::supik()
     pf["WhEditor"] = &supik::WhEditor;
     pf["Quarantine"] = &supik::Quarantine;
     pf["SysDirectories"] = &supik::SysDirectories;
+    pf["DevDoc"] = &supik::DevDoc;
     pf["Dummy"]=&supik::Dummy;
 }
 
@@ -484,6 +486,26 @@ void supik::WhEditor()
 
     int ids = MainTW->addTab(whd, "Редактор складов");
     MainTW->tabBar()->setTabData(ids, QVariant(TW_WH));
+    MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
+    MainTW->tabBar()->setCurrentIndex(ids);
+    MainTW->repaint();
+}
+
+void supik::DevDoc() // редактор документов на изделия
+{
+    S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
+    if (MainTW == 0)
+        return;
+    if (!(pc.access & (ACC_ALT_FULL | ACC_SYS_FULL | ACC_WH_FULL)))
+    {
+        ERMSG(PublicClass::ER_SUPIK,__LINE__,"Недостаточно прав для продолжения!");
+        return;
+    }
+
+    dev_docdialog *ddd = new dev_docdialog;
+
+    int ids = MainTW->addTab(ddd, "Изделия::Документация");
+    MainTW->tabBar()->setTabData(ids, QVariant(TW_DEV));
     MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
     MainTW->tabBar()->setCurrentIndex(ids);
     MainTW->repaint();

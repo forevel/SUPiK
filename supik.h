@@ -52,6 +52,7 @@ private:
     void WhIncome();
     void WhOutgoing();
     void WhSearch();
+    void DevDoc();
     void Quarantine();
     void Dummy();
     void SysDirectories();

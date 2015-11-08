@@ -67,5 +67,6 @@
         <file>res/Object3.png</file>
         <file>res/Object4.png</file>
         <file>res/Object5.png</file>
+        <file>res/DevWallpaper.png</file>
     </qresource>
 </RCC>

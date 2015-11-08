@@ -33,14 +33,17 @@ WaitWidget::~WaitWidget()
 
 void WaitWidget::Start()
 {
+    show();
     thr = new WaitThread;
     connect(thr,SIGNAL(TenMsPassed()),this,SLOT(Rotate()));
     connect(thr,SIGNAL(finished()),thr,SLOT(deleteLater()));
     thr->start();
+    this->moveToThread(thr);
 }
 
 void WaitWidget::Stop()
 {
+    hide();
     if (thr)
     {
         thr->quit();
@@ -51,6 +54,11 @@ void WaitWidget::Stop()
     Finished = true;
     emit finished();
     this->close();
+}
+
+void WaitWidget::SetMessage(QString msg)
+{
+    Message = msg;
 }
 
 void WaitWidget::Rotate()

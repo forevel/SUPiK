@@ -315,7 +315,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
     QString ElementString = ElementSl.at(CompType);
     // сначала берём наименование и производителя из соответствующей БД компонентов
     QStringList fl = QStringList() << "PartNumber" << "Manufacturer";
-    QStringList vl = sqlc.GetValuesFromTableByID(sqlc.GetDB(CompDb),CompTbles,fl,QString::number(id));
+    QStringList vl = sqlc.GetValuesFromTableByIDSimple(sqlc.GetDB(CompDb),CompTbles,fl,QString::number(id));
     if (sqlc.result) // нет такого элемента или ошибка в БД
     {
         COMPWARN;

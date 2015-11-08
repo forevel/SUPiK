@@ -115,9 +115,9 @@ void cmp_maindialog::SetupUI(int CompType, int CompTable, int CompID)
     QStringList dbsl = QStringList() << "" << "alt" << "sch" << "sol" << "con" << "dev";
     QStringList sectsl = QStringList() << "" << "Altium" << "Schemagee" << "Solidworks" << "Конструктивы,материалы" << "Устройства";
     this->CompDb = dbsl.at(CompType);
-    QStringList fl = QStringList() << "Наименование" << "Описание";
-    QStringList tblesl = tfl.valuesbyfield(sl.at(CompType)+"Компоненты_описание_сокращ",fl,"ИД",QString::number(CompTable));
-    if (tfl.result)
+    QStringList fl = QStringList() << "Наименование" << "Описание" << "Путь к файлам";
+    QStringList tblesl = tfl.valuesbyfield(sl.at(CompType)+"Компоненты_описание_полн",fl,"ИД",QString::number(CompTable));
+    if ((tfl.result) || (tblesl.size() < 3))
     {
         CMPWARN;
         return;
@@ -125,6 +125,7 @@ void cmp_maindialog::SetupUI(int CompType, int CompTable, int CompID)
     this->CompTble = tblesl.at(0);
     this->CompId = QString::number(CompID);
     this->CompType = QString::number(CompType);
+    this->CompUrlPrefix = tblesl.at(2);
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("section");
     if (le == 0)
     {
@@ -247,7 +248,7 @@ void cmp_maindialog::SetAltDialog()
     cw = new s_tqChooseWidget(true);
     connect(cw,SIGNAL(textchanged(QVariant)),this,SLOT(SomethingChanged()));
     cw->setObjectName("libref");
-    int i = 0;
+/*    int i = 0;
     QStringList tmpsl = CompTble.split("_", QString::KeepEmptyParts);
     QString PathString = "";
     QString tmps = tmpsl.last();
@@ -256,7 +257,8 @@ void cmp_maindialog::SetAltDialog()
         PathString += "/";
         PathString += tmpsl.value(i++);
     }
-    tmps = pc.PathToLibs + "Symbols" + PathString + "/" + CompTble + ".SchLib";
+    tmps = pc.PathToLibs + "Symbols" + PathString + "/" + CompTble + ".SchLib"; */
+    QString tmps = pc.PathToLibs + "Symbols" + CompUrlPrefix + CompTble + ".SchLib";
     cw->Setup("2.17.."+tmps+"."+pc.symfind);
     glyout->addWidget(cw,0,1,1,1);
     lbl = new s_tqLabel("Посадочное место");
@@ -264,7 +266,8 @@ void cmp_maindialog::SetAltDialog()
     cw = new s_tqChooseWidget(true);
     connect(cw,SIGNAL(textchanged(QVariant)),this,SLOT(SomethingChanged()));
     cw->setObjectName("footref");
-    tmps = pc.PathToLibs + "Footprints" + PathString + "/" + CompTble + ".PcbLib";
+//    tmps = pc.PathToLibs + "Footprints" + PathString + "/" + CompTble + ".PcbLib";
+    tmps = pc.PathToLibs + "Footprints" + CompUrlPrefix + CompTble + ".PcbLib";
     cw->Setup("2.17.."+tmps+"."+pc.footfind);
     glyout->addWidget(cw,1,1,1,1);
     gb->setLayout(glyout);

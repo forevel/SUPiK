@@ -1,3 +1,4 @@
+#include <QCoreApplication>
 #include <QHBoxLayout>
 #include <QFileDialog>
 #include <QStringListModel>
@@ -9,6 +10,7 @@
 #include "s_tqcombobox.h"
 #include "s_maskedle.h"
 #include "s_tqlabel.h"
+#include "waitwidget.h"
 #include "../gen/s_sql.h"
 #include "../gen/s_tablefields.h"
 #include "../dialogs/s_2cdialog.h"
@@ -139,6 +141,7 @@ void s_tqChooseWidget::pbclicked()
         chooseDialog->setup(ff.link.at(0), true); // диалог с "корневой кнопкой"
         connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
         chooseDialog->setTvCurrentText(le->text());
+
         chooseDialog->exec();
         break;
     }
@@ -150,6 +153,7 @@ void s_tqChooseWidget::pbclicked()
             chooseDialog->setup(ff.link.at(0));
             connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
             chooseDialog->setTvCurrentText(le->text());
+
             chooseDialog->exec();
         }
         else // это таблица
@@ -159,6 +163,7 @@ void s_tqChooseWidget::pbclicked()
             if (!chooseDialog->result)
             {
                 connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
+
                 chooseDialog->exec();
             }
         }
@@ -175,6 +180,7 @@ void s_tqChooseWidget::pbclicked()
             dlg->AddTable(ff.link.at(i));
         connect(dlg,SIGNAL(changeshasbeenMade(QString)),this,SLOT(accepted(QString)));
         dlg->SetTvCurrentText(le->text());
+
         dlg->exec();
         break;
     }
@@ -184,6 +190,7 @@ void s_tqChooseWidget::pbclicked()
         s_accessdialog *dlg = new s_accessdialog;
         dlg->SetupUI(le->text());
         connect(dlg, SIGNAL(acceptChanges(QString)), this, SLOT(accepted(QString)));
+
         dlg->exec();
         break;
     }
@@ -199,6 +206,7 @@ void s_tqChooseWidget::pbclicked()
         calWdgt->setSelectedDate(dte);
         connect(calWdgt, SIGNAL(activated(QDate)), this, SLOT(dateChoosed(QDate)));
         connect(calWdgt, SIGNAL(activated(QDate)), calWdgt, SLOT(close()));
+
         calWdgt->show();
         break;
     }
@@ -208,6 +216,7 @@ void s_tqChooseWidget::pbclicked()
         QStringList tmpsl = QStringList() << ff.link.at(0) << ff.link.at(1);
         dlg->Setup(tmpsl, le->text());
         connect(dlg,SIGNAL(finished(QString)),this,SLOT(accepted(QString)));
+
         dlg->exec();
         break;
     }
@@ -216,6 +225,7 @@ void s_tqChooseWidget::pbclicked()
         s_2cdialog *dlg = new s_2cdialog("");
         dlg->SetupFile(ff.link.at(0)+"."+ff.link.at(1),ff.link.at(2),le->text()); // ff.link.at(0) - имя файла, (1) - расширение, (2) - StringToFind
         connect(dlg,SIGNAL(changeshasbeenMade(QString)),this,SLOT(accepted(QString)));
+
         dlg->exec();
         break;
     }
@@ -230,12 +240,14 @@ void s_tqChooseWidget::pbclicked()
         }
         if (Template.isEmpty())
             return;
+
         QString filename = QFileDialog::getOpenFileName(this,"Открыть файл","",Template);
         accepted(filename);
         break;
     }
     case FW_ILINK: // диалог выбора каталога
     {
+
         QString dirname = QFileDialog::getExistingDirectory(this,"Выбрать каталог","",QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
         accepted(dirname);
         break;
@@ -243,7 +255,6 @@ void s_tqChooseWidget::pbclicked()
     default:
         break;
     }
-
 }
 
 void s_tqChooseWidget::accepted(QString str)

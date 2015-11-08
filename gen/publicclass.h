@@ -48,7 +48,7 @@ QT_END_NAMESPACE
 #define TW_PROB     0x107 // диалог событий
 #define TW_WH       0x108 // склады
 #define TW_QUAR     0x109 // работа с карантином
-#define TW_DOC      0x10A // редактор документов
+#define TW_DEV      0x10A // редактор документов
 #define TW_ADM      0x10B // сисадминистрирование
 
 // Максимальный размер буфера ошибок
@@ -159,7 +159,8 @@ public:
         ER_NTMODEL,  // s_ntmodel
         ER_TFIELD,   // tablefields
         ER_SQL,      // s_sql
-        ER_START     // startwindow
+        ER_START,    // startwindow
+        ER_DEVDOC    // dev_docdialog
     };
 
     double timerperiod;

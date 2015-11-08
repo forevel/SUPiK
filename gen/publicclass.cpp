@@ -22,7 +22,7 @@ PublicClass::PublicClass()
     TabColors[TW_DIR] = QColor(255, 255, 153); // DIRECTORY
     TabColors[TW_ADM] = QColor(102, 102, 153); // ADMIN
     TabColors[TW_WH] = QColor(204, 204, 51); // WAREHOUSE
-    TabColors[TW_DOC] = QColor(204, 204, 153); // DOCUMENTS
+    TabColors[TW_DEV] = QColor(204, 204, 255); // DEVICES
 
     NewNotifyHasArrived = false;
     Acknowledged = false;
@@ -192,7 +192,8 @@ void PublicClass::DBCheck()
     // 4. проверим справочники на правильность ссылок (наличие таких элементов в таблице, на которую дана ссылка)
     // 5. проверим справочники на наличие дублирующихся элементов (по основному полю - alias либо <tble>)
     // 6. проверим правильность полей date (дата не позднее текущей)
-        // 7. проверим каждый элемент в каждой таблице (кроме symbols) на соответствие полей: NominalValue должно быть равно Nominal+Unit
+        // 7. проверим каждый элемент в каждой таблице (кроме symbols) в Altium на соответствие полей: NominalValue должно быть равно Nominal+Unit
+        // 8. проверим все таблицы на предмет пустых строк (все поля пустые, исключая из проверки id<tble>,idpers,date,deleted)
     }
     if (access & ACC_WH_FULL)
     {
@@ -325,7 +326,8 @@ void PublicClass::AddErrMsg(ermsgtype msgtype, quint64 ernum, quint64 ersubnum, 
     QStringList filessl = QStringList() << "Супик" << "Компоненты" << "Компоненты_гл" << "Компоненты_новкатег" << "Добавление_справочника" \
                                         << "Работа со складом" << "Редактор_складов" << "Система" << "Справочники_гл" << "Комплексная_строка" \
                                         << "Редактор_системы" << "Ред_системы_справочники" << "Диалог_2_дерева" << "Диалог_дерево" \
-                                        << "Диалог_таблица" << "Модель_таблица" << "Модель_дерево" << "Таблицы" << "БД" << "Вход_в_систему";
+                                        << "Диалог_таблица" << "Модель_таблица" << "Модель_дерево" << "Таблицы" << "БД" << "Вход_в_систему" \
+                                        << "Изделия_документы";
     if (ermsgpool.size()>=ER_BUFMAX)
         ermsgpool.removeFirst();
     ermsg tmpm;

@@ -38,6 +38,7 @@ public:
     QString GetValueFromTableByFields (QSqlDatabase db, QString tble, QString field, QStringList cmpfields, QStringList cmpvalues);
     QString GetLastValueFromTableByField (QSqlDatabase db, QString tble, QString field, QString cmpfield, QString cmpvalue); // взять из таблицы последнюю запись по полю field, где cmpfield=cmpvalue
     QStringList GetValuesFromTableByID (QSqlDatabase db, QString tble, QStringList fields, QString id); // взять значения по полям fields для записи с ИД=id
+    QStringList GetValuesFromTableByIDSimple (QSqlDatabase db, QString tble, QStringList fields, QString id); // взять значения по полям fields для записи с ИД=id
     QStringList GetValuesFromTableByField (QSqlDatabase db, QString tble, QStringList fields, QString cmpfield, QString cmpvalue);
     QStringList GetValuesFromTableByFields (QSqlDatabase db, QString tble, QStringList fields, QStringList cmpfields, QStringList cmpvalues);
     QStringList GetValuesFromTableByColumn (QSqlDatabase db, QString tble, QString column, QString orderby="", bool asc=true);

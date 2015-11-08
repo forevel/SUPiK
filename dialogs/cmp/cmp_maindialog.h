@@ -25,7 +25,7 @@ signals:
     void cancelled();
 
 private:
-    QString CompDb, CompTble, CompId, CompType;
+    QString CompDb, CompTble, CompId, CompType, CompUrlPrefix;
     bool Changed, ChangeEnabled;
     int RevNotes;
     bool PartNumberCreatorEnabled;

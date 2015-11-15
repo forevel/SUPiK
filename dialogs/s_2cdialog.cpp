@@ -4,6 +4,7 @@
 #include "../widgets/s_tqpushbutton.h"
 #include "../widgets/s_tqlineedit.h"
 #include "../widgets/s_tqlabel.h"
+#include "../widgets/waitwidget.h"
 #include "../gen/s_sql.h"
 #include "../gen/publicclass.h"
 #include "../gen/s_tablefields.h"
@@ -40,6 +41,8 @@ s_2cdialog::s_2cdialog(QString caption, QWidget *parent) :
 
 void s_2cdialog::setup(QString tble, int Mode, QString id, QString matchtext, bool isQuarantine)
 {
+    WaitWidget *w = new WaitWidget;
+    w->Start();
     this->tble.clear();
     this->tble.append(tble);
     this->Mode = Mode;
@@ -54,6 +57,7 @@ void s_2cdialog::setup(QString tble, int Mode, QString id, QString matchtext, bo
         {
             result=1;
             CD2WARN;
+            w->Stop();
             return;
         }
         mainmodel->isEditable = false;
@@ -66,6 +70,7 @@ void s_2cdialog::setup(QString tble, int Mode, QString id, QString matchtext, bo
         if (mainmodel->result)
         {
             CD2WARN;
+            w->Stop();
             return;
         }
         mainmodel->isEditable = true;
@@ -75,6 +80,7 @@ void s_2cdialog::setup(QString tble, int Mode, QString id, QString matchtext, bo
     default:
     {
         CD2WARN;
+        w->Stop();
         return;
     }
     }
@@ -82,10 +88,13 @@ void s_2cdialog::setup(QString tble, int Mode, QString id, QString matchtext, bo
     if (!matchtext.isEmpty())
         SetTvCurrentText(matchtext);
     result = 0;
+    w->Stop();
 }
 
 void s_2cdialog::SetupFile(QString Filename, QString StringToFind, QString str)
 {
+    WaitWidget *w = new WaitWidget;
+    w->Start();
     QStringList tmpList;
     QString tmpString;
     char *tmpChar;
@@ -100,6 +109,7 @@ void s_2cdialog::SetupFile(QString Filename, QString StringToFind, QString str)
     if (!file.open(QIODevice::ReadOnly))
     {
         CD2WARN;
+        w->Stop();
         return;
     }
 
@@ -140,11 +150,13 @@ void s_2cdialog::SetupFile(QString Filename, QString StringToFind, QString str)
     if (mainmodel->result)
     {
         CD2WARN;
+        w->Stop();
         return;
     }
     fillModelAdata();
     IsQuarantine = false;
     SetTvCurrentText(str);
+    w->Stop();
 }
 
 void s_2cdialog::setupUI()

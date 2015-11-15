@@ -2,6 +2,11 @@
 
 #include <QTimer>
 
+WaitThread::WaitThread(QObject *parent) : QThread(parent)
+{
+    moveToThread(this);
+}
+
 void WaitThread::run()
 {
     QTimer *tmr = new QTimer;

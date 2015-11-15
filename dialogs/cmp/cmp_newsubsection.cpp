@@ -112,15 +112,10 @@ void cmp_newsubsection::Cancel()
 
 void cmp_newsubsection::Ok()
 {
-/*    // временное
+    // временное
     WaitWidget *w = new WaitWidget();
-    w->show();
+//    w->show();
     w->Start();
-    QTime tmr;
-    tmr.start();
-    while (tmr.elapsed() < 5000)
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
-    w->Stop();
     // временное */
     s_tqLineEdit *le1 = this->findChild<s_tqLineEdit *>("name");
     s_tqLineEdit *le2 = this->findChild<s_tqLineEdit *>("tblename");
@@ -128,6 +123,13 @@ void cmp_newsubsection::Ok()
     if ((le1 == 0) || (le2 == 0) || (cw == 0))
     {
         CMPNSDBG;
+        w->Stop();
+        return;
+    }
+    if ((le1->text().isEmpty()) || (le2->text().isEmpty()))
+    {
+        CMPNSWARN;
+        w->Stop();
         return;
     }
     QString desc = le2->text().toLower(); // наименование таблицы компонентов строчными буквами
@@ -158,6 +160,7 @@ void cmp_newsubsection::Ok()
         if (sqlc.result)
         {
             CMPNSWARN;
+            w->Stop();
             return;
         }
     }
@@ -176,6 +179,7 @@ void cmp_newsubsection::Ok()
         if (tfl.result)
         {
             CMPNSINFO("Ошибка добавления записи в таблицу description");
+            w->Stop();
             return;
         }
     }
@@ -186,6 +190,7 @@ void cmp_newsubsection::Ok()
     {
         tfl.Delete(TableName, newID);
         CMPNSINFO("Ошибка обновления записи в таблице description");
+        w->Stop();
         return;
     }
 
@@ -197,6 +202,7 @@ void cmp_newsubsection::Ok()
         if (tfl.result)
         {
             CMPNSWARN;
+            w->Stop();
             return;
         }
         QStringList fl = QStringList() << "ИД" << "Наименование" << "ИД_а" << "Параметры";
@@ -206,9 +212,11 @@ void cmp_newsubsection::Ok()
         {
             tfl.Delete(TableName, newID);
             CMPNSWARN;
+            w->Stop();
             return;
         }
     }
+    w->Stop();
     this->close();
     CMPNSINFO("Записано успешно!");
 }

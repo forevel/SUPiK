@@ -14,6 +14,7 @@ WaitWidget::WaitWidget(QWidget *parent) : QWidget(parent)
 {
     Finished = false;
     setAttribute(Qt::WA_TranslucentBackground);
+    setAttribute(Qt::WA_DeleteOnClose);
     gamma = 0.0;
     Message = "";
     resize(800, 220);
@@ -38,19 +39,19 @@ void WaitWidget::Start()
     connect(thr,SIGNAL(TenMsPassed()),this,SLOT(Rotate()));
     connect(thr,SIGNAL(finished()),thr,SLOT(deleteLater()));
     thr->start();
-    this->moveToThread(thr);
+//    this->moveToThread(thr);
 }
 
 void WaitWidget::Stop()
 {
     hide();
-    if (thr)
+/*    if (thr)
     {
         thr->quit();
         thr->wait();
-        delete thr;
-        thr = 0;
-    }
+//        delete thr;
+//        thr = 0;
+    } */
     Finished = true;
     emit finished();
     this->close();

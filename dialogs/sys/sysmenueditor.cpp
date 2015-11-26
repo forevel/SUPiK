@@ -45,7 +45,6 @@ void SysmenuEditor::SetupUI(QString tble) // tble - имя таблицы, из 
     tv->setIndentation(2);
     tv->setAnimated(false);
     s_duniversal *gridItemDelegate = new s_duniversal;
-    connect(gridItemDelegate,SIGNAL(error(int,int)),this,SIGNAL(error(int,int)));
     tv->setItemDelegate(gridItemDelegate);
     tv->ResizeColumnsToContents();
     tv->setContextMenuPolicy(Qt::CustomContextMenu);

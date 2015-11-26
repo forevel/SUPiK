@@ -35,8 +35,6 @@ s_tqChooseWidget::s_tqChooseWidget(bool Transparent, QWidget *parent) :
 
 void s_tqChooseWidget::Setup(QString links, QString hdr)
 {
-    WaitWidget *w = new WaitWidget;
-    w->Start();
     this->links = links;
     ff = pc.getFFfromLinks(links);
     this->hdr = hdr;
@@ -128,7 +126,6 @@ void s_tqChooseWidget::Setup(QString links, QString hdr)
     wdgt->setLayout(ml2);
     ml->addWidget(wdgt);
     setLayout(ml);
-    w->Stop();
 }
 
 void s_tqChooseWidget::pbclicked()
@@ -278,16 +275,11 @@ void s_tqChooseWidget::accepted(QString str)
 
 void s_tqChooseWidget::SetValue(QVariant data)
 {
-    WaitWidget *w = new WaitWidget;
-    w->Start();
     SetData(tfl.idtov(links, data.toString()));
-    w->Stop();
 }
 
 void s_tqChooseWidget::SetData(QVariant data)
 {
-    WaitWidget *w = new WaitWidget;
-    w->Start();
     switch (ff.delegate)
     {
     case FD_CHOOSE:
@@ -336,16 +328,12 @@ void s_tqChooseWidget::SetData(QVariant data)
     default:
         break;
     }
-    w->Stop();
 }
 
 QVariant s_tqChooseWidget::Value()
 {
-    WaitWidget *w = new WaitWidget;
-    w->Start();
     QVariant RetData = Data();
     QVariant v = tfl.vtoid(links, RetData.toString());
-    w->Stop();
     return v;
 }
 

@@ -309,7 +309,6 @@ void sys_systemdialog::MainMenuEditor()
         return;
     }
     SysmenuEditor *dlg = new SysmenuEditor;
-    connect(dlg,SIGNAL(error(int,int)),this,SIGNAL(error(int,int)));
     connect(this,SIGNAL(closeslvdlg()),dlg,SLOT(close()));
     dlg->SetupUI("Главное меню");
     wdgt->addWidget(dlg);
@@ -325,7 +324,6 @@ void sys_systemdialog::SystemMenuEditor()
         return;
     }
     SysmenuEditor *dlg = new SysmenuEditor;
-    connect(dlg,SIGNAL(error(int,int)),this,SIGNAL(error(int,int)));
     connect(this,SIGNAL(closeslvdlg()),dlg,SLOT(close()));
     dlg->SetupUI("Системное меню");
     wdgt->addWidget(dlg);
@@ -341,7 +339,6 @@ void sys_systemdialog::SystemDirEditor()
         return;
     }
     dir_maindialog *dird = new dir_maindialog("Справочники системные");
-    connect(dird,SIGNAL(error(int,int)),this,SLOT(emiterror(int,int)));
     connect(this,SIGNAL(closeslvdlg()),dird,SLOT(close()));
     sw->addWidget(dird);
     sw->setCurrentWidget(dird);

@@ -13,6 +13,7 @@ s_tqTreeView::s_tqTreeView(QWidget *parent) :
     setFrameStyle(QFrame::NoFrame);
     setStyle(style);
     connect(this, SIGNAL(clicked(QModelIndex)), this, SLOT(setTVexpanded(QModelIndex)));
+    RootIndexes.clear();
 }
 
 void s_tqTreeView::setAData(QVariant dat)
@@ -30,9 +31,34 @@ void s_tqTreeView::setTVexpanded(QModelIndex index)
     if (!index.column())
     {
         if (isExpanded(index))
+        {
+            QModelIndex parent;
+            if (!RootIndexes.isEmpty())
+                parent = RootIndexes.pop();
+            for (int i = 0; model()->index(i, 0, parent).isValid(); i++)
+                setRowHidden(i, parent, false);
+            if (!RootIndexes.isEmpty())
+                parent = RootIndexes.top();
+            else
+                parent = QModelIndex();
+            setRootIndex(parent);
             setExpanded(index, false);
+        }
         else
+        {
             setExpanded(index, true);
+            QModelIndex parent = index.parent();
+            if (!parent.isValid())
+                parent = rootIndex();
+            RootIndexes.push(parent);
+            setRootIndex(parent);
+            int indexrow = index.row();
+            for (int i = 0; model()->index(i,0,parent).isValid(); i++)
+            {
+                if (i != indexrow)
+                    setRowHidden(i, parent, true);
+            }
+        }
     }
     ResizeColumnsToContents();
 }

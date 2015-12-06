@@ -8,6 +8,7 @@
 #include "s_tqcalendarwidget.h"
 #include "s_tqspinbox.h"
 #include "s_tqcombobox.h"
+#include "s_tqcheckbox.h"
 #include "s_maskedle.h"
 #include "s_tqlabel.h"
 #include "waitwidget.h"
@@ -118,6 +119,13 @@ void s_tqChooseWidget::Setup(QString links, QString hdr)
         sb->setDecimals(tmpInt2);
         sb->setMaximum(tmpString.toDouble());
         ml2->addWidget(sb);
+        break;
+    }
+    case FD_CHECK:
+    {
+        s_tqCheckBox *cb = new s_tqCheckBox;
+        cb->setObjectName("fdcb");
+        ml2->addWidget(cb);
         break;
     }
     default:
@@ -325,6 +333,13 @@ void s_tqChooseWidget::SetData(QVariant data)
             sb->setValue(data.toDouble());
         break;
     }
+    case FD_CHECK:
+    {
+        s_tqCheckBox *cb = this->findChild<s_tqCheckBox *>("fdcb");
+        if (cb != 0)
+            cb->setChecked(data.toBool());
+        break;
+    }
     default:
         break;
     }
@@ -382,6 +397,13 @@ QVariant s_tqChooseWidget::Data()
         s_tqSpinBox *sb = this->findChild<s_tqSpinBox *>("fdcsb");
         if (sb != 0)
             return QVariant(sb->value());
+        break;
+    }
+    case FD_CHECK:
+    {
+        s_tqCheckBox *cb = this->findChild<s_tqCheckBox *>("fdcb");
+        if (cb != 0)
+            return QVariant(cb->isChecked());
         break;
     }
     default:

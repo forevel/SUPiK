@@ -39,6 +39,7 @@ public:
     s_ntitem *getItem(const QModelIndex &index) const;
     int Setup (QString table);
     int Setup (QString maintble, QString slvtble);
+    void DocSetup(); // формирование дерева документов для диалога DevDocDialog
     void ClearModel();
     QList<QPersistentModelIndex> expandedIndexes;
 

@@ -1022,7 +1022,7 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
     QStringListModel *cbmodel = new QStringListModel;
     QStringList tmpStringList; // делегаты
     tmpStringList << "0.Простое поле" << "1.Поле ввода" << "2.Поле выбора" << "3.Выпадающий список" << "4.Неактивное поле" <<  \
-                     "5.Счётчик" << "6.Поле выбора с вводом" << "7.Поле с рамкой";
+                     "5.Счётчик" << "6.Поле выбора с вводом" << "7.Поле с рамкой" << "8.Поле бинарного ввода";
     cbmodel->setStringList(tmpStringList);
     dtypecb->setModel(cbmodel);
     connect(dtypecb,SIGNAL(currentIndexChanged(int)),this,SLOT(DTypeCBIndexChanged(int)));
@@ -1404,6 +1404,10 @@ void dir_adddialog::DTypeCBIndexChanged(int FD)
     {
         tmpStringList << FW_Links.at(10);
         break;
+    }
+    case FD_CHECK:
+    {
+        tmpStringList << FW_Links.at(8);
     }
     default:
         break;

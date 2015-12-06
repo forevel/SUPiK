@@ -4,6 +4,7 @@
 #include <QTreeView>
 #include <QProxyStyle>
 #include <QPaintEvent>
+#include <QStack>
 
 class s_tqTreeView : public QTreeView
 {
@@ -23,6 +24,7 @@ public slots:
 
 private:
     QVariant adata;
+    QStack<QModelIndex> RootIndexes;
 
 protected:
 };

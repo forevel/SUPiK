@@ -24,13 +24,15 @@ private:
     s_ncmodel *slavemodel;
 
     void SetupUI();
+    void ResizeMainTV();
 
 private slots:
     void AddNewSubsection();
     void AddNewItem();
+    void EditItem();
     void MainItemChoosed(QModelIndex idx);
     void SlaveItemChoosed(QModelIndex idx);
-    void SlaveContextMenu(QPoint pt);
+    void MainContextMenu(QPoint pt);
 
 protected:
     void paintEvent(QPaintEvent *);

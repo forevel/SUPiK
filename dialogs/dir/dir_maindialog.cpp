@@ -409,7 +409,7 @@ void dir_maindialog::DeleteDataUnconditional(QString id)
     }
     else
     {
-        INFOMSG(PublicClass::ER_DIRMAIN,__LINE__,"Удалено успешно!");
+        DIRMINFO("Удалено успешно!");
         showDirDialog();
     }
 }

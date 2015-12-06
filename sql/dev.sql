@@ -52,34 +52,30 @@ INSERT INTO `devices` VALUES (1,'Плата вспомогательная об�
 UNLOCK TABLES;
 
 --
--- Table structure for table `docclasses`
+-- Table structure for table `documents`
 --
 
-DROP TABLE IF EXISTS `docclasses`;
+DROP TABLE IF EXISTS `documents`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `docclasses` (
-  `iddocclasses` int(11) NOT NULL,
-  `docclasses` varchar(128) DEFAULT NULL,
-  `type` varchar(128) DEFAULT NULL,
-  `tblename` varchar(128) DEFAULT NULL,
-  `url` varchar(128) DEFAULT NULL,
-  `idpers` varchar(128) DEFAULT NULL,
-  `date` varchar(128) DEFAULT NULL,
-  `deleted` int(1) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`iddocclasses`),
-  UNIQUE KEY `iddocclasses_UNIQUE` (`iddocclasses`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+CREATE TABLE `documents` (
+  `iddocuments` int(11) NOT NULL,
+  `documents` varchar(128) DEFAULT NULL,
+  `device` varchar(128) DEFAULT NULL,
+  `idpers` varchar(45) DEFAULT NULL,
+  `deleted` varchar(1) NOT NULL DEFAULT '0',
+  `date` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`iddocuments`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `docclasses`
+-- Dumping data for table `documents`
 --
 
-LOCK TABLES `docclasses` WRITE;
-/*!40000 ALTER TABLE `docclasses` DISABLE KEYS */;
-INSERT INTO `docclasses` VALUES (1,'Перечни','i','lists','','2001','2015-11-08 15:44:51',0);
-/*!40000 ALTER TABLE `docclasses` ENABLE KEYS */;
+LOCK TABLES `documents` WRITE;
+/*!40000 ALTER TABLE `documents` DISABLE KEYS */;
+/*!40000 ALTER TABLE `documents` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -172,4 +168,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2015-11-08 23:04:10
+-- Dump completed on 2015-12-06 22:35:15

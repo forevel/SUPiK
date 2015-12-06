@@ -534,5 +534,68 @@ void s_ntmodel::ClearModel()
     while (rowCount() > 0)
         removeRows(0, 1);
     endResetModel();
+}
 
+void s_ntmodel::DocSetup()
+{
+    setHeaderData(0, Qt::Horizontal, "ИД", Qt::EditRole);
+    setHeaderData(1, Qt::Horizontal, "Наименование", Qt::EditRole);
+    position = 0;
+    int set = 4;
+    QStringList sl;
+    QSqlQuery get_child_from_db1 (sqlc.GetDB("dev"));
+    QString tmpString = "SELECT `devices`,`iddevices` FROM `devices` WHERE `deleted`=0 ORDER BY `iddevices` ASC;";
+    get_child_from_db1.exec(tmpString);
+    while (get_child_from_db1.next())
+    {
+        sl.clear();
+        sl << QString("%1").arg(get_child_from_db1.value(1).toInt(0), 7, 10, QChar('0')) << get_child_from_db1.value(0).toString();
+        QString DevID = get_child_from_db1.value(1).toString();
+        additemtotree(position, sl, set);
+        position++;
+        QSqlQuery get_child_from_db2 (sqlc.GetDB("dev"));
+        tmpString = "SELECT `documents` FROM `documents` WHERE `device`=" + DevID + " AND `deleted`=0 ORDER BY `iddocuments` ASC;";
+        get_child_from_db2.exec(tmpString);
+        QStringList sl2;
+        while (get_child_from_db2.next())
+            sl2 << get_child_from_db2.value(0).toString();
+        QList<QStringList> lsl;
+        while (!sl2.isEmpty())
+        {
+            QString DocID = sl2.takeFirst();
+            QSqlQuery get_child_from_db3 (sqlc.GetDB("ent"));
+            tmpString = "SELECT `iddocuments`,`documents`,`docclasses` FROM `documents` WHERE `iddocuments`=" + DocID + " AND `deleted`=0;";
+            get_child_from_db3.exec(tmpString);
+            get_child_from_db3.next();
+            sl.clear();
+            sl << get_child_from_db3.value(0).toString() << get_child_from_db3.value(1).toString() << get_child_from_db3.value(2).toString();
+            lsl.append(sl);
+        }
+        while (!lsl.isEmpty())
+        {
+            QString DocClassID = lsl.at(0).at(2);
+            QSqlQuery get_child_from_db4 (sqlc.GetDB("ent"));
+            tmpString = "SELECT `docclasses` FROM `docclasses` WHERE `iddocclasses`=" + DocClassID + " AND `deleted`=0;";
+            get_child_from_db4.exec(tmpString);
+            get_child_from_db4.exec();
+            QString DocClassName = get_child_from_db4.value(0).toString();
+            sl.clear();
+            sl << "" << DocClassName;
+            additemtotree(position, sl, set);
+            position++;
+            for (int i = 0; i < lsl.size(); i++)
+            {
+                if (lsl.at(i).at(2) == DocClassID)
+                {
+                    sl.clear();
+                    sl << lsl.at(i).at(0) << lsl.at(i).at(1);
+                    additemtotree(position, sl, set);
+                    lsl.removeFirst();
+                    i--;
+                }
+            }
+            position--;
+        }
+        position--;
+    }
 }

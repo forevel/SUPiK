@@ -12,6 +12,7 @@
 #include "../s_2cdialog.h"
 #include "../../models/proxymodel.h"
 #include "../../models/s_duniversal.h"
+#include "../../models/s_ntmodel.h"
 #include "../../widgets/s_tqgroupbox.h"
 #include "../../widgets/s_tqlabel.h"
 #include "../../widgets/s_tqlineedit.h"
@@ -82,28 +83,24 @@ void dev_docdialog::SetupUI()
     hlyout->setAlignment(lbl, Qt::AlignRight);
 
     lyout->addLayout(hlyout);
-    s_tqTableView *MainTV = new s_tqTableView;
+    s_tqTreeView *MainTV = new s_tqTreeView;
     s_duniversal *gridItemDelegate = new s_duniversal;
     MainTV->setItemDelegate(gridItemDelegate);
     MainTV->setObjectName("mtv");
-    MainTV->horizontalHeader()->setVisible(true);
-    MainTV->verticalHeader()->setVisible(false);
-    s_ncmodel *mainmodel = new s_ncmodel;
+    s_ntmodel *mainmodel = new s_ntmodel;
     ProxyModel *mainproxymodel = new ProxyModel;
-    mainmodel->setup("Классы документации_сокращ");
-    if (mainmodel->result)
-    {
-        DEVDOCWARN;
-        return;
-    }
+    mainmodel->DocSetup();
     mainproxymodel->setSourceModel(mainmodel);
     MainTV->setModel(mainproxymodel);
-    MainTV->resizeColumnsToContents();
-    MainTV->resizeRowsToContents();
+    ResizeMainTV();
     MainTV->setSelectionMode(QAbstractItemView::NoSelection);
     MainTV->setSortingEnabled(true);
     MainTV->sortByColumn(0, Qt::AscendingOrder);
-    connect(MainTV,SIGNAL(clicked(QModelIndex)),this,SLOT(MainItemChoosed(QModelIndex)));
+    MainTV->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(MainTV, SIGNAL(expanded(QModelIndex)), mainmodel, SLOT(addExpandedIndex(QModelIndex)));
+    connect(MainTV, SIGNAL(collapsed(QModelIndex)), mainmodel, SLOT(removeExpandedIndex(QModelIndex)));
+    connect (MainTV, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(MainContextMenu(QPoint)));
+    connect (MainTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(EditItem()));
     s_tqSplitter *spl = new s_tqSplitter;
     s_tqFrame *left = new s_tqFrame;
     QVBoxLayout *leftlyout = new QVBoxLayout;
@@ -114,7 +111,7 @@ void dev_docdialog::SetupUI()
     spl->addWidget(left);
     s_tqFrame *right = new s_tqFrame;
     QVBoxLayout *rlyout = new QVBoxLayout;
-    s_tqTableView *SlaveTV = new s_tqTableView;
+/*    s_tqTableView *SlaveTV = new s_tqTableView;
     SlaveTV->setItemDelegate(gridItemDelegate);
     slavemodel = new s_ncmodel;
     ProxyModel *slaveproxymodel = new ProxyModel;
@@ -131,7 +128,7 @@ void dev_docdialog::SetupUI()
     connect(SlaveTV,SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(SlaveContextMenu(QPoint)));
     rlyout->addWidget(SlaveTV);
     right->setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    right->setLineWidth(1);
+    right->setLineWidth(1);*/
     right->setLayout(rlyout);
     spl->addWidget(right);
     spl->setOrientation(Qt::Horizontal);
@@ -285,7 +282,7 @@ void dev_docdialog::AddNewSubsection()
         dlg->exec();
 }
 
-void dev_docdialog::SlaveContextMenu(QPoint)
+void dev_docdialog::MainContextMenu(QPoint)
 {
 /*    QAction *ChangeDataChild;
     ChangeDataChild = new QAction ("Изменить элемент", this);
@@ -307,4 +304,21 @@ void dev_docdialog::SlaveContextMenu(QPoint)
     if (pc.access & 0x4924) // права на удаление
         ContextMenu->addAction(DeleteAction);
     ContextMenu->exec(QCursor::pos()); // если есть права на удаление, на изменение тоже должны быть */
+}
+
+void dev_docdialog::ResizeMainTV()
+{
+    s_tqTreeView *tv = this->findChild<s_tqTreeView *>("mtv");
+    if (tv == 0)
+    {
+        DEVDOCDBG;
+        return;
+    }
+    for (int i = 0; i < tv->header()->count(); i++)
+        tv->resizeColumnToContents(i);
+}
+
+void dev_docdialog::EditItem()
+{
+
 }

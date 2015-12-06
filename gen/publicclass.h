@@ -123,7 +123,8 @@ QT_END_NAMESPACE
 #define FD_SPIN     5 // счётчик
 #define FD_CHOOSE_X 6 // поле ввода с кнопкой выбора по ссылке с возможностью редактирования
 #define FD_SIMGRID  7 // простой делегат с рамкой
-#define DELEGNUM    8 // количество делегатов
+#define FD_CHECK    8 // поле бинарного выбора
+#define DELEGNUM    9 // количество делегатов
 
 // тип арифм операции
 #define OP_PLUS     1

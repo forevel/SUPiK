@@ -112,7 +112,7 @@ void cmp_compdialog::SetupUI()
     mainmodel->setup(CompLetter+"Компоненты_описание_сокращ");
     if (mainmodel->result)
     {
-        WARNMSG(PublicClass::ER_COMP, __LINE__);
+        COMPWARN;
         QApplication::restoreOverrideCursor();
         return;
     }

@@ -13,6 +13,7 @@ s_tqTreeView::s_tqTreeView(QWidget *parent) :
     setFrameStyle(QFrame::NoFrame);
     setStyle(style);
     connect(this, SIGNAL(clicked(QModelIndex)), this, SLOT(setTVexpanded(QModelIndex)));
+    setExpandsOnDoubleClick(false);
     RootIndexes.clear();
 }
 
@@ -28,23 +29,25 @@ QVariant s_tqTreeView::getAData()
 
 void s_tqTreeView::setTVexpanded(QModelIndex index)
 {
-    if (!index.column())
+    if (index.column() != 0)
+        return;
+    if (isExpanded(index))
     {
-        if (isExpanded(index))
-        {
-            QModelIndex parent;
-            if (!RootIndexes.isEmpty())
-                parent = RootIndexes.pop();
-            for (int i = 0; model()->index(i, 0, parent).isValid(); i++)
-                setRowHidden(i, parent, false);
-            if (!RootIndexes.isEmpty())
-                parent = RootIndexes.top();
-            else
-                parent = QModelIndex();
-            setRootIndex(parent);
-            setExpanded(index, false);
-        }
+        QModelIndex parent;
+        if (!RootIndexes.isEmpty())
+            parent = RootIndexes.pop();
+        for (int i = 0; model()->index(i, 0, parent).isValid(); i++)
+            setRowHidden(i, parent, false);
+        if (!RootIndexes.isEmpty())
+            parent = RootIndexes.top();
         else
+            parent = QModelIndex();
+        setRootIndex(parent);
+        setExpanded(index, false);
+    }
+    else
+    {
+        if (index.child(0,0).isValid())
         {
             setExpanded(index, true);
             QModelIndex parent = index.parent();

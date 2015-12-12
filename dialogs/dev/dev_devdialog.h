@@ -1,39 +1,33 @@
-#ifndef DEV_DOCDIALOG_H
-#define DEV_DOCDIALOG_H
+#ifndef DEV_DEVDIALOG_H
+#define DEV_DEVDIALOG_H
 
 #include <QDialog>
-#include "../../models/proxymodel.h"
+#include "../../models/s_ncmodel.h"
 
 #define DEVDOCWARN    WARNMSG(PublicClass::ER_DEVDOC, __LINE__)
 #define DEVDOCDBG     DBGMSG(PublicClass::ER_DEVDOC, __LINE__)
 #define DEVDOCINFO(a) INFOMSG(PublicClass::ER_DEVDOC, __LINE__,a)
 
-class dev_docdialog : public QDialog
+class dev_devdialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit dev_docdialog(QWidget *parent = 0);
-    ~dev_docdialog();
+    explicit dev_devdialog(QWidget *parent = 0);
+    ~dev_devdialog();
 
 signals:
 
 public slots:
 
 private:
-    QString DevDocTble;
-    ProxyModel *mainproxymodel;
-
     void SetupUI();
     void ResizeMainTV();
 
 private slots:
-    void AddNewDoc();
-    void EditDoc();
-    void DeleteDoc();
-    void MainItemChoosed(QModelIndex idx);
-    void SlaveItemChoosed(QModelIndex idx);
+    void AddNewDev();
+    void EditDev();
+    void DeleteDev();
     void MainContextMenu(QPoint pt);
-    void ShowFilterLineEdit();
     void Filter();
     void Unfilter();
 
@@ -43,4 +37,4 @@ protected:
 
 };
 
-#endif // DEV_DOCDIALOG_H
+#endif // DEV_DEVDIALOG_H

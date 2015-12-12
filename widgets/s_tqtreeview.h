@@ -5,6 +5,7 @@
 #include <QProxyStyle>
 #include <QPaintEvent>
 #include <QStack>
+#include <QTimer>
 
 class s_tqTreeView : public QTreeView
 {
@@ -26,7 +27,11 @@ private:
     QVariant adata;
     QStack<QModelIndex> RootIndexes;
 
+private slots:
+
+
 protected:
+
 };
 
 class s_tqTreeViewstyle : public QProxyStyle

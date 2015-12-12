@@ -16,7 +16,7 @@
 
 #define SYSSTYLESHEET "background-image: url(:/res/SysWallpaper.png);"
 
-#define PROGNAME    "Супик 1.0.284"
+#define PROGNAME    "Супик 1.0.289"
 
 class supik : public QMainWindow
 {
@@ -53,6 +53,7 @@ private:
     void WhOutgoing();
     void WhSearch();
     void DevDoc();
+    void DevDev();
     void Quarantine();
     void Dummy();
     void SysDirectories();

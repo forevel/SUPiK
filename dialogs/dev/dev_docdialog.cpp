@@ -56,17 +56,16 @@ void dev_docdialog::SetupUI()
     QHBoxLayout *hlyout = new QHBoxLayout;
 
     s_tqPushButton *pb = new s_tqPushButton;
-    pb->setIcon(QIcon(":/res/newcaty.png"));
-    connect(pb, SIGNAL(clicked()), this, SLOT(AddNewSubsection()));
-    pb->setToolTip("Создать новый раздел");
-    hlyout->addWidget(pb);
-    hlyout->addSpacing(5);
     pb = new s_tqPushButton;
-    pb->setIcon(QIcon(":/res/newdocy.png"));
-    connect(pb, SIGNAL(clicked()), this, SLOT(AddNewItem()));
-    pb->setToolTip("Создать новый компонент");
+    pb->setIcon(QIcon(":/res/lupa.gif"));
+    pb->setToolTip("Поиск изделия");
+    connect(pb,SIGNAL(clicked()),this,SLOT(ShowFilterLineEdit()));
     hlyout->addWidget(pb);
-    hlyout->addSpacing(5);
+    pb = new s_tqPushButton;
+    pb->setToolTip("Сбросить фильтр");
+    pb->setIcon(QIcon(":/res/crossgray.png"));
+    connect(pb,SIGNAL(clicked()),this,SLOT(Unfilter()));
+    hlyout->addWidget(pb);
     pb = new s_tqPushButton;
     pb->setIcon(QIcon(":/res/cross.png"));
     connect(pb, SIGNAL(clicked()), this, SLOT(close()));
@@ -88,11 +87,10 @@ void dev_docdialog::SetupUI()
     MainTV->setItemDelegate(gridItemDelegate);
     MainTV->setObjectName("mtv");
     s_ntmodel *mainmodel = new s_ntmodel;
-    ProxyModel *mainproxymodel = new ProxyModel;
+    mainproxymodel = new ProxyModel;
     mainmodel->DocSetup();
     mainproxymodel->setSourceModel(mainmodel);
     MainTV->setModel(mainproxymodel);
-    ResizeMainTV();
     MainTV->setSelectionMode(QAbstractItemView::NoSelection);
     MainTV->setSortingEnabled(true);
     MainTV->sortByColumn(0, Qt::AscendingOrder);
@@ -100,7 +98,7 @@ void dev_docdialog::SetupUI()
     connect(MainTV, SIGNAL(expanded(QModelIndex)), mainmodel, SLOT(addExpandedIndex(QModelIndex)));
     connect(MainTV, SIGNAL(collapsed(QModelIndex)), mainmodel, SLOT(removeExpandedIndex(QModelIndex)));
     connect (MainTV, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(MainContextMenu(QPoint)));
-    connect (MainTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(EditItem()));
+    connect (MainTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(EditDoc()));
     s_tqSplitter *spl = new s_tqSplitter;
     s_tqFrame *left = new s_tqFrame;
     QVBoxLayout *leftlyout = new QVBoxLayout;
@@ -111,7 +109,11 @@ void dev_docdialog::SetupUI()
     spl->addWidget(left);
     s_tqFrame *right = new s_tqFrame;
     QVBoxLayout *rlyout = new QVBoxLayout;
-/*    s_tqTableView *SlaveTV = new s_tqTableView;
+    s_tqWidget *wdgt = new s_tqWidget;
+
+    // рисуем окно свойств документов/изделий
+
+    /*    s_tqTableView *SlaveTV = new s_tqTableView;
     SlaveTV->setItemDelegate(gridItemDelegate);
     slavemodel = new s_ncmodel;
     ProxyModel *slaveproxymodel = new ProxyModel;
@@ -126,14 +128,53 @@ void dev_docdialog::SetupUI()
     connect(SlaveTV,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(SlaveItemChoosed(QModelIndex)));
     SlaveTV->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(SlaveTV,SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(SlaveContextMenu(QPoint)));
-    rlyout->addWidget(SlaveTV);
+    rlyout->addWidget(SlaveTV); */
+    rlyout->addWidget(wdgt);
     right->setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    right->setLineWidth(1);*/
+    right->setLineWidth(1);
     right->setLayout(rlyout);
     spl->addWidget(right);
     spl->setOrientation(Qt::Horizontal);
     lyout->addWidget(spl, 90);
     setLayout(lyout);
+    ResizeMainTV();
+}
+
+void dev_docdialog::ShowFilterLineEdit()
+{
+    QDialog *dlg = new QDialog(this);
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
+    QPushButton *pb = qobject_cast<QPushButton *>(sender());
+    dlg->move(pb->mapToGlobal(pb->pos()));
+    QHBoxLayout *hlyout = new QHBoxLayout;
+    s_tqLabel *lbl = new s_tqLabel("Фильтр:");
+    s_tqLineEdit *le = new s_tqLineEdit;
+    le->setObjectName("filterle");
+    pb = new s_tqPushButton;
+    pb->setIcon(QIcon(":/res/cross.png"));
+    connect(le,SIGNAL(returnPressed()),this,SLOT(Filter()));
+    connect(pb,SIGNAL(clicked()),dlg,SLOT(close()));
+    hlyout->addWidget(lbl);
+    hlyout->addWidget(le, 1);
+    hlyout->addWidget(pb);
+    dlg->setLayout(hlyout);
+    dlg->exec();
+}
+
+void dev_docdialog::Filter()
+{
+    s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("filterle");
+    if (le == 0)
+    {
+        DEVDOCDBG;
+        return;
+    }
+    mainproxymodel->setFilterWildcard("*"+le->text()+"*");
+}
+
+void dev_docdialog::Unfilter()
+{
+    mainproxymodel->setFilterWildcard("*");
 }
 
 void dev_docdialog::MainItemChoosed(QModelIndex idx)
@@ -215,7 +256,7 @@ void dev_docdialog::EditCancelled()
 // Добавляем новый элемент
 // --------------------------------------
 
-void dev_docdialog::AddNewItem()
+void dev_docdialog::AddNewDoc()
 {
     if (DevDocTble.isEmpty())
     {
@@ -264,46 +305,26 @@ void dev_docdialog::DeleteItem()
     }
 }
  */
-// добавление новой категории документов
-
-void dev_docdialog::AddNewSubsection()
-{
-    QString newID = tfl.insert("Классы документации_полн");
-    if (tfl.result)
-    {
-        DEVDOCWARN;
-        return;
-    }
-    s_2cdialog *dlg = new s_2cdialog("Категории документов::Создание");
-    dlg->setup("Классы документации_полн",MODE_EDITNEW,newID);
-    if (dlg->result)
-        DEVDOCWARN;
-    else
-        dlg->exec();
-}
 
 void dev_docdialog::MainContextMenu(QPoint)
 {
-/*    QAction *ChangeDataChild;
-    ChangeDataChild = new QAction ("Изменить элемент", this);
-    ChangeDataChild->setSeparator(false);
-    connect(ChangeDataChild, SIGNAL(triggered()), this, SLOT(EditItem()));
-    QAction *AddNewByExisting = new QAction ("Создать на основе...", this);
-    AddNewByExisting->setSeparator(false);
-    connect(AddNewByExisting, SIGNAL(triggered()), this, SLOT(AddNewOnExistingItem()));
-    QAction *DeleteAction = new QAction("Удалить элемент", this);
-    DeleteAction->setSeparator(false);
-    connect (DeleteAction, SIGNAL(triggered()), this, SLOT(DeleteItem()));
     QMenu *ContextMenu = new QMenu;
-    ContextMenu->setTitle("Context menu");
-    if (pc.access & 0x2492) // права на изменение
-    {
-        ContextMenu->addAction(AddNewByExisting);
-        ContextMenu->addAction(ChangeDataChild);
-    }
-    if (pc.access & 0x4924) // права на удаление
-        ContextMenu->addAction(DeleteAction);
-    ContextMenu->exec(QCursor::pos()); // если есть права на удаление, на изменение тоже должны быть */
+    QAction *act;
+    act = new QAction ("Добавить документ", this);
+    act->setSeparator(false);
+    connect(act,SIGNAL(triggered()),this,SLOT(AddNewDoc()));
+    ContextMenu->addAction(act);
+    act = new QAction ("Изменить", this);
+    act->setSeparator(false);
+    connect(act,SIGNAL(triggered()),this,SLOT(EditDoc()));
+    if (pc.access & ACC_DOC) // права архивариуса
+        ContextMenu->addAction(act);
+    act = new QAction("Удалить", this);
+    act->setSeparator(false);
+    connect(act,SIGNAL(triggered()),this,SLOT(DeleteDoc()));
+    if (pc.access & ACC_DOC) // права архивариуса
+        ContextMenu->addAction(act);
+    ContextMenu->exec(QCursor::pos());
 }
 
 void dev_docdialog::ResizeMainTV()
@@ -318,7 +339,12 @@ void dev_docdialog::ResizeMainTV()
         tv->resizeColumnToContents(i);
 }
 
-void dev_docdialog::EditItem()
+void dev_docdialog::EditDoc()
+{
+
+}
+
+void dev_docdialog::DeleteDoc()
 {
 
 }

@@ -3,6 +3,7 @@
 #include <QPropertyAnimation>
 #include "supik.h"
 #include "dialogs/dev/dev_docdialog.h"
+#include "dialogs/dev/dev_devdialog.h"
 #include "dialogs/sys/sys_settingsdialog.h"
 #include "dialogs/sys/sys_systemdialog.h"
 #include "dialogs/dir/dir_maindialog.h"
@@ -27,7 +28,7 @@ supik::supik()
     SetSupikWindow();
     SetSupikStatusBar();
     pc.supikprocs << "ExitSupik" << "SysStructEdit" << "SettingsEdit" << "Components" << "Directories" << "BackupDir" << "RestoreDir" << "ProbCheck";
-    pc.supikprocs << "WhIncome" << "WhOutgoing" << "WhSearch" << "DevDoc" << "Quarantine" << "";
+    pc.supikprocs << "WhIncome" << "WhOutgoing" << "WhSearch" << "DevDoc" << "DevDev" << "Quarantine" << "";
     pf["ExitSupik"] = &supik::ExitSupik;
     pf["SysStructEdit"] = &supik::SysStructEdit;
     pf["SettingsEdit"] = &supik::SettingsEdit;
@@ -43,6 +44,7 @@ supik::supik()
     pf["Quarantine"] = &supik::Quarantine;
     pf["SysDirectories"] = &supik::SysDirectories;
     pf["DevDoc"] = &supik::DevDoc;
+    pf["DevDev"] = &supik::DevDev;
     pf["Dummy"]=&supik::Dummy;
 }
 
@@ -505,6 +507,26 @@ void supik::DevDoc() // редактор документов на издели�
     dev_docdialog *ddd = new dev_docdialog;
 
     int ids = MainTW->addTab(ddd, "Изделия::Документация");
+    MainTW->tabBar()->setTabData(ids, QVariant(TW_DEV));
+    MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
+    MainTW->tabBar()->setCurrentIndex(ids);
+    MainTW->repaint();
+}
+
+void supik::DevDev() // редактор изделий (классификатор)
+{
+    S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
+    if (MainTW == 0)
+        return;
+    if (!(pc.access & (ACC_SYS_FULL | ACC_DOC)))
+    {
+        ERMSG(PublicClass::ER_SUPIK,__LINE__,"Недостаточно прав для продолжения!");
+        return;
+    }
+
+    dev_devdialog *ddd = new dev_devdialog;
+
+    int ids = MainTW->addTab(ddd, "Изделия::Классификатор");
     MainTW->tabBar()->setTabData(ids, QVariant(TW_DEV));
     MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
     MainTW->tabBar()->setCurrentIndex(ids);

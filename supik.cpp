@@ -138,7 +138,7 @@ void supik::SetSupikMenuBar()
     QSqlQuery get_mainmenu (pc.sup);
     QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
     tmpString="SELECT `idmainmenu`,`alias`,`access`,`tooltip`,`method` FROM `mainmenu` WHERE " \
-                      "`idalias`=0 AND `deleted`=0 ORDER BY `idmainmenu` ASC;";
+                      "`idalias`=0 AND `deleted`=0 ORDER BY `order` ASC;";
     get_mainmenu.exec(tmpString);
     while (get_mainmenu.next())
     {
@@ -155,7 +155,6 @@ void supik::SetSupikMenuBar()
                 tmpString = sqlc.GetValueFromTableByField(sqlc.GetDB("sup"),"mainmenumethods","mainmenumethods","idmainmenumethods",get_mainmenu.value(4).toString());
                 if (!sqlc.result)
                     tmpAction->setData(tmpString);
-//                tmpAction->setData(get_mainmenu.value(4).toString());
                 tmpAction->setStatusTip(get_mainmenu.value(3).toString());
                 if (tmpAction->text() == "Внимание!")
                 {
@@ -331,7 +330,7 @@ void supik::Components()
     S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
     if (MainTW == 0)
         return;
-    if (!(pc.access & (ACC_SYS_FULL | ACC_ALT_FULL)))
+    if (!(pc.access & (ACC_SYS_WR | ACC_ALT_WR)))
     {
         ERMSG(PublicClass::ER_SUPIK,__LINE__,"Недостаточно прав для продолжения!");
         return;
@@ -424,7 +423,7 @@ void supik::WhIncome()
     S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
     if (MainTW == 0)
         return;
-    if (!(pc.access & (ACC_SYS_FULL | ACC_WH_FULL)))
+    if (!(pc.access & (ACC_SYS_WR | ACC_WH_WR)))
     {
         ERMSG(PublicClass::ER_SUPIK,__LINE__,"Недостаточно прав для продолжения!");
         return;
@@ -478,7 +477,7 @@ void supik::WhEditor()
     S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
     if (MainTW == 0)
         return;
-    if (!(pc.access & (ACC_SYS_FULL | ACC_WH_FULL)))
+    if (!(pc.access & (ACC_SYS_WR | ACC_WH_WR)))
     {
         ERMSG(PublicClass::ER_SUPIK,__LINE__,"Недостаточно прав для продолжения!");
         return;
@@ -498,7 +497,7 @@ void supik::DevDoc() // редактор документов на издели�
     S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
     if (MainTW == 0)
         return;
-    if (!(pc.access & (ACC_ALT_FULL | ACC_SYS_FULL | ACC_WH_FULL)))
+    if (!(pc.access & (ACC_ALT_WR | ACC_SYS_WR | ACC_WH_WR)))
     {
         ERMSG(PublicClass::ER_SUPIK,__LINE__,"Недостаточно прав для продолжения!");
         return;
@@ -518,7 +517,7 @@ void supik::DevDev() // редактор изделий (классификат�
     S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
     if (MainTW == 0)
         return;
-    if (!(pc.access & (ACC_SYS_FULL | ACC_DOC)))
+    if (!(pc.access & (ACC_SYS_WR | ACC_DOC_WR)))
     {
         ERMSG(PublicClass::ER_SUPIK,__LINE__,"Недостаточно прав для продолжения!");
         return;

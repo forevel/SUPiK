@@ -16,8 +16,6 @@
 
 #define SYSSTYLESHEET "background-image: url(:/res/SysWallpaper.png);"
 
-#define PROGNAME    "Супик 1.0.289"
-
 class supik : public QMainWindow
 {
     Q_OBJECT

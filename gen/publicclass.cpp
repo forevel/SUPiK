@@ -107,7 +107,7 @@ void PublicClass::DBCheck()
     // 1. проверим справочники на пустые поля (alias, idalias, <idtble>, <tble>, idpers, date, deleted)
     QStringList databases, tables;
     databases = db.keys();
-    if (access & ACC_SYS_FULL)
+    if (access & ACC_SYS_WR)
     {
         for (i = 0; i < databases.size(); i++)
         {
@@ -195,7 +195,7 @@ void PublicClass::DBCheck()
         // 7. проверим каждый элемент в каждой таблице (кроме symbols) в Altium на соответствие полей: NominalValue должно быть равно Nominal+Unit
         // 8. проверим все таблицы на предмет пустых строк (все поля пустые, исключая из проверки id<tble>,idpers,date,deleted)
     }
-    if (access & ACC_WH_FULL)
+    if (access & ACC_WH_WR)
     {
         // проверим наличие элементов номенклатуры, у которых не задана группа
         // проверим наличие у каждого элемента в БД Altium, Schemagee и т.д. однозначного соответствия элементу в справочнике номенклатуры (кроме symbols)
@@ -216,7 +216,7 @@ void PublicClass::addmessage(QStringList &sl, QString mes)
 void PublicClass::minutetest()
 {
     // 1. проверим, не появилось ли новых элементов в карантине
-    if (pc.access & ACC_ALT_FULL)
+    if (pc.access & ACC_ALT_WR)
     {
         if (notify & PR_Q); // если признак уже висит, то не надо его и менять
         else
@@ -327,7 +327,7 @@ void PublicClass::AddErrMsg(ermsgtype msgtype, quint64 ernum, quint64 ersubnum, 
                                         << "Работа со складом" << "Редактор_складов" << "Система" << "Справочники_гл" << "Комплексная_строка" \
                                         << "Редактор_системы" << "Ред_системы_справочники" << "Диалог_2_дерева" << "Диалог_дерево" \
                                         << "Диалог_таблица" << "Модель_таблица" << "Модель_дерево" << "Таблицы" << "БД" << "Вход_в_систему" \
-                                        << "Изделия_документы";
+                                        << "Изделия_документы" << "Права_доступа" << "ftp-клиент";
     if (ermsgpool.size()>=ER_BUFMAX)
         ermsgpool.removeFirst();
     ermsg tmpm;

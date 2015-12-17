@@ -66,9 +66,9 @@ void SysmenuEditor::Context(QPoint pt)
     connect (AddRoot, SIGNAL(triggered()), this, SLOT(AddRoot()));
     QAction *Separator2Child = new QAction ("", this);
     Separator2Child->setSeparator(1);
-    QAction *ChangeChild = new QAction("Изменить имя элемента", this);
+/*    QAction *ChangeChild = new QAction("Изменить имя элемента", this);
     ChangeChild->setSeparator(0);
-    connect (ChangeChild, SIGNAL(triggered()), this, SLOT(ChangeName()));
+    connect (ChangeChild, SIGNAL(triggered()), this, SLOT(ChangeName())); */
     QAction *DeleteChild = new QAction("Удалить элемент", this);
     DeleteChild->setSeparator(0);
     connect(DeleteChild, SIGNAL(triggered()), this, SLOT(Delete()));
@@ -83,7 +83,7 @@ void SysmenuEditor::Context(QPoint pt)
     ContextMenu->addAction(AddRoot);
     ContextMenu->addAction(AddChild);
     ContextMenu->addAction(Separator2Child);
-    ContextMenu->addAction(ChangeChild);
+//    ContextMenu->addAction(ChangeChild);
     ContextMenu->addAction(DeleteChild);
     ContextMenu->addAction(SeparatorChild);
     ContextMenu->addAction(ChangeDataChild);
@@ -213,7 +213,7 @@ void SysmenuEditor::AddToTree(QString str)
     else
         WARNMSG(PublicClass::ER_SYSMENU,__LINE__);
 }
-
+/*
 void SysmenuEditor::ChangeName()
 {
     QString tmpString, tmpValue;
@@ -244,7 +244,7 @@ void SysmenuEditor::ChangeName()
         INFOMSG(PublicClass::ER_CMPMAIN,__LINE__,"Изменение проведено!");
     }
     UpdateTree();
-}
+} */
 
 QString SysmenuEditor::GetIndex(int column)
 {

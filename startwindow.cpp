@@ -9,6 +9,7 @@
 #include "startwindow.h"
 #include "gen/s_sql.h"
 #include "widgets/s_tqcheckbox.h"
+#include "gen/sftp.h"
 
 StartWindow::StartWindow(QWidget *parent) : QMainWindow(parent)
 {
@@ -141,7 +142,7 @@ void StartWindow::OkPBClicked()
         }
         else
         {
-            ERMSG(PublicClass::ER_START,__LINE__,"Пользователь не найден!");
+            STARTER("Пользователь не найден!");
             return;
         }
 
@@ -151,7 +152,7 @@ void StartWindow::OkPBClicked()
             pc.access = tmpString.toLong(0, 16); // права доступа - в hex формате
         else // не нашли запись
         {
-            ERMSG(PublicClass::ER_START,__LINE__,"Не найдена группа доступа, обратитесь к администратору!");
+            STARTER("Не найдена группа доступа, обратитесь к администратору!");
             return;
         }
 
@@ -160,6 +161,11 @@ void StartWindow::OkPBClicked()
         QPixmap StartWindowSplashPixmap(":/res/1.x.png");
         QSplashScreen *StartWindowSplashScreen = new QSplashScreen(StartWindowSplashPixmap);
         StartWindowSplashScreen->show();
+
+        StartWindowSplashScreen->showMessage("Проверка наличия подключения к каталогу СУПиК...", Qt::AlignRight, Qt::white);
+        bool FtpCheck = sftp.IsFtpAvailable();
+        if (!FtpCheck)
+            STARTER("Каталог СУПиК недоступен");
 
         StartWindowSplashScreen->showMessage("Проверка целостности данных...", Qt::AlignRight, Qt::white);
         QCoreApplication::processEvents(QEventLoop::AllEvents, 100);

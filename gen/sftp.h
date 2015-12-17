@@ -1,22 +1,43 @@
-#ifndef PUBLICLANG_H
-#define PUBLICLANG_H
+#ifndef S_FTP_H
+#define S_FTP_H
+
+#include <QObject>
+#include <QtNetwork/QNetworkAccessManager>
+#include <QtNetwork/QNetworkReply>
 
 #include "publicclass.h"
 
-class publiclang
+#define FTP_SERVER  "ftp://ftp.asu-vei.ru"
+
+#define SFTPER(a)   ERMSG(PublicClass::ER_SFTP,__LINE__,a)
+#define SFTPWARN    WARNMSG(PublicClass::ER_SFTP,__LINE__)
+
+class s_ftp : public QObject
 {
+    Q_OBJECT
 public:
-    publiclang();
+    s_ftp(QObject *parent = 0);
 
-    bool InitLang();
-    void SetDefaultLang();
+    QByteArray ReadData;
+    bool Busy;
 
-    QString SplashMessages[5]; // сообщения на заставке
-    QString WindowTitlesMessages[20]; // Заголовки окон
-    QString DialogMessages[255]; // информационные и аварийные сообщения
-    QString CompLabels[40]; // названия и заголовки в диалоге компонентов
+    bool IsFtpAvailable();
+
+signals:
+    void NewDataAvailable();
+    void ReadBufferFull();
+    void ReadFinished();
+
+private:
+    void GetFile(QString Url);
+    bool CheckForFtp();
+
+private slots:
+    void SetError(QNetworkReply::NetworkError err);
+    void ReadDataFromUrl();
+    void FinishRead();
 };
 
-extern publiclang pl;
+extern s_ftp sftp;
 
-#endif // PUBLICLANG_H
+#endif // S_FTP_H

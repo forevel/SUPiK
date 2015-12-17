@@ -24,6 +24,8 @@ QT_END_NAMESPACE
 
 #include "publiclang.h"
 
+#define PROGNAME    "Супик 1.0.289"
+
 // Макросы для выдачи сообщений
 #define ERMSG(...)     pc.AddErrMsg(PublicClass::ER_MSG,__VA_ARGS__)
 #define DBGMSG(...)    pc.AddErrMsg(PublicClass::DBG_MSG,__VA_ARGS__)
@@ -64,21 +66,17 @@ QT_END_NAMESPACE
 
 #define ACC_SYS_RO      0x0001
 #define ACC_SYS_WR      0x0002
-#define ACC_SYS_FULL    0x0007
-#define ACC_WH_RO       0x0008
-#define ACC_WH_WR       0x0010
-#define ACC_WH_FULL     0x0038
-#define ACC_ALT_RO      0x0040
-#define ACC_ALT_WR      0x0080
-#define ACC_ALT_FULL    0x01C0
-#define ACC_TB_RO       0x0200
-#define ACC_TB_WR       0x0400
-#define ACC_TB_FULL     0x0E00
-#define ACC_SADM_RO     0x1000
-#define ACC_SADM_WR     0x2000
-#define ACC_SADM_FULL   0x4000
-#define ACC_DOC         0x8000
-#define ACC_NUM         16
+#define ACC_WH_RO       0x0004
+#define ACC_WH_WR       0x0008
+#define ACC_ALT_RO      0x0010
+#define ACC_ALT_WR      0x0020
+#define ACC_TB_RO       0x0040
+#define ACC_TB_WR       0x0080
+#define ACC_SADM_RO     0x0100
+#define ACC_SADM_WR     0x0200
+#define ACC_DOC_RO      0x0400
+#define ACC_DOC_WR      0x0800
+#define ACC_NUM         12
 
 // определение проблем
 #define PR_Q    0x01 // есть новые элементы на карантине
@@ -162,7 +160,9 @@ public:
         ER_TFIELD,   // tablefields
         ER_SQL,      // s_sql
         ER_START,    // startwindow
-        ER_DEVDOC    // dev_docdialog
+        ER_DEVDOC,   // dev_docdialog
+        ER_ACC,      // s_accessdialog
+        ER_SFTP      // sftp
     };
 
     double timerperiod;

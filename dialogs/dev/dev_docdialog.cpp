@@ -317,12 +317,12 @@ void dev_docdialog::MainContextMenu(QPoint)
     act = new QAction ("Изменить", this);
     act->setSeparator(false);
     connect(act,SIGNAL(triggered()),this,SLOT(EditDoc()));
-    if (pc.access & ACC_DOC) // права архивариуса
+    if (pc.access & ACC_DOC_WR) // права архивариуса
         ContextMenu->addAction(act);
     act = new QAction("Удалить", this);
     act->setSeparator(false);
     connect(act,SIGNAL(triggered()),this,SLOT(DeleteDoc()));
-    if (pc.access & ACC_DOC) // права архивариуса
+    if (pc.access & ACC_DOC_WR) // права архивариуса
         ContextMenu->addAction(act);
     ContextMenu->exec(QCursor::pos());
 }

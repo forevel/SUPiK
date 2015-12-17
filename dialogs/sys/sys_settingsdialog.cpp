@@ -10,21 +10,12 @@
 #include <QSettings>
 #include <QFileDialog>
 
+#include "../../gen/publicclass.h"
 #include "sys_settingsdialog.h"
 
 sys_settingsdialog::sys_settingsdialog(QWidget *parent) :
     QDialog(parent)
 {
-}
-
-void sys_settingsdialog::showEvent(QShowEvent *event)
-{
-    event->accept();
-}
-
-void sys_settingsdialog::closeEvent(QCloseEvent *event)
-{
-    event->accept();
 }
 
 void sys_settingsdialog::paintEvent(QPaintEvent *event)
@@ -33,12 +24,11 @@ void sys_settingsdialog::paintEvent(QPaintEvent *event)
     painter.drawPixmap(rect(), QPixmap(":/res/SysWallpaper.png"));
 
     event->accept();
-    //    QDialog::paintEvent(event);
 }
 
 void sys_settingsdialog::SetupUI ()
 {
-    setWindowTitle("Супик :: Настройки");
+    setWindowTitle(PROGNAME);
     setMinimumSize(QSize(384, 194));
     setMaximumSize(QSize(16661, 11616));
     QIcon qssdIcon;
@@ -51,7 +41,7 @@ void sys_settingsdialog::SetupUI ()
     s_tqLabel *PathToLibsL = new s_tqLabel("Путь к каталогам библиотек Altium:");
     s_tqLineEdit *PathToLibsLE = new s_tqLineEdit(pc.LandP->value("settings/pathtolibs","////FSERVER//PCAD//Altium//Libs//").toString());
     PathToLibsLE->setObjectName("PathToLibs");
-    s_tqLabel *PathToSupikL = new s_tqLabel("Путь к рабочему каталогу СУПиКа");
+    s_tqLabel *PathToSupikL = new s_tqLabel("Рабочий каталог СУПиКа");
     s_tqLineEdit *PathToSupikLE = new s_tqLineEdit(pc.LandP->value("settings/pathtosup","////NS//SUPiK").toString());
     PathToSupikLE->setObjectName("PathToSupik");
     s_tqPushButton *isOKPB = new s_tqPushButton (QColor(0,135,0), "Ага");

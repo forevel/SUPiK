@@ -22,6 +22,8 @@ public slots:
 private:
     void SetupUI();
     void ResizeMainTV();
+    void Refresh();
+    QString GetIndex(int column);
 
 private slots:
     void AddNewDev();

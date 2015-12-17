@@ -22,7 +22,7 @@ private slots:
     void Context(QPoint);
     void AddChild();
     void AddRoot();
-    void ChangeName();
+//    void ChangeName();
     void Delete();
     void AddToTree(QString);
 

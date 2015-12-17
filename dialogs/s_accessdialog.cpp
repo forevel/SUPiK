@@ -5,13 +5,12 @@
 #include "../widgets/s_tqpushbutton.h"
 #include "../widgets/s_tqlabel.h"
 #include "../gen/s_tablefields.h"
+#include "../gen/publicclass.h"
 
 s_accessdialog::s_accessdialog(QWidget *parent) :
     QDialog(parent)
 {
     setStyleSheet("QDialog {background-color: rgba(204,204,153);}");
-    MainLayout = new QVBoxLayout;
-    CheckBoxLayout = new QGridLayout;
     setAttribute(Qt::WA_DeleteOnClose);
 }
 
@@ -21,8 +20,10 @@ void s_accessdialog::SetupUI(QString rights)
     QStringList msg, lblm;
     msg.clear();
     lblm.clear();
-    msg << "Системные" << "По складу" << "САПР" << "ТБ" << "Сисадмин";
-    lblm << "Чтение" << "Изменение" << "Удаление";
+    msg << "Системные" << "По складу" << "САПР" << "ТБ" << "Сисадмин" << "Документы";
+    lblm << "Чтение" << "Изменение";
+    QVBoxLayout *MainLayout = new QVBoxLayout;
+    QGridLayout *CheckBoxLayout = new QGridLayout;
     s_tqLabel *MainL = new s_tqLabel;
     MainL->setText("Настройка прав доступа");
     QFont font, fontB;
@@ -32,7 +33,7 @@ void s_accessdialog::SetupUI(QString rights)
     MainLayout->addWidget(MainL);
     MainLayout->setAlignment(MainL, Qt::AlignRight);
     k = 0;
-    for (i = 0; i < 10; i+=2)
+    for (i = 0; i < ACC_NUM; i+=2)
     {
         QFrame *line1 = new QFrame;
         line1->setFrameShape(QFrame::HLine);
@@ -47,12 +48,13 @@ void s_accessdialog::SetupUI(QString rights)
         line2->setFrameShadow(QFrame::Sunken);
         line2->setMinimumHeight(2);
         line2->setMinimumWidth(80);
-        CheckBoxLayout->addWidget(line1, i, 0, 1, 1, Qt::AlignCenter);
-        CheckBoxLayout->addWidget(lbl, i, 1, 1, 1, Qt::AlignCenter);
-        CheckBoxLayout->addWidget(line2, i, 2, 1, 1, Qt::AlignCenter);
-        for (j = 0; j < 3; j++)
+        CheckBoxLayout->addWidget(line1, i, 0, 1, 2, Qt::AlignCenter);
+        CheckBoxLayout->addWidget(lbl, i, 2, 1, 2, Qt::AlignCenter);
+        CheckBoxLayout->addWidget(line2, i, 4, 1, 2, Qt::AlignCenter);
+        for (j = 0; j < 2; j++)
         {
             s_tqCheckBox *cb = new s_tqCheckBox;
+            cb->setObjectName(QString::number(i*2+j));
             cb->setText(lblm[j]);
             if (rights.isEmpty())
                 cb->setChecked(false);
@@ -66,7 +68,7 @@ void s_accessdialog::SetupUI(QString rights)
                 cb->setChecked(true);
                 rights.chop(1);
             }
-            CheckBoxLayout->addWidget(cb, i+1, j, 1, 1, Qt::AlignLeft);
+            CheckBoxLayout->addWidget(cb, i+1, j*3, 1, 3, Qt::AlignLeft);
         }
         k++;
     }
@@ -83,11 +85,17 @@ void s_accessdialog::OkPressed()
     int i, j;
     long one = 0x0001;
     long res = 0x0;
-    for (i = 0; i < 10; i+=2)
+    for (i = 0; i < ACC_NUM; i+=2)
     {
-        for (j = 0; j < 3; j++)
+        for (j = 0; j < 2; j++)
         {
-            if (dynamic_cast<s_tqCheckBox *>(CheckBoxLayout->itemAtPosition(i+1,j)->widget())->isChecked())
+            s_tqCheckBox *cb = this->findChild<s_tqCheckBox *>(QString::number(i*2+j));
+            if (cb == 0)
+            {
+                ACCDBG;
+                return;
+            }
+            if (cb->isChecked())
                 res |= one;
             one <<= 1;
         }

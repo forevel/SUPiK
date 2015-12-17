@@ -11,14 +11,6 @@
 #include "../../widgets/s_tqcombobox.h"
 #include "../../widgets/s_tqspinbox.h"
 
-QT_BEGIN_NAMESPACE
-class QGridLayout;
-class QVBoxLayout;
-class QHBoxLayout;
-class QFont;
-class QFrame;
-QT_END_NAMESPACE
-
 #define SYS_BGCOLOR "#FF6666"
 
 class sys_settingsdialog : public QDialog
@@ -40,8 +32,6 @@ private slots:
     void ChooseSDirPBClicked();
 
 private:
-    void showEvent(QShowEvent *event);
-    void closeEvent(QCloseEvent *event);
     void paintEvent(QPaintEvent *event);
 };
 

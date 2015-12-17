@@ -3,10 +3,7 @@
 
 #include <QDialog>
 
-QT_BEGIN_NAMESPACE
-class QGridLayout;
-class QVBoxLayout;
-QT_END_NAMESPACE
+#define ACCDBG  DBGMSG(PublicClass::ER_ACC,__LINE__)
 
 class s_accessdialog : public QDialog
 {
@@ -21,8 +18,7 @@ signals:
 public slots:
 
 private:
-    QVBoxLayout *MainLayout;
-    QGridLayout *CheckBoxLayout;
+
 private slots:
     void OkPressed();
 };

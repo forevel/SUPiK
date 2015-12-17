@@ -202,7 +202,7 @@ QString s_tablefields::idtov(QString links, QString id)
         int j = 0;
         while ((tmpui) && (j < ACC_NUM))
         {
-            switch (j%3)
+            switch (j%2)
             {
             case 0:
             {
@@ -212,11 +212,6 @@ QString s_tablefields::idtov(QString links, QString id)
             case 1:
             {
                 outs.insert(0, (tmpui & 0x0001) ? "з" : ".");
-                break;
-            }
-            case 2:
-            {
-                outs.insert(0, (tmpui & 0x0001) ? "у" : ".");
                 break;
             }
             default:
@@ -349,7 +344,7 @@ QString s_tablefields::vtoid(QString links, QString value)
         int j = 0;
         while ((!value.isEmpty()) && (j < ACC_NUM)) // пока в строке есть что-нибудь и находимся в пределах битовой ширины прав
         {
-            switch (j%3)
+            switch (j%2)
             {
             case 0:
             {
@@ -364,14 +359,6 @@ QString s_tablefields::vtoid(QString links, QString value)
                 int tmpi = value.size()-1;
                 QChar tmpc = value.at(tmpi);
                 if (tmpc == QChar(1079)) // "з"
-                    outui |= tmpui;
-                break;
-            }
-            case 2:
-            {
-                int tmpi = value.size()-1;
-                QChar tmpc = value.at(tmpi);
-                if (tmpc == QChar(1091)) // "у"
                     outui |= tmpui;
                 break;
             }

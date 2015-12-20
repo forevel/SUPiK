@@ -163,9 +163,10 @@ void StartWindow::OkPBClicked()
         StartWindowSplashScreen->show();
 
         StartWindowSplashScreen->showMessage("Проверка наличия подключения к каталогу СУПиК...", Qt::AlignRight, Qt::white);
-        bool FtpCheck = sftp.IsFtpAvailable();
+        bool FtpCheck = sftp.CheckFtp();
         if (!FtpCheck)
             STARTER("Каталог СУПиК недоступен");
+
 
         StartWindowSplashScreen->showMessage("Проверка целостности данных...", Qt::AlignRight, Qt::white);
         QCoreApplication::processEvents(QEventLoop::AllEvents, 100);

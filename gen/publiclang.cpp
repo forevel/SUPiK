@@ -13,8 +13,8 @@ publiclang::publiclang()
 
 bool publiclang::InitLang()
 {
-    QFile file;
-    QString tmpString;
+//    QFile file;
+//    QString tmpString;
 //    int i;
 
     pc.CurLang = pc.LandP->value("settings/lang","RU").toString();

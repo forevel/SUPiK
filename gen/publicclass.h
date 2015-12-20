@@ -1,4 +1,4 @@
-#ifndef PUBLICCLASS_H
+﻿#ifndef PUBLICCLASS_H
 #define PUBLICCLASS_H
 
 #define SUPIK_VERS  "SUPiK v1.0"
@@ -24,7 +24,7 @@ QT_END_NAMESPACE
 
 #include "publiclang.h"
 
-#define PROGNAME    "Супик 1.0.289"
+#define PROGNAME    "Супик 1.0.291"
 
 // Макросы для выдачи сообщений
 #define ERMSG(...)     pc.AddErrMsg(PublicClass::ER_MSG,__VA_ARGS__)
@@ -162,18 +162,13 @@ public:
         ER_START,    // startwindow
         ER_DEVDOC,   // dev_docdialog
         ER_ACC,      // s_accessdialog
-        ER_SFTP      // sftp
+        ER_SFTP,     // sftp
+        ER_SYSSET    // sys_settingsdialog
     };
 
     double timerperiod;
     QString SQLUser, SQLPsw;
-    QSqlDatabase ent;
-    QSqlDatabase alt;
-    QSqlDatabase sup;
-    QSqlDatabase con;
-    QSqlDatabase sol;
-    QSqlDatabase sch;
-    QSqlDatabase dev;
+    QSqlDatabase ent, alt, sup, con, sol, sch, dev;
     QMap<QString, QSqlDatabase> db;
 //    QString Date; // Сегодняшняя дата
     QString DateTime; // Сегодняшнее время
@@ -183,6 +178,7 @@ public:
     int idGroup; // ИД группы пользователя, определяет права пользователя в системе (ent.groups.idgroup)
     QString PathToLibs; // текущий путь до библиотек Altium
     QString PathToSup; // текущий путь до рабочей директории СУПиКа
+    QString FtpServer; // адрес ftp-сервера, используемого для архивов
     QString CurLang; // обозначение текущего языка системы
     QString SQLPath; // путь к SQL-серверу
     QSettings *LandP; // переменная для работы с настройками системы в реестре
@@ -322,8 +318,8 @@ public:
     {
         QString DateTime;
         ermsgtype type;
-        quint64 ernum;
-        quint64 ersubnum;
+        QString module;
+        quint64 line;
         QString msg;
     };
     QList<ermsg> ermsgpool;

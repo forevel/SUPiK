@@ -55,8 +55,8 @@ void PublicClass::InitiatePublicClass()
 //    Date = QDate::currentDate().toString("dd/MM/yyyy");
     DateTime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
     SQLPath = LandP->value("settings/SQLPath","localhost").toString();
-    PathToLibs = LandP->value("settings/pathtolibs","////FSERVER//PCAD//Altium//Libs//").toString();
-    PathToSup = LandP->value("settings/pathtosup","////NS//SUPiK").toString();
+    PathToLibs = LandP->value("settings/pathtolibs","").toString();
+    PathToSup = LandP->value("settings/pathtosup","").toString();
     timerperiod = LandP->value("settings/timerperiod","1").toInt();
     openBD(alt, "ALT", "altium", "supik", "sysupik");
     openBD(con, "CON", "constructives", "supik", "sysupik");
@@ -327,17 +327,20 @@ void PublicClass::AddErrMsg(ermsgtype msgtype, quint64 ernum, quint64 ersubnum, 
                                         << "Работа со складом" << "Редактор_складов" << "Система" << "Справочники_гл" << "Комплексная_строка" \
                                         << "Редактор_системы" << "Ред_системы_справочники" << "Диалог_2_дерева" << "Диалог_дерево" \
                                         << "Диалог_таблица" << "Модель_таблица" << "Модель_дерево" << "Таблицы" << "БД" << "Вход_в_систему" \
-                                        << "Изделия_документы" << "Права_доступа" << "ftp-клиент";
+                                        << "Изделия_документы" << "Права_доступа" << "Ftp-клиент" << "Система_настройки";
     if (ermsgpool.size()>=ER_BUFMAX)
         ermsgpool.removeFirst();
     ermsg tmpm;
     tmpm.DateTime = DateTime;
     tmpm.type = msgtype;
-    tmpm.ernum = ernum;
-    tmpm.ersubnum = ersubnum;
+    if (ernum < filessl.size())
+        tmpm.module = filessl.at(ernum);
+    else
+        tmpm.module = "Неизвестно";
+    tmpm.line = ersubnum;
     // Разбор кода ошибки
-    QString prefix;
-    if ((msg.isEmpty()) || (msg == " ")) // пробел выдаётся при пустом запросе в БД
+//    QString prefix;
+/*    if ((msg.isEmpty()) || (msg == " ")) // пробел выдаётся при пустом запросе в БД
     {
         switch (msgtype)
         {
@@ -348,7 +351,7 @@ void PublicClass::AddErrMsg(ermsgtype msgtype, quint64 ernum, quint64 ersubnum, 
         }
 
         msg = prefix+"в модуле " + filessl.at(ernum) + " строка " + QString::number(ersubnum);
-    }
+    } */
     tmpm.msg = msg;
     ermsgpool.append(tmpm);
 }

@@ -294,7 +294,7 @@ void supik::SettingsEdit()
     qssda->SetupUI();
     qssda->setAttribute(Qt::WA_DeleteOnClose);
 
-    int ids = MainTW->addTab(qssda, "Редактор настроек");
+    int ids = MainTW->addTab(qssda, "Система::Редактор настроек");
     MainTW->tabBar()->setTabData(ids, QVariant(TW_SET));
     MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
     MainTW->tabBar()->setCurrentIndex(ids);
@@ -316,7 +316,7 @@ void supik::SysStructEdit()
     }
 
     sys_systemdialog *qsyda = new sys_systemdialog;
-    int ids = MainTW->addTab(qsyda, "Редактор системных параметров");
+    int ids = MainTW->addTab(qsyda, "Система::Редактор параметров");
     MainTW->tabBar()->setTabData(ids, QVariant(TW_SYSST));
     MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
     MainTW->tabBar()->setCurrentIndex(ids);
@@ -344,7 +344,7 @@ void supik::Components()
 
     cmp_compdialog *qccda = new cmp_compdialog(CMP_ALTIUM);
 
-    int ids = MainTW->addTab(qccda, "Компоненты Altium");
+    int ids = MainTW->addTab(qccda, "Компоненты::Altium");
     MainTW->tabBar()->setTabData(ids, QVariant(TW_COMP));
     MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
     MainTW->tabBar()->setCurrentIndex(ids);
@@ -365,7 +365,7 @@ void supik::Directories()
 
     dir_maindialog *dird = new dir_maindialog("Справочники");
 
-    int ids = MainTW->addTab(dird, "Справочники");
+    int ids = MainTW->addTab(dird, "Справочники::Справочники");
     MainTW->tabBar()->setTabData(ids, QVariant(TW_DIR));
     MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
     MainTW->tabBar()->setCurrentIndex(ids);
@@ -386,7 +386,7 @@ void supik::SysDirectories()
 
     dir_maindialog *dird = new dir_maindialog("Справочники системные");
 
-    int ids = MainTW->addTab(dird, "Справочники системные");
+    int ids = MainTW->addTab(dird, "Справочники::системные");
     MainTW->tabBar()->setTabData(ids, QVariant(TW_SYSDIR));
     MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
     MainTW->tabBar()->setCurrentIndex(ids);
@@ -430,7 +430,7 @@ void supik::WhIncome()
     }
 
     wh_dialog *whd = new wh_dialog (true, ""); // isIncoming = true
-    int ids = MainTW->addTab(whd, "Приём на склад");
+    int ids = MainTW->addTab(whd, "Склады::Приём на склад");
     MainTW->tabBar()->setTabData(ids, QVariant(TW_WH));
     MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
     MainTW->tabBar()->setCurrentIndex(ids);
@@ -485,7 +485,7 @@ void supik::WhEditor()
 
     Wh_Editor *whd = new Wh_Editor;
 
-    int ids = MainTW->addTab(whd, "Редактор складов");
+    int ids = MainTW->addTab(whd, "Склады::Редактор складов");
     MainTW->tabBar()->setTabData(ids, QVariant(TW_WH));
     MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
     MainTW->tabBar()->setCurrentIndex(ids);

@@ -12,6 +12,7 @@
 
 #include "../../gen/publicclass.h"
 #include "sys_settingsdialog.h"
+#include "../../widgets/s_tqchoosewidget.h"
 
 sys_settingsdialog::sys_settingsdialog(QWidget *parent) :
     QDialog(parent)
@@ -34,95 +35,130 @@ void sys_settingsdialog::SetupUI ()
     QIcon qssdIcon;
     qssdIcon.addFile(QString::fromUtf8(":/res/supik.png"), QSize(), QIcon::Normal, QIcon::Off);
     setWindowIcon(qssdIcon);
-    s_tqLabel *SettingsL = new s_tqLabel("Настройки");
+
+    QVBoxLayout *lyout = new QVBoxLayout;
+    QHBoxLayout *hlyout = new QHBoxLayout;
+    s_tqPushButton *pb = new s_tqPushButton;
+    pb->setIcon(QIcon(":/res/cross.png"));
+    connect(pb, SIGNAL(clicked()), this, SLOT(close()));
+    pb->setToolTip("Закрыть вкладку");
+    hlyout->addWidget(pb);
+    hlyout->addStretch(300);
+    s_tqLabel *lbl = new s_tqLabel("Настройки");
     QFont font;
     font.setPointSize(15);
-    SettingsL->setFont(font);
-    s_tqLabel *PathToLibsL = new s_tqLabel("Путь к каталогам библиотек Altium:");
-    s_tqLineEdit *PathToLibsLE = new s_tqLineEdit(pc.LandP->value("settings/pathtolibs","////FSERVER//PCAD//Altium//Libs//").toString());
-    PathToLibsLE->setObjectName("PathToLibs");
-    s_tqLabel *PathToSupikL = new s_tqLabel("Рабочий каталог СУПиКа");
-    s_tqLineEdit *PathToSupikLE = new s_tqLineEdit(pc.LandP->value("settings/pathtosup","////NS//SUPiK").toString());
-    PathToSupikLE->setObjectName("PathToSupik");
-    s_tqPushButton *isOKPB = new s_tqPushButton (QColor(0,135,0), "Ага");
-    s_tqPushButton *CancelPB = new s_tqPushButton (QColor(185,0,0), "Неа");
-    CancelPB->setMaximumSize(75, 23);
-    s_tqPushButton *ChooseDirPB = new s_tqPushButton("...");
-    s_tqPushButton *ChooseSDirPB = new s_tqPushButton("...");
-    s_tqLabel *LangL = new s_tqLabel("Язык системы:");
+    lbl->setFont(font);
+    hlyout->addWidget(lbl, 0);
+    hlyout->setAlignment(lbl, Qt::AlignRight);
+    lyout->addLayout(hlyout);
+
+    QGridLayout *glyout = new QGridLayout;
+    glyout->setColumnStretch(0,0);
+    glyout->setColumnStretch(1,1);
+
+    lbl = new s_tqLabel("Путь к каталогам библиотек Altium:");
+    glyout->addWidget(lbl,0,0,1,1);
+    glyout->setAlignment(lbl,Qt::AlignRight);
+    s_tqChooseWidget *cw = new s_tqChooseWidget(true); // transparent=true
+    cw->Setup("2.16..");
+    connect(cw,SIGNAL(textchanged(QVariant)),this,SLOT(PathToLibsChoosed(QVariant)));
+    cw->SetValue(pc.PathToLibs);
+    glyout->addWidget(cw,0,1,1,1);
+
+    lbl = new s_tqLabel("Рабочий каталог СУПиКа:");
+    glyout->addWidget(lbl,1,0,1,1);
+    glyout->setAlignment(lbl,Qt::AlignRight);
+    cw = new s_tqChooseWidget(true); // transparent=true
+    cw->Setup("2.16..");
+    connect(cw,SIGNAL(textchanged(QVariant)),this,SLOT(SupikDirChoosed(QVariant)));
+    cw->SetValue(pc.PathToSup);
+    glyout->addWidget(cw,1,1,1,1);
+
+    lbl = new s_tqLabel("Адрес FTP-сервера архива СУПиК:");
+    glyout->addWidget(lbl,2,0,1,1);
+    glyout->setAlignment(lbl,Qt::AlignRight);
+    s_tqLineEdit *le = new s_tqLineEdit;
+    connect(le,SIGNAL(textChanged(QString)),this,SLOT(FtpNameChoosed(QString)));
+    le->setText(pc.FtpServer);
+    glyout->addWidget(le,2,1,1,1);
+
+    lbl = new s_tqLabel("Адрес SQL-сервера:");
+    glyout->addWidget(lbl,3,0,1,1);
+    glyout->setAlignment(lbl,Qt::AlignRight);
+    le = new s_tqLineEdit;
+    connect(le,SIGNAL(textChanged(QString)),this,SLOT(SqlPathChoosed(QString)));
+    le->setText(pc.SQLPath);
+    glyout->addWidget(le, 3, 1, 1, 1);
+
+    lbl = new s_tqLabel("Язык системы:");
+    glyout->addWidget(lbl,4,0,1,1);
+    glyout->setAlignment(lbl,Qt::AlignRight);
     s_tqComboBox *LangCB = new s_tqComboBox;
     connect(LangCB,SIGNAL(currentIndexChanged(QString)),this,SLOT(LangChoosed(QString)));
-    QIcon RusIcon;
-    QIcon EngIcon;
-    RusIcon.addFile(":/res/LangRU.png", QSize(), QIcon::Normal, QIcon::Off);
-    LangCB->addItem(RusIcon, "RU");
-    EngIcon.addFile(":/res/langGB.png", QSize(), QIcon::Normal, QIcon::Off);
-    LangCB->addItem(EngIcon, "EN");
-    LangCB->setCurrentText(pc.LandP->value("settings/lang","EN").toString());
-    s_tqLabel *timerperiodL = new s_tqLabel("Период обновления информации о новых компонентах (мин)");
-    s_tqSpinBox *timerperiodSB = new s_tqSpinBox;
-    timerperiodSB->setMinimum(0.1);
-    timerperiodSB->setMaximum(9999.0);
-    timerperiodSB->setDecimals(1);
-    timerperiodSB->setSingleStep(0.1);
-    connect(timerperiodSB,SIGNAL(valueChanged(double)),this,SLOT(TimerPeriodChoosed(double)));
-    timerperiodSB->setValue(pc.LandP->value("settings/timerperiod","1").toDouble());
-    s_tqLineEdit *SQLPathLE = new s_tqLineEdit(pc.LandP->value("settings/SQLPath","localhost").toString());
-    SQLPathLE->setObjectName("SQLPath");
-    s_tqLabel *SQLPathL = new s_tqLabel("Адрес SQL-сервера:");
+    LangCB->addItem(QIcon(":/res/LangRU.png"), "RU");
+    LangCB->addItem(QIcon(":/res/langGB.png"), "EN");
+    LangCB->setCurrentText(pc.CurLang);
+    glyout->addWidget(LangCB, 4, 1, 1, 1);
 
-    QVBoxLayout *MainLayout = new QVBoxLayout;
-    QFrame *MainFrame = new QFrame;
-    MainFrame->setFrameShape(QFrame::NoFrame);
-    MainFrame->setMinimumHeight(80);
-    QGridLayout *GridLayout = new QGridLayout;
-    GridLayout->addWidget(PathToLibsL, 0, 0);
-    GridLayout->addWidget(PathToLibsLE, 0, 1);
-    GridLayout->addWidget(ChooseDirPB, 0, 2);
-    GridLayout->addWidget(PathToSupikL, 1, 0);
-    GridLayout->addWidget(PathToSupikLE, 1, 1);
-    GridLayout->addWidget(ChooseSDirPB, 1, 2);
-    GridLayout->addWidget(SQLPathL, 2, 0);
-    GridLayout->addWidget(SQLPathLE, 2, 1,1,2);
-    GridLayout->addWidget(LangL, 3, 0);
-    GridLayout->addWidget(LangCB, 3, 1,1,2);
-    GridLayout->addWidget(timerperiodL, 4, 0,1,2);
-    GridLayout->addWidget(timerperiodSB, 4, 2);
-    GridLayout->setColumnStretch(0, 0);
-    GridLayout->setColumnStretch(1, 100);
-    GridLayout->setColumnStretch(2, 0);
-    MainFrame->setAttribute(Qt::WA_TranslucentBackground);
-    MainFrame->setLayout(GridLayout);
+    s_tqPushButton *isOKPB = new s_tqPushButton (QColor(0,135,0), "Ага");
+    s_tqPushButton *CancelPB = new s_tqPushButton (QColor(185,0,0), "Неа");
+    isOKPB->setMaximumSize(75, 23);
+    CancelPB->setMaximumSize(75, 23);
 
-    QFrame *PBFrame = new QFrame;
-    PBFrame->setFrameShape(QFrame::NoFrame);
-    PBFrame->setAttribute(Qt::WA_TranslucentBackground);
-    QHBoxLayout *PBLayout = new QHBoxLayout;
-    PBLayout->addWidget(isOKPB);
-    PBLayout->addWidget(CancelPB);
-    PBFrame->setLayout(PBLayout);
+    lbl = new s_tqLabel("Период обновления информации (мин)");
+    glyout->setAlignment(lbl,Qt::AlignRight);
+    glyout->addWidget(lbl,5,0,1,1);
+    s_tqSpinBox *spb = new s_tqSpinBox;
+    spb->setMinimum(0.1);
+    spb->setMaximum(9999.0);
+    spb->setDecimals(1);
+    spb->setSingleStep(0.1);
+    connect(spb,SIGNAL(valueChanged(double)),this,SLOT(TimerPeriodChoosed(double)));
+    spb->setValue(pc.timerperiod);
+    glyout->addWidget(spb,5,1,1,1);
 
-    MainLayout->addWidget(SettingsL);
-    MainLayout->setAlignment(SettingsL, Qt::AlignRight);
-    MainLayout->addWidget(MainFrame);
-    MainLayout->addWidget(PBFrame);
-    MainLayout->addStretch(50);
-    setLayout(MainLayout);
+    hlyout = new QHBoxLayout;
+    hlyout->addWidget(isOKPB);
+    hlyout->addWidget(CancelPB);
+    glyout->addLayout(hlyout,6,0,1,2);
+
+    lyout->addLayout(glyout);
+    lyout->addSpacing(500);
+    setLayout(lyout);
 
     connect (isOKPB, SIGNAL(clicked()), this, SLOT(OKPBClicked()));
     connect (CancelPB, SIGNAL(clicked()), this, SLOT(CancelPBClicked()));\
-    connect (ChooseDirPB, SIGNAL(clicked()), this, SLOT(ChooseDirPBClicked()));
-    connect (ChooseSDirPB, SIGNAL(clicked()), this, SLOT(ChooseSDirPBClicked()));
+}
+
+void sys_settingsdialog::PathToLibsChoosed(QVariant value)
+{
+    pc.PathToLibs = value.toString();
+}
+
+void sys_settingsdialog::SupikDirChoosed(QVariant value)
+{
+    pc.PathToSup = value.toString();
+}
+
+void sys_settingsdialog::FtpNameChoosed(QString str)
+{
+    s_tqLineEdit *le = static_cast<s_tqLineEdit *>(sender());
+    pc.FtpServer = le->text();
+}
+
+void sys_settingsdialog::SqlPathChoosed(QString str)
+{
+    pc.SQLPath = str;
 }
 
 void sys_settingsdialog::LangChoosed(QString lang)
 {
-    Lang = lang;
+    pc.CurLang = lang;
 }
 
 void sys_settingsdialog::TimerPeriodChoosed(double dbl)
 {
-    TimerPeriod = dbl;
+    pc.timerperiod = dbl;
 }
 
 void sys_settingsdialog::CancelPBClicked()
@@ -132,35 +168,22 @@ void sys_settingsdialog::CancelPBClicked()
 
 void sys_settingsdialog::OKPBClicked()
 {
-    QLineEdit *PathToLibsLE = this->findChild<QLineEdit *>("PathToLibs");
-    if (PathToLibsLE == 0)
-        return;
-    QLineEdit *PathToSupikLE = this->findChild<QLineEdit *>("PathToSupik");
-    if (PathToSupikLE == 0)
-        return;
-    QLineEdit *SQLPathLE = this->findChild<QLineEdit *>("SQLPath");
-    if (SQLPathLE == 0)
-        return;
-    QString tmpString = PathToLibsLE->text() + "//Symbols//Capasitors.SchLib";
+    QString tmpString = pc.PathToLibs + "//Symbols//Capasitors.SchLib";
     QFile file;
 
     file.setFileName(tmpString);
     if (!file.exists())
     {
-        INFOMSG(PublicClass::ER_SYS,__LINE__,"Неправильный путь к файлам библиотеки");
+        SYSSETINFO("Неправильный путь к файлам библиотеки");
         return;
     }
     else
     {
-        pc.LandP->setValue("settings/pathtolibs",PathToLibsLE->text());
-        pc.PathToLibs = PathToLibsLE->text();
-        pc.LandP->setValue("settings/pathtosup",PathToSupikLE->text());
-        pc.PathToSup = PathToSupikLE->text();
-        pc.LandP->setValue("settings/lang",Lang);
-        pc.SQLPath = SQLPathLE->text();
-        pc.LandP->setValue("settings/SQLPath",SQLPathLE->text());
-        pc.LandP->setValue("settings/timerperiod",TimerPeriod);
-        pc.InitiatePublicClass();
+        pc.LandP->setValue("settings/pathtolibs",pc.PathToLibs);
+        pc.LandP->setValue("settings/pathtosup",pc.PathToSup);
+        pc.LandP->setValue("settings/lang",pc.CurLang);
+        pc.LandP->setValue("settings/SQLPath",pc.SQLPath);
+        pc.LandP->setValue("settings/timerperiod",pc.timerperiod);
 
         if (!pl.InitLang())
             pl.SetDefaultLang();
@@ -169,28 +192,3 @@ void sys_settingsdialog::OKPBClicked()
     }
 }
 
-void sys_settingsdialog::ChooseDirPBClicked()
-{
-    QLineEdit *PathToLibsLE = this->findChild<QLineEdit *>("PathToLibs");
-    if (PathToLibsLE == 0)
-        return;
-    QString DirName = QFileDialog::getExistingDirectory(this, \
-                                                        "Выберите каталог с файлами библиотек (содержит каталоги Symbols и Footprints)"                                                        , \
-                                                        pc.PathToLibs,
-                                                        QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
-    if (DirName != "")
-        PathToLibsLE->setText(DirName);
-}
-
-void sys_settingsdialog::ChooseSDirPBClicked()
-{
-    QLineEdit *PathToSupikLE = this->findChild<QLineEdit *>("PathToSupik");
-    if (PathToSupikLE == 0)
-        return;
-    QString DirName = QFileDialog::getExistingDirectory(this, \
-                                                        "Выберите каталог файлами СУПиК", \
-                                                        pc.PathToSup,
-                                                        QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
-    if (DirName != "")
-        PathToSupikLE->setText(DirName);
-}

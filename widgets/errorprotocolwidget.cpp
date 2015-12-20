@@ -14,8 +14,8 @@ ErrorProtocolWidget::ErrorProtocolWidget(QWidget *parent) : QWidget(parent)
     ErrorProtocolModel *erm = new ErrorProtocolModel;
     erm->setHeaderData(0, Qt::Horizontal, "Номер",Qt::EditRole);
     erm->setHeaderData(1, Qt::Horizontal, "Дата/время",Qt::EditRole);
-    erm->setHeaderData(2, Qt::Horizontal, "Номер сообщения",Qt::EditRole);
-    erm->setHeaderData(3, Qt::Horizontal, "Тип сообщения",Qt::EditRole);
+    erm->setHeaderData(2, Qt::Horizontal, "Модуль",Qt::EditRole);
+    erm->setHeaderData(3, Qt::Horizontal, "Строка",Qt::EditRole);
     erm->setHeaderData(4, Qt::Horizontal, "Сообщение",Qt::EditRole);
     tv->setModel(erm);
     tv->resizeColumnsToContents();
@@ -166,8 +166,7 @@ void ErrorProtocolModel::AddRow(PublicClass::ermsg msg)
     beginResetModel();
     if (rowCount()<MAX_MSG)
         insertRows(0,1,QModelIndex());
-    QStringList tmpsl = QStringList() << "#"+QString::number(MsgCount) << msg.DateTime << "0x"+QString::number(msg.ernum,16) << \
-             "0x"+QString::number(msg.ersubnum,16) << msg.msg;
+    QStringList tmpsl = QStringList() << "#"+QString::number(MsgCount) << msg.DateTime << msg.module << QString::number(msg.line,10) << msg.msg;
     MsgCount++;
     erdata.insert(0,tmpsl);
     if (erdata.size() >= MAX_MSG)

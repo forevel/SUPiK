@@ -1,21 +1,34 @@
 #include <QApplication>
+#include <QFile>
+#include <QNetworkConfiguration>
+#include <QNetworkSession>
 
 #include "sftp.h"
-
 
 s_ftp sftp;
 
 s_ftp::s_ftp(QObject *parent) : QObject(parent)
 {
     Busy = false;
+    Connected = false;
     ReadData.resize(65535);
+    ftp = 0;
+    Tmr = new QTimer;
+    Tmr->setInterval(5000); // 5 секунд, чтобы получить ответ от сервера
+    connect(Tmr,SIGNAL(timeout()),this,SLOT(FtpTimeout()));
 }
 
-bool s_ftp::IsFtpAvailable()
+s_ftp::~s_ftp()
 {
-    Busy = true;
-    QString CheckUrl = QString(FTP_SERVER)+"/xmHXP_FW~h";
-    GetFile(CheckUrl);
+    FtpDisconnect();
+}
+
+// Установка связи и проверка соединения с FTP-сервером
+
+bool s_ftp::CheckFtp()
+{
+    QString CheckUrl = QString(CHECKFILE);
+    GetData(CheckUrl);
     while (Busy)
         qApp->processEvents(QEventLoop::AllEvents);
     if (QString(ReadData.data()) == "supik\n")
@@ -23,51 +36,113 @@ bool s_ftp::IsFtpAvailable()
     return false;
 }
 
-void s_ftp::GetFile(QString Url)
+// установка соединения с FTP-сервером и определение необходимых связок сигнал-слот
+
+void s_ftp::ConnectToFtp()
 {
-    ReadData.clear();
-    QNetworkAccessManager *nam = new QNetworkAccessManager();
-    QUrl url2(Url);
-    url2.setPassword("wdbpy(WcTtTZzA_TEc-<");
-    url2.setUserName("supik");
-    QNetworkRequest req(url2);
-    QNetworkReply *reply = nam->get(req);
-    connect(reply, SIGNAL(readyRead()), this, SLOT(ReadDataFromUrl()));
-    connect(reply,SIGNAL(finished()),this,SLOT(FinishRead()));
-    connect(this,SIGNAL(ReadFinished()),reply,SLOT(deleteLater()));
-    connect(reply, SIGNAL(error(QNetworkReply::NetworkError)), SLOT(SetError(QNetworkReply::NetworkError)));
+    Tmr->start();
+    ftp = new QFtp(this);
+    connect(ftp,SIGNAL(commandFinished(int,bool)),this,SLOT(TransferFinished(int, bool)));
+    connect(ftp, SIGNAL(readyRead()), this, SLOT(ReadDataFromUrl()));
+    connect(ftp,SIGNAL(dataTransferProgress(qint64,qint64)),this,SLOT(SetRangeAndValue(qint64,qint64)));
+    ftp->connectToHost(QString(FTP_SERVER), 21);
+    ftp->login("supik","wdbpy(WcTtTZzA_TEc-<");
+    Tmr->stop();
 }
 
-void s_ftp::SetError(QNetworkReply::NetworkError err)
+// получить данные из удалённого файла по ссылке Url в буфер ReadData
+
+void s_ftp::GetData(QString Url)
 {
-    QStringList sl = QStringList() << "FTP: Нет ошибок" << "FTP: Удалённый сервер отказал в соединении" << \
-                                      "FTP: Удалённый сервер неожиданно закрыл соединение" << "FTP: Сервер с таким адресом не найден" << \
-                                      "FTP: Превышено время ожидания ответа" << "FTP: Операция была отменена" << "FTP: ошибка SSL" << \
-                                      "FTP: Временные неполадки в связи" << "FTP: Соединение не удалось" << "FTP: Соединение не разрешено сервером" << \
-                                      "FTP: Прочие неполадки в сети" << "" << "FTP: Отказано в соединении с прокси" << "FTP: Прокси-сервер закрыл соединение" << \
-                                      "FTP: Не найден прокси-сервер" << "FTP: Превышено время ожидания связи с прокси-сервером" << \
-                                      "FTP: Прокси-сервер требует аутентификации" << "FTP: Прочие проблемы с прокси" << \
-                                      "" << "FTP: Отказ в доступе" << "FTP: Операция не разрешена" << "FTP: Файл не найден на удалённом сервере" << \
-                                      "FTP: Требуется аутентификация" << "FTP: Ошибка при передаче" << "FTP: Конфликт состояния" << \
-                                      "FTP: Требуемого файла больше нет на удалённом сервере" << "FTP: Прочие ошибки удалённого доступа" << \
-                                      "" << "FTP: Неизвестный протокол доступа" << "FTP: Некорректная операция для выбранного протокола" << \
-                                      "FTP: Ошибка протокола" << "" << "FTP: Удалённый сервер вышел в неожиданное состояние" << \
-                                      "FTP: Удалённый сервер не имеет должного функционала для обработки запроса" << "FTP: В данное время невозможно обработать запрос" << \
-                                      "FTP: Неизвестная ошибка ответа сервера";
-    int ErrNum = static_cast<int>(err);
-    if (ErrNum > 9) // 99>
-        ErrNum -= 89; // с 99 по 105 обрабатываем в диапазоне 10-16
-    if (ErrNum > 16) // 199>
-        ErrNum -= 93; // с 199 по 207 обрабатываем в диапазоне 17-25
-    if (ErrNum > 25) // 299>
-        ErrNum -= 91; // с 299 по 302 обрабатываем в диапазоне 26-29
-    if (ErrNum > 29) // 399>
-        ErrNum -= 96; // с 399 по 403 обрабатываем в диапазоне 30-34
-    if (ErrNum > 34) // 499
-        ErrNum = 35;
-    SFTPER(sl.at(ErrNum));
-    Busy = false;
+    Busy = true;
+    RangeWasSent = false;
+    ReadData.clear();
+    RDptr=0;
+    if (!Connected)
+        ConnectToFtp();
+
+    ftp->get(Url);
+    ftp->close();
 }
+
+// получить данные из удалённого файла по ссылке Url в локальный файл с именем filename
+
+void s_ftp::GetFile(QString Url, QString filename)
+{
+    Busy = true;
+    RangeWasSent = false;
+    if (!Connected)
+        ConnectToFtp();
+    QFile *data = new QFile(filename, this);
+    if (data->open(QIODevice::WriteOnly))
+    {
+        ftp->get(Url, data);
+        ftp->close();
+    }
+    else
+    {
+        SFTPER("Ошибка открытия файла "+filename);
+        return;
+    }
+}
+
+// отправить данные из локального файла с именем filename в удалённый файл по ссылке Url
+
+void s_ftp::PutFile(QString Url, QString filename)
+{
+    Busy = true;
+    RangeWasSent = false;
+
+    if (!Connected)
+        ConnectToFtp();
+    QFile *data = new QFile(filename, this);
+    if (data->open(QIODevice::ReadOnly))
+    {
+        CdFailed = false;
+        ftp->cd(Url);
+        ftp->close();
+        while (Busy)
+            qApp->processEvents(QEventLoop::AllEvents);
+        if (CdFailed) // нет такого каталога на сервере
+        {
+            ftp->mkdir(Url);
+            ftp->close();
+        }
+        ftp->put(data, Url);
+        ftp->close();
+    }
+    else
+    {
+        SFTPER("Ошибка открытия файла "+filename);
+        return;
+    }
+}
+
+// создать каталог на удалённом сервере
+
+void s_ftp::MakeDir(QString DirName)
+{
+    Busy = true;
+    RangeWasSent = false;
+    if (!Connected)
+        ConnectToFtp();
+    ftp->mkdir(DirName);
+    ftp->close();
+}
+
+// перейти в каталог на удалённом сервере
+
+void s_ftp::ChangeDir(QString dir)
+{
+    Busy = true;
+    RangeWasSent = false;
+    if (!Connected)
+        ConnectToFtp();
+    ftp->cd(dir);
+    ftp->close();
+}
+
+// слот, вызываемый при получении каких-либо данных (readyRead)
 
 void s_ftp::ReadDataFromUrl()
 {
@@ -77,17 +152,88 @@ void s_ftp::ReadDataFromUrl()
         emit ReadBufferFull();
         return;
     }
-    QNetworkReply *reply = static_cast<QNetworkReply *>(sender());
-    QByteArray ba = reply->read(65535);
-    ReadData.append(ba);
+    QFtp *ftp = static_cast<QFtp *>(sender());
+    quint64 BytesRead = ftp->bytesAvailable();
+    ReadData.resize(RDSize+BytesRead);
+    BytesRead = ftp->read(&(ReadData.data()[RDptr]), BytesRead); // BytesRead справа - сколько хочется скачать, BytesRead слева - сколько реально удалось скачать
+    RDptr += BytesRead;
     emit NewDataAvailable();
 }
 
-void s_ftp::FinishRead()
+// слот, вызываемый по окончании какой-либо команды
+
+void s_ftp::TransferFinished(int, bool error)
 {
-    QNetworkReply *reply = static_cast<QNetworkReply *>(sender());
-    QByteArray ba = reply->readAll();
-    ReadData.append(ba);
-    emit ReadFinished();
-    Busy = false;
+    if (ftp->currentCommand() == QFtp::ConnectToHost)
+    {
+        if (error)
+        {
+            SFTPER("Невозможно соединение с FTP-сервером");
+            FtpDisconnect();
+            return;
+        }
+        Connected = true;
+        SFTPINFO("Создано подключение к FTP-серверу");
+        return;
+    }
+    if (ftp->currentCommand() == QFtp::Get)
+    {
+        if (error)
+            SFTPER("Передача файла была отменена");
+        else
+            SFTPINFO("Файл получен успешно");
+        Busy = false;
+    }
+    if (ftp->currentCommand() == QFtp::Put)
+    {
+        if (error)
+            SFTPER("Ошибка при отправке файла");
+        else
+            SFTPINFO("Файл отправлен успешно");
+        Busy = false;
+    }
+    if (ftp->currentCommand() == QFtp::Cd)
+    {
+        if (error)
+            CdFailed = true;
+    }
+    if (ftp->currentCommand() == QFtp::Mkdir)
+    {
+        if (error)
+        {
+            SFTPER("Ошибка при создании каталога");
+        }
+        else
+            SFTPER("Каталог создан успешно");
+        Busy = false;
+    }
+}
+
+// слот, вызываемый при скачивании/закачивании кусков файлов
+
+void s_ftp::SetRangeAndValue(qint64 Value, qint64 Total)
+{
+    if (!RangeWasSent)
+    {
+        RangeWasSent = true;
+        emit SetRange(0, Total);
+    }
+    emit SetValue(Value);
+}
+
+void s_ftp::FtpDisconnect()
+{
+    Connected = false;
+    if (ftp)
+    {
+        ftp->abort();
+        ftp->deleteLater();
+        ftp = 0;
+    }
+}
+
+void s_ftp::FtpTimeout()
+{
+    FtpDisconnect();
+    Tmr->stop();
 }

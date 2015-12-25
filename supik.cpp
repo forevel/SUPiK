@@ -16,6 +16,7 @@
 #include "widgets/s_colortabwidget.h"
 #include "widgets/s_tqtableview.h"
 #include "widgets/errorprotocolwidget.h"
+#include "widgets/waitwidget.h"
 #include "gen/publiclang.h"
 #include "gen/s_sql.h"
 
@@ -71,7 +72,8 @@ void supik::SetSupikWindow()
     ErrorProtocolUpdateTimer->setInterval(1000);
     connect(ErrorProtocolUpdateTimer,SIGNAL(timeout()),this,SLOT(UpdateErrorProtocol()));
     ErrorProtocolUpdateTimer->start();
-    setWindowTitle(PROGNAME);
+    QString tmps = "Супик "+QString(PROGVER);
+    setWindowTitle(tmps);
     resize (984, 688);
     QIcon SupikIcon;
     SupikIcon.addFile(QString::fromUtf8(":/res/supik.png"), QSize(), QIcon::Normal, QIcon::Off);

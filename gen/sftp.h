@@ -19,7 +19,7 @@ class s_ftp : public QObject
 {
     Q_OBJECT
 public:
-    s_ftp(QObject *parent = 0);
+    explicit s_ftp(QObject *parent=0);
     ~s_ftp();
 
     QByteArray ReadData;

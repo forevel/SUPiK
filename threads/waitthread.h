@@ -1,18 +1,25 @@
 #ifndef WAITTHREAD_H
 #define WAITTHREAD_H
 
-#include <QThread>
+#include <QObject>
 
-class WaitThread : public QThread
+class WaitThread : public QObject
 {
     Q_OBJECT
 
 public:
     explicit WaitThread(QObject *parent = 0);
-    void run();
+
+    bool FinishQuery;
 
 signals:
     void TenMsPassed();
+    void Finished();
+
+public slots:
+    void Run();
+    void Stop();
+
 };
 
 #endif // WAITTHREAD_H

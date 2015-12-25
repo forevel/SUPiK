@@ -26,7 +26,7 @@ private slots:
     void Rotate();
 
 private:
-    WaitThread *thr;
+    WaitThread *WThread;
     QString Message;
     float gamma;
     float vel1, vel2, vel3, vel4, vel5;

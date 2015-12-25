@@ -265,7 +265,6 @@ void s_tqChooseWidget::pbclicked()
     default:
         break;
     }
-    w->Stop();
 }
 
 void s_tqChooseWidget::accepted(QString str)

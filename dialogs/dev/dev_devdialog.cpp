@@ -77,7 +77,6 @@ void dev_devdialog::SetupUI()
     hlyout->addWidget(pb);
 
     hlyout->addStretch(300);
-//    lyout->addLayout(hlyout);
     s_tqLabel *lbl = new s_tqLabel("Классификатор");
     QFont font;
     font.setPointSize(15);

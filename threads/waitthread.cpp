@@ -1,18 +1,26 @@
 #include "waitthread.h"
 
 #include <QTimer>
+#include <QCoreApplication>
 
-WaitThread::WaitThread(QObject *parent) : QThread(parent)
+WaitThread::WaitThread(QObject *parent) : QObject(parent)
 {
-    moveToThread(this);
+    FinishQuery = false;
 }
 
-void WaitThread::run()
+void WaitThread::Run()
 {
     QTimer *tmr = new QTimer;
     tmr->setInterval(10);
     connect(tmr,SIGNAL(timeout()),this,SIGNAL(TenMsPassed()));
     tmr->setSingleShot(false);
     tmr->start();
-    exec();
+    while (!FinishQuery)
+        qApp->processEvents();
+    emit Finished();
+}
+
+void WaitThread::Stop()
+{
+    FinishQuery = true;
 }

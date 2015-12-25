@@ -1,7 +1,5 @@
 #include <QApplication>
 #include <QFile>
-#include <QNetworkConfiguration>
-#include <QNetworkSession>
 
 #include "sftp.h"
 
@@ -13,9 +11,6 @@ s_ftp::s_ftp(QObject *parent) : QObject(parent)
     Connected = false;
     ReadData.resize(65535);
     ftp = 0;
-    Tmr = new QTimer;
-    Tmr->setInterval(5000); // 5 секунд, чтобы получить ответ от сервера
-    connect(Tmr,SIGNAL(timeout()),this,SLOT(FtpTimeout()));
 }
 
 s_ftp::~s_ftp()
@@ -40,6 +35,9 @@ bool s_ftp::CheckFtp()
 
 void s_ftp::ConnectToFtp()
 {
+    Tmr = new QTimer;
+    Tmr->setInterval(5000); // 5 секунд, чтобы получить ответ от сервера
+    connect(Tmr,SIGNAL(timeout()),this,SLOT(FtpTimeout()));
     Tmr->start();
     ftp = new QFtp(this);
     connect(ftp,SIGNAL(commandFinished(int,bool)),this,SLOT(TransferFinished(int, bool)));
@@ -164,6 +162,8 @@ void s_ftp::ReadDataFromUrl()
 
 void s_ftp::TransferFinished(int, bool error)
 {
+    if (ftp == 0)
+        return;
     if (ftp->currentCommand() == QFtp::ConnectToHost)
     {
         if (error)
@@ -224,9 +224,11 @@ void s_ftp::SetRangeAndValue(qint64 Value, qint64 Total)
 void s_ftp::FtpDisconnect()
 {
     Connected = false;
+    Busy = false;
     if (ftp)
     {
         ftp->abort();
+        ftp->close();
         ftp->deleteLater();
         ftp = 0;
     }

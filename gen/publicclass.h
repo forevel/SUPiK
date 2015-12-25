@@ -24,7 +24,7 @@ QT_END_NAMESPACE
 
 #include "publiclang.h"
 
-#define PROGNAME    "Супик 1.0.291"
+#define PROGVER    "1.0.291"
 
 // Макросы для выдачи сообщений
 #define ERMSG(...)     pc.AddErrMsg(PublicClass::ER_MSG,__VA_ARGS__)

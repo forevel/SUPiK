@@ -8,7 +8,7 @@
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QDateTime>
-#include <QThread>
+#include <QTimer>
 #include <math.h>
 
 WaitWidget::WaitWidget(QWidget *parent) : QWidget(parent)
@@ -36,30 +36,14 @@ WaitWidget::~WaitWidget()
 void WaitWidget::Start()
 {
     show();
-    QThread *thr = new QThread;
-    WThread = new WaitThread;
-    WThread->moveToThread(thr);
-    connect(WThread,SIGNAL(TenMsPassed()),this,SLOT(Rotate()));
-    connect(thr,SIGNAL(finished()),thr,SLOT(deleteLater()));
-    connect(thr,SIGNAL(finished()),WThread,SLOT(deleteLater()));
-    connect(thr,SIGNAL(started()),WThread,SLOT(Run()));
-    thr->start();
+    QTimer *tmr = new QTimer;
+    tmr->setInterval(10);
+    connect(tmr,SIGNAL(timeout()),this,SLOT(Rotate()));
+    tmr->start();
 }
 
 void WaitWidget::Stop()
 {
-    hide();
-    WThread->Stop();
-    if (WThread)
-    {
-        QThread *thr = WThread->thread();
-        if (thr->isRunning())
-        {
-            thr->quit();
-            thr->wait(1000);
-        }
-    }
-    Finished = true;
     emit finished();
     this->close();
 }

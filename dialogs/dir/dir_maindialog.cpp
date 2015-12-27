@@ -6,6 +6,7 @@
 #include "../../gen/publicclass.h"
 #include "../../widgets/s_tqlabel.h"
 #include "../../widgets/s_tqtreeview.h"
+#include "../../widgets/treeview.h"
 #include "../../widgets/s_tqframe.h"
 #include "../../widgets/s_tqtableview.h"
 #include "../../widgets/s_tqsplitter.h"
@@ -66,11 +67,14 @@ void dir_maindialog::SetupUI()
     hlyout->setAlignment(lbl, Qt::AlignRight);
     lyout->addLayout(hlyout);
 
-    s_tqTreeView *SlaveTV = new s_tqTreeView;
+//    s_tqTreeView *SlaveTV = new s_tqTreeView;
+//    QTreeView *SlaveTV = new QTreeView;
+    TreeView *SlaveTV = new TreeView;
     s_tqTableView *SlaveTbV = new s_tqTableView;
     s_tqTableView *MainTV = new s_tqTableView;
     MainTableModel = new s_ncmodel;
-    SlaveTreeModel = new s_ntmodel;
+//    SlaveTreeModel = new s_ntmodel;
+    SlaveTreeModel = new TreeModel;
     SlaveTableModel = new s_ncmodel;
     MainTV->setObjectName("MainTV");
     SlaveTV->setObjectName("SlaveTV");
@@ -105,8 +109,10 @@ void dir_maindialog::SetupUI()
     connect (MainTV, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(mainContextMenu(QPoint)));
 //    connect (MainTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(showDirDialog(QModelIndex)));
     connect(MainTV, SIGNAL(clicked(QModelIndex)), this, SLOT(showDirDialog(QModelIndex)));
-    connect(SlaveTV, SIGNAL(expanded(QModelIndex)), SlaveTreeModel, SLOT(addExpandedIndex(QModelIndex)));
-    connect(SlaveTV, SIGNAL(collapsed(QModelIndex)), SlaveTreeModel, SLOT(removeExpandedIndex(QModelIndex)));
+//    connect(SlaveTV, SIGNAL(expanded(QModelIndex)), SlaveTreeModel, SLOT(addExpandedIndex(QModelIndex)));
+//    connect(SlaveTV, SIGNAL(collapsed(QModelIndex)), SlaveTreeModel, SLOT(removeExpandedIndex(QModelIndex)));
+//    connect(SlaveTV,SIGNAL(expanded(QModelIndex)),SlaveTreeModel,SLOT(GoIntoIndex(QModelIndex)));
+//    connect(SlaveTV,SIGNAL(collapsed(QModelIndex)),SlaveTreeModel,SLOT(GoOut(QModelIndex)));
     connect (SlaveTV, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(SystemSlaveContextMenu(QPoint)));
     connect (SlaveTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(EditItem()));
     connect (SlaveTbV, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(SystemSlaveContextMenu(QPoint)));
@@ -168,7 +174,9 @@ void dir_maindialog::showDirDialog(QModelIndex idx)
 
 void dir_maindialog::ShowSlaveTree(QString str)
 {
-    s_tqTreeView *SlaveTV = this->findChild<s_tqTreeView *>("SlaveTV");
+    TreeView *SlaveTV = this->findChild<TreeView *>("SlaveTV");
+//    s_tqTreeView *SlaveTV = this->findChild<s_tqTreeView *>("SlaveTV");
+//    QTreeView *SlaveTV = this->findChild<QTreeView *>("SlaveTV");
     if (SlaveTV == 0)
     {
         DBGMSG(PublicClass::ER_DIRMAIN,__LINE__);
@@ -198,14 +206,15 @@ void dir_maindialog::ShowSlaveTree(QString str)
             {
                 SlaveParentTableName = values.at(1);
                 twodb = true;
-                res = SlaveTreeModel->Setup(values.at(1)+"_сокращ",values.at(0)+"_сокращ");
+//                res = SlaveTreeModel->Setup(values.at(1)+"_сокращ",values.at(0)+"_сокращ");
+                res = SlaveTreeModel->Setup(values.at(1)+"_сокращ");
             }
             else
             {
                 twodb = false;
                 res = SlaveTreeModel->Setup(values.at(0) + "_сокращ");
             }
-            if (res == PublicClass::ER_NTMODEL) // это не дерево
+            if (res == PublicClass::ER_TMODEL) // это не дерево
             {
                 SlaveTableModel->setup(values.at(0) + "_сокращ");
                 if (SlaveTableModel->result)
@@ -228,12 +237,15 @@ void dir_maindialog::ShowSlaveTree(QString str)
                 SlaveTVIsTree = true;
                 SlaveTbV->setVisible(false);
                 SlaveTV->setVisible(true);
-                SlaveTV->header()->setDefaultAlignment(Qt::AlignCenter);
-                SlaveTV->header()->setVisible(true);
-                SlaveTV->setIndentation(2);
-                SlaveTV->setAnimated(false);
-                for (i = 0; i < SlaveTV->header()->count(); i++)
-                    SlaveTV->resizeColumnToContents(i);
+//                SlaveTV->header()->setDefaultAlignment(Qt::AlignCenter);
+                SlaveTV->horizontalHeader()->setDefaultAlignment(Qt::AlignCenter);
+//                SlaveTV->header()->setVisible(true);
+                SlaveTV->horizontalHeader()->setVisible(true);
+//                SlaveTV->setIndentation(2);
+//                SlaveTV->setAnimated(false);
+//                for (i = 0; i < SlaveTV->header()->count(); i++)
+//                    SlaveTV->resizeColumnToContents(i);
+                SlaveTV->resizeColumnsToContents();
             }
             SlaveTVAccess = values.at(2).toLongLong(0, 16);
         }
@@ -264,13 +276,16 @@ QString dir_maindialog::getSlaveIndex(int column)
     QString tmpString;
     if (SlaveTVIsTree)
     {
-        s_tqTreeView *SlaveTV = this->findChild<s_tqTreeView *>("SlaveTV");
+//        s_tqTreeView *SlaveTV = this->findChild<s_tqTreeView *>("SlaveTV");
+//        QTreeView *SlaveTV = this->findChild<QTreeView *>("SlaveTV");
+        TreeView *SlaveTV = this->findChild<TreeView *>("SlaveTV");
         if (SlaveTV == 0)
         {
             DIRMDBG;
             return QString();
         }
-        tmpString = SlaveTV->model()->index(SlaveTV->currentIndex().row(), column, SlaveTV->model()->parent(SlaveTV->currentIndex())).data(Qt::DisplayRole).toString();
+//        tmpString = SlaveTV->model()->index(SlaveTV->currentIndex().row(), column, SlaveTV->model()->parent(SlaveTV->currentIndex())).data(Qt::DisplayRole).toString();
+        tmpString = SlaveTV->model()->index(SlaveTV->currentIndex().row(), column, QModelIndex()).data(Qt::DisplayRole).toString();
     }
     else
     {
@@ -291,7 +306,9 @@ void dir_maindialog::EditItem()
 {
     if (SlaveTVIsTree)
     {
-        s_tqTreeView *SlaveTV = this->findChild<s_tqTreeView *>("SlaveTV");
+//        s_tqTreeView *SlaveTV = this->findChild<s_tqTreeView *>("SlaveTV");
+//        QTreeView *SlaveTV = this->findChild<QTreeView *>("SlaveTV");
+/*        TreeView *SlaveTV = this->findChild<TreeView *>("SlaveTV");
         if (SlaveTV == 0)
         {
             DIRMDBG;
@@ -310,7 +327,7 @@ void dir_maindialog::EditItem()
             if ((mdl->data(index,Qt::ForegroundRole).value<QColor>() == mdl->colors[4]) && \
                     (mdl->data(index,Qt::FontRole).value<QFont>() == mdl->fonts[4]))
                 return; // для родителей запрещено иметь дополнительные поля
-        }
+        } */
     }
     QString tmpString = getSlaveIndex(0);
     if (!tmpString.isEmpty())

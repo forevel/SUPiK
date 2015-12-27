@@ -6,7 +6,8 @@
 #include <QPoint>
 #include <QSqlDatabase>
 
-#include "../../models/s_ntmodel.h"
+//#include "../../models/s_ntmodel.h"
+#include "../../models/treemodel.h"
 #include "../../models/s_ncmodel.h"
 
 #define DIRMDBG         DBGMSG(PublicClass::ER_DIRMAIN,__LINE__)
@@ -41,7 +42,8 @@ private:
     QSqlDatabase db;
     QString tble,slvtble, SlaveParentTableName;
     int SlaveTVAccess;
-    s_ntmodel *SlaveTreeModel;
+//    s_ntmodel *SlaveTreeModel;
+    TreeModel *SlaveTreeModel;
     s_ncmodel *MainTableModel, *SlaveTableModel;
     quint32 result;
 

@@ -24,7 +24,7 @@ QT_END_NAMESPACE
 
 #include "publiclang.h"
 
-#define PROGVER    "1.0.291"
+#define PROGVER    "1.0.292"
 
 // Макросы для выдачи сообщений
 #define ERMSG(...)     pc.AddErrMsg(PublicClass::ER_MSG,__VA_ARGS__)
@@ -38,20 +38,6 @@ QT_END_NAMESPACE
 #define CTYPE_SOL   3
 #define CTYPE_CON   4
 #define CTYPE_DEV   5
-
-// диалоговые окна в СУПиКе
-#define TW_SET      0x100 // настройки (Settings)
-#define TW_SYSST    0x101 // SysStructEdit - редактор структуры системы
-#define TW_SYSBU    0x102 // резервное копирование
-#define TW_SYSRS    0x103 // восстановление
-#define TW_SYSDIR   0x104 // системные справочники
-#define TW_COMP     0x105 // редактор компонентов
-#define TW_DIR      0x106 // справочники
-#define TW_PROB     0x107 // диалог событий
-#define TW_WH       0x108 // склады
-#define TW_QUAR     0x109 // работа с карантином
-#define TW_DEV      0x10A // редактор документов
-#define TW_ADM      0x10B // сисадминистрирование
 
 // Максимальный размер буфера ошибок
 #define ER_BUFMAX   0x40 // 64 элемента
@@ -163,7 +149,27 @@ public:
         ER_DEVDOC,   // dev_docdialog
         ER_ACC,      // s_accessdialog
         ER_SFTP,     // sftp
-        ER_SYSSET    // sys_settingsdialog
+        ER_SYSSET,   // sys_settingsdialog
+        ER_SYSICT,   // sys_importclass_t
+        ER_TMODEL    // treemodel
+    };
+
+    // диалоговые окна в СУПиКе
+    enum supikdialogwindows
+    {
+        TW_SET,     // настройки (Settings)
+        TW_SYSST,   // SysStructEdit - редактор структуры системы
+        TW_SYSIC,   // SysImportClasses - импорт классификатора
+        TW_SYSBU,   // резервное копирование
+        TW_SYSRS,   // восстановление
+        TW_SYSDIR,  // системные справочники
+        TW_COMP,    // редактор компонентов
+        TW_DIR,     // справочники
+        TW_PROB,    // диалог событий
+        TW_WH,      // склады
+        TW_QUAR,    // работа с карантином
+        TW_DEV,     // редактор документов
+        TW_ADM      // сисадминистрирование
     };
 
     double timerperiod;

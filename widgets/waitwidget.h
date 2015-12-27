@@ -3,7 +3,6 @@
 
 #include <QWidget>
 #include <QPaintEvent>
-#include "../threads/waitthread.h"
 
 class WaitWidget : public QWidget
 {
@@ -15,18 +14,17 @@ public:
 
     void Start();
     void Stop();
-    void SetMessage(QString msg);
 
 signals:
     void finished();
 
 public slots:
+    void SetMessage(QString msg);
 
 private slots:
     void Rotate();
 
 private:
-    WaitThread *WThread;
     QString Message;
     float gamma;
     float vel1, vel2, vel3, vel4, vel5;

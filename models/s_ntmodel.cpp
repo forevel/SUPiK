@@ -454,10 +454,14 @@ int s_ntmodel::BuildTree(QString id, bool twodb)
     else if (!FirstPass) // не имеет потомков и это не первый проход
     {
         s_ntitem *item = parents.last()->child(parents.last()->childCount()-1); // текущий элемент
-        for (int i=0; i<item->columnCount(); i++)
+        if (item != 0)
         {
-            item->setColor(i, colors[6]);
-            item->setFont(i, fonts[6]);
+            for (int i=0; i<item->columnCount(); i++)
+            {
+                item->setColor(i, colors[6]);
+                item->setFont(i, fonts[6]);
+            }
+
         }
     }
     return 0;

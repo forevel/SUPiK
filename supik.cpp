@@ -12,11 +12,11 @@
 #include "dialogs/wh/wh_dialog.h"
 #include "dialogs/wh/wh_editor.h"
 #include "dialogs/sys/sys_backuprestoredirdialog.h"
+#include "dialogs/sys/sys_importclass.h"
 #include "widgets/s_tqlabel.h"
 #include "widgets/s_colortabwidget.h"
 #include "widgets/s_tqtableview.h"
 #include "widgets/errorprotocolwidget.h"
-#include "widgets/waitwidget.h"
 #include "gen/publiclang.h"
 #include "gen/s_sql.h"
 
@@ -29,7 +29,7 @@ supik::supik()
     SetSupikWindow();
     SetSupikStatusBar();
     pc.supikprocs << "ExitSupik" << "SysStructEdit" << "SettingsEdit" << "Components" << "Directories" << "BackupDir" << "RestoreDir" << "ProbCheck";
-    pc.supikprocs << "WhIncome" << "WhOutgoing" << "WhSearch" << "DevDoc" << "DevDev" << "Quarantine" << "";
+    pc.supikprocs << "WhIncome" << "WhOutgoing" << "WhSearch" << "DevDoc" << "DevDev" << "Quarantine" << "" << "SysImportClass";
     pf["ExitSupik"] = &supik::ExitSupik;
     pf["SysStructEdit"] = &supik::SysStructEdit;
     pf["SettingsEdit"] = &supik::SettingsEdit;
@@ -47,6 +47,7 @@ supik::supik()
     pf["DevDoc"] = &supik::DevDoc;
     pf["DevDev"] = &supik::DevDev;
     pf["Dummy"]=&supik::Dummy;
+    pf["SysImportClass"] = &supik::SysImportClass;
 }
 
 void supik::showEvent(QShowEvent *event)
@@ -285,7 +286,7 @@ void supik::SettingsEdit()
     S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
     if (MainTW == 0)
         return;
-    int idx = CheckForWidget(TW_SET);
+    int idx = CheckForWidget(pc.TW_SET);
     if (idx != -1)
     {
         MainTW->setCurrentIndex(idx);
@@ -297,7 +298,7 @@ void supik::SettingsEdit()
     qssda->setAttribute(Qt::WA_DeleteOnClose);
 
     int ids = MainTW->addTab(qssda, "Система::Редактор настроек");
-    MainTW->tabBar()->setTabData(ids, QVariant(TW_SET));
+    MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_SET));
     MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
     MainTW->tabBar()->setCurrentIndex(ids);
     MainTW->repaint();
@@ -310,7 +311,7 @@ void supik::SysStructEdit()
     S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
     if (MainTW == 0)
         return;
-    int idx = CheckForWidget(TW_SYSST);
+    int idx = CheckForWidget(pc.TW_SYSST);
     if (idx != -1)
     {
         MainTW->setCurrentIndex(idx);
@@ -319,7 +320,29 @@ void supik::SysStructEdit()
 
     sys_systemdialog *qsyda = new sys_systemdialog;
     int ids = MainTW->addTab(qsyda, "Система::Редактор параметров");
-    MainTW->tabBar()->setTabData(ids, QVariant(TW_SYSST));
+    MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_SYSST));
+    MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
+    MainTW->tabBar()->setCurrentIndex(ids);
+    MainTW->repaint();
+}
+
+// Импорт классификатора
+
+void supik::SysImportClass()
+{
+    S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
+    if (MainTW == 0)
+        return;
+    int idx = CheckForWidget(pc.TW_SYSIC);
+    if (idx != -1)
+    {
+        MainTW->setCurrentIndex(idx);
+        return;
+    }
+
+    sys_ImportClass *dlg = new sys_ImportClass;
+    int ids = MainTW->addTab(dlg, "Система::Импорт классификатора ЕСКД");
+    MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_SYSIC));
     MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
     MainTW->tabBar()->setCurrentIndex(ids);
     MainTW->repaint();
@@ -337,7 +360,7 @@ void supik::Components()
         ERMSG(PublicClass::ER_SUPIK,__LINE__,"Недостаточно прав для продолжения!");
         return;
     }
-    int idx = CheckForWidget(TW_COMP);
+    int idx = CheckForWidget(pc.TW_COMP);
     if (idx != -1)
     {
         MainTW->setCurrentIndex(idx);
@@ -347,7 +370,7 @@ void supik::Components()
     cmp_compdialog *qccda = new cmp_compdialog(CMP_ALTIUM);
 
     int ids = MainTW->addTab(qccda, "Компоненты::Altium");
-    MainTW->tabBar()->setTabData(ids, QVariant(TW_COMP));
+    MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_COMP));
     MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
     MainTW->tabBar()->setCurrentIndex(ids);
     MainTW->repaint();
@@ -358,7 +381,7 @@ void supik::Directories()
     S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
     if (MainTW == 0)
         return;
-    int idx = CheckForWidget(TW_DIR);
+    int idx = CheckForWidget(pc.TW_DIR);
     if (idx != -1)
     {
         MainTW->setCurrentIndex(idx);
@@ -368,7 +391,7 @@ void supik::Directories()
     dir_maindialog *dird = new dir_maindialog("Справочники");
 
     int ids = MainTW->addTab(dird, "Справочники::Справочники");
-    MainTW->tabBar()->setTabData(ids, QVariant(TW_DIR));
+    MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_DIR));
     MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
     MainTW->tabBar()->setCurrentIndex(ids);
     MainTW->repaint();
@@ -379,7 +402,7 @@ void supik::SysDirectories()
     S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
     if (MainTW == 0)
         return;
-    int idx = CheckForWidget(TW_SYSDIR);
+    int idx = CheckForWidget(pc.TW_SYSDIR);
     if (idx != -1)
     {
         MainTW->setCurrentIndex(idx);
@@ -389,7 +412,7 @@ void supik::SysDirectories()
     dir_maindialog *dird = new dir_maindialog("Справочники системные");
 
     int ids = MainTW->addTab(dird, "Справочники::системные");
-    MainTW->tabBar()->setTabData(ids, QVariant(TW_SYSDIR));
+    MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_SYSDIR));
     MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
     MainTW->tabBar()->setCurrentIndex(ids);
     MainTW->repaint();
@@ -400,7 +423,7 @@ void supik::ProbCheck()
     S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
     if (MainTW == 0)
         return;
-    int idx = CheckForWidget(TW_PROB);
+    int idx = CheckForWidget(pc.TW_PROB);
     if (idx != -1)
     {
         MainTW->setCurrentIndex(idx);
@@ -411,7 +434,7 @@ void supik::ProbCheck()
     pc.NewNotifyHasArrived = false; // чтобы перестала мигать надпись "Внимание"
     sys_probsdialog *probDialog = new sys_probsdialog;
     int ids = MainTW->addTab(probDialog, "Сообщения: "+QString::number(pc.allprobs.size()));
-    MainTW->tabBar()->setTabData(ids, QVariant(TW_PROB));
+    MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_PROB));
     MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
     MainTW->tabBar()->setCurrentIndex(ids);
     connect (this, SIGNAL(newnotify()), probDialog, SLOT(updatemainTV()));
@@ -433,7 +456,7 @@ void supik::WhIncome()
 
     wh_dialog *whd = new wh_dialog (true, ""); // isIncoming = true
     int ids = MainTW->addTab(whd, "Склады::Приём на склад");
-    MainTW->tabBar()->setTabData(ids, QVariant(TW_WH));
+    MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_WH));
     MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
     MainTW->tabBar()->setCurrentIndex(ids);
     MainTW->repaint();
@@ -442,7 +465,7 @@ void supik::WhIncome()
     whd->setupUI("whincome", ":/res/WhWallpaper.jpg", DT_GENERAL);
     connect(whd,SIGNAL(error(int,int)),this,SLOT(ShowErMsg(int,int)));
     int ids = MainTW->addTab(whd, "Приём на склад");
-    MainTW->tabBar()->setTabData(ids, QVariant(TW_WH));
+    MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_WH));
     MainTW->tabBar()->setCurrentIndex(ids);
     MainTW->repaint(); */
 }
@@ -461,7 +484,7 @@ void supik::WhOutgoing()
     whd = new wh_dialog (false, ""); // isIncoming = false
 
     int ids = MainTW->addTab(whd, "Выдача со склада");
-    MainTW->tabBar()->setTabData(ids, QVariant(TW_WH));
+    MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_WH));
     MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
     MainTW->tabBar()->setCurrentIndex(ids);
     MainTW->repaint(); */
@@ -488,7 +511,7 @@ void supik::WhEditor()
     Wh_Editor *whd = new Wh_Editor;
 
     int ids = MainTW->addTab(whd, "Склады::Редактор складов");
-    MainTW->tabBar()->setTabData(ids, QVariant(TW_WH));
+    MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_WH));
     MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
     MainTW->tabBar()->setCurrentIndex(ids);
     MainTW->repaint();
@@ -508,7 +531,7 @@ void supik::DevDoc() // редактор документов на издели�
     dev_docdialog *ddd = new dev_docdialog;
 
     int ids = MainTW->addTab(ddd, "Изделия::Документация");
-    MainTW->tabBar()->setTabData(ids, QVariant(TW_DEV));
+    MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_DEV));
     MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
     MainTW->tabBar()->setCurrentIndex(ids);
     MainTW->repaint();
@@ -528,7 +551,7 @@ void supik::DevDev() // редактор изделий (классификат�
     dev_devdialog *ddd = new dev_devdialog;
 
     int ids = MainTW->addTab(ddd, "Изделия::Классификатор");
-    MainTW->tabBar()->setTabData(ids, QVariant(TW_DEV));
+    MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_DEV));
     MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
     MainTW->tabBar()->setCurrentIndex(ids);
     MainTW->repaint();
@@ -544,7 +567,7 @@ void supik::BackupDir()
     S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
     if (MainTW == 0)
         return;
-    int idx = CheckForWidget(TW_SYSBU);
+    int idx = CheckForWidget(pc.TW_SYSBU);
     if (idx != -1)
     {
         MainTW->setCurrentIndex(idx);
@@ -554,7 +577,7 @@ void supik::BackupDir()
     sys_backuprestoredirdialog *brd = new sys_backuprestoredirdialog (false); // isIncoming = false
 
     int ids = MainTW->addTab(brd, "Экспорт в файл");
-    MainTW->tabBar()->setTabData(ids, QVariant(TW_SYSBU));
+    MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_SYSBU));
     MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
     MainTW->tabBar()->setCurrentIndex(ids);
     MainTW->repaint();
@@ -565,7 +588,7 @@ void supik::RestoreDir()
     S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
     if (MainTW == 0)
         return;
-    int idx = CheckForWidget(TW_SYSRS);
+    int idx = CheckForWidget(pc.TW_SYSRS);
     if (idx != -1)
     {
         MainTW->setCurrentIndex(idx);
@@ -575,7 +598,7 @@ void supik::RestoreDir()
     sys_backuprestoredirdialog *brd = new sys_backuprestoredirdialog (true);
 
     int ids = MainTW->addTab(brd, "Импорт из файла");
-    MainTW->tabBar()->setTabData(ids, QVariant(TW_SYSRS));
+    MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_SYSRS));
     MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
     MainTW->tabBar()->setCurrentIndex(ids);
     MainTW->repaint();
@@ -586,7 +609,7 @@ void supik::Quarantine()
     S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
     if (MainTW == 0)
         return;
-    int idx = CheckForWidget(TW_QUAR);
+    int idx = CheckForWidget(pc.TW_QUAR);
     if (idx != -1)
     {
         MainTW->setCurrentIndex(idx);
@@ -596,7 +619,7 @@ void supik::Quarantine()
     sys_backuprestoredirdialog *brd = new sys_backuprestoredirdialog (true);
 
     int ids = MainTW->addTab(brd, "Импорт из файла");
-    MainTW->tabBar()->setTabData(ids, QVariant(TW_QUAR));
+    MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_QUAR));
     MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
     MainTW->tabBar()->setCurrentIndex(ids);
     MainTW->repaint();
@@ -615,7 +638,7 @@ void supik::periodic1s()
 /*    QAction *ta = this->findChild<QAction *>("warning");
     if (pc.NewNotifyHasArrived)
     {
-        int idx = CheckForWidget(TW_PROB);
+        int idx = CheckForWidget(pc.TW_PROB);
         if (idx == -1)
         {
             if (ta->isVisible())
@@ -659,7 +682,7 @@ void supik::updateprobsnumberintabtext()
     S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
     if (MainTW == 0)
         return;
-    int idx = CheckForWidget(TW_PROB);
+    int idx = CheckForWidget(pc.TW_PROB);
     if (idx != -1)
         MainTW->tabBar()->setTabText(idx, "Сообщения: "+QString::number(pc.allprobs.size()));
 }

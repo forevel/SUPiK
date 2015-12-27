@@ -11,7 +11,6 @@
 #include "s_tqcheckbox.h"
 #include "s_maskedle.h"
 #include "s_tqlabel.h"
-#include "waitwidget.h"
 #include "../gen/s_sql.h"
 #include "../gen/s_tablefields.h"
 #include "../dialogs/s_2cdialog.h"
@@ -138,8 +137,6 @@ void s_tqChooseWidget::Setup(QString links, QString hdr)
 
 void s_tqChooseWidget::pbclicked()
 {
-    WaitWidget *w = new WaitWidget;
-    w->Start();
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fdcle");
     if (le == 0)
         return;
@@ -151,7 +148,6 @@ void s_tqChooseWidget::pbclicked()
         chooseDialog->setup(ff.link.at(0), true); // диалог с "корневой кнопкой"
         connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
         chooseDialog->setTvCurrentText(le->text());
-        w->Stop();
         chooseDialog->exec();
         break;
     }
@@ -163,7 +159,6 @@ void s_tqChooseWidget::pbclicked()
             chooseDialog->setup(ff.link.at(0));
             connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
             chooseDialog->setTvCurrentText(le->text());
-            w->Stop();
             chooseDialog->exec();
         }
         else // это таблица
@@ -173,7 +168,6 @@ void s_tqChooseWidget::pbclicked()
             if (!chooseDialog->result)
             {
                 connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
-                w->Stop();
                 chooseDialog->exec();
             }
         }
@@ -190,7 +184,6 @@ void s_tqChooseWidget::pbclicked()
             dlg->AddTable(ff.link.at(i));
         connect(dlg,SIGNAL(changeshasbeenMade(QString)),this,SLOT(accepted(QString)));
         dlg->SetTvCurrentText(le->text());
-        w->Stop();
         dlg->exec();
         break;
     }
@@ -200,7 +193,6 @@ void s_tqChooseWidget::pbclicked()
         s_accessdialog *dlg = new s_accessdialog;
         dlg->SetupUI(le->text());
         connect(dlg, SIGNAL(acceptChanges(QString)), this, SLOT(accepted(QString)));
-        w->Stop();
         dlg->exec();
         break;
     }
@@ -216,7 +208,6 @@ void s_tqChooseWidget::pbclicked()
         calWdgt->setSelectedDate(dte);
         connect(calWdgt, SIGNAL(activated(QDate)), this, SLOT(dateChoosed(QDate)));
         connect(calWdgt, SIGNAL(activated(QDate)), calWdgt, SLOT(close()));
-        w->Stop();
         calWdgt->show();
         break;
     }
@@ -226,7 +217,6 @@ void s_tqChooseWidget::pbclicked()
         QStringList tmpsl = QStringList() << ff.link.at(0) << ff.link.at(1);
         dlg->Setup(tmpsl, le->text());
         connect(dlg,SIGNAL(finished(QString)),this,SLOT(accepted(QString)));
-        w->Stop();
         dlg->exec();
         break;
     }
@@ -235,7 +225,6 @@ void s_tqChooseWidget::pbclicked()
         s_2cdialog *dlg = new s_2cdialog("");
         dlg->SetupFile(ff.link.at(0)+"."+ff.link.at(1),ff.link.at(2),le->text()); // ff.link.at(0) - имя файла, (1) - расширение, (2) - StringToFind
         connect(dlg,SIGNAL(changeshasbeenMade(QString)),this,SLOT(accepted(QString)));
-        w->Stop();
         dlg->exec();
         break;
     }
@@ -250,14 +239,12 @@ void s_tqChooseWidget::pbclicked()
         }
         if (Template.isEmpty())
             return;
-        w->Stop();
         QString filename = QFileDialog::getOpenFileName(this,"Открыть файл","",Template,0,QFileDialog::DontUseNativeDialog);
         accepted(filename);
         break;
     }
     case FW_ILINK: // диалог выбора каталога
     {
-        w->Stop();
         QString dirname = QFileDialog::getExistingDirectory(this,"Выбрать каталог","",QFileDialog::ShowDirsOnly | QFileDialog::DontResolveSymlinks);
         accepted(dirname);
         break;
@@ -269,15 +256,12 @@ void s_tqChooseWidget::pbclicked()
 
 void s_tqChooseWidget::accepted(QString str)
 {
-    WaitWidget *w = new WaitWidget;
-    w->Start();
     s_tqLineEdit *le = this->findChild<s_tqLineEdit*>("fdcle");
     if (le == 0)
         return;
     QString tmpString = tfl.idtov(pc.getlinksfromFF(ff),str);
     le->setText(tmpString);
     emit textchanged(QVariant(tmpString));
-    w->Stop();
 }
 
 void s_tqChooseWidget::SetValue(QVariant data)

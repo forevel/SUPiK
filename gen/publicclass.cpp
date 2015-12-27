@@ -16,7 +16,7 @@ PublicClass::PublicClass()
 {
     LandP = new QSettings ("EvelSoft","Supik");
     TabColors[TW_PROB] = QColor(153, 153, 153); // GENERAL
-    TabColors[TW_SYSBU] = TabColors[TW_SYSRS] = TabColors[TW_SYSST] = TabColors[TW_SYSDIR] = QColor(194, 194, 194); // SYSTEM
+    TabColors[TW_SYSBU] = TabColors[TW_SYSRS] = TabColors[TW_SYSST] = TabColors[TW_SYSDIR] = TabColors[TW_SYSIC] = QColor(194, 194, 194); // SYSTEM
     TabColors[TW_SET] = QColor(255, 204, 204); // SETTINGS
     TabColors[TW_COMP] = QColor(153, 204, 153); // COMPONENTS
     TabColors[TW_DIR] = QColor(255, 255, 153); // DIRECTORY
@@ -327,7 +327,8 @@ void PublicClass::AddErrMsg(ermsgtype msgtype, quint64 ernum, quint64 ersubnum, 
                                         << "Работа со складом" << "Редактор_складов" << "Система" << "Справочники_гл" << "Комплексная_строка" \
                                         << "Редактор_системы" << "Ред_системы_справочники" << "Диалог_2_дерева" << "Диалог_дерево" \
                                         << "Диалог_таблица" << "Модель_таблица" << "Модель_дерево" << "Таблицы" << "БД" << "Вход_в_систему" \
-                                        << "Изделия_документы" << "Права_доступа" << "Ftp-клиент" << "Система_настройки";
+                                        << "Изделия_документы" << "Права_доступа" << "Ftp-клиент" << "Система_настройки" << "Система_импортЕСКД_т" \
+                                        << "Дерево_модель";
     if (ermsgpool.size()>=ER_BUFMAX)
         ermsgpool.removeFirst();
     ermsg tmpm;
@@ -338,20 +339,6 @@ void PublicClass::AddErrMsg(ermsgtype msgtype, quint64 ernum, quint64 ersubnum, 
     else
         tmpm.module = "Неизвестно";
     tmpm.line = ersubnum;
-    // Разбор кода ошибки
-//    QString prefix;
-/*    if ((msg.isEmpty()) || (msg == " ")) // пробел выдаётся при пустом запросе в БД
-    {
-        switch (msgtype)
-        {
-        case ER_MSG: prefix = "Ошибка "; break;
-        case WARN_MSG: prefix = "Проблема "; break;
-        case INFO_MSG: prefix = "Инфо "; break;
-        case DBG_MSG: prefix = "Отладка "; break;
-        }
-
-        msg = prefix+"в модуле " + filessl.at(ernum) + " строка " + QString::number(ersubnum);
-    } */
     tmpm.msg = msg;
     ermsgpool.append(tmpm);
 }

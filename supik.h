@@ -6,6 +6,7 @@
 #include <QCloseEvent>
 #include <QResizeEvent>
 #include "gen/publicclass.h"
+#include "widgets/waitwidget.h"
 
 #define SUPIKMENUBAR_BG "transparent"
 #define SUPIKMENUBAR_ITEM_SELECTED "#EEEEEE"
@@ -44,8 +45,9 @@ private:
     void ExitSupik ();
     void BackupDir();
     void RestoreDir();
-    void SysStructEdit ();
-    void SettingsEdit ();
+    void SysStructEdit();
+    void SettingsEdit();
+    void SysImportClass();
     void ProbCheck();
     void WhIncome();
     void WhOutgoing();

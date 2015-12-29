@@ -289,8 +289,10 @@ int TreeModel::Setup(QString Table)
     // 2
     int idalpos=-1;
     bool IsIdAliasExist = false, IsAliasExist = false;
+    TableHeaders.clear();
     for (i = 0; i < vl.size(); i++)
     {
+        TableHeaders << vl.at(i).at(1); // формирование списка полей
         if (vl.at(i).at(1) == "idalias")
         {
             idalpos = i;
@@ -308,7 +310,8 @@ int TreeModel::Setup(QString Table)
     }
     // 3
     QStringList tmpsl = vl.at(idalpos).at(0).split("."); // tmpsl - таблица в виде db.tble
-    vl.removeAt(idalpos); // не включать ИД в заголовок
+    vl.removeAt(idalpos); // не включать ИД_а в заголовок
+    TableHeaders.removeAt(idalpos); // не включать ИД_а в список полей отображения
     for (i = 0; i < vl.size(); i++)
     {
         insertColumns(i,1,QModelIndex());
@@ -322,6 +325,7 @@ int TreeModel::Setup(QString Table)
     }
     MainDb = tmpsl.at(0);
     MainTable = tmpsl.at(1);
+    TableHeaders.removeAll("id"+MainTable); // убираем из списка полей ИД, т.к. он всегда добавляется в BuildTree на первое место
     int res = BuildTree("0", false);
     if (res)
     {
@@ -408,23 +412,36 @@ int TreeModel::BuildTree(QString id, bool twodb)
     else // для некорневого надо нарисовать первый элемент его самого с открытой книгой
     {
         QSqlQuery get_child_from_db0 (sqlc.GetDB(MainDb));
-        tmps = "SELECT `alias` FROM `"+MainTable+"` WHERE `id"+MainTable+"`=\""+id+"\" AND `deleted`=0 LIMIT 1;";
+        tmps = "SELECT ";
+        for (int i=0; i<TableHeaders.size(); i++)
+            tmps += "`"+TableHeaders.at(i)+"`,";
+        tmps.chop(1); // последняя запятая долой
+        tmps += " FROM `"+MainTable+"` WHERE `id"+MainTable+"`=\""+id+"\" AND `deleted`=0 LIMIT 1;";
+//        tmps = "SELECT `alias` FROM `"+MainTable+"` WHERE `id"+MainTable+"`=\""+id+"\" AND `deleted`=0 LIMIT 1;";
         get_child_from_db0.exec(tmps);
         get_child_from_db0.next();
-        tmpsl = QStringList() << QString("%1").arg(id.toInt(0), 7, 10, QChar('0')) << get_child_from_db0.value(0).toString();
+        tmpsl = QStringList() << QString("%1").arg(id.toInt(0), 7, 10, QChar('0'));
+        for (int i=0; i<TableHeaders.size(); i++)
+            tmpsl << get_child_from_db0.value(i).toString();
         AddItemToTree(tmpsl);
         SetLastItem(Colors[4], Fonts[4], Icons[4]); // раскрытая книга
     }
     QSqlQuery get_child_from_db1 (sqlc.GetDB(MainDb));
-    tmps = "SELECT `alias`,`id"+MainTable+"` FROM `"+MainTable+"` WHERE `idalias`=\""+id+"\" AND `deleted`=0 ORDER BY `id"+MainTable+"` ASC;";
+    tmps = "SELECT `id"+MainTable+"`,";
+    for (int i=0; i<TableHeaders.size(); i++)
+        tmps += "`"+TableHeaders.at(i)+"`,";
+    tmps.chop(1); // последняя запятая долой
+    tmps += " FROM `"+MainTable+"` WHERE `idalias`=\""+id+"\" AND `deleted`=0 ORDER BY `id"+MainTable+"` ASC;";
     get_child_from_db1.exec(tmps);
     while (get_child_from_db1.next())
     {
-        QString RootId = get_child_from_db1.value(1).toString();
-        tmpsl = QStringList() << QString("%1").arg(RootId.toInt(0), 7, 10, QChar('0')) << get_child_from_db1.value(0).toString();
+        QString RootId = get_child_from_db1.value(0).toString();
+        tmpsl = QStringList() << QString("%1").arg(RootId.toInt(0), 7, 10, QChar('0'));
+        for (int i=0; i<TableHeaders.size(); i++)
+            tmpsl << get_child_from_db1.value(i+1).toString();
         AddItemToTree(tmpsl);
         QSqlQuery get_child_from_db2 (sqlc.GetDB(MainDb));
-        tmps = "SELECT `alias`,`id"+MainTable+"` FROM `"+MainTable+"` WHERE `idalias`=\""+RootId+"\" AND `deleted`=0 LIMIT 1;"; // если есть хотя бы один потомок, надо ставить "книжку"
+        tmps = "SELECT `alias` FROM `"+MainTable+"` WHERE `idalias`=\""+RootId+"\" AND `deleted`=0 LIMIT 1;"; // если есть хотя бы один потомок, надо ставить "книжку"
         get_child_from_db2.exec(tmps);
         if (get_child_from_db2.next()) // есть потомки
             SetLastItem(Colors[4],Fonts[4],Icons[3]); // закрытая книга
@@ -483,11 +500,7 @@ int TreeModel::BuildTree(QString id, bool twodb)
 
 void TreeModel::AddItemToTree(QStringList sl)
 {
-    int LastIndex;
-    if (rowCount() == 0)
-        LastIndex = 0;
-    else
-        LastIndex = rowCount();
+    int LastIndex = rowCount();
     insertRows(LastIndex, 1);
     for (int column = 0; column < sl.size(); ++column)
         setData(index(LastIndex, column, QModelIndex()), sl.at(column), Qt::EditRole);

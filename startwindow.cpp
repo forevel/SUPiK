@@ -246,7 +246,10 @@ void StartWindow::OpenSettingsDialog()
 void StartWindow::OpenAndCheckDB(QSqlDatabase db, int signid)
 {
     if (!db.open())
+    {
+        QString tmps = db.lastError().text();
         ERMSG(PublicClass::ER_START,__LINE__,db.lastError().text());
+    }
     else
         emit DBOpened(signid);
 }

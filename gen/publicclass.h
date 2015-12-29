@@ -24,7 +24,7 @@ QT_END_NAMESPACE
 
 #include "publiclang.h"
 
-#define PROGVER    "1.0.292"
+#define PROGVER    "1.0.294"
 
 // Макросы для выдачи сообщений
 #define ERMSG(...)     pc.AddErrMsg(PublicClass::ER_MSG,__VA_ARGS__)

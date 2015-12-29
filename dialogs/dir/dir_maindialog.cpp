@@ -189,7 +189,7 @@ void dir_maindialog::ShowSlaveTree(QString str)
         return;
     }
     QStringList fields, values;
-    int i, res;
+    int res;
     slvtble = str; // для функций удаления и добавления необходимо знать имя текущей таблицы
     if (str.contains("карантин", Qt::CaseInsensitive))
         IsQuarantine = true;

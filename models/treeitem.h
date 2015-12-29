@@ -17,12 +17,7 @@ public:
     bool SetData(int Column, const QString &Value);
 //    bool setLinksData(int column, const QString &value);
 
-    TreeItem *Parent();
-    TreeItem *Child(int Row);
-    int ChildCount() const;
     int ColumnCount() const;
-    TreeItem *InsertChild(int Position, int Columns);
-    bool RemoveChildren(int Position, int Count);
     bool RemoveColumns(int Position, int Columns);
     int Row() const;
     void SetColor(int Column, QColor Color);
@@ -41,5 +36,4 @@ private:
     QList<QFont> ItemFont;
     QList<QIcon> ItemIcon;
 };
-//Q_DECLARE_METATYPE(TreeItem *)
 #endif // TREEITEM_H

@@ -55,6 +55,7 @@ private:
 
     QList<TreeItem *> maindata;
     QStringList hdr;
+    QStringList TableHeaders;
     QString MainDb, MainTable;
     QStack<QString> RootIDs;
 /*    QString Slvtble;

@@ -20,14 +20,6 @@ QString TreeItem::Data(int Column) const
         return QString();
 }
 
-/*QString TreeItem::linksdata(int column) const
-{
-    if (column < linksData.size())
-        return linksData.at(column);
-    else
-        return QString();
-}*/
-
 bool TreeItem::SetData(int Column, const QString &Value)
 {
     if (Column < 0)
@@ -50,19 +42,6 @@ bool TreeItem::SetData(int Column, const QString &Value)
     return true;
 }*/
 
-TreeItem *TreeItem::Child(int Row)
-{
-    if ((Row < ChildItems.size()) && (Row != -1))
-        return ChildItems.at(Row);
-    else
-        return 0;
-}
-
-int TreeItem::ChildCount() const
-{
-    return ChildItems.count();
-}
-
 int TreeItem::Row() const
 {
     if (ParentItem)
@@ -73,31 +52,6 @@ int TreeItem::Row() const
 int TreeItem::ColumnCount() const
 {
     return ItemData.count();
-}
-
-TreeItem *TreeItem::InsertChild(int Position, int Columns)
-{
-    if (Position < 0)
-        return 0;
-    TreeItem *Item = new TreeItem(this);
-    if (Position < ChildItems.size())
-        ChildItems.insert(Position, Item);
-    else
-        ChildItems.append(Item);
-    return Item;
-}
-
-TreeItem *TreeItem::Parent()
-{
-    return ParentItem;}
-
-bool TreeItem::RemoveChildren(int Position, int Count)
-{
-    if (Position < 0 || ((Position + Count) > ChildItems.size()))
-        return false;
-    for (int row = 0; row < Count; ++row)
-        delete ChildItems.takeAt(Position);
-    return true;
 }
 
 bool TreeItem::RemoveColumns(int Position, int Columns)

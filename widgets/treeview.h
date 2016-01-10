@@ -28,12 +28,4 @@ protected:
 
 };
 
-class TreeViewstyle : public QProxyStyle
-{
-    Q_OBJECT
-public:
-    explicit TreeViewstyle();
-    void drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, QPainter *p, const QWidget *w) const;
-};
-
 #endif // TREEVIEW_H

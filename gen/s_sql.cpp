@@ -482,7 +482,7 @@ QString s_sql::GetValueFromTableByField (QSqlDatabase db, QString tble, QString 
     exec_db.exec(tmpString);
     if (!exec_db.isActive())
     {
-        result = 2;
+        result = SQLC_FAILED;
         SQLWARN;
         return QString();
     }
@@ -490,10 +490,10 @@ QString s_sql::GetValueFromTableByField (QSqlDatabase db, QString tble, QString 
     if (exec_db.isValid())
     {
         vl = exec_db.value(0).toString();
-        result = 0;
+        result = SQLC_OK;
         return vl;
     }
-    result = 1;
+    result = SQLC_EMPTY;
     return QString();
 }
 
@@ -527,7 +527,7 @@ QString s_sql::GetValueFromTableByFields (QSqlDatabase db, QString tble, QString
     exec_db.exec(tmpString);
     if (!exec_db.isActive())
     {
-        result = 2;
+        result =SQLC_FAILED;
         SQLWARN;
         return QString();
     }
@@ -535,10 +535,10 @@ QString s_sql::GetValueFromTableByFields (QSqlDatabase db, QString tble, QString
     if (exec_db.isValid())
     {
         vl = exec_db.value(0).toString();
-        result = 0;
+        result = SQLC_OK;
         return vl;
     }
-    result = 1;
+    result = SQLC_EMPTY;
     return QString();
 }
 

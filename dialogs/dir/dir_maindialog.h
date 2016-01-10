@@ -40,7 +40,8 @@ private:
     bool MainTVIsTree, SlaveTVIsTree, IsQuarantine;
     bool firstShow, twodb, isNewID;
     QSqlDatabase db;
-    QString tble,slvtble, SlaveParentTableName;
+    QString tble, SlaveTable, SlaveParentTableName;
+    QStringList Tables;
     int SlaveTVAccess;
 //    s_ntmodel *SlaveTreeModel;
     TreeModel *SlaveTreeModel;

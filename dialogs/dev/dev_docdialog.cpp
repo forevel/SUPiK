@@ -179,8 +179,8 @@ void dev_docdialog::Unfilter()
 
 void dev_docdialog::MainItemChoosed(QModelIndex idx)
 {
-/*    Q_UNUSED(idx);
-    QApplication::setOverrideCursor(Qt::WaitCursor);
+    Q_UNUSED(idx);
+/*    QApplication::setOverrideCursor(Qt::WaitCursor);
     s_tqTableView *tv = this->findChild<s_tqTableView *>("mtv");
     if (tv == 0)
     {
@@ -221,8 +221,8 @@ void dev_docdialog::EditItem()
 */
 void dev_docdialog::SlaveItemChoosed(QModelIndex idx)
 {
-/*    Q_UNUSED(idx);
-    s_tqTableView *tv = this->findChild<s_tqTableView *>("stv");
+    Q_UNUSED(idx);
+/*    s_tqTableView *tv = this->findChild<s_tqTableView *>("stv");
     if (tv == 0)
     {
         COMPDBG;

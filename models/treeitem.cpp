@@ -31,6 +31,25 @@ bool TreeItem::SetData(int Column, const QString &Value)
     return true;
 }
 
+QString TreeItem::AData(int Column) const
+{
+    if (Column < ItemAData.size())
+        return ItemAData.at(Column);
+    else
+        return QString();
+}
+
+bool TreeItem::SetAData(int Column, const QString &Value)
+{
+    if (Column < 0)
+        return false;
+    if (Column < ItemAData.size())
+        ItemAData.replace(Column, Value);
+    else
+        ItemAData.append(Value);
+    return true;
+}
+
 /*bool TreeItem::setLinksData(int column, const QString &data)
 {
     if (column < 0)

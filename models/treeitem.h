@@ -13,8 +13,10 @@ public:
     ~TreeItem();
 
     QString Data(int Column) const;
+    QString AData(int Column) const;
 //    QString linksdata(int column) const;
     bool SetData(int Column, const QString &Value);
+    bool SetAData(int Column, const QString &Value);
 //    bool setLinksData(int column, const QString &value);
 
     int ColumnCount() const;
@@ -29,6 +31,7 @@ public:
 
 private:
     QStringList ItemData;
+    QStringList ItemAData;
     TreeItem *ParentItem;
     QList<TreeItem*> ChildItems;
 //    QStringList linksData; // содержимое вспомогательного поля

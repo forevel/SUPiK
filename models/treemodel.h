@@ -12,6 +12,9 @@
 #define TMODELWARN        WARNMSG(PublicClass::ER_TMODEL,__LINE__)
 #define TMODELINFO(a)     INFOMSG(PublicClass::ER_TMODEL,__LINE__,a)
 
+#define TM_SIMPLE_ELEMENT           "0"
+#define TM_ELEMENT_WITH_CHILDREN    "1"
+
 class TreeModel : public QAbstractTableModel
 {
     Q_OBJECT
@@ -31,15 +34,10 @@ public:
     bool insertColumns(int column, int count, const QModelIndex &parent);
     bool removeColumns(int column, int count, const QModelIndex &parent = QModelIndex());
     bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex());
-    void SetLastItem(QColor Color, QFont Font, QIcon Icon);
-    int Setup (QString Table);
-//    int Setup (QString Maintble, QString Slvtble);
-    void ClearModel();
-    void ClearOnlyData();
+    int Setup(QStringList Tables, int Type=TT_TYPE1);
+    int Setup(QString Table);
 
-    QColor Colors[7]; // определение набора цветов шрифта
-    QFont Fonts[7]; // определение набора шрифтов
-    QIcon Icons[7]; // определение набора иконок
+    int TreeType; // тип дерева (см. определение enum TreeType)
 
 signals:
 
@@ -50,20 +48,43 @@ public slots:
 private:
     enum Roles
     {
-        MyItemRole = Qt::UserRole+1
+        MyItemRole = Qt::UserRole+1,
+        SetRole = Qt::UserRole+2
     };
 
+    enum TreeTypes
+    {
+        TT_SIMPLE, // простое дерево из одной таблицы по полям idalias
+        TT_TYPE1,  // дерево типа 1, построенное по двум таблицам - первое с idalias, второе - ссылками id<tble> на первую таблицу
+        TT_TYPE2,  // дерево типа 2, построенное след. образом: 1 уровень - таблица №1 с полями id<tble1>, 2 уровень - таблица №2 с такими полями id<tble2>, которые равны
+                   // полям id<tble2> в таблице 3, причём из таблицы 3 берутся элементы, для которых id<tble1> равны id<tble1> выбранного в уровне 1 элемента
+                   // 3 уровень - элементы таблицы 3, для которых id<tble1>=id<tble1> уровня 1 И id<tble2>=id<tble2> выбранного в уровне 2
+        TT_TABLE   // таблица, не дерево (нет поля idalias)
+    };
+
+    QColor Colors[7]; // определение набора цветов шрифта
+    QFont Fonts[7]; // определение набора шрифтов
+    QIcon Icons[7]; // определение набора иконок
     QList<TreeItem *> maindata;
     QStringList hdr;
-    QStringList TableHeaders;
-    QString MainDb, MainTable;
-    QStack<QString> RootIDs;
-/*    QString Slvtble;
-    QStringList Slvtblefields, Slvtblelinks; */
+    QList<QStringList> TableHeaders;
+    QStringList DBs;
+    QStringList Tables;
+    QList<bool> TableIsTree; // список признаков, дерево это (есть поля idalias и alias) или таблица
+    int TablesNum; // количество таблиц, участвующих в работе
+    QStack<QString> RootIDs; // элементы записываются в виде: <номер_таблицы>.<ИД>
 
-    int BuildTree (QString Id, bool Twodb);
-//    int AddTreeSlvItem(int Position, QString Id);
+    int BuildTree (QString TableDotId);
+    int SetFirstTreeElement(int Table, QString Id);
+    int SetTree(int Table, QString Id);
+    int SetTable(int Table, QString Id);
+    int SetNextTree(int Table, QString Id);
+    int SetNextTable(int Table, QString Id);
     void AddItemToTree(QStringList Fields);
+    int PrepareTable(QString Table); // подготовить очередные TableHeaders, DBs и Tables по таблице Table
+    void SetLastItem(QColor Color, QFont Font, QIcon Icon, QString AData="0");
+    void ClearModel();
+    void ClearOnlyData();
 };
 
 #endif // TREEMODEL_H

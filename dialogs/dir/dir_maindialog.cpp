@@ -11,6 +11,7 @@
 #include "../../widgets/s_tqtableview.h"
 #include "../../widgets/s_tqsplitter.h"
 #include "../../models/s_duniversal.h"
+#include "../../models/griddelegate.h"
 #include "../../models/s_ntmodel.h"
 #include "../../models/s_ncmodel.h"
 
@@ -67,13 +68,10 @@ void dir_maindialog::SetupUI()
     hlyout->setAlignment(lbl, Qt::AlignRight);
     lyout->addLayout(hlyout);
 
-//    s_tqTreeView *SlaveTV = new s_tqTreeView;
-//    QTreeView *SlaveTV = new QTreeView;
     TreeView *SlaveTV = new TreeView;
     s_tqTableView *SlaveTbV = new s_tqTableView;
     s_tqTableView *MainTV = new s_tqTableView;
     MainTableModel = new s_ncmodel;
-//    SlaveTreeModel = new s_ntmodel;
     SlaveTreeModel = new TreeModel;
     SlaveTableModel = new s_ncmodel;
     MainTV->setObjectName("MainTV");
@@ -97,9 +95,10 @@ void dir_maindialog::SetupUI()
     MainTV->horizontalHeader()->setVisible(false);
     MainTV->verticalHeader()->setVisible(false);
     s_duniversal *gridItemDelegate = new s_duniversal;
+    GridDelegate *MainDelegate = new GridDelegate;
     MainTV->setItemDelegate(gridItemDelegate);
-    SlaveTbV->setItemDelegate(gridItemDelegate);
-    SlaveTV->setItemDelegate(gridItemDelegate);
+//    SlaveTbV->setItemDelegate(gridItemDelegate);
+    SlaveTV->setItemDelegate(MainDelegate);
     MainTV->resizeColumnsToContents();
     MainTV->resizeRowsToContents();
     QApplication::restoreOverrideCursor();
@@ -126,8 +125,6 @@ void dir_maindialog::SetupUI()
     s_tqFrame *right = new s_tqFrame;
     QVBoxLayout *rlyout = new QVBoxLayout;
     rlyout->addWidget(SlaveTV);
-    rlyout->addWidget(SlaveTbV);
-    SlaveTV->setVisible(false);
     right->setLayout(rlyout);
     right->setFrameStyle(QFrame::Panel | QFrame::Sunken);
     right->setLineWidth(1);
@@ -175,22 +172,20 @@ void dir_maindialog::showDirDialog(QModelIndex idx)
 void dir_maindialog::ShowSlaveTree(QString str)
 {
     TreeView *SlaveTV = this->findChild<TreeView *>("SlaveTV");
-//    s_tqTreeView *SlaveTV = this->findChild<s_tqTreeView *>("SlaveTV");
-//    QTreeView *SlaveTV = this->findChild<QTreeView *>("SlaveTV");
     if (SlaveTV == 0)
     {
         DBGMSG(PublicClass::ER_DIRMAIN,__LINE__);
         return;
     }
-    s_tqTableView *SlaveTbV = this->findChild<s_tqTableView *>("SlaveTbV");
+/*    s_tqTableView *SlaveTbV = this->findChild<s_tqTableView *>("SlaveTbV");
     if (SlaveTbV == 0)
     {
         DBGMSG(PublicClass::ER_DIRMAIN,__LINE__);
         return;
-    }
+    } */
     QStringList fields, values;
     int res;
-    slvtble = str; // для функций удаления и добавления необходимо знать имя текущей таблицы
+    SlaveTable = str; // для функций удаления и добавления необходимо знать имя текущей таблицы
     if (str.contains("карантин", Qt::CaseInsensitive))
         IsQuarantine = true;
     else
@@ -202,19 +197,25 @@ void dir_maindialog::ShowSlaveTree(QString str)
     {
         if (values.at(2).toUInt(0,16) & pc.access)
         {
+            Tables.clear();
+            QStringList sl;
             if (!values.at(1).isEmpty()) // есть родительские категории у справочника
             {
-                SlaveParentTableName = values.at(1);
+//                SlaveParentTableName = values.at(1);
+                Tables << values.at(1) << values.at(0);
                 twodb = true;
 //                res = SlaveTreeModel->Setup(values.at(1)+"_сокращ",values.at(0)+"_сокращ");
-                res = SlaveTreeModel->Setup(values.at(1)+"_сокращ");
+                //res = SlaveTreeModel->Setup(values.at(1)+"_сокращ");
+                sl << values.at(1)+"_сокращ" << values.at(0)+"_сокращ";
             }
             else
             {
                 twodb = false;
-                res = SlaveTreeModel->Setup(values.at(0) + "_сокращ");
+                Tables << values.at(0);
+                sl << values.at(0) + "_сокращ";
             }
-            if (res == PublicClass::ER_TMODEL) // это не дерево
+            res = SlaveTreeModel->Setup(sl);
+/*            if (res == PublicClass::ER_TMODEL) // это не дерево
             {
                 SlaveTableModel->setup(values.at(0) + "_сокращ");
                 if (SlaveTableModel->result)
@@ -233,20 +234,19 @@ void dir_maindialog::ShowSlaveTree(QString str)
                 SlaveTbV->resizeRowsToContents();
             }
             else
-            {
+            { */
                 SlaveTVIsTree = true;
-                SlaveTbV->setVisible(false);
-                SlaveTV->setVisible(true);
+//                SlaveTbV->setVisible(false);
 //                SlaveTV->header()->setDefaultAlignment(Qt::AlignCenter);
-                SlaveTV->horizontalHeader()->setDefaultAlignment(Qt::AlignCenter);
+//                SlaveTV->horizontalHeader()->setDefaultAlignment(Qt::AlignCenter);
 //                SlaveTV->header()->setVisible(true);
-                SlaveTV->horizontalHeader()->setVisible(true);
+//                SlaveTV->horizontalHeader()->setVisible(true);
 //                SlaveTV->setIndentation(2);
 //                SlaveTV->setAnimated(false);
 //                for (i = 0; i < SlaveTV->header()->count(); i++)
 //                    SlaveTV->resizeColumnToContents(i);
                 SlaveTV->resizeColumnsToContents();
-            }
+//            }
             SlaveTVAccess = values.at(2).toLongLong(0, 16);
         }
         else
@@ -297,8 +297,8 @@ QString dir_maindialog::getSlaveIndex(int column)
         }
         tmpString = SlaveTbV->model()->index(SlaveTbV->currentIndex().row(),column,QModelIndex()).data(Qt::DisplayRole).toString();
     }
-    if (!column) // в нулевом столбце всегда ИД элемента с нулями в начале, надо незначащие нули убрать
-        tmpString = QString::number(tmpString.toInt(0));
+//    if (!column) // в нулевом столбце всегда ИД элемента с нулями в начале, надо незначащие нули убрать
+//        tmpString = QString::number(tmpString.toInt(0));
     return tmpString;
 }
 
@@ -344,34 +344,46 @@ void dir_maindialog::EditItem(QString str)
         DIRMWARN;
         return;
     }
-    s_2cdialog *newdialog = new s_2cdialog(tble+":"+tmps);
+    QStringList sl = str.split(".");
+    QString Table, Id;
+    if (sl.size()>1)
+    {
+        Table = Tables.at(sl.at(0).toInt());
+        Id = QString::number(sl.at(1).toInt());
+    }
+    else
+    {
+        Table = Tables.at(0);
+        Id = QString::number(str.toInt());
+    }
+    s_2cdialog *newdialog = new s_2cdialog(tmps+":"+Id);
     int Mode = (isNewID) ? MODE_EDITNEW : MODE_EDIT;
-    newdialog->setup(tmps+"_полн",Mode,str);
+    newdialog->setup(Table+"_полн",Mode,Id);
     if (newdialog->result)
         DIRMWARN;
     else
         newdialog->exec();
-    ShowSlaveTree(slvtble);
+    ShowSlaveTree(SlaveTable);
 }
 
 void dir_maindialog::AddNew()
 {
     isNewID = true;
-    QString newID = tfl.insert(slvtble+"_полн");
+    QString newID = tfl.insert(SlaveTable+"_полн");
     QString tmpString = getSlaveIndex(0);
     QStringList fl, vl;
     if ((!tmpString.isEmpty()) && (SlaveTVIsTree) && (!twodb)) // если из двух таблиц, то создавать элемент надо в подчиннённой таблице
     {
         fl << "ИД" << "ИД_а";
         vl << newID << tmpString;
-        tfl.idtois(slvtble+"_полн",fl,vl);
+        tfl.idtois(SlaveTable+"_полн",fl,vl);
     }
     else if (twodb)
     {
         QString ParentID = getSlaveIndex(0); // берём ИД "родительского" элемента
         QString SlaveHeader;
         QSqlQuery GetTableFields(sqlc.GetDB("sup"));
-        GetTableFields.exec("SELECT `header` FROM `tablefields` WHERE `tablename`=\"" + slvtble + "_полн\" AND `links` LIKE \"%" \
+        GetTableFields.exec("SELECT `header` FROM `tablefields` WHERE `tablename`=\"" + SlaveTable + "_полн\" AND `links` LIKE \"%" \
                             + SlaveParentTableName + "%\";");
         if (GetTableFields.isActive())
         {
@@ -381,7 +393,7 @@ void dir_maindialog::AddNew()
             {
                 fl = QStringList() << "ИД" << SlaveHeader;
                 vl = QStringList() << newID << ParentID;
-                tfl.idtois(slvtble+"_полн", fl, vl);
+                tfl.idtois(SlaveTable+"_полн", fl, vl);
                 if (tfl.result)
                 {
                     DIRMWARN;
@@ -418,7 +430,7 @@ void dir_maindialog::DeleteData()
 
 void dir_maindialog::DeleteDataUnconditional(QString id)
 {
-    tfl.remove(slvtble+"_полн", id);
+    tfl.remove(SlaveTable+"_полн", id);
     if (tfl.result)
     {
         DIRMWARN;

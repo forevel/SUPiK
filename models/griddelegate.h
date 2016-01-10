@@ -1,18 +1,13 @@
-#ifndef S_DUNIVERSAL_H
-#define S_DUNIVERSAL_H
+#ifndef GRIDDELEGATE_H
+#define GRIDDELEGATE_H
 
 #include <QStyledItemDelegate>
-#include "../gen/publicclass.h"
-#include "../widgets/s_tqchoosewidget.h"
 
-class s_duniversal : public QStyledItemDelegate
+class GridDelegate : public QStyledItemDelegate
 {
     Q_OBJECT
 public:
-    explicit s_duniversal(QObject *parent = 0);
-    QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const;
-    void setEditorData (QWidget *editor, const QModelIndex &index) const;
-    void setModelData (QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const;
+    explicit GridDelegate(QObject *parent = 0);
     virtual void paint (QPainter *painter, const QStyleOptionViewItem& option, const QModelIndex& index ) const;
 
 public slots:
@@ -20,11 +15,8 @@ public slots:
 protected:
 
 private slots:
-    void CommitChanges(QVariant);
 
 private:
-    mutable PublicClass::fieldformat ff;
-    mutable s_tqChooseWidget *wdgt;
 };
 
-#endif // S_DUNIVERSAL_H
+#endif // GRIDDELEGATE_H

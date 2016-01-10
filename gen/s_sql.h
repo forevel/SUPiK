@@ -6,6 +6,11 @@
 #include <QSqlQuery>
 
 #define SQLWARN WARNMSG(PublicClass::ER_SQL, __LINE__, exec_db.lastError().text())
+
+#define SQLC_OK     0
+#define SQLC_EMPTY  1
+#define SQLC_FAILED 2
+
 class s_sql
 {
 public:

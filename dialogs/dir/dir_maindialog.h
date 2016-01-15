@@ -13,6 +13,7 @@
 #define DIRMDBG         DBGMSG(PublicClass::ER_DIRMAIN,__LINE__)
 #define DIRMWARN        WARNMSG(PublicClass::ER_DIRMAIN,__LINE__)
 #define DIRMINFO(a)     INFOMSG(PublicClass::ER_DIRMAIN,__LINE__,a)
+#define DIRMER(a)       ERMSG(PublicClass::ER_DIRMAIN,__LINE__,a)
 
 class dir_maindialog : public QDialog
 {
@@ -37,15 +38,13 @@ private slots:
     void AddNew();
 
 private:
-    bool MainTVIsTree, SlaveTVIsTree, IsQuarantine;
-    bool firstShow, twodb, isNewID;
-    QSqlDatabase db;
-    QString tble, SlaveTable, SlaveParentTableName;
+    bool IsQuarantine;
+    bool isNewID;
+    QString SlaveTable, SlaveParentTableName;
     QStringList Tables;
     int SlaveTVAccess;
-//    s_ntmodel *SlaveTreeModel;
     TreeModel *SlaveTreeModel;
-    s_ncmodel *MainTableModel, *SlaveTableModel;
+    s_ncmodel *MainTableModel;
     quint32 result;
 
     void SetupUI();
@@ -60,7 +59,6 @@ private:
     QString getSlaveIndex(int column);
 
 protected:
-    void showEvent(QShowEvent *e);
     void paintEvent(QPaintEvent *e);
 };
 

@@ -68,6 +68,7 @@ private:
     QList<TreeItem *> maindata;
     QStringList hdr;
     QList<QStringList> TableHeaders;
+    QList<QStringList> TableLinks;
     QStringList DBs;
     QStringList Tables;
     QList<bool> TableIsTree; // список признаков, дерево это (есть поля idalias и alias) или таблица

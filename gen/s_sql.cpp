@@ -847,6 +847,11 @@ QList<QStringList> s_sql::GetMoreValuesFromTableByField(QSqlDatabase db, QString
     }
     tmpString += ";";
     exec_db.exec(tmpString);
+    if (!exec_db.isActive())
+    {
+        result = 2;
+        return QList<QStringList>();
+    }
     while (exec_db.next())
     {
         tmpsl.clear();

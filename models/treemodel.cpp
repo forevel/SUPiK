@@ -341,7 +341,7 @@ int TreeModel::PrepareTable(QString Table)
         TMODELWARN;
         return 1;
     }
-    QStringList fl = QStringList() << "table" << "tablefields" << "header";
+    QStringList fl = QStringList() << "table" << "tablefields" << "header" << "links";
     QList<QStringList> vl = sqlc.GetMoreValuesFromTableByField(sqlc.GetDB("sup"), "tablefields", fl, "tablename", Table, "fieldsorder", true);
     if (sqlc.result)
     {
@@ -353,16 +353,18 @@ int TreeModel::PrepareTable(QString Table)
     int idpos = -1;
     bool IsIdAliasExist = false, IsAliasExist = false;
     QStringList TableHeadersSl;
+    QStringList TableLinksSl;
 
     // ищем ключевые поля - idalias, alias и id<tble>
     for (i = 0; i < vl.size(); i++)
     {
-        if (vl.at(i).size()<3)
+        if (vl.at(i).size()<4)
         {
             TMODELWARN;
             return 1;
         }
         TableHeadersSl.append(vl.at(i).at(1));
+        TableLinksSl.append(vl.at(i).at(3));
         if (vl.at(i).at(1) == "idalias")
         {
             idalpos = i;
@@ -399,10 +401,18 @@ int TreeModel::PrepareTable(QString Table)
     // обновляем списки заголовков, БД и таблиц
     QStringList tmpsl = vl.at(idpos).at(0).split("."); // tmpsl - таблица в виде db.tble
     if (idpos != -1)
+    {
         TableHeadersSl.removeAt(idpos); // убираем поле ИД, т.к. оно при построении дерева всё равно будет добавлено
+        TableLinksSl.removeAt(idpos);
+    }
     if (idalpos != -1)
-        TableHeadersSl.removeAt(idalpos); // убираем поле ИД_а, т.к. это вспомогательное поле, и его показывать не нужно
+    {
+        int idx = TableHeadersSl.indexOf("idalias");
+        TableHeadersSl.removeAll("idalias"); // убираем поле ИД_а, т.к. это вспомогательное поле, и его показывать не нужно
+        TableLinksSl.removeAt(idx);
+    }
     TableHeaders.append(TableHeadersSl); // список полей, которые необходимо отображать в дереве
+    TableLinks.append(TableLinksSl);
     int ColumnNeeded = TableHeadersSl.size()+1; // +1 на ИД
     if (columnCount()<ColumnNeeded) // если число столбцов в дереве меньше числа полей в очередной таблице
     {
@@ -489,6 +499,8 @@ int TreeModel::SetFirstTreeElement(int Table, QString Id)
         return 1;
     }
     tmpsl.insert(0,QString("%1").arg(Id.toInt(0), 7, 10, QChar('0')));
+    for (int j=1; j<tmpsl.size(); j++)
+        tmpsl.replace(j, tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j)));
     AddItemToTree(tmpsl);
     SetLastItem(Colors[4], Fonts[4], Icons[4], TM_ELEMENT_WITH_CHILDREN); // раскрытая книга
     return 0;
@@ -510,6 +522,8 @@ int TreeModel::SetTree(int Table, QString Id)
         tmpsl = vl.at(i);
         QString RootId = tmpsl.at(0);
         tmpsl.replace(0, QString::number(Table)+"."+QString("%1").arg(tmpsl.at(0).toInt(0), 7, 10, QChar('0'))); // добавка нулей
+        for (int j=1; j<tmpsl.size(); j++)
+            tmpsl.replace(j, tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j)));
         AddItemToTree(tmpsl);
         // проверка наличия потомков у элемента
         QString tmps = sqlc.GetValueFromTableByField(sqlc.GetDB(DBs.at(Table)), Tables.at(Table), "alias", "idalias", RootId);
@@ -547,6 +561,8 @@ int TreeModel::SetTable(int Table, QString Id)
             tmpsl = vl.at(i);
             QString RootId = tmpsl.at(0);
             tmpsl.replace(0, QString::number(Table)+"."+QString("%1").arg(RootId.toInt(),7, 10, QChar('0'))); // добавка нулей
+            for (int j=1; j<tmpsl.size(); j++)
+                tmpsl.replace(j, tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j)));
             AddItemToTree(tmpsl);
             // проверка наличия потомков у элемента
             if (NewTableExist) // если дальше ещё есть таблицы
@@ -585,6 +601,8 @@ int TreeModel::SetNextTree(int Table, QString Id)
         tmpsl = vl.at(i);
         QString RootId = tmpsl.at(0);
         tmpsl.replace(0, QString::number(Table)+"."+QString("%1").arg(tmpsl.at(0).toInt(0), 7, 10, QChar('0'))); // добавка нулей
+        for (int j=1; j<tmpsl.size(); j++)
+            tmpsl.replace(j, tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j)));
         AddItemToTree(tmpsl);
         // проверка наличия потомков у элемента
         QString tmps = sqlc.GetValueFromTableByField(sqlc.GetDB(DBs.at(Table)), Tables.at(Table), "alias", "idalias", RootId);
@@ -608,7 +626,7 @@ int TreeModel::SetNextTable(int Table, QString Id)
     QStringList tmpsl = TableHeaders.at(Table);
     tmpsl.insert(0, "id"+Tables.at(Table));
     QList<QStringList> vl = sqlc.GetMoreValuesFromTableByField(sqlc.GetDB(DBs.at(Table)), Tables.at(Table), tmpsl, "id"+Tables.at(Table-1), Id, "id"+Tables.at(Table));
-    if (sqlc.result)
+    if (sqlc.result == 2)
     {
         TMODELWARN;
         return 1;
@@ -620,6 +638,8 @@ int TreeModel::SetNextTable(int Table, QString Id)
         tmpsl = vl.at(i);
         QString RootId = tmpsl.at(0);
         tmpsl.replace(0, QString::number(Table)+"."+QString("%1").arg(tmpsl.at(0).toInt(0), 7, 10, QChar('0'))); // добавка нулей
+        for (int j=1; j<tmpsl.size(); j++)
+            tmpsl.replace(j, tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j)));
         AddItemToTree(tmpsl);
         if (NewTableExist) // если дальше ещё есть таблицы
         {
@@ -659,6 +679,7 @@ void TreeModel::ClearModel()
     DBs.clear();
     Tables.clear();
     TableHeaders.clear();
+    TableLinks.clear();
     TableIsTree.clear();
     endResetModel();
 }

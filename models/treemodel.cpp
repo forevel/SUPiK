@@ -65,12 +65,6 @@ QVariant TreeModel::data(const QModelIndex &index, int role) const
                 return QVariant::fromValue(QIcon(maindata.at(index.row())->Icon(index.column())));
             else if (role == SetRole)
                 return maindata.at(index.row())->AData(index.column());
-/*            else if (role == Qt::UserRole)
-                return maindata.at(index.row())->linksdata(index.column());
-            else if (role == Qt::UserRole+1)
-                return maindata.at(index.row())->AData();
-            else if (role == Qt::UserRole+2)
-                return maindata.at(index.row())->TData(index.column()); */
         }
     }
     return QVariant();
@@ -154,7 +148,6 @@ bool TreeModel::insertRows(int row, int count, const QModelIndex &parent)
         for (j = 0; j < hdr.size(); j++)
         {
             Item->SetData(j, "");
-//            Item->setLinksData(j, "");
         }
         maindata.insert(row, Item);
     }
@@ -233,7 +226,6 @@ void TreeModel::GoIntoIndex(QModelIndex idx)
         return;
     // 1
     QString IndexID = data(index(idx.row(),0,QModelIndex()),Qt::DisplayRole).toString(); // ИД должен быть в нулевом столбце
-//    IndexID = QString::number(IndexID.toInt());
     // 2
     RootIDs.push(IndexID);
     // 3
@@ -241,31 +233,6 @@ void TreeModel::GoIntoIndex(QModelIndex idx)
     // 4
     if (BuildTree(IndexID))
         TMODELWARN;
-}
-
-// слот, вызываемый по закрытию элемента
-
-void TreeModel::GoOut(QModelIndex index)
-{
-    Q_UNUSED(index);
-    // 1. проверить, если в стеке остался только один элемент ("0"), выйти
-    // 2. выкинуть из стека один элемент
-    // 3. очистить модель
-    // 4. построить новую модель от последнего элемента в стеке
-
-    // 1
-    if (RootIDs.size() == 1)
-        return;
-    // 2
-    RootIDs.pop();
-    // 3
-    ClearOnlyData();
-    // 4
-    if (BuildTree(RootIDs.top()))
-    {
-        TMODELWARN;
-        return;
-    }
 }
 
 // установка цвета, шрифта и иконки у последнедобавленного элемента
@@ -289,12 +256,12 @@ void TreeModel::SetLastItem(QColor Color, QFont Font, QIcon Icon, QString AData)
 int TreeModel::Setup(QString Table)
 {
     QStringList sl = QStringList() << Table;
-    TreeType = TT_SIMPLE;
-    return Setup(sl);
+    return Setup(sl, TT_SIMPLE);
 }
 
 int TreeModel::Setup(QStringList Tables, int Type)
 {
+    TreeType = Type;
     ClearModel();
 
     // 1. взять столбцы tablefields из tablefields, где tablename=table
@@ -314,17 +281,6 @@ int TreeModel::Setup(QStringList Tables, int Type)
     {
         if (PrepareTable(Tables.at(i)))
             return 1;
-    }
-    switch (Type)
-    {
-    case 1:
-        TreeType = TT_TYPE1;
-        break;
-    case 2:
-        TreeType = TT_TYPE2;
-        break;
-    default:
-        break;
     }
     if (BuildTree("0.0")) // элементы записываются в виде: <номер_таблицы>.<ИД>
     {
@@ -349,7 +305,6 @@ int TreeModel::PrepareTable(QString Table)
         return 1;
     }
     int i;
-    int idalpos = -1;
     int idpos = -1;
     bool IsIdAliasExist = false, IsAliasExist = false;
     QStringList TableHeadersSl;
@@ -358,22 +313,23 @@ int TreeModel::PrepareTable(QString Table)
     // ищем ключевые поля - idalias, alias и id<tble>
     for (i = 0; i < vl.size(); i++)
     {
-        if (vl.at(i).size()<4)
+        QStringList sl = vl.at(i);
+        if (sl.size()<4)
+            continue;
+        if (sl.at(1) == "idalias")
         {
-            TMODELWARN;
-            return 1;
-        }
-        TableHeadersSl.append(vl.at(i).at(1));
-        TableLinksSl.append(vl.at(i).at(3));
-        if (vl.at(i).at(1) == "idalias")
-        {
-            idalpos = i;
             IsIdAliasExist = true;
+            continue;
         }
-        if (vl.at(i).at(1) == "alias")
-            IsAliasExist = true;
-        if (vl.at(i).at(2) == "ИД")
+        if (sl.at(2) == "ИД")
+        {
             idpos = i;
+            continue;
+        }
+        if (sl.at(1) == "alias")
+            IsAliasExist = true;
+        TableHeadersSl.append(sl.at(1));
+        TableLinksSl.append(sl.at(3));
     }
     if (idpos == -1)
     {
@@ -383,11 +339,7 @@ int TreeModel::PrepareTable(QString Table)
     if (!IsIdAliasExist)
     {
         if (TreeType == TT_SIMPLE)
-        {
-//        TMODELINFO("Не найдено поле idalias в таблице "+Table);
-//        return 1;
             TreeType = TT_TABLE;
-        }
         TableIsTree.append(false);
     }
     else if (!IsAliasExist) // если есть idalias, но нет alias - это не дело
@@ -398,19 +350,6 @@ int TreeModel::PrepareTable(QString Table)
     else
         TableIsTree.append(true);
 
-    // обновляем списки заголовков, БД и таблиц
-    QStringList tmpsl = vl.at(idpos).at(0).split("."); // tmpsl - таблица в виде db.tble
-    if (idpos != -1)
-    {
-        TableHeadersSl.removeAt(idpos); // убираем поле ИД, т.к. оно при построении дерева всё равно будет добавлено
-        TableLinksSl.removeAt(idpos);
-    }
-    if (idalpos != -1)
-    {
-        int idx = TableHeadersSl.indexOf("idalias");
-        TableHeadersSl.removeAll("idalias"); // убираем поле ИД_а, т.к. это вспомогательное поле, и его показывать не нужно
-        TableLinksSl.removeAt(idx);
-    }
     TableHeaders.append(TableHeadersSl); // список полей, которые необходимо отображать в дереве
     TableLinks.append(TableLinksSl);
     int ColumnNeeded = TableHeadersSl.size()+1; // +1 на ИД
@@ -419,6 +358,9 @@ int TreeModel::PrepareTable(QString Table)
         for (i = columnCount(); i < ColumnNeeded; i++) // добавим нехватающее количество столбцов в общую модель
             insertColumns(i,1,QModelIndex());
     }
+
+    // обновляем списки заголовков, БД и таблиц
+    QStringList tmpsl = vl.at(idpos).at(0).split("."); // tmpsl - таблица в виде db.tble
     if (tmpsl.size()<2)
     {
         TMODELWARN;
@@ -509,7 +451,6 @@ int TreeModel::SetFirstTreeElement(int Table, QString Id)
 int TreeModel::SetTree(int Table, QString Id)
 {
     QStringList tmpsl = TableHeaders.at(Table);
-//    tmpsl.removeAll("id"+Tables.at(Table)); // смысл этих двух строк - принудительно поставить ИД на первое место, чтобы в него добавлять нули
     tmpsl.insert(0, "id"+Tables.at(Table));
     QList<QStringList> vl = sqlc.GetMoreValuesFromTableByField(sqlc.GetDB(DBs.at(Table)), Tables.at(Table), tmpsl, "idalias", Id, "id"+Tables.at(Table));
     if (sqlc.result)
@@ -622,10 +563,38 @@ int TreeModel::SetNextTree(int Table, QString Id)
 
 int TreeModel::SetNextTable(int Table, QString Id)
 {
-    QString MainTable = Tables.at(Table);
-    QStringList tmpsl = TableHeaders.at(Table);
+    QList<QStringList> vl;
+    QString MainTable; // Table = "docclasses", Table-1 = "devices", Table+1 = "documents"
+    QStringList tmpsl;
+    if ((TreeType == TT_TYPE2) && (Table == 1)) // второй уровень для типа 2 - особенный
+    {
+        if (Tables.size() < 3)
+        {
+            TMODELWARN;
+            return;
+        }
+        tmpsl = TableHeaders.at(Table+1);
+        tmpsl.insert(0, "id"+Tables.at(Table+1));
+        vl = sqlc.GetMoreValuesFromTableByField(sqlc.GetDB(DBs.at(Table+1)), Tables.at(Table+1), tmpsl, "id"+Tables.at(Table-1), Id, "id"+Tables.at(Table+1));
+        if (sqlc.result)
+        {
+            TMODELWARN;
+            return;
+        }
+        int tmpidx = tmpsl.indexOf("id"+Tables.at(Table));
+        // надо подобрать уникальные iddocclasses
+        QStringList idsl;
+        for (int i=0; i<vl.size(); i++)
+        {
+            if (idsl.indexOf(vl.at(i).at(tmpidx)) == -1)
+                idsl << vl.at(i).at(tmpidx);
+        }
+
+    }
+    MainTable = Tables.at(Table);
+    tmpsl = TableHeaders.at(Table);
     tmpsl.insert(0, "id"+Tables.at(Table));
-    QList<QStringList> vl = sqlc.GetMoreValuesFromTableByField(sqlc.GetDB(DBs.at(Table)), Tables.at(Table), tmpsl, "id"+Tables.at(Table-1), Id, "id"+Tables.at(Table));
+    vl = sqlc.GetMoreValuesFromTableByField(sqlc.GetDB(DBs.at(Table)), Tables.at(Table), tmpsl, "id"+Tables.at(Table-1), Id, "id"+Tables.at(Table));
     if (sqlc.result == 2)
     {
         TMODELWARN;
@@ -690,7 +659,12 @@ void TreeModel::ClearOnlyData()
     while (rowCount() > 0)
         removeRows(0, 1);
     maindata.clear();
-/*    RootIDs.clear();
-    RootIDs.push("0"); */
     endResetModel();
+}
+
+void TreeModel::Refresh()
+{
+    ClearOnlyData();
+    if (BuildTree(RootIDs.top()))
+        TMODELWARN;
 }

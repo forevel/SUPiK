@@ -36,21 +36,7 @@ public:
     bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex());
     int Setup(QStringList Tables, int Type=TT_TYPE1);
     int Setup(QString Table);
-
-    int TreeType; // тип дерева (см. определение enum TreeType)
-
-signals:
-
-public slots:
-    void GoIntoIndex(QModelIndex idx);
-    void GoOut(QModelIndex idx);
-
-private:
-    enum Roles
-    {
-        MyItemRole = Qt::UserRole+1,
-        SetRole = Qt::UserRole+2
-    };
+    void Refresh();
 
     enum TreeTypes
     {
@@ -60,6 +46,20 @@ private:
                    // полям id<tble2> в таблице 3, причём из таблицы 3 берутся элементы, для которых id<tble1> равны id<tble1> выбранного в уровне 1 элемента
                    // 3 уровень - элементы таблицы 3, для которых id<tble1>=id<tble1> уровня 1 И id<tble2>=id<tble2> выбранного в уровне 2
         TT_TABLE   // таблица, не дерево (нет поля idalias)
+    };
+
+    int TreeType; // тип дерева (см. определение enum TreeType)
+
+signals:
+
+public slots:
+    void GoIntoIndex(QModelIndex idx);
+
+private:
+    enum Roles
+    {
+        MyItemRole = Qt::UserRole+1,
+        SetRole = Qt::UserRole+2
     };
 
     QColor Colors[7]; // определение набора цветов шрифта

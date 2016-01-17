@@ -40,7 +40,7 @@ private slots:
 private:
     bool IsQuarantine;
     bool isNewID;
-    QString SlaveTable, SlaveParentTableName;
+    QString MainTable;
     QStringList Tables;
     int SlaveTVAccess;
     TreeModel *SlaveTreeModel;
@@ -57,6 +57,7 @@ private:
     void EditItem(QString str);
     QString getMainIndex(int column);
     QString getSlaveIndex(int column);
+    void RefreshSlaveTV();
 
 protected:
     void paintEvent(QPaintEvent *e);

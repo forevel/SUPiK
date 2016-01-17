@@ -26,13 +26,9 @@
 dir_maindialog::dir_maindialog(QString tble, QWidget *parent) :
     QDialog(parent)
 {
-    this->tble = tble;
+    MainTable = tble;
     setAttribute(Qt::WA_DeleteOnClose);
-    firstShow = true;
-    MainTVIsTree = false;
-    SlaveTVIsTree = false;
     IsQuarantine = false;
-    twodb = false;
     isNewID = false;
     SetupUI();
 }
@@ -60,7 +56,7 @@ void dir_maindialog::SetupUI()
     hlyout->addWidget(pb);
 
     hlyout->addStretch(300);
-    s_tqLabel *lbl = new s_tqLabel(tble);
+    s_tqLabel *lbl = new s_tqLabel(MainTable);
     QFont font;
     font.setPointSize(15);
     lbl->setFont(font);
@@ -80,10 +76,10 @@ void dir_maindialog::SetupUI()
     QVBoxLayout *leftlyout = new QVBoxLayout;
 
     QApplication::setOverrideCursor(Qt::WaitCursor);
-    MainTableModel->setup(tble+"_сокращ");
+    MainTableModel->setup(MainTable+"_сокращ");
     if (MainTableModel->result)
     {
-        DBGMSG(PublicClass::ER_DIRMAIN,__LINE__,"Ошибка при построении таблицы "+tble);
+        DIRMER("Ошибка при построении таблицы "+MainTable);
         QApplication::restoreOverrideCursor();
         return;
     }
@@ -146,19 +142,18 @@ void dir_maindialog::ShowSlaveTree(QString str)
     TreeView *SlaveTV = this->findChild<TreeView *>("SlaveTV");
     if (SlaveTV == 0)
     {
-        DBGMSG(PublicClass::ER_DIRMAIN,__LINE__);
+        DIRMDBG;
         return;
     }
     QStringList fields, values;
     int res;
-    SlaveTable = str; // для функций удаления и добавления необходимо знать имя текущей таблицы
     if (str.contains("карантин", Qt::CaseInsensitive))
         IsQuarantine = true;
     else
         IsQuarantine = false;
     QApplication::setOverrideCursor(Qt::WaitCursor);
     fields << "Наименование" << "Родительский справочник" << "Права доступа";
-    values = tfl.valuesbyfield(tble+"_полн",fields,"Наименование",str);
+    values = tfl.valuesbyfield(MainTable+"_полн",fields,"Наименование",str);
     if (!tfl.result)
     {
         if (values.at(2).toUInt(0,16) & pc.access)
@@ -215,6 +210,16 @@ QString dir_maindialog::getSlaveIndex(int column)
     return tmpString;
 }
 
+void dir_maindialog::RefreshSlaveTV()
+{
+    TreeView *SlaveTV = this->findChild<TreeView *>("SlaveTV");
+    if (SlaveTV != 0)
+    {
+        TreeModel *mdl = static_cast<TreeModel *>(SlaveTV->model());
+        mdl->Refresh();
+    }
+}
+
 void dir_maindialog::EditItem()
 {
     QString tmpString = getSlaveIndex(0);
@@ -251,7 +256,7 @@ void dir_maindialog::EditItem(QString str)
         DIRMWARN;
     else
         newdialog->exec();
-    ShowSlaveTree(SlaveTable);
+    RefreshSlaveTV();
 }
 
 void dir_maindialog::AddNew()
@@ -264,7 +269,7 @@ void dir_maindialog::AddNew()
     if (SlaveTV == 0)
     {
         DIRMDBG;
-        return QString();
+        return;
     }
     TreeModel *mdl = static_cast<TreeModel *>(SlaveTV->model());
     switch (mdl->TreeType)
@@ -279,46 +284,6 @@ void dir_maindialog::AddNew()
         break;
     }
     tfl.idtois(Tables.last()+"_полн",fl,vl);
-
-    if ((!tmpString.isEmpty()) && (SlaveTVIsTree) && (!twodb)) // если из двух таблиц, то создавать элемент надо в подчиннённой таблице
-    {
-        fl << "ИД" << "ИД_а";
-        vl << newID << tmpString;
-    }
-    else if (twodb)
-    {
-        QString ParentID = getSlaveIndex(0); // берём ИД "родительского" элемента
-        QString SlaveHeader;
-        QSqlQuery GetTableFields(sqlc.GetDB("sup"));
-        GetTableFields.exec("SELECT `header` FROM `tablefields` WHERE `tablename`=\"" + SlaveTable + "_полн\" AND `links` LIKE \"%" \
-                            + SlaveParentTableName + "%\";");
-        if (GetTableFields.isActive())
-        {
-            GetTableFields.next();
-            SlaveHeader = GetTableFields.value(0).toString();
-            if (!SlaveHeader.isEmpty())
-            {
-                fl = QStringList() << "ИД" << SlaveHeader;
-                vl = QStringList() << newID << ParentID;
-                tfl.idtois(SlaveTable+"_полн", fl, vl);
-                if (tfl.result)
-                {
-                    DIRMWARN;
-                    return;
-                }
-            }
-            else
-            {
-                DIRMWARN;
-                return;
-            }
-        }
-        else
-        {
-            DIRMWARN;
-            return;
-        }
-    }
     EditItem(newID);
     isNewID = false;
 }
@@ -337,7 +302,7 @@ void dir_maindialog::DeleteData()
 
 void dir_maindialog::DeleteDataUnconditional(QString id)
 {
-    tfl.remove(SlaveTable+"_полн", id);
+    tfl.remove(Tables.last()+"_полн", id);
     if (tfl.result)
     {
         DIRMWARN;
@@ -346,7 +311,7 @@ void dir_maindialog::DeleteDataUnconditional(QString id)
     else
     {
         DIRMINFO("Удалено успешно!");
-        showDirDialog();
+        RefreshSlaveTV();
     }
 }
 
@@ -364,14 +329,14 @@ void dir_maindialog::DeleteDir()
 
 void dir_maindialog::AddDirDialog()
 {
-    dir_adddialog *AddDialog = new dir_adddialog(false, tble); // no update. В tble передаётся тип справочника ("Справочники", "Справочники системные" и т.д.)
+    dir_adddialog *AddDialog = new dir_adddialog(false, MainTable); // no update. В MainTable передаётся тип справочника ("Справочники", "Справочники системные" и т.д.)
     AddDialog->exec();
 }
 
 void dir_maindialog::EditDirDialog()
 {
     QString tmpString = getMainIndex(1);
-    dir_adddialog *EditDialog = new dir_adddialog(true, tble, tmpString+"_полн"); // В tble передаётся тип справочника ("Справочники", "Справочники системные" и т.д.)
+    dir_adddialog *EditDialog = new dir_adddialog(true, MainTable, tmpString+"_полн"); // В MainTable передаётся тип справочника ("Справочники", "Справочники системные" и т.д.)
     EditDialog->exec();
 }
 

@@ -571,7 +571,7 @@ int TreeModel::SetNextTable(int Table, QString Id)
         if (Tables.size() < 3)
         {
             TMODELWARN;
-            return;
+            return 1;
         }
         tmpsl = TableHeaders.at(Table+1);
         tmpsl.insert(0, "id"+Tables.at(Table+1));
@@ -579,7 +579,7 @@ int TreeModel::SetNextTable(int Table, QString Id)
         if (sqlc.result)
         {
             TMODELWARN;
-            return;
+            return 1;
         }
         int tmpidx = tmpsl.indexOf("id"+Tables.at(Table));
         // надо подобрать уникальные iddocclasses
@@ -589,40 +589,58 @@ int TreeModel::SetNextTable(int Table, QString Id)
             if (idsl.indexOf(vl.at(i).at(tmpidx)) == -1)
                 idsl << vl.at(i).at(tmpidx);
         }
-
-    }
-    MainTable = Tables.at(Table);
-    tmpsl = TableHeaders.at(Table);
-    tmpsl.insert(0, "id"+Tables.at(Table));
-    vl = sqlc.GetMoreValuesFromTableByField(sqlc.GetDB(DBs.at(Table)), Tables.at(Table), tmpsl, "id"+Tables.at(Table-1), Id, "id"+Tables.at(Table));
-    if (sqlc.result == 2)
-    {
-        TMODELWARN;
-        return 1;
-    }
-    int NewTable = Table+1;
-    bool NewTableExist = (NewTable < TablesNum);
-    for (int i=0; i<vl.size(); i++)
-    {
-        tmpsl = vl.at(i);
-        QString RootId = tmpsl.at(0);
-        tmpsl.replace(0, QString::number(Table)+"."+QString("%1").arg(tmpsl.at(0).toInt(0), 7, 10, QChar('0'))); // добавка нулей
-        for (int j=1; j<tmpsl.size(); j++)
-            tmpsl.replace(j, tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j)));
-        AddItemToTree(tmpsl);
-        if (NewTableExist) // если дальше ещё есть таблицы
+        tmpsl = TableHeaders.at(Table);
+        tmpsl.insert(0, "id"+Tables.at(Table));
+        for (int i=0; i<idsl.size(); i++)
         {
-            QString tmps = sqlc.GetValueFromTableByField(sqlc.GetDB(DBs.at(NewTable)), Tables.at(NewTable), "id"+Tables.at(NewTable), "id"+MainTable, RootId);
-            if (sqlc.result == SQLC_FAILED)
-            {
+            QStringList sl = sqlc.GetValuesFromTableByField(sqlc.GetDB(DBs.at(Table)), Tables.at(Table), tmpsl, "id"+Tables.at(Table), idsl.at(i));
+            if (sqlc.result)
                 TMODELWARN;
-                return 1;
-            }
-            // если есть хотя бы один потомок, надо ставить "книжку"
-            if (tmps.isEmpty()) // нет потомков
-                SetLastItem(Colors[0],Fonts[0],Icons[0],TM_SIMPLE_ELEMENT);
             else
-                SetLastItem(Colors[4],Fonts[4],Icons[3], TM_ELEMENT_WITH_CHILDREN); // закрытая книга
+            {
+                sl.replace(0, QString::number(Table)+"."+QString("%1").arg(sl.at(0).toInt(0), 7, 10, QChar('0'))); // добавка нулей
+                for (int j=1; j<sl.size(); j++)
+                    sl.replace(j, tfl.idtov(TableLinks.at(Table).at(j-1), sl.at(j)));
+                AddItemToTree(sl);
+                SetLastItem(Colors[4],Fonts[4],Icons[3], TM_ELEMENT_WITH_CHILDREN); // закрытая книга, т.к. если есть запись в таблице 2, значит, есть соответствующая запись в таблице 3
+            }
+        }
+    }
+    else
+    {
+        MainTable = Tables.at(Table);
+        tmpsl = TableHeaders.at(Table);
+        tmpsl.insert(0, "id"+Tables.at(Table));
+        vl = sqlc.GetMoreValuesFromTableByField(sqlc.GetDB(DBs.at(Table)), Tables.at(Table), tmpsl, "id"+Tables.at(Table-1), Id, "id"+Tables.at(Table));
+        if (sqlc.result == 2)
+        {
+            TMODELWARN;
+            return 1;
+        }
+        int NewTable = Table+1;
+        bool NewTableExist = (NewTable < TablesNum);
+        for (int i=0; i<vl.size(); i++)
+        {
+            tmpsl = vl.at(i);
+            QString RootId = tmpsl.at(0);
+            tmpsl.replace(0, QString::number(Table)+"."+QString("%1").arg(tmpsl.at(0).toInt(0), 7, 10, QChar('0'))); // добавка нулей
+            for (int j=1; j<tmpsl.size(); j++)
+                tmpsl.replace(j, tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j)));
+            AddItemToTree(tmpsl);
+            if (NewTableExist) // если дальше ещё есть таблицы
+            {
+                QString tmps = sqlc.GetValueFromTableByField(sqlc.GetDB(DBs.at(NewTable)), Tables.at(NewTable), "id"+Tables.at(NewTable), "id"+MainTable, RootId);
+                if (sqlc.result == SQLC_FAILED)
+                {
+                    TMODELWARN;
+                    return 1;
+                }
+                // если есть хотя бы один потомок, надо ставить "книжку"
+                if (tmps.isEmpty()) // нет потомков
+                    SetLastItem(Colors[0],Fonts[0],Icons[0],TM_SIMPLE_ELEMENT);
+                else
+                    SetLastItem(Colors[4],Fonts[4],Icons[3], TM_ELEMENT_WITH_CHILDREN); // закрытая книга
+            }
         }
     }
     return 0;

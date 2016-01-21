@@ -71,10 +71,10 @@ void s_ftp::GetFile(QString Url, QString filename)
     RangeWasSent = false;
     if (!Connected)
         ConnectToFtp();
-    QFile *data = new QFile(filename, this);
-    if (data->open(QIODevice::WriteOnly))
+    ReadFile = new QFile(filename, this);
+    if (ReadFile->open(QIODevice::WriteOnly))
     {
-        ftp->get(Url, data);
+        ftp->get(Url, ReadFile);
         ftp->close();
     }
     else
@@ -132,12 +132,33 @@ void s_ftp::MakeDir(QString DirName)
 
 void s_ftp::ChangeDir(QString dir)
 {
+    DirToCD = dir;
     Busy = true;
     RangeWasSent = false;
     if (!Connected)
         ConnectToFtp();
     ftp->cd(dir);
     ftp->close();
+}
+
+// прочитать содержимое текущего каталога в список FileList
+
+void s_ftp::ListDir()
+{
+    Busy = true;
+    FileList.clear();
+    RangeWasSent = false;
+    if (!Connected)
+        ConnectToFtp();
+    ftp->list();
+    ftp->close();
+}
+
+// слот, вызываемый при получении очередной порции информации о файлах в каталоге
+
+void s_ftp::AddToFileList(QUrlInfo FileInfo)
+{
+    FileList.append(FileInfo);
 }
 
 // слот, вызываемый при получении каких-либо данных (readyRead)
@@ -174,6 +195,9 @@ void s_ftp::TransferFinished(int, bool error)
         }
         Connected = true;
         SFTPINFO("Создано подключение к FTP-серверу");
+        FtpListConnection = connect(ftp,SIGNAL(listInfo(QUrlInfo)),this,SLOT(AddToFileList(QUrlInfo)));
+        CurrentDirectory.clear();
+        CurrentDirectory.push("/");
         return;
     }
     if (ftp->currentCommand() == QFtp::Get)
@@ -182,6 +206,11 @@ void s_ftp::TransferFinished(int, bool error)
             SFTPER("Передача файла была отменена");
         else
             SFTPINFO("Файл получен успешно");
+        if (ReadFile)
+        {
+            ReadFile->close();
+            delete ReadFile;
+        }
         Busy = false;
     }
     if (ftp->currentCommand() == QFtp::Put)
@@ -196,6 +225,26 @@ void s_ftp::TransferFinished(int, bool error)
     {
         if (error)
             CdFailed = true;
+        else
+        {
+            if (DirToCD == "..")
+            {
+                if (CurrentDirectory.size()>2)
+                    CurrentDirectory.pop();
+                else
+                {
+                    SFTPWARN;
+                }
+            }
+            else if (DirToCD == "//")
+            {
+                while (CurrentDirectory.size() > 1)
+                    CurrentDirectory.pop();
+            }
+            else
+                CurrentDirectory.push(DirToCD);
+        }
+        Busy = false;
     }
     if (ftp->currentCommand() == QFtp::Mkdir)
     {
@@ -225,6 +274,8 @@ void s_ftp::FtpDisconnect()
 {
     Connected = false;
     Busy = false;
+    if (FtpListConnection)
+        QObject::disconnect(FtpListConnection);
     if (ftp)
     {
         ftp->abort();
@@ -236,6 +287,7 @@ void s_ftp::FtpDisconnect()
 
 void s_ftp::FtpTimeout()
 {
+    SFTPER("Превышено время ожидания установления соединения");
     FtpDisconnect();
     Tmr->stop();
 }

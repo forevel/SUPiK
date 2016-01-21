@@ -1,5 +1,6 @@
 #include "proxymodel.h"
 #include "s_ntmodel.h"
+#include "treemodel.h"
 
 ProxyModel::ProxyModel(QObject *parent) :
     QSortFilterProxyModel(parent)
@@ -32,6 +33,8 @@ void ProxyModel::addExpandedIndex(const QModelIndex &index)
     {
         s_ntmodel *mdl = static_cast<s_ntmodel *>(sourceModel());
         mdl->addExpandedIndex(mapToSource(index));
+//        TreeModel *mdl = static_cast<TreeModel *>(sourceModel());
+//        mdl->GoIntoIndex(mapToSource(index));
     }
 }
 
@@ -45,3 +48,18 @@ void ProxyModel::removeExpandedIndex(const QModelIndex &index)
         mdl->removeExpandedIndex(mapToSource(index));
     }
 }
+/*
+bool ProxyModel::lessThan(const QModelIndex &left, const QModelIndex &right) const
+{
+    QString LeftData = sourceModel()->data(left).toString();
+    QString RightData = sourceModel()->data(right).toString();
+    QString LeftColumn0Data = sourceModel()->data(left.sibling(left.row(), 0)).toString();
+    QString RightColumn0Data = sourceModel()->data(right.sibling(right.row(), 0)).toString();
+    if (LeftColumn0Data < RightColumn0Data)
+        return true; // если в столбце 0 данные left меньше, то и весь left меньше, выходим
+    if (LeftData < RightData)
+        return true;
+    else
+        return false;
+}
+*/

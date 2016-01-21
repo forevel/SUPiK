@@ -74,9 +74,10 @@ private:
     QList<bool> TableIsTree; // список признаков, дерево это (есть поля idalias и alias) или таблица
     int TablesNum; // количество таблиц, участвующих в работе
     QStack<QString> RootIDs; // элементы записываются в виде: <номер_таблицы>.<ИД>
+    int Indentation;
 
-    int BuildTree (QString TableDotId);
-    int SetFirstTreeElement(int Table, QString Id);
+    int BuildTree ();
+    int SetFirstTreeElements();
     int SetTree(int Table, QString Id);
     int SetTable(int Table, QString Id);
     int SetNextTree(int Table, QString Id);

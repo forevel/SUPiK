@@ -1,6 +1,4 @@
 #include "s_duniversal.h"
-#include "../widgets/s_tqchoosewidget.h"
-#include "../widgets/waitwidget.h"
 #include <QPainter>
 #include <QRect>
 

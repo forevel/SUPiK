@@ -64,10 +64,16 @@ void dir_maindialog::SetupUI()
     hlyout->setAlignment(lbl, Qt::AlignRight);
     lyout->addLayout(hlyout);
 
-    TreeView *SlaveTV = new TreeView;
-    s_tqTableView *MainTV = new s_tqTableView;
-    MainTableModel = new s_ncmodel;
+    TreeView *SlaveTV = new TreeView(TreeView::TV_PLAIN);
+//    s_tqTableView *MainTV = new s_tqTableView;
+    TreeView *MainTV = new TreeView(TreeView::TV_PLAIN);
+//    MainTableModel = new s_ncmodel;
+    MainTableModel = new TreeModel;
+//    MainProxyModel = new ProxyModel;
+//    MainProxyModel->setSourceModel(MainTableModel);
     SlaveTreeModel = new TreeModel;
+//    SlaveProxyModel = new ProxyModel;
+//    SlaveProxyModel->setSourceModel(SlaveTreeModel);
     MainTV->setObjectName("MainTV");
     SlaveTV->setObjectName("SlaveTV");
     SlaveTV->setModel(SlaveTreeModel);
@@ -76,8 +82,8 @@ void dir_maindialog::SetupUI()
     QVBoxLayout *leftlyout = new QVBoxLayout;
 
     QApplication::setOverrideCursor(Qt::WaitCursor);
-    MainTableModel->setup(MainTable+"_сокращ");
-    if (MainTableModel->result)
+    if (MainTableModel->Setup(MainTable+"_сокращ"))
+//    if (MainTableModel->result)
     {
         DIRMER("Ошибка при построении таблицы "+MainTable);
         QApplication::restoreOverrideCursor();
@@ -86,10 +92,11 @@ void dir_maindialog::SetupUI()
     MainTV->setModel(MainTableModel);
     MainTV->horizontalHeader()->setVisible(false);
     MainTV->verticalHeader()->setVisible(false);
-    s_duniversal *gridItemDelegate = new s_duniversal;
+//    s_duniversal *gridItemDelegate = new s_duniversal;
     GridDelegate *MainDelegate = new GridDelegate;
-    MainTV->setItemDelegate(gridItemDelegate);
+    MainTV->setItemDelegate(MainDelegate);
     SlaveTV->setItemDelegate(MainDelegate);
+//    MainProxyModel->sort(1, Qt::AscendingOrder);
     MainTV->resizeColumnsToContents();
     MainTV->resizeRowsToContents();
     QApplication::restoreOverrideCursor();
@@ -180,12 +187,14 @@ void dir_maindialog::ShowSlaveTree(QString str)
     else
         DIRMWARN;
     SlaveTV->resizeRowsToContents();
+//     SlaveProxyModel->sort(1, Qt::AscendingOrder);
     QApplication::restoreOverrideCursor();
 }
 
 QString dir_maindialog::getMainIndex(int column)
 {
-    s_tqTableView *MainTV = this->findChild<s_tqTableView *>("MainTV");
+//    s_tqTableView *MainTV = this->findChild<s_tqTableView *>("MainTV");
+    TreeView *MainTV = this->findChild<TreeView *>("MainTV");
     if (MainTV == 0)
     {
         DIRMDBG;
@@ -218,6 +227,8 @@ void dir_maindialog::RefreshSlaveTV()
         TreeModel *mdl = static_cast<TreeModel *>(SlaveTV->model());
         mdl->Refresh();
     }
+    SlaveTV->resizeColumnsToContents();
+    SlaveTV->resizeRowsToContents();
 }
 
 void dir_maindialog::EditItem()
@@ -263,6 +274,11 @@ void dir_maindialog::AddNew()
 {
     isNewID = true;
     QString newID = tfl.insert(Tables.last()+"_полн"); // добавление элементов разрешается только в крайнюю таблицу
+    if (tfl.result)
+    {
+        DIRMDBG;
+        return;
+    }
     QString tmpString = getSlaveIndex(0);
     QStringList fl, vl;
     TreeView *SlaveTV = this->findChild<TreeView *>("SlaveTV");

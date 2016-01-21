@@ -5,6 +5,8 @@
 #include <QtFtp/QtFtp>
 #include <QIODevice>
 #include <QTimer>
+#include <QUrlInfo>
+#include <QStack>
 
 #include "publicclass.h"
 
@@ -23,12 +25,16 @@ public:
     ~s_ftp();
 
     QByteArray ReadData;
+    QList<QUrlInfo> FileList;
+    QStack<QString> CurrentDirectory;
+    QFile *ReadFile;
 
     bool CheckFtp();
     void PutFile(QString Url, QString filename);
     void GetData(QString Url);
     void GetFile(QString Url, QString filename);
     void ChangeDir(QString dir);
+    void ListDir(); // прочитать текущую директорию, список файлов - в FileList
 
 signals:
     void NewDataAvailable();
@@ -43,6 +49,8 @@ private:
     quint32 RDptr;
     QFtp *ftp;
     QTimer *Tmr;
+    QMetaObject::Connection FtpListConnection;
+    QString DirToCD;
 
     void ConnectToFtp();
     void FtpDisconnect();
@@ -53,6 +61,7 @@ private slots:
     void TransferFinished(int, bool error);
     void SetRangeAndValue(qint64 Value, qint64 Total);
     void FtpTimeout();
+    void AddToFileList(QUrlInfo FileInfo);
 };
 
 extern s_ftp sftp;

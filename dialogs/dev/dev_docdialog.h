@@ -21,7 +21,7 @@ public slots:
 
 private:
     QString DevDocTble;
-    ProxyModel *mainproxymodel;
+    ProxyModel *MainProxyModel;
 
     void SetupUI();
     void ResizeMainTV();

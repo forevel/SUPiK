@@ -9,9 +9,13 @@ class TreeView : public QTableView
 {
     Q_OBJECT
 public:
-    explicit TreeView(QWidget *parent = 0);
+    explicit TreeView(int Proxy, QWidget *parent = 0);
 
-    void ResizeColumnsToContents();
+    enum tv_proxies
+    {
+        TV_PROXY,
+        TV_PLAIN
+    };
 
 signals:
     void datachanged();
@@ -20,6 +24,7 @@ public slots:
     void setTVexpanded(QModelIndex index);
 
 private:
+    bool IsProxyModel;
 
 private slots:
 

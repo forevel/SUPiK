@@ -11,15 +11,15 @@
 #include <QApplication>
 #include "../s_2cdialog.h"
 #include "../../models/proxymodel.h"
-#include "../../models/s_duniversal.h"
-#include "../../models/s_ntmodel.h"
+#include "../../models/griddelegate.h"
+#include "../../models/treemodel.h"
 #include "../../widgets/s_tqgroupbox.h"
 #include "../../widgets/s_tqlabel.h"
 #include "../../widgets/s_tqlineedit.h"
 #include "../../widgets/s_tqcombobox.h"
 #include "../../widgets/s_tqpushbutton.h"
 #include "../../widgets/s_tqcheckbox.h"
-#include "../../widgets/s_tqtreeview.h"
+#include "../../widgets/treeview.h"
 #include "../../widgets/s_tqtableview.h"
 #include "../../widgets/s_tqframe.h"
 #include "../../widgets/s_tqsplitter.h"
@@ -73,7 +73,6 @@ void dev_docdialog::SetupUI()
     hlyout->addWidget(pb);
 
     hlyout->addStretch(300);
-//    lyout->addLayout(hlyout);
     s_tqLabel *lbl = new s_tqLabel("Документы");
     QFont font;
     font.setPointSize(15);
@@ -82,21 +81,20 @@ void dev_docdialog::SetupUI()
     hlyout->setAlignment(lbl, Qt::AlignRight);
 
     lyout->addLayout(hlyout);
-    s_tqTreeView *MainTV = new s_tqTreeView;
-    s_duniversal *gridItemDelegate = new s_duniversal;
+    TreeView *MainTV = new TreeView(TreeView::TV_PROXY);
+    GridDelegate *gridItemDelegate = new GridDelegate;
     MainTV->setItemDelegate(gridItemDelegate);
     MainTV->setObjectName("mtv");
-    s_ntmodel *mainmodel = new s_ntmodel;
-    mainproxymodel = new ProxyModel;
-    mainmodel->DocSetup();
-    mainproxymodel->setSourceModel(mainmodel);
-    MainTV->setModel(mainproxymodel);
+    TreeModel *MainModel = new TreeModel;
+    MainProxyModel = new ProxyModel;
+    MainProxyModel->setSourceModel(MainModel);
+    QStringList sl = QStringList() << "Изделия_сокращ" << "Классы документов_сокращ" << "Документы_сокращ";
+    MainModel->Setup(sl, TreeModel::TT_TYPE2);
+    MainTV->setModel(MainProxyModel);
     MainTV->setSelectionMode(QAbstractItemView::NoSelection);
     MainTV->setSortingEnabled(true);
     MainTV->sortByColumn(0, Qt::AscendingOrder);
     MainTV->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(MainTV, SIGNAL(expanded(QModelIndex)), mainmodel, SLOT(addExpandedIndex(QModelIndex)));
-    connect(MainTV, SIGNAL(collapsed(QModelIndex)), mainmodel, SLOT(removeExpandedIndex(QModelIndex)));
     connect (MainTV, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(MainContextMenu(QPoint)));
     connect (MainTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(EditDoc()));
     s_tqSplitter *spl = new s_tqSplitter;
@@ -113,22 +111,6 @@ void dev_docdialog::SetupUI()
 
     // рисуем окно свойств документов/изделий
 
-    /*    s_tqTableView *SlaveTV = new s_tqTableView;
-    SlaveTV->setItemDelegate(gridItemDelegate);
-    slavemodel = new s_ncmodel;
-    ProxyModel *slaveproxymodel = new ProxyModel;
-    slaveproxymodel->setSourceModel(slavemodel);
-    SlaveTV->setModel(slaveproxymodel);
-    SlaveTV->setObjectName("stv");
-    SlaveTV->horizontalHeader()->setVisible(true);
-    SlaveTV->verticalHeader()->setVisible(false);
-    SlaveTV->setSelectionMode(QAbstractItemView::NoSelection);
-    SlaveTV->setSortingEnabled(true);
-    SlaveTV->sortByColumn(0, Qt::AscendingOrder);
-    connect(SlaveTV,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(SlaveItemChoosed(QModelIndex)));
-    SlaveTV->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(SlaveTV,SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(SlaveContextMenu(QPoint)));
-    rlyout->addWidget(SlaveTV); */
     rlyout->addWidget(wdgt);
     right->setFrameStyle(QFrame::Panel | QFrame::Sunken);
     right->setLineWidth(1);
@@ -169,12 +151,12 @@ void dev_docdialog::Filter()
         DEVDOCDBG;
         return;
     }
-    mainproxymodel->setFilterWildcard("*"+le->text()+"*");
+    MainProxyModel->setFilterWildcard("*"+le->text()+"*");
 }
 
 void dev_docdialog::Unfilter()
 {
-    mainproxymodel->setFilterWildcard("*");
+    MainProxyModel->setFilterWildcard("*");
 }
 
 void dev_docdialog::MainItemChoosed(QModelIndex idx)
@@ -329,13 +311,13 @@ void dev_docdialog::MainContextMenu(QPoint)
 
 void dev_docdialog::ResizeMainTV()
 {
-    s_tqTreeView *tv = this->findChild<s_tqTreeView *>("mtv");
+    TreeView *tv = this->findChild<TreeView *>("mtv");
     if (tv == 0)
     {
         DEVDOCDBG;
         return;
     }
-    for (int i = 0; i < tv->header()->count(); i++)
+    for (int i = 0; i < tv->horizontalHeader()->count(); i++)
         tv->resizeColumnToContents(i);
 }
 

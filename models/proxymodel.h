@@ -17,6 +17,8 @@ public slots:
     void addExpandedIndex(const QModelIndex &index);
     void removeExpandedIndex(const QModelIndex &index);
 
+protected:
+//    bool lessThan(const QModelIndex &left, const QModelIndex &right) const Q_DECL_OVERRIDE;
 };
 
 #endif // PROXYMODEL_H

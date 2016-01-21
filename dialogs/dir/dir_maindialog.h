@@ -6,9 +6,8 @@
 #include <QPoint>
 #include <QSqlDatabase>
 
-//#include "../../models/s_ntmodel.h"
 #include "../../models/treemodel.h"
-#include "../../models/s_ncmodel.h"
+#include "../../models/proxymodel.h"
 
 #define DIRMDBG         DBGMSG(PublicClass::ER_DIRMAIN,__LINE__)
 #define DIRMWARN        WARNMSG(PublicClass::ER_DIRMAIN,__LINE__)
@@ -44,7 +43,9 @@ private:
     QStringList Tables;
     int SlaveTVAccess;
     TreeModel *SlaveTreeModel;
-    s_ncmodel *MainTableModel;
+//    s_ncmodel *MainTableModel;
+    TreeModel *MainTableModel;
+    ProxyModel *MainProxyModel, *SlaveProxyModel;
     quint32 result;
 
     void SetupUI();

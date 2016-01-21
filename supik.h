@@ -75,7 +75,6 @@ private slots:
 
 protected:
     void showEvent(QShowEvent *event);
-    //void closeEvent(QCloseEvent *e);
     void resizeEvent(QResizeEvent *e);
 };
 

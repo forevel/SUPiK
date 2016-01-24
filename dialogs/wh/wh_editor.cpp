@@ -321,7 +321,7 @@ void Wh_Editor::UpdatePlace()
             WHEDDBG;
             return;
         }
-        cw->SetData(CurIDProperties.ChoosePlaceString);
+        cw->SetValue(CurIDProperties.ChoosePlaceString);
     }
     item->Alias = CurIDProperties.PlacePrefix;
     item->WhID = Wh;

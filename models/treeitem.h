@@ -13,15 +13,19 @@ public:
     ~TreeItem();
 
     QString Data(int Column) const;
-    QString AData(int Column) const;
-//    QString linksdata(int column) const;
+    QString Info(int Column) const;
+    QString TableNumber(int Column) const;
+    QString Links(int Column) const;
+    QString Header(int Column) const;
     bool SetData(int Column, const QString &Value);
-    bool SetAData(int Column, const QString &Value);
-//    bool setLinksData(int column, const QString &value);
+    bool SetInfo(int Column, const QString &Value);
+    bool SetLinks(int Column, const QString &Value);
+    bool SetHeader(int Column, const QString &Value);
+    bool SetTableNumber(int Column, const QString &Value);
 
-    int ColumnCount() const;
-    bool RemoveColumns(int Position, int Columns);
-    int Row() const;
+//    int ColumnCount() const;
+//    bool RemoveColumns(int Position, int Columns);
+//    int Row() const;
     void SetColor(int Column, QColor Color);
     void SetFont(int Column, QFont Font);
     void SetIcon(int Column, QIcon Icon);
@@ -31,10 +35,9 @@ public:
 
 private:
     QStringList ItemData;
-    QStringList ItemAData;
-    TreeItem *ParentItem;
-    QList<TreeItem*> ChildItems;
-//    QStringList linksData; // содержимое вспомогательного поля
+    QStringList LinksData, TableNumbers, Headers, Infos; // вспомогательные поля
+/*    TreeItem *ParentItem;
+    QList<TreeItem*> ChildItems; */
     QList<QColor> ItemColor;
     QList<QFont> ItemFont;
     QList<QIcon> ItemIcon;

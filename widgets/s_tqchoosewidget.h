@@ -13,12 +13,12 @@ public:
     explicit s_tqChooseWidget(bool Transparent=false, QWidget *parent = 0);
 
     void Setup(QString links, QString hdr="");
-    void SetData (QVariant data);
-    QVariant Data();
+    void SetData (PublicClass::ValueStruct data);
+    PublicClass::ValueStruct Data();
     QVariant getAData();
     void setAData(QVariant dat);
     void SetValue(QVariant data); // установить значение поля ввода в зависимости от links
-    QVariant Value(); // выдать значение в соответствии с содержимым поля ввода и links
+    QString Value(); // выдать значение в соответствии с содержимым поля ввода и links
 
     int result;
 signals:
@@ -29,7 +29,7 @@ public slots:
 private:
     QVariant adata;
     QString hdr, links;
-    PublicClass::fieldformat ff;
+    PublicClass::FieldFormat ff;
     bool Transparent;
     QWidget *parent;
 

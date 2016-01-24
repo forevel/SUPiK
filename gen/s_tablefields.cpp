@@ -1,5 +1,5 @@
+#include <QVariant>
 #include "s_tablefields.h"
-#include "publicclass.h"
 
 // класс s_tablefields предназначен для облегчения работы с таблицей tablefields БД supik и содержит в себе высокоуровневые процедуры работы с данной таблицей:
 // 1. htovl ([table:header] to value list) - взять все значения по ссылке table:tablefields из таблицы tablename для данного поля header
@@ -126,37 +126,32 @@ QString s_tablefields::tov(QString tble, QString header, QString tbleid)
 // id - ИД элемента в таблице tablefields:table/tablefields
 // links - строка из поля tablefields:links
 
-QString s_tablefields::idtov(QString links, QString id)
+PublicClass::ValueStruct s_tablefields::idtov(QString links, QString id)
 {
-    QString outs;
-    int tmpi;
-    PublicClass::fieldformat ff = pc.getFFfromLinks(links);
+    PublicClass::ValueStruct vl;
+    vl.Type = VS_STRING; // тип по умолчанию - простая строка
+    vl.Value = ""; // значение по умолчанию - пустая строка
+    PublicClass::FieldFormat ff = pc.getFFfromLinks(links);
     switch (ff.ftype)
     {
     case FW_ALLINK:
     {
         if (!id.toInt()) // корневой элемент
         {
-            outs = "<Корневой элемент>";
-            break;
+            vl.Value = "<Корневой элемент>";
+            return vl;
         }
-        outs = tov(ff.link.at(0), "Наименование", id);
+        vl.Value = tov(ff.link.at(0), "Наименование", id);
         if (result)
-        {
             TFWARN;
-            return QString();
-        }
         break;
     }
     case FW_LINK:
     case FW_MAXLINK:
     {
-        outs = tov(ff.link.at(0), ff.link.at(1), id);
+        vl.Value = tov(ff.link.at(0), ff.link.at(1), id);
         if (result)
-        {
             TFWARN;
-            return QString();
-        }
         break;
     }
     case FW_AUTONUM:
@@ -167,25 +162,22 @@ QString s_tablefields::idtov(QString links, QString id)
     case FW_EQUAT:
     case FW_ID:
     {
-        outs = id;
+        vl.Value = id;
         break;
     }
     case FW_DLINK:
     {
         QStringList sl = id.split("."); // номер таблицы до точки (нумерация с нуля), id - после точки
-        tmpi = sl.at(0).toInt();
+        int tmpi = sl.at(0).toInt();
         if (tmpi*2+1 > ff.link.size()) // нет в перечислении links таблицы с таким номером
         {
             result = 1;
             TFWARN;
-            return QString();
+            return vl;
         }
-        outs = "_"+sl.at(0)+tov(ff.link.at(tmpi*2), ff.link.at(tmpi*2+1), sl.at(1)); // _ - признак того, что в ячейку надо сохранить доп. информацию о номере таблицы
+        vl.Value = "_"+sl.at(0)+tov(ff.link.at(tmpi*2), ff.link.at(tmpi*2+1), sl.at(1)); // _ - признак того, что в ячейку надо сохранить доп. информацию о номере таблицы
         if (result)
-        {
             TFWARN;
-            return QString();
-        }
         break;
     }
     case FW_RIGHTS:
@@ -196,9 +188,9 @@ QString s_tablefields::idtov(QString links, QString id)
         {
             result = 1;
             TFWARN;
-            return QString();
+            return vl;
         }
-        outs.clear();
+        QString outs;
         int j = 0;
         while ((tmpui) && (j < ACC_NUM))
         {
@@ -220,15 +212,32 @@ QString s_tablefields::idtov(QString links, QString id)
             j++;
             tmpui >>= 1;
         }
+        vl.Value = outs;
         break;
+    }
+    case FW_BOOL:
+    {
+        bool ok;
+        int tmpb = id.toInt(&ok);
+        if (!ok)
+        {
+            result = 1;
+            TFWARN;
+            return vl;
+        }
+        vl.Type = VS_ICON;
+        if (tmpb == 0)
+            vl.Value = ":/res/cross.png";
+        else
+            vl.Value = ":/res/ok.png";
     }
     default:
     {
-        outs = id;
+        vl.Value = id;
         break;
     }
     }
-    return outs;
+    return vl;
 }
 
 // взять все значения по ссылке links в зависимости от типа ссылки
@@ -236,7 +245,7 @@ QString s_tablefields::idtov(QString links, QString id)
 QStringList s_tablefields::idtovl(QString links)
 {
     QStringList tmpsl;
-    PublicClass::fieldformat ff = pc.getFFfromLinks(links);
+    PublicClass::FieldFormat ff = pc.getFFfromLinks(links);
     switch (ff.ftype)
     {
     case FW_ALLINK:
@@ -276,30 +285,34 @@ QStringList s_tablefields::idtovl(QString links)
 // перевод имени в его ИД через строку links в таблице tablefields (поиск в таблице по имени его ИД)
 // links = 2.9, value = "ч..ч..чузчузч"
 
-QString s_tablefields::vtoid(QString links, QString value)
+QString s_tablefields::vtoid(QString links, PublicClass::ValueStruct vl)
 {
     QString outs;
     result = 0;
-    if (value == "") // пустая строка вполне имеет право на запись
+    if ((vl.Type == VS_STRING) && (vl.Value == "")) // пустая строка вполне имеет право на запись
         return QString();
-    int tmpi;
-    PublicClass::fieldformat ff = pc.getFFfromLinks(links);
+    PublicClass::FieldFormat ff = pc.getFFfromLinks(links);
     switch (ff.ftype)
     {
     case FW_ALLINK:
     {
-        if (value == "<Корневой элемент>")
-            outs = "0";
+        if (vl.Type == VS_STRING)
+        {
+            if (vl.Value == "<Корневой элемент>")
+                outs = "0";
+            else
+                outs = toid(ff.link.at(0), "Наименование", vl.Value);
+            if (result)
+                TFWARN;
+        }
         else
-            outs = toid(ff.link.at(0), "Наименование", value);
-        if (result)
             TFWARN;
         break;
     }
     case FW_LINK:
     case FW_MAXLINK:
     {
-        outs = toid(ff.link.at(0), ff.link.at(1), value);
+        outs = toid(ff.link.at(0), ff.link.at(1), vl.Value);
         if (result)
             TFWARN;
         break;
@@ -315,49 +328,52 @@ QString s_tablefields::vtoid(QString links, QString value)
     case FW_FLINK:
     case FW_ILINK:
     {
-        outs = value;
+        outs = vl.Value;
         break;
     }
     case FW_DLINK:
     {
-        if (value.at(0) == '_') // символ подчёркивания в первой позиции ИД означает, что номер таблицы надо брать из второго символа
+        QString tmps = vl.Value;
+        int tmpi;
+        if (tmps.at(0) == '_') // символ подчёркивания в первой позиции ИД означает, что номер таблицы надо брать из второго символа
         {
-            tmpi = value.at(1).digitValue();
+            tmpi = tmps.at(1).digitValue();
             if (tmpi*2+1 > ff.link.size()) // нет в перечислении links таблицы с таким номером
             {
                 result = 1;
                 TFWARN;
                 return QString();
             }
-            value.remove(0, 2);
+            tmps.remove(0, 2);
         }
         else
             tmpi = 0;
-        outs = toid(ff.link.at(tmpi*2), ff.link.at(tmpi*2+1), value);
+        outs = toid(ff.link.at(tmpi*2), ff.link.at(tmpi*2+1), tmps);
         if (result)
             TFWARN;
         break;
     }
     case FW_RIGHTS:
     {
+        QString tmps = vl.Value;
         quint32 outui=0, tmpui = 0x0001;
         int j = 0;
-        while ((!value.isEmpty()) && (j < ACC_NUM)) // пока в строке есть что-нибудь и находимся в пределах битовой ширины прав
+        while ((!tmps.isEmpty()) && (j < ACC_NUM)) // пока в строке есть что-нибудь и находимся в пределах битовой ширины прав
         {
             switch (j%2)
             {
             case 0:
             {
-                int tmpi = value.size()-1;
-                QChar tmpc = value.at(tmpi);
+                int tmpi = tmps.size()-1;
+                QChar tmpc = tmps.at(tmpi);
                 if (tmpc == QChar(1095)) // "ч"
                     outui |= tmpui;
                 break;
             }
             case 1:
             {
-                int tmpi = value.size()-1;
-                QChar tmpc = value.at(tmpi);
+                int tmpi = tmps.size()-1;
+                QChar tmpc = tmps.at(tmpi);
                 if (tmpc == QChar(1079)) // "з"
                     outui |= tmpui;
                 break;
@@ -365,11 +381,26 @@ QString s_tablefields::vtoid(QString links, QString value)
             default:
                 break;
             }
-            value.chop(1);
+            tmps.chop(1);
             j++;
             tmpui <<= 1;
         }
         outs = QString::number(outui, 16).toUpper();
+        break;
+    }
+    case FW_BOOL:
+    {
+        if (vl.Type == VS_ICON)
+        {
+            if (vl.Value == ":/res/ok.png")
+                outs = "1";
+            else if (vl.Value == ":/res/cross.png")
+                outs = "0";
+            else
+                TFWARN;
+        }
+        else
+            TFWARN;
         break;
     }
     default:
@@ -377,11 +408,6 @@ QString s_tablefields::vtoid(QString links, QString value)
         TFWARN;
         break;
     }
-    }
-    if (result)
-    {
-        TFWARN;
-        return QString();
     }
     return outs;
 }

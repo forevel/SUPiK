@@ -7,6 +7,7 @@
 #include <QIcon>
 #include <QStack>
 #include "treeitem.h"
+#include "../gen/publicclass.h"
 
 #define TMODELDBG         DBGMSG(PublicClass::ER_TMODEL,__LINE__)
 #define TMODELWARN        WARNMSG(PublicClass::ER_TMODEL,__LINE__)
@@ -19,6 +20,7 @@ class TreeModel : public QAbstractTableModel
 {
     Q_OBJECT
 public:
+
     explicit TreeModel(QObject *parent = 0);
     ~TreeModel();
 
@@ -56,10 +58,13 @@ public slots:
     void GoIntoIndex(QModelIndex idx);
 
 private:
+    // роли для моделей
     enum Roles
     {
-        MyItemRole = Qt::UserRole+1,
-        SetRole = Qt::UserRole+2
+        LinksRole = Qt::UserRole,
+        HeaderTextRole = Qt::UserRole+1,
+        TableNumberRole = Qt::UserRole+2,
+        CellInfoRole = Qt::UserRole+3
     };
 
     QColor Colors[7]; // определение набора цветов шрифта
@@ -82,7 +87,7 @@ private:
     int SetTable(int Table, QString Id);
     int SetNextTree(int Table, QString Id);
     int SetNextTable(int Table, QString Id);
-    void AddItemToTree(QStringList Fields);
+    void AddItemToTree(QList<PublicClass::ValueStruct> Fields);
     int PrepareTable(QString Table); // подготовить очередные TableHeaders, DBs и Tables по таблице Table
     void SetLastItem(QColor Color, QFont Font, QIcon Icon, QString AData="0");
     void ClearModel();

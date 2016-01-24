@@ -115,7 +115,7 @@ Qt::ItemFlags s_ntmodel::flags(const QModelIndex &index) const
     if (!index.isValid())
         return Qt::NoItemFlags;
 /*    s_ntitem *item=getItem(index);
-    fieldformat ff = getFFfromLinks(item->linksdata(index.column()));
+    FieldFormat ff = getFFfromLinks(item->linksdata(index.column()));
     if ((ff.delegate == FD_SIMPLE) || (ff.delegate == FD_DISABLED))
         return Qt::NoItemFlags;
     else */
@@ -493,7 +493,7 @@ int s_ntmodel::addTreeSlvItem(int position, QString id)
         HaveChildren = true;
         tmpStringlist.clear();
         for (i = 0; i < slvtblefields.size(); i++)
-            tmpStringlist << tfl.idtov(slvtblelinks.at(i), get_child_from_db2.value(i).toString()); // установка элемента дерева в соответствии с links
+            tmpStringlist << tfl.idtov(slvtblelinks.at(i), get_child_from_db2.value(i).toString()).Value; // установка элемента дерева в соответствии с links
         tmpStringlist.replace(0,QString("%1").arg(tmpStringlist.value(0).toInt(0), 7, 10, QChar('0')));
         additemtotree(position, tmpStringlist, 0);
     }

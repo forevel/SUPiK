@@ -259,9 +259,9 @@ void s_tqChooseWidget::accepted(QString str)
     s_tqLineEdit *le = this->findChild<s_tqLineEdit*>("fdcle");
     if (le == 0)
         return;
-    QString tmpString = tfl.idtov(pc.getlinksfromFF(ff),str);
-    le->setText(tmpString);
-    emit textchanged(QVariant(tmpString));
+    PublicClass::ValueStruct vs = tfl.idtov(pc.getlinksfromFF(ff),str);
+    le->setText(vs.Value);
+    emit textchanged(QVariant(vs.Value));
 }
 
 void s_tqChooseWidget::SetValue(QVariant data)
@@ -269,7 +269,7 @@ void s_tqChooseWidget::SetValue(QVariant data)
     SetData(tfl.idtov(links, data.toString()));
 }
 
-void s_tqChooseWidget::SetData(QVariant data)
+void s_tqChooseWidget::SetData(PublicClass::ValueStruct data)
 {
     switch (ff.delegate)
     {
@@ -278,14 +278,14 @@ void s_tqChooseWidget::SetData(QVariant data)
     {
         s_tqLineEdit *le = this->findChild<s_tqLineEdit*>("fdcle");
         if (le != 0)
-            le->setText(data.toString());
+            le->setText(data.Value);
         break;
     }
     case FD_COMBO:
     {
         s_tqComboBox *cb = this->findChild<s_tqComboBox *>("fdccb");
         if (cb != 0)
-            cb->setCurrentText(data.toString());
+            cb->setCurrentText(data.Value);
         break;
     }
     case FD_LINEEDIT:
@@ -296,14 +296,14 @@ void s_tqChooseWidget::SetData(QVariant data)
         {
             s_MaskedLineEdit *le = this->findChild<s_MaskedLineEdit *>("lele");
             if (le != 0)
-                le->setText(data.toString());
+                le->setText(data.Value);
             break;
         }
         default:
         {
             s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("lele");
             if (le != 0)
-                le->setText(data.toString());
+                le->setText(data.Value);
             break;
         }
         }
@@ -313,14 +313,19 @@ void s_tqChooseWidget::SetData(QVariant data)
     {
         s_tqSpinBox *sb = this->findChild<s_tqSpinBox *>("fdcsb");
         if (sb != 0)
-            sb->setValue(data.toDouble());
+            sb->setValue(data.Value.toDouble());
         break;
     }
     case FD_CHECK:
     {
         s_tqCheckBox *cb = this->findChild<s_tqCheckBox *>("fdcb");
         if (cb != 0)
-            cb->setChecked(data.toBool());
+        {
+            if (data.Value == ":/res/ok.png")
+                cb->setChecked(true);
+            else
+                cb->setChecked(false);
+        }
         break;
     }
     default:
@@ -328,15 +333,16 @@ void s_tqChooseWidget::SetData(QVariant data)
     }
 }
 
-QVariant s_tqChooseWidget::Value()
+QString s_tqChooseWidget::Value()
 {
-    QVariant RetData = Data();
-    QVariant v = tfl.vtoid(links, RetData.toString());
-    return v;
+    return tfl.vtoid(links, Data());
 }
 
-QVariant s_tqChooseWidget::Data()
+PublicClass::ValueStruct s_tqChooseWidget::Data()
 {
+    PublicClass::ValueStruct vs;
+    vs.Type = VS_STRING;
+    vs.Value = "";
     switch (ff.delegate)
     {
     case FD_CHOOSE:
@@ -344,14 +350,14 @@ QVariant s_tqChooseWidget::Data()
     {
         s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fdcle");
         if (le != 0)
-            return QVariant(le->text());
+            vs.Value = le->text();
         break;
     }
     case FD_COMBO:
     {
         s_tqComboBox *cb = this->findChild<s_tqComboBox *>("fdccb");
         if (cb != 0)
-            return QVariant(cb->currentText());
+            vs.Value = cb->currentText();
         break;
     }
     case FD_LINEEDIT:
@@ -362,14 +368,14 @@ QVariant s_tqChooseWidget::Data()
         {
             s_MaskedLineEdit *le = this->findChild<s_MaskedLineEdit *>("lele");
             if (le != 0)
-                return QVariant(le->text());
+                vs.Value = le->text();
             break;
         }
         default:
         {
             s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("lele");
             if (le != 0)
-                return QVariant(le->text());
+                vs.Value = le->text();
             break;
         }
         }
@@ -379,20 +385,26 @@ QVariant s_tqChooseWidget::Data()
     {
         s_tqSpinBox *sb = this->findChild<s_tqSpinBox *>("fdcsb");
         if (sb != 0)
-            return QVariant(sb->value());
+            vs.Value = QString::number(sb->value(),'f',6);
         break;
     }
     case FD_CHECK:
     {
+        vs.Type = VS_ICON;
         s_tqCheckBox *cb = this->findChild<s_tqCheckBox *>("fdcb");
         if (cb != 0)
-            return QVariant(cb->isChecked());
+        {
+            if (cb->isChecked())
+                vs.Value = ":/res/ok.png";
+            else
+                vs.Value = ":/res/cross.png";
+        }
         break;
     }
     default:
         break;
     }
-    return QVariant();
+    return vs;
 }
 
 

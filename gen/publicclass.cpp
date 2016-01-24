@@ -277,10 +277,10 @@ QString PublicClass::getTranslit(QString str)
     return newstr;
 }
 
-PublicClass::fieldformat PublicClass::getFFfromLinks(QString links) const
+PublicClass::FieldFormat PublicClass::getFFfromLinks(QString links) const
 {
     QStringList tmpsl = links.split(".");
-    fieldformat ff;
+    FieldFormat ff;
     ff.ftype = 8;
     ff.delegate = FD_SIMGRID;
     ff.dependson = -1;
@@ -307,7 +307,7 @@ PublicClass::fieldformat PublicClass::getFFfromLinks(QString links) const
     return ff;
 }
 
-QString PublicClass::getlinksfromFF(PublicClass::fieldformat ff)
+QString PublicClass::getlinksfromFF(PublicClass::FieldFormat ff)
 {
     QString tmpString = QString::number(ff.delegate,10)+"."+QString::number(ff.ftype,10)+".";
     if (ff.dependson != -1)

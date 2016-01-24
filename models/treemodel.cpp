@@ -1,5 +1,4 @@
 #include "treemodel.h"
-#include "../gen/publicclass.h"
 #include "../gen/s_sql.h"
 #include "../gen/s_tablefields.h"
 #include <QSqlDatabase>
@@ -63,8 +62,14 @@ QVariant TreeModel::data(const QModelIndex &index, int role) const
                 return QVariant::fromValue(QColor(maindata.at(index.row())->Color(index.column())));
             else if (role == Qt::DecorationRole)
                 return QVariant::fromValue(QIcon(maindata.at(index.row())->Icon(index.column())));
-            else if (role == SetRole)
-                return maindata.at(index.row())->AData(index.column());
+            else if (role == CellInfoRole)
+                return maindata.at(index.row())->Info(index.column());
+            else if (role == LinksRole)
+                return maindata.at(index.row())->Links(index.column());
+            else if (role == HeaderTextRole)
+                return maindata.at(index.row())->Header(index.column());
+            else if (role == TableNumberRole)
+                return maindata.at(index.row())->TableNumber(index.column());
         }
     }
     return QVariant();
@@ -95,9 +100,24 @@ bool TreeModel::setData(const QModelIndex &index, const QVariant &value, int rol
             maindata.at(index.row())->SetIcon(index.column(), value.value<QIcon>());
             return true;
         }
-        else if (role == SetRole)
+        else if (role == CellInfoRole)
         {
-            maindata.at(index.row())->SetAData(index.column(), value.toString());
+            maindata.at(index.row())->SetInfo(index.column(), value.toString());
+            return true;
+        }
+        else if (role == HeaderTextRole)
+        {
+            maindata.at(index.row())->SetHeader(index.column(), value.toString());
+            return true;
+        }
+        else if (role == LinksRole)
+        {
+            maindata.at(index.row())->SetLinks(index.column(), value.toString());
+            return true;
+        }
+        else if (role == TableNumberRole)
+        {
+            maindata.at(index.row())->SetTableNumber(index.column(), value.toString());
             return true;
         }
         else
@@ -226,7 +246,7 @@ void TreeModel::GoIntoIndex(QModelIndex idx)
     }
     else
     {
-        if (data(index(idx.row(),0,QModelIndex()),SetRole) == TM_SIMPLE_ELEMENT) // если простой элемент
+        if (data(index(idx.row(),0,QModelIndex()),CellInfoRole) == TM_SIMPLE_ELEMENT) // если простой элемент
             return;
         // 1
         QString IndexID = data(index(idx.row(),0,QModelIndex()),Qt::DisplayRole).toString(); // ИД должен быть в нулевом столбце
@@ -253,7 +273,7 @@ void TreeModel::SetLastItem(QColor Color, QFont Font, QIcon Icon, QString AData)
         setData(index(LastIndex, i, QModelIndex()), Font, Qt::FontRole);
     }
     setData(index(LastIndex, 0, QModelIndex()), Icon, Qt::DecorationRole);
-    setData(index(LastIndex, 0, QModelIndex()), AData, SetRole);
+    setData(index(LastIndex, 0, QModelIndex()), AData, CellInfoRole);
 }
 
 // процедура инициализации модели данными из таблицы table и построение дерева по полям alias и idalias
@@ -467,14 +487,18 @@ int TreeModel::SetFirstTreeElements()
         }
         Id = QString("%1").arg(Id.toInt(0), 7, 10, QChar('0'));
         Id.insert(0, IndentSpaces);
-        tmpsl.insert(0, Id);
+        QList<PublicClass::ValueStruct> vl;
+        PublicClass::ValueStruct tmpvl;
+        tmpvl.Type = VS_STRING;
+        tmpvl.Value = Id;
+        vl.append(tmpvl);
         for (int j=1; j<tmpsl.size(); j++)
         {
-            QString tmps = tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j));
-            tmps.insert(0, IndentSpaces);
-            tmpsl.replace(j, tmps);
+            PublicClass::ValueStruct tmpvl = tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j));
+            tmpvl.Value.insert(0, IndentSpaces);
+            vl.append(tmpvl);
         }
-        AddItemToTree(tmpsl);
+        AddItemToTree(vl);
         SetLastItem(Colors[4], Fonts[4], Icons[4], TM_ELEMENT_WITH_CHILDREN); // раскрытая книга
         Indentation++;
     }
@@ -499,14 +523,18 @@ int TreeModel::SetTree(int Table, QString Id)
         QString RootId = tmpsl.at(0);
         QString tmps = QString::number(Table)+"."+QString("%1").arg(RootId.toInt(0), 7, 10, QChar('0')); // добавка нулей
         tmps.insert(0, IndentSpaces);
-        tmpsl.replace(0, tmps);
+        QList<PublicClass::ValueStruct> vl;
+        PublicClass::ValueStruct tmpvl;
+        tmpvl.Type = VS_STRING;
+        tmpvl.Value = tmps;
+        vl.append(tmpvl);
         for (int j=1; j<tmpsl.size(); j++)
         {
-            tmps = tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j));
-            tmps.insert(0, IndentSpaces);
-            tmpsl.replace(j, tmps);
+            PublicClass::ValueStruct tmpvl = tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j));
+            tmpvl.Value.insert(0, IndentSpaces);
+            vl.append(tmpvl);
         }
-        AddItemToTree(tmpsl);
+        AddItemToTree(vl);
         // проверка наличия потомков у элемента
         tmps = sqlc.GetValueFromTableByField(sqlc.GetDB(DBs.at(Table)), Tables.at(Table), "alias", "idalias", RootId);
         if (sqlc.result == SQLC_FAILED)
@@ -546,14 +574,18 @@ int TreeModel::SetTable(int Table, QString Id)
             QString RootId = tmpsl.at(0);
             QString tmps = QString::number(Table)+"."+QString("%1").arg(RootId.toInt(),7, 10, QChar('0')); // добавка нулей
             tmps.insert(0, IndentSpaces);
-            tmpsl.replace(0, tmps);
+            QList<PublicClass::ValueStruct> vl;
+            PublicClass::ValueStruct tmpvl;
+            tmpvl.Type = VS_STRING;
+            tmpvl.Value = tmps;
+            vl.append(tmpvl);
             for (int j=1; j<tmpsl.size(); j++)
             {
-                tmps = tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j));
-                tmps.insert(0, IndentSpaces);
-                tmpsl.replace(j, tmps);
+                PublicClass::ValueStruct tmpvl = tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j));
+                tmpvl.Value.insert(0, IndentSpaces);
+                vl.append(tmpvl);
             }
-            AddItemToTree(tmpsl);
+            AddItemToTree(vl);
             // проверка наличия потомков у элемента
             if (NewTableExist) // если дальше ещё есть таблицы
             {
@@ -597,14 +629,18 @@ int TreeModel::SetNextTree(int Table, QString Id)
         QString RootId = tmpsl.at(0);
         QString tmps = QString::number(Table)+"."+QString("%1").arg(RootId.toInt(),7, 10, QChar('0')); // добавка нулей
         tmps.insert(0, IndentSpaces);
-        tmpsl.replace(0, tmps);
+        QList<PublicClass::ValueStruct> vl;
+        PublicClass::ValueStruct tmpvl;
+        tmpvl.Type = VS_STRING;
+        tmpvl.Value = tmps;
+        vl.append(tmpvl);
         for (int j=1; j<tmpsl.size(); j++)
         {
-            tmps = tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j));
-            tmps.insert(0, IndentSpaces);
-            tmpsl.replace(j, tmps);
+            PublicClass::ValueStruct tmpvl = tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j));
+            tmpvl.Value.insert(0, IndentSpaces);
+            vl.append(tmpvl);
         }
-        AddItemToTree(tmpsl);
+        AddItemToTree(vl);
         // проверка наличия потомков у элемента
         tmps = sqlc.GetValueFromTableByField(sqlc.GetDB(DBs.at(Table)), Tables.at(Table), "alias", "idalias", RootId);
         if (sqlc.result == SQLC_FAILED)
@@ -669,14 +705,18 @@ int TreeModel::SetNextTable(int Table, QString Id)
             {
                 QString tmps = QString::number(Table)+"."+QString("%1").arg(sl.at(0).toInt(),7, 10, QChar('0')); // добавка нулей
                 tmps.insert(0, IndentSpaces);
-                sl.replace(0, tmps);
-                for (int j=1; j<sl.size(); j++)
+                QList<PublicClass::ValueStruct> vl;
+                PublicClass::ValueStruct tmpvl;
+                tmpvl.Type = VS_STRING;
+                tmpvl.Value = tmps;
+                vl.append(tmpvl);
+                for (int j=1; j<tmpsl.size(); j++)
                 {
-                    tmps = tfl.idtov(TableLinks.at(Table).at(j-1), sl.at(j));
-                    tmps.insert(0, IndentSpaces);
-                    sl.replace(j, tmps);
+                    PublicClass::ValueStruct tmpvl = tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j));
+                    tmpvl.Value.insert(0, IndentSpaces);
+                    vl.append(tmpvl);
                 }
-                AddItemToTree(sl);
+                AddItemToTree(vl);
                 SetLastItem(Colors[4],Fonts[4],Icons[3], TM_ELEMENT_WITH_CHILDREN); // закрытая книга, т.к. если есть запись в таблице 2, значит, есть соответствующая запись в таблице 3
             }
         }
@@ -700,14 +740,18 @@ int TreeModel::SetNextTable(int Table, QString Id)
             QString RootId = tmpsl.at(0);
             QString tmps = QString::number(Table)+"."+QString("%1").arg(tmpsl.at(0).toInt(),7, 10, QChar('0')); // добавка нулей
             tmps.insert(0, IndentSpaces);
-            tmpsl.replace(0, tmps);
+            QList<PublicClass::ValueStruct> vl;
+            PublicClass::ValueStruct tmpvl;
+            tmpvl.Type = VS_STRING;
+            tmpvl.Value = tmps;
+            vl.append(tmpvl);
             for (int j=1; j<tmpsl.size(); j++)
             {
-                tmps = tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j));
-                tmps.insert(0, IndentSpaces);
-                tmpsl.replace(j, tmps);
+                PublicClass::ValueStruct tmpvl = tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j));
+                tmpvl.Value.insert(0, IndentSpaces);
+                vl.append(tmpvl);
             }
-            AddItemToTree(tmpsl);
+            AddItemToTree(vl);
             if (NewTableExist) // если дальше ещё есть таблицы
             {
                 tmps = sqlc.GetValueFromTableByField(sqlc.GetDB(DBs.at(NewTable)), Tables.at(NewTable), "id"+Tables.at(NewTable), "id"+MainTable, RootId);
@@ -729,12 +773,20 @@ int TreeModel::SetNextTable(int Table, QString Id)
     return 0;
 }
 
-void TreeModel::AddItemToTree(QStringList sl)
+void TreeModel::AddItemToTree(QList<PublicClass::ValueStruct> vl)
 {
     int LastIndex = rowCount();
     insertRows(LastIndex, 1);
-    for (int column = 0; column < sl.size(); ++column)
-        setData(index(LastIndex, column, QModelIndex()), sl.at(column), Qt::EditRole);
+    for (int column = 0; column < vl.size(); ++column)
+    {
+        if (vl.at(column).Type == VS_ICON)
+        {
+            setData(index(LastIndex, column, QModelIndex()), QIcon(vl.at(column).Value), Qt::DecorationRole);
+            setData(index(LastIndex, column, QModelIndex()), QVariant("i."+vl.at(column).Value), CellInfoRole);
+        }
+        else
+            setData(index(LastIndex, column, QModelIndex()), vl.at(column).Value, Qt::EditRole);
+    }
 }
 
 void TreeModel::ClearModel()

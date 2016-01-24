@@ -67,7 +67,7 @@ void sys_ImportClass::ImpExpPBPressed()
         MessageBox::information(this,"","Элемент CW не найден");
         return;
     }
-    sys_ImportClass_T *t = new sys_ImportClass_T(cw->Value().toString());
+    sys_ImportClass_T *t = new sys_ImportClass_T(cw->Value());
     WWidget = new WaitWidget;
     WWidget->setObjectName("waitwidget");
     connect(t,SIGNAL(RowProcessing(QString)),WWidget,SLOT(SetMessage(QString)));

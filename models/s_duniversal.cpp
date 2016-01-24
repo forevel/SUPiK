@@ -10,13 +10,13 @@ s_duniversal::s_duniversal(QObject *parent) :
 QWidget* s_duniversal::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
     Q_UNUSED(option);
-    QString links = index.data(Qt::UserRole).toString();
+    QString links = index.data(TreeModel::LinksRole).toString();
     ff = pc.getFFfromLinks(links);
     if ((ff.delegate == FD_DISABLED) || (ff.delegate == FD_SIMPLE) || (ff.delegate == FD_SIMGRID))
     {
         return 0;
     }
-    QString hdr=index.data(Qt::UserRole+1).toString(); // в UserRole+1 должна содержаться aData, в которой находится подзаголовок диалога редактирования, вызываемого по кнопке в делегате
+    QString hdr=index.data(TreeModel::HeaderTextRole).toString(); // в UserRole+1 должна содержаться aData, в которой находится подзаголовок диалога редактирования, вызываемого по кнопке в делегате
     wdgt = new s_tqChooseWidget(false,parent);
     wdgt->Setup(links,hdr);
     return wdgt;
@@ -28,7 +28,16 @@ void s_duniversal::setEditorData(QWidget *editor, const QModelIndex &index) cons
         return;
     s_tqChooseWidget *wdgt = static_cast<s_tqChooseWidget *>(editor);
     connect(wdgt,SIGNAL(textchanged(QVariant)),this,SLOT(CommitChanges(QVariant)));
-    wdgt->SetData(index.data(Qt::EditRole));
+    PublicClass::ValueStruct vs;
+    vs.Value = index.data(Qt::EditRole).toString();
+    QStringList tmpsl = index.data(TreeModel::CellInfoRole).toString().split(".");
+    if (tmpsl.size()<2)
+        vs.Type = VS_STRING;
+    else if (tmpsl.at(0) == "i")
+        vs.Type = VS_ICON;
+    else
+        vs.Type = VS_STRING;
+    wdgt->SetData(vs);
 }
 
 void s_duniversal::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const
@@ -36,7 +45,14 @@ void s_duniversal::setModelData(QWidget *editor, QAbstractItemModel *model, cons
     if ((ff.delegate == FD_DISABLED) || (ff.delegate == FD_SIMPLE) || (ff.delegate == FD_SIMGRID))
         return;
     s_tqChooseWidget *wdgt = static_cast<s_tqChooseWidget *>(editor);
-    model->setData(index,wdgt->Data(),Qt::EditRole);
+    PublicClass::ValueStruct vs = wdgt->Data();
+    if (vs.Type == VS_STRING)
+        model->setData(index,vs.Value,Qt::EditRole);
+    else if (vs.Type == VS_ICON)
+    {
+        model->setData(index,QIcon(vs.Value),Qt::DecorationRole);
+        model->setData(index, vs.Value, TreeModel::CellInfoRole);
+    }
 }
 
 void s_duniversal::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
@@ -46,7 +62,7 @@ void s_duniversal::paint(QPainter *painter, const QStyleOptionViewItem &option, 
     if (index.isValid())
     {
         QRect rct = option.rect;
-        PublicClass::fieldformat tmpff = pc.getFFfromLinks(index.data(Qt::UserRole).toString());
+        PublicClass::FieldFormat tmpff = pc.getFFfromLinks(index.data(Qt::UserRole).toString());
         if (option.state & QStyle::State_Selected)
         {
             painter->setPen(Qt::SolidLine);

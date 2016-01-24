@@ -84,7 +84,7 @@ QVariant s_ncmodel::data(const QModelIndex &index, int role) const
 bool s_ncmodel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     QString tmpString;
-    PublicClass::fieldformat ff;
+    PublicClass::FieldFormat ff;
     QVariant vl;
     if (index.isValid())
     {
@@ -160,6 +160,11 @@ bool s_ncmodel::setData(const QModelIndex &index, const QVariant &value, int rol
         else if (role == Qt::UserRole+2)
         {
             maindata.at(index.row())->setTData(index.column(), value.toString());
+            return true;
+        }
+        else if (role == Qt::DecorationRole)
+        {
+            maindata.at(index.row())->setIcon(index.column(), value.value<QIcon>());
             return true;
         }
     }
@@ -365,7 +370,7 @@ void s_ncmodel::fillModel()
             else
             {
                 // перевод из ИД элемента в его значение с использованием ссылки, заданной ранее процедурой setcolumnlinks или аналогичной
-                vl = tfl.idtov(data(index(rcount, j, QModelIndex()), Qt::UserRole).toString(), DataToWrite.at(j).at(i));
+                vl = tfl.idtov(data(index(rcount, j, QModelIndex()), Qt::UserRole).toString(), DataToWrite.at(j).at(i)).Value;
                 if (vl.isEmpty())
                     continue;
                 if (vl.at(0) == '_') // идентификатор составного значения - номер таблицы и само значение
@@ -408,6 +413,12 @@ QStringList s_ncmodel::rvalues(int row)
 
 QString s_ncmodel::value(int row, int column)
 {
+    PublicClass::ValueStruct vs;
+    QIcon ic = data(index(row,column,QModelIndex()),Qt::DecorationRole).value<QIcon>();
+    if (ic.isNull())
+        vs.Type = VS_STRING;
+    else
+        vs.Type = VS_ICON;
     QString vl = data(index(row, column, QModelIndex()), Qt::DisplayRole).toString();
     QString links = data(index(row,column,QModelIndex()),Qt::UserRole).toString();
     QString tablenum = data(index(row,column,QModelIndex()),Qt::UserRole+2).toString();
@@ -416,7 +427,8 @@ QString s_ncmodel::value(int row, int column)
         vl.insert(0,tablenum);
         vl.insert(0,'_');
     }
-    vl = tfl.vtoid(links, vl);
+    vs.Value = vl;
+    vl = tfl.vtoid(links, vs);
     if (tfl.result)
     {
         result=1;

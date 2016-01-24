@@ -4,12 +4,12 @@
 
 TreeItem::TreeItem(TreeItem *parent)
 {
-    ParentItem = parent;
+//    ParentItem = parent;
 }
 
 TreeItem::~TreeItem()
 {
-    qDeleteAll(ChildItems);
+//    qDeleteAll(ChildItems);
 }
 
 QString TreeItem::Data(int Column) const
@@ -31,37 +31,26 @@ bool TreeItem::SetData(int Column, const QString &Value)
     return true;
 }
 
-QString TreeItem::AData(int Column) const
+QString TreeItem::Links(int Column) const
 {
-    if (Column < ItemAData.size())
-        return ItemAData.at(Column);
+    if (Column < LinksData.size())
+        return LinksData.at(Column);
     else
         return QString();
 }
 
-bool TreeItem::SetAData(int Column, const QString &Value)
+bool TreeItem::SetLinks(int Column, const QString &Value)
 {
     if (Column < 0)
         return false;
-    if (Column < ItemAData.size())
-        ItemAData.replace(Column, Value);
+    if (Column < LinksData.size())
+        LinksData.replace(Column, Value);
     else
-        ItemAData.append(Value);
+        LinksData.append(Value);
     return true;
 }
 
-/*bool TreeItem::setLinksData(int column, const QString &data)
-{
-    if (column < 0)
-        return false;
-    if (column < linksData.size())
-        linksData.replace(column, data);
-    else
-        linksData.append(data);
-    return true;
-}*/
-
-int TreeItem::Row() const
+/*int TreeItem::Row() const
 {
     if (ParentItem)
         return ParentItem->ChildItems.indexOf(const_cast<TreeItem*>(this));
@@ -82,8 +71,64 @@ bool TreeItem::RemoveColumns(int Position, int Columns)
     foreach (TreeItem *Child, ChildItems)
         Child->RemoveColumns(Position, Columns);
     return true;
+} */
+
+QString TreeItem::TableNumber(int Column) const
+{
+    if (Column < TableNumbers.size())
+        return TableNumbers.at(Column);
+    else
+        return QString();
 }
 
+bool TreeItem::SetTableNumber(int Column, const QString &Value)
+{
+    if (Column < 0)
+        return false;
+    if (Column < TableNumbers.size())
+        TableNumbers.replace(Column, Value);
+    else
+        TableNumbers.append(Value);
+    return true;
+}
+
+QString TreeItem::Header(int Column) const
+{
+    if (Column < Headers.size())
+        return Headers.at(Column);
+    else
+        return QString();
+}
+
+bool TreeItem::SetHeader(int Column, const QString &Value)
+{
+    if (Column < 0)
+        return false;
+    if (Column < Headers.size())
+        Headers.replace(Column, Value);
+    else
+        Headers.append(Value);
+    return true;
+}
+
+QString TreeItem::Info(int Column) const
+{
+    if (Column < Infos.size())
+        return Infos.at(Column);
+    else
+        return QString();
+}
+
+bool TreeItem::SetInfo(int Column, const QString &Value)
+{
+    if (Column < 0)
+        return false;
+    if (Column < Infos.size())
+        Infos.replace(Column, Value);
+    else
+        Infos.append(Value);
+    return true;
+}
 void TreeItem::SetColor(int Column, QColor Color)
 {
     if (Column < ItemColor.size())

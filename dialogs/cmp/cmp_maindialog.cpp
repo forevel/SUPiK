@@ -749,14 +749,14 @@ void cmp_maindialog::SetCWData(QString cwname, QVariant data)
 {
     s_tqChooseWidget *cw = this->findChild<s_tqChooseWidget *>(cwname);
     if (cw != 0)
-        cw->SetData(data);
+        cw->SetValue(data);
 }
 
 QString cmp_maindialog::CWData(QString cwname)
 {
     s_tqChooseWidget *cw = this->findChild<s_tqChooseWidget *>(cwname);
     if (cw != 0)
-        return cw->Data().toString();
+        return cw->Value();
     else
         return QString();
 }

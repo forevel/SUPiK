@@ -4,6 +4,7 @@
 #include <QStyledItemDelegate>
 #include "../gen/publicclass.h"
 #include "../widgets/s_tqchoosewidget.h"
+#include "treemodel.h"
 
 class s_duniversal : public QStyledItemDelegate
 {
@@ -23,7 +24,7 @@ private slots:
     void CommitChanges(QVariant);
 
 private:
-    mutable PublicClass::fieldformat ff;
+    mutable PublicClass::FieldFormat ff;
     mutable s_tqChooseWidget *wdgt;
 };
 

@@ -90,7 +90,7 @@ QT_END_NAMESPACE
 #define FW_RIGHTS   9 // поле с бинарным отображением и организации делегата FD_CHOOSE с диалогом rights
 #define FW_FNUMBER  10 // форматированное число для делегата-счётчика
 #define FW_SPECIAL  11 // сложная ссылка. Подробнее см. "СУПиК РП"
-#define FW_SMETHOD  12 // ссылка на метод СУПиКа
+#define FW_BOOL     12 // булево значение
 #define FW_2CD      13 // отображение диалога редактирования строки таблицы (2cdialog)
 #define FW_LLINK    14 // отображение диалога конструктора ссылок
 #define FW_FLINK    15 // отображение диалога выбора имени файла
@@ -117,13 +117,18 @@ QT_END_NAMESPACE
 #define OP_MULT     3
 #define OP_DIV      4
 
+// типы возвращаемых значений
+#define VS_STRING   0 // простая строка
+#define VS_ICON     1 // значение в виде ссылки на иконку
+
+
 class PublicClass
 {
 public:
     PublicClass();
     ~PublicClass();
 
-// Коды ошибок
+    // Коды ошибок
     enum errors
     {
         ER_SUPIK,    // supik
@@ -170,6 +175,13 @@ public:
         TW_QUAR,    // работа с карантином
         TW_DEV,     // редактор документов
         TW_ADM      // сисадминистрирование
+    };
+
+    // структура возвращаемых значений по полю links
+    struct ValueStruct
+    {
+        int Type; // тип значения VL_
+        QString Value; // само значение
     };
 
     double timerperiod;
@@ -302,10 +314,10 @@ public:
         int delegate;
         int dependson;
         QStringList link;
-    } fieldformat;
+    } FieldFormat;
 
-    PublicClass::fieldformat getFFfromLinks (QString links) const;
-    QString getlinksfromFF (PublicClass::fieldformat ff);
+    PublicClass::FieldFormat getFFfromLinks (QString links) const;
+    QString getlinksfromFF (PublicClass::FieldFormat ff);
     void InitiatePublicClass();
     void DBCheck();
     void fillallprob();

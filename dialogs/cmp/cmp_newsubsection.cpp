@@ -206,7 +206,7 @@ void cmp_newsubsection::Ok()
             return;
         }
         QStringList fl = QStringList() << "ИД" << "Наименование" << "ИД_а" << "Параметры";
-        QStringList vl = QStringList() << newID << descfull << "0" << cw->Value().toString();
+        QStringList vl = QStringList() << newID << descfull << "0" << cw->Value();
         tfl.idtois(TableName,fl,vl);
         if (tfl.result)
         {

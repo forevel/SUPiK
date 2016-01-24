@@ -53,7 +53,7 @@ dir_adddialog::dir_adddialog(bool update, QString dirtype, QString dir, QWidget 
     FW_Links.clear();
     FW_Links << "0.Автонумерация" << "1.Фиксированное значение" << "2.Простая ссылка" << "3.Ссылка на несколько таблиц" << "4.Ссылка на дочерние элементы" << \
                 "5.Значение с макс. ИД" << "6.Форматированное поле" << "7.Вычисляемое поле" << "8.Простое поле" << "9.Права доступа" << \
-                "10.Форматированное число" << "11.Специальная ссылка" << "12.Ссылка на методы" << "13.Вызов диалога редактирования строки" << "14.Конструктор ссылок" << \
+                "10.Форматированное число" << "11.Специальная ссылка" << "12.Булево поле" << "13.Вызов диалога редактирования строки" << "14.Конструктор ссылок" << \
                 "15.Ссылка на файл" << "16.Ссылка на каталог" << "17.Ссылка на элемент внутри файла" << "18.Выбор даты" << "19.Автодополнение нулями";
 }
 
@@ -135,7 +135,10 @@ void dir_adddialog::setupUI()
     else
     {
         cw->setEnabled(false);
-        cw->SetData("узч");
+        PublicClass::ValueStruct vs;
+        vs.Type = VS_STRING;
+        vs.Value = "узч";
+        cw->SetData(vs);
     }
     dlg1Layout->addWidget(lbl, 3, 0);
     dlg1Layout->addWidget(cw, 3, 1);
@@ -493,7 +496,7 @@ void dir_adddialog::WriteAndClose()
         fl.clear();
         vl.clear();
         fl << "dirlist" << "access" << "deleted" << "date" << "idpers";
-        vl << tmpdir << dirAccessCW->Value().toString() << "0" << pc.DateTime << QString::number(pc.idPers);
+        vl << tmpdir << dirAccessCW->Value() << "0" << pc.DateTime << QString::number(pc.idPers);
         tmpString = sqlc.GetValueFromTableByField(db, tble, "dirlist", "dirlist", tmpdir);
         if (tmpString.isEmpty())
         {
@@ -1379,35 +1382,35 @@ void dir_adddialog::DTypeCBIndexChanged(int FD)
     case FD_DISABLED:
     case FD_SIMGRID:
     {
-        tmpStringList << FW_Links.at(0) << FW_Links.at(1) << FW_Links.at(5) << FW_Links.at(7) << FW_Links.at(8) << FW_Links.at(19);
+        tmpStringList << FW_Links.at(FW_AUTONUM) << FW_Links.at(FW_NUMBER) << FW_Links.at(FW_MAXLINK) << FW_Links.at(FW_EQUAT) << FW_Links.at(FW_PLAIN) << FW_Links.at(FW_ID);
         break;
     }
     case FD_LINEEDIT:
     {
-        tmpStringList << FW_Links.at(6) << FW_Links.at(8);
+        tmpStringList << FW_Links.at(FW_MASKED) << FW_Links.at(FW_PLAIN);
         break;
     }
     case FD_CHOOSE:
     case FD_CHOOSE_X:
     {
-        tmpStringList << FW_Links.at(2) << FW_Links.at(3) << FW_Links.at(4) << FW_Links.at(9) << FW_Links.at(10) \
-                      << FW_Links.at(11) << FW_Links.at(13) << FW_Links.at(14) << FW_Links.at(15) \
-                      << FW_Links.at(16) << FW_Links.at(17) << FW_Links.at(18);
+        tmpStringList << FW_Links.at(FW_LINK) << FW_Links.at(FW_DLINK) << FW_Links.at(FW_ALLINK) << FW_Links.at(FW_RIGHTS) << FW_Links.at(FW_FNUMBER) \
+                      << FW_Links.at(FW_SPECIAL) << FW_Links.at(FW_2CD  ) << FW_Links.at(FW_LLINK) << FW_Links.at(FW_FLINK) \
+                      << FW_Links.at(FW_ILINK) << FW_Links.at(FW_FLLINK) << FW_Links.at(FW_DATE);
         break;
     }
     case FD_COMBO:
     {
-        tmpStringList << FW_Links.at(2) << FW_Links.at(4);
+        tmpStringList << FW_Links.at(FW_LINK) << FW_Links.at(FW_ALLINK);
         break;
     }
     case FD_SPIN:
     {
-        tmpStringList << FW_Links.at(10);
+        tmpStringList << FW_Links.at(FW_FNUMBER);
         break;
     }
     case FD_CHECK:
     {
-        tmpStringList << FW_Links.at(8);
+        tmpStringList << FW_Links.at(FW_BOOL);
     }
     default:
         break;

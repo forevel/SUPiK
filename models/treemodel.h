@@ -40,6 +40,15 @@ public:
     int Setup(QString Table);
     void Refresh();
 
+    // роли для моделей
+    enum Roles
+    {
+        LinksRole = Qt::UserRole,
+        HeaderTextRole = Qt::UserRole+1,
+        TableNumberRole = Qt::UserRole+2,
+        CellInfoRole = Qt::UserRole+3
+    };
+
     enum TreeTypes
     {
         TT_SIMPLE, // простое дерево из одной таблицы по полям idalias
@@ -58,15 +67,6 @@ public slots:
     void GoIntoIndex(QModelIndex idx);
 
 private:
-    // роли для моделей
-    enum Roles
-    {
-        LinksRole = Qt::UserRole,
-        HeaderTextRole = Qt::UserRole+1,
-        TableNumberRole = Qt::UserRole+2,
-        CellInfoRole = Qt::UserRole+3
-    };
-
     QColor Colors[7]; // определение набора цветов шрифта
     QFont Fonts[7]; // определение набора шрифтов
     QIcon Icons[7]; // определение набора иконок

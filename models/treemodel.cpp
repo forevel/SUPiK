@@ -251,6 +251,7 @@ void TreeModel::GoIntoIndex(QModelIndex idx)
         // 1
         QString IndexID = data(index(idx.row(),0,QModelIndex()),Qt::DisplayRole).toString(); // ИД должен быть в нулевом столбце
         // 2
+        IndexID.remove(QChar(0xFFFF));
         RootIDs.push(IndexID);
         // 3
         ClearOnlyData();
@@ -335,7 +336,11 @@ int TreeModel::PrepareTable(QString Table)
     QStringList TableHeadersSl;
     QStringList TableLinksSl;
 
-    // ищем ключевые поля - idalias, alias и id<tble>
+    QStringList tmpsl = vl.at(0).at(0).split(".");
+    QString PlainTable;
+    if (tmpsl.size()>1)
+        PlainTable = tmpsl.at(1);
+    // ищем ключевые поля - <tble>, alias и id<tble>
     for (i = 0; i < vl.size(); i++)
     {
         QStringList sl = vl.at(i);
@@ -351,7 +356,7 @@ int TreeModel::PrepareTable(QString Table)
             idpos = i;
             continue;
         }
-        if (sl.at(1) == "alias")
+        if (sl.at(1) == PlainTable)
             IsAliasExist = true;
         TableHeadersSl.append(sl.at(1));
         TableLinksSl.append(sl.at(3));
@@ -369,7 +374,7 @@ int TreeModel::PrepareTable(QString Table)
     }
     else if (!IsAliasExist) // если есть idalias, но нет alias - это не дело
     {
-        TMODELINFO("Не найдено поле alias в таблице "+Table);
+        TMODELINFO("Не найдено поле " + vl.at(0).at(0) + " в таблице "+Table);
         return 1;
     }
     else
@@ -385,7 +390,7 @@ int TreeModel::PrepareTable(QString Table)
     }
 
     // обновляем списки заголовков, БД и таблиц
-    QStringList tmpsl = vl.at(idpos).at(0).split("."); // tmpsl - таблица в виде db.tble
+    tmpsl = vl.at(idpos).at(0).split("."); // tmpsl - таблица в виде db.tble
     if (tmpsl.size()<2)
     {
         TMODELWARN;
@@ -492,9 +497,9 @@ int TreeModel::SetFirstTreeElements()
         tmpvl.Type = VS_STRING;
         tmpvl.Value = Id;
         vl.append(tmpvl);
-        for (int j=1; j<tmpsl.size(); j++)
+        for (int j=0; j<tmpsl.size(); j++)
         {
-            PublicClass::ValueStruct tmpvl = tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j));
+            PublicClass::ValueStruct tmpvl = tfl.idtov(TableLinks.at(Table).at(j), tmpsl.at(j));
             tmpvl.Value.insert(0, IndentSpaces);
             vl.append(tmpvl);
         }
@@ -536,7 +541,7 @@ int TreeModel::SetTree(int Table, QString Id)
         }
         AddItemToTree(vl);
         // проверка наличия потомков у элемента
-        tmps = sqlc.GetValueFromTableByField(sqlc.GetDB(DBs.at(Table)), Tables.at(Table), "alias", "idalias", RootId);
+        tmps = sqlc.GetValueFromTableByField(sqlc.GetDB(DBs.at(Table)), Tables.at(Table), Tables.at(Table), "idalias", RootId);
         if (sqlc.result == SQLC_FAILED)
         {
             TMODELWARN;
@@ -642,7 +647,7 @@ int TreeModel::SetNextTree(int Table, QString Id)
         }
         AddItemToTree(vl);
         // проверка наличия потомков у элемента
-        tmps = sqlc.GetValueFromTableByField(sqlc.GetDB(DBs.at(Table)), Tables.at(Table), "alias", "idalias", RootId);
+        tmps = sqlc.GetValueFromTableByField(sqlc.GetDB(DBs.at(Table)), Tables.at(Table), Tables.at(Table), "idalias", RootId);
         if (sqlc.result == SQLC_FAILED)
         {
             TMODELWARN;

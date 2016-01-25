@@ -24,7 +24,7 @@ DROP TABLE IF EXISTS `classes`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `classes` (
   `idclasses` int(11) NOT NULL,
-  `alias` varchar(45) NOT NULL,
+  `classes` varchar(45) NOT NULL,
   `idalias` varchar(45) DEFAULT NULL,
   `parameters` varchar(45) DEFAULT NULL,
   `deleted` tinyint(1) NOT NULL DEFAULT '0',
@@ -297,6 +297,7 @@ CREATE TABLE `documents` (
   `iddocclasses` varchar(128) DEFAULT NULL,
   `pic` varchar(128) DEFAULT NULL,
   `iddevices` varchar(45) DEFAULT NULL,
+  `issent` varchar(128) DEFAULT NULL,
   PRIMARY KEY (`iddocuments`),
   UNIQUE KEY `iddocuments_UNIQUE` (`iddocuments`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -308,6 +309,7 @@ CREATE TABLE `documents` (
 
 LOCK TABLES `documents` WRITE;
 /*!40000 ALTER TABLE `documents` DISABLE KEYS */;
+INSERT INTO `documents` VALUES (1,'АВМР.426419.009 Э3','','','','','','2001','2016-01-24 18:15:00',0,'2','','1','');
 /*!40000 ALTER TABLE `documents` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -934,4 +936,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2016-01-18 22:49:46
+-- Dump completed on 2016-01-25 23:38:39

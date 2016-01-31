@@ -35,7 +35,7 @@ bool s_ftp::CheckFtp()
 
 void s_ftp::ConnectToFtp()
 {
-    Tmr = new QTimer;
+    Tmr = new QTimer(this);
     Tmr->setInterval(5000); // 5 секунд, чтобы получить ответ от сервера
     connect(Tmr,SIGNAL(timeout()),this,SLOT(FtpTimeout()));
     Tmr->start();
@@ -287,6 +287,7 @@ void s_ftp::FtpDisconnect()
 
 void s_ftp::FtpTimeout()
 {
+    Busy = false;
     SFTPER("Превышено время ожидания установления соединения");
     FtpDisconnect();
     Tmr->stop();

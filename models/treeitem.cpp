@@ -4,12 +4,11 @@
 
 TreeItem::TreeItem(TreeItem *parent)
 {
-//    ParentItem = parent;
+    Q_UNUSED(parent);
 }
 
 TreeItem::~TreeItem()
 {
-//    qDeleteAll(ChildItems);
 }
 
 QString TreeItem::Data(int Column) const

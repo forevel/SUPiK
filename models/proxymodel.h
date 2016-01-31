@@ -11,6 +11,7 @@ public:
     ~ProxyModel();
     QVariant data (const QModelIndex &index, int role = Qt::DisplayRole) const;
     bool setData(const QModelIndex &index, const QVariant &value, int role);
+    QModelIndexList match(const QModelIndex &start, int role, const QVariant &value, int hits, Qt::MatchFlags flags) const;
 
 public slots:
 

@@ -131,7 +131,9 @@ Qt::ItemFlags TreeModel::flags(const QModelIndex &index) const
 {
     if (!index.isValid())
             return Qt::ItemIsEnabled;
-    return Qt::ItemIsEnabled | Qt::ItemIsSelectable;// | Qt::ItemIsEditable;
+    if (IsEditable)
+        return Qt::ItemIsEditable | Qt::ItemIsEnabled;
+    return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
 }
 
 QVariant TreeModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -279,8 +281,9 @@ void TreeModel::SetLastItem(QColor Color, QFont Font, QIcon Icon, QString AData)
 
 // процедура инициализации модели данными из таблицы table и построение дерева по полям alias и idalias
 
-int TreeModel::Setup(QString Table)
+int TreeModel::Setup(QString Table, bool IsEditable)
 {
+    this->IsEditable = IsEditable;
     QStringList sl = QStringList() << Table;
     return Setup(sl, TT_SIMPLE);
 }
@@ -374,7 +377,7 @@ int TreeModel::PrepareTable(QString Table)
     }
     else if (!IsAliasExist) // если есть idalias, но нет alias - это не дело
     {
-        TMODELINFO("Не найдено поле " + vl.at(0).at(0) + " в таблице "+Table);
+        TMODELINFO("Не найдено поле " + PlainTable + " в таблице "+Table);
         return 1;
     }
     else

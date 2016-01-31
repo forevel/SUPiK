@@ -5,6 +5,7 @@
 #include <QByteArray>
 #include <QSortFilterProxyModel>
 #include "../models/s_ncmodel.h"
+#include "../models/editmodel.h"
 
 #define MODE_CHOOSE     1
 #define MODE_EDIT       2
@@ -44,11 +45,10 @@ public slots:
 private:
     QStringList tble;
     QString Id;
-    s_ncmodel *mainmodel;
-    QSortFilterProxyModel *pmainmodel;
+//    s_ncmodel *mainmodel;
+    EditModel *MainModel;
     bool Cancelled;
     int constheight;
-    void fillModelAdata();
     void setupUI();
     void Update();
 
@@ -57,10 +57,7 @@ private slots:
     void accepted();
     void cancelled();
     void resizemainTV(QModelIndex, QModelIndex);
-    void ShowFilterLineEdit();
     void AddItem();
-    void Filter();
-    void Unfilter();
 
 protected:
     void paintEvent(QPaintEvent *e);

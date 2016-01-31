@@ -14,7 +14,7 @@
 #include "../gen/s_sql.h"
 #include "../gen/s_tablefields.h"
 #include "../dialogs/s_2cdialog.h"
-#include "../dialogs/s_2ctdialog.h"
+#include "../dialogs/chooseitemdialog.h"
 #include "../dialogs/s_2tdialog.h"
 #include "../dialogs/s_accessdialog.h"
 
@@ -144,8 +144,8 @@ void s_tqChooseWidget::pbclicked()
     {
     case FW_ALLINK:
     {
-        s_2ctdialog *chooseDialog = new s_2ctdialog(hdr);
-        chooseDialog->setup(ff.link.at(0), true); // диалог с "корневой кнопкой"
+        ChooseItemDialog *chooseDialog = new ChooseItemDialog(hdr);
+        chooseDialog->Setup(ff.link.at(0), true); // диалог с "корневой кнопкой"
         connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
         chooseDialog->setTvCurrentText(le->text());
         chooseDialog->exec();
@@ -153,24 +153,11 @@ void s_tqChooseWidget::pbclicked()
     }
     case FW_LINK:
     {
-        if (tfl.tableistree(ff.link.at(0))) // это дерево
-        {
-            s_2ctdialog *chooseDialog = new s_2ctdialog(hdr);
-            chooseDialog->setup(ff.link.at(0));
-            connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
-            chooseDialog->setTvCurrentText(le->text());
-            chooseDialog->exec();
-        }
-        else // это таблица
-        {
-            s_2cdialog *chooseDialog = new s_2cdialog(hdr);
-            chooseDialog->setup(ff.link.at(0), MODE_CHOOSE, "", le->text());
-            if (!chooseDialog->result)
-            {
-                connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
-                chooseDialog->exec();
-            }
-        }
+        ChooseItemDialog *chooseDialog = new ChooseItemDialog(hdr);
+        chooseDialog->Setup(ff.link.at(0));
+        connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
+        chooseDialog->setTvCurrentText(le->text());
+        chooseDialog->exec();
         break;
     }
     case FW_DLINK:
@@ -335,7 +322,7 @@ void s_tqChooseWidget::SetData(PublicClass::ValueStruct data)
 
 QString s_tqChooseWidget::Value()
 {
-    return tfl.vtoid(links, Data());
+    return tfl.vtoid(Data());
 }
 
 PublicClass::ValueStruct s_tqChooseWidget::Data()
@@ -343,6 +330,7 @@ PublicClass::ValueStruct s_tqChooseWidget::Data()
     PublicClass::ValueStruct vs;
     vs.Type = VS_STRING;
     vs.Value = "";
+    vs.Links = links;
     switch (ff.delegate)
     {
     case FD_CHOOSE:

@@ -37,7 +37,7 @@ public:
     bool removeColumns(int column, int count, const QModelIndex &parent = QModelIndex());
     bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex());
     int Setup(QStringList Tables, int Type=TT_TYPE1);
-    int Setup(QString Table);
+    int Setup(QString Table, bool IsEditable = false);
     void Refresh();
 
     // роли для моделей
@@ -80,6 +80,7 @@ private:
     int TablesNum; // количество таблиц, участвующих в работе
     QStack<QString> RootIDs; // элементы записываются в виде: <номер_таблицы>.<ИД>
     int Indentation;
+    bool IsEditable;
 
     int BuildTree ();
     int SetFirstTreeElements();

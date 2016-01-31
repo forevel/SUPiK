@@ -48,6 +48,30 @@ void ProxyModel::removeExpandedIndex(const QModelIndex &index)
         mdl->removeExpandedIndex(mapToSource(index));
     }
 }
+
+QModelIndexList ProxyModel::match(const QModelIndex &start, int role, const QVariant &value, int hits, Qt::MatchFlags flags) const
+{
+    Q_UNUSED(flags);
+    QModelIndexList mil;
+    int StartRow = start.row();
+    int StartColumn = start.column();
+    for (int i=StartRow; i<rowCount(); i++)
+    {
+        for (int j=StartColumn; j<columnCount(); j++)
+        {
+            QModelIndex idx = index(i, j, QModelIndex());
+            if (!idx.isValid())
+                continue;
+            QVariant vl = data(idx, role);
+            if (vl == value)
+                mil.append(idx);
+            if (hits >= mil.size())
+                return mil;
+        }
+    }
+    return mil;
+}
+
 /*
 bool ProxyModel::lessThan(const QModelIndex &left, const QModelIndex &right) const
 {

@@ -156,7 +156,9 @@ public:
         ER_SFTP,     // sftp
         ER_SYSSET,   // sys_settingsdialog
         ER_SYSICT,   // sys_importclass_t
-        ER_TMODEL    // treemodel
+        ER_TMODEL,   // treemodel
+        ER_EMODEL,   // editmodel
+        ER_CHIDLG   // chooseitemdialog
     };
 
     // диалоговые окна в СУПиКе
@@ -182,6 +184,7 @@ public:
     {
         int Type; // тип значения VL_
         QString Value; // само значение
+        QString Links; // строка ссылок
     };
 
     double timerperiod;

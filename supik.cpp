@@ -140,7 +140,7 @@ void supik::SetSupikMenuBar()
     SupikMenuBar->setObjectName("MenuBar");
     QSqlQuery get_mainmenu (pc.sup);
     QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
-    tmpString="SELECT `idmainmenu`,`alias`,`access`,`tooltip`,`method` FROM `mainmenu` WHERE " \
+    tmpString="SELECT `idmainmenu`,`mainmenu`,`access`,`tooltip`,`method` FROM `mainmenu` WHERE " \
                       "`idalias`=0 AND `deleted`=0 ORDER BY `order` ASC;";
     get_mainmenu.exec(tmpString);
     while (get_mainmenu.next())
@@ -195,7 +195,7 @@ QMenu *supik::AddChildToMenu(int id)
     QString tmpString;
     QSqlQuery get_child_mainmenu (pc.sup);
 
-    get_child_mainmenu.exec("SELECT `idmainmenu`,`alias`,`access`,`tooltip`,`method` FROM `mainmenu` WHERE "
+    get_child_mainmenu.exec("SELECT `idmainmenu`,`mainmenu`,`access`,`tooltip`,`method` FROM `mainmenu` WHERE "
                             "`idalias`=" + QString::number(id, 10) + " AND `deleted`=0 ORDER BY `idmainmenu` ASC;");
 
     while (get_child_mainmenu.next())

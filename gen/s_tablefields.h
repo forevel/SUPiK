@@ -15,7 +15,7 @@ public:
     QList<QStringList> tbvll (QString tble); // взять все значения по всем полям таблицы tble
     QString tov(QString tble, QString header, QString tbleid); // взять значение по id=tbleid из table.tablefields для заданного поля header таблицы tble
     QString toid(QString tble, QString header, QString value); // взять ИД из поля header таблицы tble, для которого значение = value
-    QString vtoid (QString links, PublicClass::ValueStruct value); // взять один ИД по ссылке и значению
+    QString vtoid (PublicClass::ValueStruct value); // взять один ИД по ссылке и значению
     PublicClass::ValueStruct idtov(QString links, QString id); // взять одно значение по ссылке и ид
     QStringList idtovl (QString links); // взять все значения по ссылке в зависимости от типа
     void idtois (QString tble, QStringList header, QStringList values);

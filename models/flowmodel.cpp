@@ -420,7 +420,7 @@ QString s_ncmodel::value(int row, int column)
     else
         vs.Type = VS_ICON;
     QString vl = data(index(row, column, QModelIndex()), Qt::DisplayRole).toString();
-    vs.Links = data(index(row,column,QModelIndex()),Qt::UserRole).toString();
+    QString links = data(index(row,column,QModelIndex()),Qt::UserRole).toString();
     QString tablenum = data(index(row,column,QModelIndex()),Qt::UserRole+2).toString();
     if (tablenum != "") // если значение относится к полю типа DLINK, то добавляем в начало номер таблицы и спецсимвол
     {
@@ -428,7 +428,7 @@ QString s_ncmodel::value(int row, int column)
         vl.insert(0,'_');
     }
     vs.Value = vl;
-    vl = tfl.vtoid(vs);
+    vl = tfl.vtoid(links, vs);
     if (tfl.result)
     {
         result=1;

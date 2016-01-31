@@ -131,6 +131,7 @@ PublicClass::ValueStruct s_tablefields::idtov(QString links, QString id)
     PublicClass::ValueStruct vl;
     vl.Type = VS_STRING; // тип по умолчанию - простая строка
     vl.Value = ""; // значение по умолчанию - пустая строка
+    vl.Links = links;
     PublicClass::FieldFormat ff = pc.getFFfromLinks(links);
     switch (ff.ftype)
     {
@@ -285,13 +286,13 @@ QStringList s_tablefields::idtovl(QString links)
 // перевод имени в его ИД через строку links в таблице tablefields (поиск в таблице по имени его ИД)
 // links = 2.9, value = "ч..ч..чузчузч"
 
-QString s_tablefields::vtoid(QString links, PublicClass::ValueStruct vl)
+QString s_tablefields::vtoid(PublicClass::ValueStruct vl)
 {
     QString outs;
     result = 0;
     if ((vl.Type == VS_STRING) && (vl.Value == "")) // пустая строка вполне имеет право на запись
         return QString();
-    PublicClass::FieldFormat ff = pc.getFFfromLinks(links);
+    PublicClass::FieldFormat ff = pc.getFFfromLinks(vl.Links);
     switch (ff.ftype)
     {
     case FW_ALLINK:

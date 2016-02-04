@@ -15,6 +15,13 @@
 #define SUPIKMENU_ITEM_COLOR_SELECTED "#000000"
 #define SYS_TAB_BGCOLOR "#FF373A"
 
+// Макросы для выдачи сообщений
+#define SUPIKER(a)    ERMSG(PublicClass::ER_SUPIK, __LINE__, a)
+#define SUPIKDBG      DBGMSG(PublicClass::ER_SUPIK,__LINE__)
+#define SUPIKINFO(a)  INFOMSG(PublicClass::ER_SUPIK, __LINE__, a)
+#define SUPIKWARN     WARNMSG(PublicClass::ER_SUPIK,__LINE__)
+
+
 #define SYSSTYLESHEET "background-image: url(:/res/SysWallpaper.png);"
 
 class supik : public QMainWindow
@@ -29,7 +36,7 @@ signals:
 public slots:
 
 private:
-    bool ERHide, ERTimerIsOn;
+    bool ERHide, ERTimerIsOn, ProblemsDetected;
     QTimer *ERTimer;
     QRect ERGeometry;
     int WarningActionIndex;
@@ -58,13 +65,14 @@ private:
     void Dummy();
     void SysDirectories();
     void ShowOrHideSlideER();
+    void ClearProblems();
 
 private slots:
     void ExecuteSub();
     void executeDirDialog();
-    void updateprobsnumberintabtext();
+    void UpdateProblemsNumberInTab();
     void periodic1s();
-    void periodicxm();
+    void NewProblemsDetected(PublicClass::ProblemStruct &prob);
     void MouseMove();
     void UpdateErrorProtocol();
     void HideErrorProtocol();

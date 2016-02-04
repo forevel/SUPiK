@@ -212,7 +212,7 @@ void s_2ctdialog::SetExpandIndex(QModelIndex idx)
         return;
     }
     QModelIndex ModelIndex = tv->model()->index(idx.row(),idx.column(), QModelIndex());
-    pmainmodel->addExpandedIndex(ModelIndex);
+//    pmainmodel->addExpandedIndex(ModelIndex);
 }
 
 void s_2ctdialog::UnsetExpandIndex(QModelIndex idx)
@@ -224,7 +224,7 @@ void s_2ctdialog::UnsetExpandIndex(QModelIndex idx)
         return;
     }
     QModelIndex ModelIndex = tv->model()->index(idx.row(),idx.column(), QModelIndex());
-    pmainmodel->removeExpandedIndex(ModelIndex);
+//    pmainmodel->removeExpandedIndex(ModelIndex);
 }
 
 void s_2ctdialog::ShowFilterLineEdit()

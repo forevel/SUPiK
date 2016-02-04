@@ -53,43 +53,7 @@ void s_2cdialog::setup(QString tble, int Mode, QString id, QString matchtext, bo
         CD2WARN;
         return;
     }
-/*    switch (Mode)
-    {
-    case MODE_CHOOSE:
-    {
-//        mainmodel->setup(tble);
-        if (MainModel->Setup(tble))
-//        if (mainmodel->result)
-        {
-            result=1;
-            CD2WARN;
-            w->Stop();
-            return;
-        }
-//        mainmodel->isEditable = false;
-        break;
-    }
-    case MODE_EDIT:
-    case MODE_EDITNEW:
-    {
-        mainmodel->setup(tble, id);
-        if (mainmodel->result)
-        {
-            CD2WARN;
-            w->Stop();
-            return;
-        }
-        mainmodel->isEditable = true;
-        fillModelAdata();
-        break;
-    }
-    default:
-    {
-        CD2WARN;
-        w->Stop();
-        return;
-    }
-    }*/
+    FillHeaderData();
     this->IsQuarantine = isQuarantine;
     result = 0;
     w->Stop();
@@ -378,39 +342,26 @@ void s_2cdialog::closeEvent(QCloseEvent *e)
     e->accept();
 }
 
-/*void s_2cdialog::fillModelAdata()
+void s_2cdialog::FillHeaderData()
 {
     int i;
     int ftype;
-    for (i=0;i<mainmodel->rowCount();i++)
+    for (i=0;i<MainModel->rowCount();i++)
     {
-        QStringList tmpStringList = mainmodel->data(mainmodel->index(i,1,QModelIndex()),Qt::UserRole).toString().split(".");
+        QStringList tmpStringList = MainModel->data(MainModel->index(i,1,QModelIndex()),Qt::UserRole).toString().split(".");
         if (tmpStringList.size() > 1)
             ftype = tmpStringList.at(1).toInt();
-        QString hdradd = mainmodel->data(mainmodel->index(i,0,QModelIndex()),Qt::DisplayRole).toString();
+        QString hdradd = MainModel->data(MainModel->index(i,0,QModelIndex()),Qt::DisplayRole).toString();
         switch (ftype)
         {
         case FW_ALLINK:
         case FW_LINK:
         {
-            mainmodel->setData(mainmodel->index(i,0,QModelIndex()),QVariant(caption+":"+hdradd),Qt::UserRole+1);
+            MainModel->setData(MainModel->index(i,0,QModelIndex()),QVariant(caption+":"+hdradd),EditModel::HeaderTextRole);
             break;
         }
         default:
             break;
         }
     }
-} */
-
-void s_2cdialog::SetTvCurrentText(QString str)
-{
-    s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
-    if (tv == 0)
-    {
-        CD2DBG;
-        return;
-    }
-    QList<QModelIndex> item = tv->model()->match(tv->model()->index(0, 0), Qt::DisplayRole, QVariant::fromValue(str), 1, Qt::MatchExactly);
-    if (!item.isEmpty())
-        tv->setCurrentIndex(item.at(0));
 }

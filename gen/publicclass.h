@@ -64,11 +64,6 @@ QT_END_NAMESPACE
 #define ACC_DOC_WR      0x0800
 #define ACC_NUM         12
 
-// определение проблем
-#define PR_Q    0x01 // есть новые элементы на карантине
-#define PR_NM   0x02 // есть новые сообщения
-#define PR_CHK  0x04 // есть задания на проверку
-
 #define INSERT  1
 #define UPDATE  2
 
@@ -129,7 +124,7 @@ public:
     ~PublicClass();
 
     // Коды ошибок
-    enum errors
+    enum Errors
     {
         ER_SUPIK,    // supik
         ER_COMP,     // cmp_compdialog
@@ -158,11 +153,12 @@ public:
         ER_SYSICT,   // sys_importclass_t
         ER_TMODEL,   // treemodel
         ER_EMODEL,   // editmodel
-        ER_CHIDLG   // chooseitemdialog
+        ER_CHIDLG,   // chooseitemdialog
+        ER_CTHREAD  // checkthread
     };
 
     // диалоговые окна в СУПиКе
-    enum supikdialogwindows
+    enum SupikDialogWindows
     {
         TW_SET,     // настройки (Settings)
         TW_SYSST,   // SysStructEdit - редактор структуры системы
@@ -177,6 +173,47 @@ public:
         TW_QUAR,    // работа с карантином
         TW_DEV,     // редактор документов
         TW_ADM      // сисадминистрирование
+    };
+
+    // определение проблем
+    enum ProblemTypes
+    {
+        PT_SYS,
+        PT_ALT,
+        PT_WH,
+        PT_SADM,
+        PT_TB,
+        PT_DOC,
+        PT_ALL
+    };
+
+    enum ProblemSubTypes
+    {
+        PST_FIELDMISSED,    // отсутствует поле ProblemField в таблице ProblemTable
+        PST_FIELDEMPTY,     // не заполнено поле ProblemField в таблице ProblemTable по индексу ProblemId
+        PST_NOSUCHID,       // в таблице ProblemTable поле ProblemField в строке ProblemId ссылается на несуществующий ИД
+        PST_INCORRECT,      // некорректная ссылка в поле ProblemField в строке ProblemId таблицы ProblemTable
+        PST_DUPLICATE,      // найдены одинаковые элементы в таблице ProblemTable с ИД ProblemId и ProblemId2
+        PST_INCORRECTDATE,  // некорректная дата в строке ProblemId в таблице ProblemField
+        PST_ALTIUMINC,      // несоответствие полей NominalValue и Nominal+Unit в строке ProblemId таблицы ProblemTable
+        PST_EMPTYFIELDS,    // найдена пустая запись в строке ProblemId таблицы ProblemTable
+        PST_NKALTIUM,       // для элемента ProblemId в таблице ProblemTable не найдена соответствующая запись в таблице ProblemTable2
+        PST_TBOVERDUE,      // просрочен срок сдачи экзамена у тов. ProblemPerson
+        PST_TBOVERDUEINC,   // до конца действия срока сдачи экзамена у тов. ProblemPerson осталось менее 14 дней
+        PST_NEWAQ,          // есть новые элементы в карантине Altium
+        PST_NEWISSUE        // есть задания для выполнения
+    };
+
+    struct ProblemStruct
+    {
+        int ProblemType;
+        int ProblemSubType;
+        QString ProblemTable;
+        QString ProblemTable2;
+        QString ProblemField;
+        QString ProblemId;
+        QString ProblemId2;
+        QString ProblemPerson;
     };
 
     // структура возвращаемых значений по полю links
@@ -205,23 +242,11 @@ public:
     QSettings *LandP; // переменная для работы с настройками системы в реестре
     QByteArray data, symfind, footfind; // data - массив хранения считанных из файлов библиотек бинарных данных,
                                         // symfind и footfind - строки поиска в библиотеках "LIBREFERENCE=" и "PATTERN="
-    QStringList sysMessages;
-    QStringList whMessages;
-    QStringList altMessages;
-    QStringList giMessages;
-    QStringList sadmMessages;
-    QStringList allprobs;
     QStringList supikprocs;
-//    bool probsdetected;
-//    int probpos;
     int Mode; // Режим работы (Справочники/Компоненты/Склады/Движение)
     int Altium; // граница между списком справочников и списком компонентов (для maintree)
     quint32 access; // текущие права доступа. Зашифрованы тройками бит (с младшего до старшего: право на чтение/изменение/удаление) (начиная с младших):
                 // Системные, Складские, Альтиумовские, ГлавноИнженерские, Сисадминские, Архивариусовские
-    int notify; // активные уведомления (см. PR_-defines выше)
-    bool NewNotifyHasArrived; // признак поступления новых с момента последнего опроса событий
-    bool Acknowledged; // признак того, что сообщение о поступлении новых событий мы уже выдавали
-    bool UpdateInProgress; // признак того, что список сообщений обновляется
 
     struct
     {
@@ -322,9 +347,6 @@ public:
     PublicClass::FieldFormat getFFfromLinks (QString links) const;
     QString getlinksfromFF (PublicClass::FieldFormat ff);
     void InitiatePublicClass();
-    void DBCheck();
-    void fillallprob();
-    void minutetest();
     QString getTranslit(QString);
 
     enum ermsgtype
@@ -348,8 +370,6 @@ public:
     void AddErrMsg(ermsgtype msgtype, quint64 ernum, quint64 ersubnum, QString msg="");
 
 private:
-
-    void addmessage(QStringList &sl, QString mes);
     void openBD(QSqlDatabase &db, QString dbid, QString dbname, QString login, QString psw);
 };
 

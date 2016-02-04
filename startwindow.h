@@ -37,9 +37,6 @@ private:
     void LoadLanguage();
     void Startup();
     void OpenAndCheckDB(QSqlDatabase db, int signid);
-    void DBCheck();
-    void ReminderCheck();
-    void CatalogueCheck();
 };
 
 #endif // STARTWINDOW_H

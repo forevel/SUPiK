@@ -32,7 +32,6 @@ public:
     // void setup(QStringList sl, QStringList links=QStringList(), QString str="");
     // функция добавления к существующей таблице ещё одной - для FW_DLINK
     void AddTable(QString tble);
-    void SetTvCurrentText(QString str);
     bool IsQuarantine;
     int Mode,result;
     QString caption;
@@ -45,12 +44,12 @@ public slots:
 private:
     QStringList tble;
     QString Id;
-//    s_ncmodel *mainmodel;
     EditModel *MainModel;
     bool Cancelled;
     int constheight;
     void setupUI();
     void Update();
+    void FillHeaderData();
 
 private slots:
     void accepted(QModelIndex);

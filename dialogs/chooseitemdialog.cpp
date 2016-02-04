@@ -6,6 +6,7 @@
 #include "../gen/s_sql.h"
 #include "../gen/publicclass.h"
 #include "../gen/s_tablefields.h"
+#include "../models/griddelegate.h"
 #include "s_2cdialog.h"
 
 #include <QHBoxLayout>
@@ -30,8 +31,8 @@ void ChooseItemDialog::SetupUI()
 {
     QVBoxLayout *mainLayout = new QVBoxLayout;
     QHBoxLayout *pbLayout = new QHBoxLayout;
-    TreeView *mainTV = new TreeView(TreeView::TV_PROXY);
-    mainTV->setObjectName("mainTV");
+    TreeView *MainTV = new TreeView(TreeView::TV_PROXY);
+    MainTV->setObjectName("MainTV");
     s_tqPushButton *pbOk = new s_tqPushButton("Ага");
     pbOk->setIcon(QIcon(":/res/ok.png"));
     s_tqPushButton *pbCancel = new s_tqPushButton("Неа");
@@ -50,11 +51,9 @@ void ChooseItemDialog::SetupUI()
     pMainModel->setSourceModel(MainModel);
     pMainModel->setFilterKeyColumn(1);
     pMainModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
-    mainTV->setModel(MainModel);
-    mainTV->setSortingEnabled(true);
-    mainTV->setEditTriggers(QAbstractItemView::AllEditTriggers);
-    mainTV->horizontalHeader()->setVisible(false);
-//    connect(pMainModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(resizemainTV(QModelIndex,QModelIndex)));
+    MainTV->setModel(pMainModel);
+    GridDelegate *MainDelegate = new GridDelegate;
+    MainTV->setItemDelegate(MainDelegate);
     mainLayout->addWidget(lbl, 0, Qt::AlignRight);
     QHBoxLayout *hlyout = new QHBoxLayout;
     s_tqPushButton *pb = new s_tqPushButton;
@@ -74,14 +73,15 @@ void ChooseItemDialog::SetupUI()
     hlyout->addWidget(pb);
     hlyout->addStretch(1);
     mainLayout->addLayout(hlyout);
-    mainLayout->addWidget(mainTV, 100, Qt::AlignLeft);
+    mainLayout->addWidget(MainTV, 100);
     s_tqPushButton *rootpb = new s_tqPushButton("Корневой");
     connect(rootpb,SIGNAL(clicked()),this,SLOT(Root()));
     if (RootNeeded)
         mainLayout->addWidget(rootpb);
     mainLayout->addLayout(pbLayout);
-    connect(mainTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(accepted(QModelIndex)));
+    connect(MainTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(accepted(QModelIndex)));
     setLayout(mainLayout);
+    MainTV->resizeColumnsToContents();
 }
 
 // процедура подготавливает дерево выбора tble по таблице tablefields
@@ -92,18 +92,9 @@ void ChooseItemDialog::Setup(QString tble, bool RootNeeded)
     this->RootNeeded = RootNeeded;
     SetupUI();
     MainModel->Setup(tble);
-    ResizemainTV();
-}
-
-void ChooseItemDialog::ResizemainTV()
-{
-    TreeView *tv = this->findChild<TreeView *>("mainTV");
-    if (tv == 0)
-    {
-        CHIDLGDBG;
-        return;
-    }
-    tv->resizeColumnsToContents();
+    TreeView *tv = this->findChild<TreeView *>("MainTV");
+    if (tv != 0)
+        tv->resizeColumnsToContents();
 }
 
 void ChooseItemDialog::paintEvent(QPaintEvent *e)
@@ -121,17 +112,15 @@ void ChooseItemDialog::accepted(QModelIndex idx)
 
 void ChooseItemDialog::accepted()
 {
-    TreeView *tv = this->findChild<TreeView *>("mainTV");
+    TreeView *tv = this->findChild<TreeView *>("MainTV");
     if (tv == 0)
     {
         CHIDLGDBG;
         return;
     }
-    QModelIndex curIndex;
-    QModelIndex parIndex;
-    curIndex = tv->currentIndex();
-    QModelIndex index = MainModel->index(curIndex.row(), 0); // 0-я колонка - это всегда должен быть ИД, по нему потом выбираются значения из таблиц
-    QString tmpString = index.data(Qt::DisplayRole).toString();
+    // 0-я колонка - это всегда должен быть ИД, по нему потом выбираются значения из таблиц
+    QVariant tmpv = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole);
+    QString tmpString = tmpv.toString();
     emit changeshasbeenMade(tmpString);
     this->close();
 }
@@ -151,20 +140,17 @@ void ChooseItemDialog::setTvCurrentText(QString text)
 {
     if (text.isEmpty())
         return;
-    TreeView *tv = this->findChild<TreeView *>("mainTV");
+    TreeView *tv = this->findChild<TreeView *>("MainTV");
     if (tv == 0)
     {
         CHIDLGDBG;
         return;
     }
-//    ProxyModel *mdl = static_cast<ProxyModel *>(tv->model());
-//    TreeModel *tmdl = static_cast<TreeModel *>(mdl->sourceModel());
-    QList<QModelIndex> item = tv->model()->match(tv->model()->index(0, 0), Qt::DisplayRole, QVariant::fromValue(text), 1, Qt::MatchRecursive);
-    if (!item.isEmpty())
-    {
-//        QModelIndex idx = mdl->mapFromSource(item.at(0));
-        tv->setCurrentIndex(item.at(0));
-    }
+    ProxyModel *mdl = static_cast<ProxyModel *>(tv->model());
+    QModelIndex item = mdl->Find(1, QVariant::fromValue(text));
+    item = item.sibling(item.row(), 0); // выбираем индекс ИД (из 0-й колонки)
+    if (item.isValid())
+        tv->setCurrentIndex(item);
 }
 
 void ChooseItemDialog::Filter()
@@ -245,5 +231,7 @@ void ChooseItemDialog::Update()
         CHIDLGWARN;
         return;
     }
-    ResizemainTV();
+    TreeView *tv = this->findChild<TreeView *>("MainTV");
+    if (tv != 0)
+        tv->resizeColumnsToContents();
 }

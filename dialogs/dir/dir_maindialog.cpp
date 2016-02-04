@@ -260,7 +260,7 @@ void dir_maindialog::EditItem(QString str)
         Table = Tables.at(0);
         Id = QString::number(str.toInt());
     }
-    s_2cdialog *newdialog = new s_2cdialog(tmps+":"+Id);
+    s_2cdialog *newdialog = new s_2cdialog(tmps+":"+getSlaveIndex(1));
     int Mode = (isNewID) ? MODE_EDITNEW : MODE_EDIT;
     newdialog->setup(Table+"_полн",Mode,Id);
     if (newdialog->result)

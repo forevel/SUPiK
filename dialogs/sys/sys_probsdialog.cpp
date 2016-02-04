@@ -7,13 +7,13 @@
 
 #include "sys_probsdialog.h"
 #include "../../widgets/s_tqlabel.h"
-#include "../../widgets/s_tqtableview.h"
+#include "../../widgets/treeview.h"
 #include "../../gen/publicclass.h"
 #include "../../gen/s_sql.h"
 #include "../../widgets/s_tqpushbutton.h"
 #include "../../widgets/s_tqcombobox.h"
 
-sys_probsdialog::sys_probsdialog(QWidget *parent) :
+SysProblemsDialog::SysProblemsDialog(QWidget *parent) :
     QDialog(parent)
 {
     slmodel = new QStringListModel;
@@ -21,40 +21,40 @@ sys_probsdialog::sys_probsdialog(QWidget *parent) :
     SetupUI();
 }
 
-void sys_probsdialog::SetupUI()
+void SysProblemsDialog::SetupUI()
 {
     QVBoxLayout *mainLayout = new QVBoxLayout;
-    s_tqTableView *mainTV = new s_tqTableView(false);
+    TreeView *mainTV = new TreeView(TreeView::TV_PLAIN);
     mainTV->setObjectName("mainTV");
     mainTV->setContextMenuPolicy(Qt::CustomContextMenu);
-    disconnect(mainTV, SIGNAL(customContextMenuRequested(QPoint)), 0, 0);
-    connect (mainTV, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(mainTVcontextmenu(QPoint)));
-    disconnect(mainTV, SIGNAL(doubleClicked(QModelIndex)), 0, 0);
-    connect (mainTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(removeProb(QModelIndex)));
+    connect (mainTV, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(MainTvContextMenu(QPoint)));
+    connect (mainTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(RemoveProb()));
     mainLayout->addWidget(mainTV, 100);
     s_tqPushButton *pb = new s_tqPushButton("Обновить");
     pb->setIcon(QIcon(":/res/refresh.png"));
     connect(pb, SIGNAL(clicked()), this, SLOT(refresh()));
     mainLayout->addWidget(pb, 0);
     setLayout(mainLayout);
-    updatemainTV();
+    UpdateMainTv();
 }
 
-void sys_probsdialog::mainTVcontextmenu(QPoint)
+void SysProblemsDialog::MainTvContextMenu(QPoint)
 {
     QAction *OpenAction = new QAction("Устранить проблему", this);
-    connect (OpenAction, SIGNAL(triggered()), this, SLOT(removeProb()));
+    connect (OpenAction, SIGNAL(triggered()), this, SLOT(RemoveProb()));
 
     QMenu *SystemContextMenu = new QMenu;
     SystemContextMenu->addAction(OpenAction);
     SystemContextMenu->exec(QCursor::pos());
 }
 
-void sys_probsdialog::removeProb(QModelIndex index)
+
+
+void SysProblemsDialog::RemoveProb()
 {
-    Q_UNUSED(index);
-/*    s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
-    QStringList probchunks;
+    TreeView *tv = this->findChild<TreeView *>("mainTV");
+    QModelIndex index = tv->currentIndex();
+/*    QStringList probchunks;
     probchunks = tv->model()->data(index, Qt::DisplayRole).toString().split(" "); // делим сообщение на части, используя разделитель - пробел
     if (probchunks.at(0) == "Невозможно")
     {
@@ -104,8 +104,8 @@ void sys_probsdialog::removeProb(QModelIndex index)
         }
         refresh();
         QMessageBox::information(this,"Ура!","Добавлено поле "+field+" в таблицу "+tble+"!");
-        updatemainTV();
-        emit updateprobsnumber();
+        UpdateMainTv();
+        emit ProblemsNumberUpdated();
     }
     else if (probchunks.at(0) == "Добавлены")
     {
@@ -119,14 +119,26 @@ void sys_probsdialog::removeProb(QModelIndex index)
     } */
 }
 
-void sys_probsdialog::removeProb()
+void SysProblemsDialog::AddProblem(PublicClass::ProblemStruct &prob)
 {
-/*    s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
-    QModelIndex index = tv->currentIndex();
-    removeProb(index);*/
+    if (prob.ProblemType == PublicClass::PT_ALL)
+        ProblemsList.append(prob);
+    else if ((pc.access & ACC_SYS_RO) && (prob.ProblemType == PublicClass::PT_SYS))
+        ProblemsList.append(prob);
+    else if ((pc.access & ACC_WH_RO) && (prob.ProblemType == PublicClass::PT_WH))
+        ProblemsList.append(prob);
+    else if ((pc.access & ACC_TB_RO) && (prob.ProblemType == PublicClass::PT_TB))
+        ProblemsList.append(prob);
+    else if ((pc.access & ACC_SADM_RO) && (prob.ProblemType == PublicClass::PT_SADM))
+        ProblemsList.append(prob);
+    else if ((pc.access & ACC_DOC_RO) && (prob.ProblemType == PublicClass::PT_DOC))
+        ProblemsList.append(prob);
+    else if ((pc.access & ACC_ALT_RO) && (prob.ProblemType == PublicClass::PT_ALT))
+        ProblemsList.append(prob);
+    UpdateMainTv();
 }
 
-void sys_probsdialog::updatemainTV()
+void SysProblemsDialog::UpdateMainTv()
 {
 /*    int i;
     s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
@@ -157,7 +169,7 @@ void sys_probsdialog::updatemainTV()
     tv->resizeColumnsToContents(); */
 }
 
-void sys_probsdialog::refresh()
+void SysProblemsDialog::refresh()
 {
 /*    QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
     // обновление событий
@@ -171,7 +183,7 @@ void sys_probsdialog::refresh()
     QApplication::restoreOverrideCursor(); */
 }
 
-void sys_probsdialog::addcol()
+void SysProblemsDialog::addcol()
 {
 /*    s_tqComboBox *cb = dlg->findChild<s_tqComboBox *>("idcb");
     db = sqlc.GetDBByTableName(tble);
@@ -193,8 +205,8 @@ void sys_probsdialog::addcol()
     {
         refresh();
         QMessageBox::information(this,"Ура!","Добавлено поле "+field+" в таблицу "+tble+"!");
-        updatemainTV();
-        emit updateprobsnumber();
+        UpdateMainTv();
+        emit ProblemsNumberUpdated();
     }
     dlg->close(); */
 }

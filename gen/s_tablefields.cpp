@@ -142,6 +142,9 @@ PublicClass::ValueStruct s_tablefields::idtov(QString links, QString id)
             vl.Value = "<Корневой элемент>";
             return vl;
         }
+        QStringList tmpsl = id.split(".");
+        if (tmpsl.size() > 1)
+            id = tmpsl.at(1);
         vl.Value = tov(ff.link.at(0), "Наименование", id);
         if (result)
             TFWARN;
@@ -150,6 +153,9 @@ PublicClass::ValueStruct s_tablefields::idtov(QString links, QString id)
     case FW_LINK:
     case FW_MAXLINK:
     {
+        QStringList tmpsl = id.split(".");
+        if (tmpsl.size() > 1)
+            id = tmpsl.at(1);
         vl.Value = tov(ff.link.at(0), ff.link.at(1), id);
         if (result)
             TFWARN;

@@ -167,19 +167,6 @@ void StartWindow::OkPBClicked()
         if (!FtpCheck)
             STARTER("Каталог СУПиК недоступен");
 
-
-        StartWindowSplashScreen->showMessage("Проверка целостности данных...", Qt::AlignRight, Qt::white);
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
-        //        DBCheck();
-
-        StartWindowSplashScreen->showMessage("Проверка наличия напоминаний...", Qt::AlignRight, Qt::white);
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
-        //        ReminderCheck();
-
-        StartWindowSplashScreen->showMessage("Проверка структуры каталогов...", Qt::AlignRight, Qt::white);
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
-        //        CatalogueCheck();
-
         StartWindowSplashScreen->finish(this);
 
         supik *supik_main_window = new supik;
@@ -252,23 +239,4 @@ void StartWindow::OpenAndCheckDB(QSqlDatabase db, int signid)
     }
     else
         emit DBOpened(signid);
-}
-
-void StartWindow::DBCheck()
-{
-    pc.DBCheck();
-}
-
-void StartWindow::ReminderCheck()
-{
-    // здесь следует проверка на просроченность экзаменов по ТБ для sys|gi
-    // далее следует проверка на приближение сроков окончания регистрации доменов, антивирусных лицензий для sadm
-    // далее следует проверка на наличие изделий, находящихся в ремонте (БД repair) для alt
-    // далее следует проверка на наличие записей в базах altium, solidworks, schemagee, devices и constructives, которые не имеют записи в номенклатуре
-    // далее следует проверка на наличие записей с одинаковым <tble>, но с разным id<tble> в одной таблице
-}
-
-void StartWindow::CatalogueCheck()
-{
-
 }

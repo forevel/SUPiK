@@ -11,12 +11,12 @@ public:
     ~ProxyModel();
     QVariant data (const QModelIndex &index, int role = Qt::DisplayRole) const;
     bool setData(const QModelIndex &index, const QVariant &value, int role);
-    QModelIndexList match(const QModelIndex &start, int role, const QVariant &value, int hits, Qt::MatchFlags flags) const;
+    QModelIndex Find(int column, const QVariant &value);
 
 public slots:
 
-    void addExpandedIndex(const QModelIndex &index);
-    void removeExpandedIndex(const QModelIndex &index);
+/*    void addExpandedIndex(const QModelIndex &index);
+    void removeExpandedIndex(const QModelIndex &index); */
 
 protected:
 //    bool lessThan(const QModelIndex &left, const QModelIndex &right) const Q_DECL_OVERRIDE;

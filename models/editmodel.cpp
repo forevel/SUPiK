@@ -53,6 +53,8 @@ QVariant EditModel::data(const QModelIndex &index, int role) const
                 return QVariant::fromValue(QIcon(MainData.at(index.row())->Icon(index.column())));
             else if (role == LinksRole)
                 return MainData.at(index.row())->LinksData(index.column());
+            else if (role == HeaderTextRole)
+                return MainData.at(index.row())->HeaderData(index.column());
             else if (role == CellInfoRole)
                 return MainData.at(index.row())->CellInfoData();
             else if (role == TableNumberRole)
@@ -92,6 +94,11 @@ bool EditModel::setData(const QModelIndex &index, const QVariant &value, int rol
         else if (role == LinksRole)
         {
             MainData.at(index.row())->SetLinksData(index.column(), value.toString()); // пишем значение вспомогательного поля
+            return true;
+        }
+        else if (role == HeaderTextRole)
+        {
+            MainData.at(index.row())->SetHeaderData(index.column(), value.toString()); // пишем значение вспомогательного поля
             return true;
         }
         else if (role == CellInfoRole)
@@ -388,6 +395,14 @@ QString EditModelItem::LinksData(int Column) const
         return QString();
 }
 
+QString EditModelItem::HeaderData(int Column) const
+{
+    if (Column < HData.size())
+        return HData.at(Column);
+    else
+        return QString();
+}
+
 void EditModelItem::SetData(int Column, const QString &Data)
 {
     if (Column < ItemData.size())
@@ -402,6 +417,14 @@ void EditModelItem::SetLinksData(int Column, const QString &Data)
         LData.replace(Column, Data);
     else
         LData.append(Data);
+}
+
+void EditModelItem::SetHeaderData(int Column, const QString &Data)
+{
+    if (Column < HData.size())
+        HData.replace(Column, Data);
+    else
+        HData.append(Data);
 }
 
 // проверка элементов в определённых позициях на "пустость"

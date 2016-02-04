@@ -1,5 +1,6 @@
 #include <QtWidgets>
 #include <QTimer>
+#include <QThread>
 #include <QPropertyAnimation>
 #include "supik.h"
 #include "dialogs/dev/dev_docdialog.h"
@@ -17,15 +18,25 @@
 #include "widgets/s_colortabwidget.h"
 #include "widgets/s_tqtableview.h"
 #include "widgets/errorprotocolwidget.h"
+#include "threads/checkthread.h"
 #include "gen/publiclang.h"
 #include "gen/s_sql.h"
 
 supik::supik()
 {
+    CheckThread *CThread = new CheckThread;
+    QThread *thr = new QThread;
+    CThread->moveToThread(thr);
+    connect(thr,SIGNAL(started()),CThread,SLOT(Start()));
+    connect(thr,SIGNAL(finished()),CThread,SLOT(deleteLater()));
+    connect(thr,SIGNAL(finished()),thr,SLOT(deleteLater()));
+    connect(CThread,SIGNAL(NewProblemsDetected(PublicClass::ProblemStruct &)),this,SLOT(NewProblemsDetected(PublicClass::ProblemStruct &)));
+    thr->start();
     ERTimer = new QTimer;
     ERTimer->setInterval(5000);
     connect(ERTimer,SIGNAL(timeout()),this,SLOT(HideErrorProtocol()));
     ERTimerIsOn = false;
+    ProblemsDetected = false;
     SetSupikWindow();
     SetSupikStatusBar();
     pc.supikprocs << "ExitSupik" << "SysStructEdit" << "SettingsEdit" << "Components" << "Directories" << "BackupDir" << "RestoreDir" << "ProbCheck";
@@ -55,12 +66,7 @@ void supik::showEvent(QShowEvent *event)
     QTimer *timer1s = new QTimer;
     timer1s->setInterval(1000);
     connect (timer1s, SIGNAL(timeout()), this, SLOT(periodic1s()));
-    QTimer *timer1m = new QTimer;
-//    timer1m->setInterval(pc.timerperiod*60000);
-    timer1m->setInterval(pc.timerperiod*3000);
-    connect (timer1m, SIGNAL(timeout()), this, SLOT(periodicxm()));
     timer1s->start();
-//    timer1m->start();
     event->accept();
 }
 
@@ -160,13 +166,7 @@ void supik::SetSupikMenuBar()
                     tmpAction->setData(tmpString);
                 tmpAction->setStatusTip(get_mainmenu.value(3).toString());
                 if (tmpAction->text() == "Внимание!")
-                {
                     tmpAction->setObjectName("warning");
-/*                    if (pc.probsdetected)
-                        tmpAction->setVisible(true);
-                    else
-                        tmpAction->setVisible(false); */
-                }
                 SupikMenuBar->addAction(tmpAction);
             }
 
@@ -357,7 +357,7 @@ void supik::Components()
         return;
     if (!(pc.access & (ACC_SYS_WR | ACC_ALT_WR)))
     {
-        ERMSG(PublicClass::ER_SUPIK,__LINE__,"Недостаточно прав для продолжения!");
+        SUPIKER("Недостаточно прав для продолжения!");
         return;
     }
     int idx = CheckForWidget(pc.TW_COMP);
@@ -429,17 +429,15 @@ void supik::ProbCheck()
         MainTW->setCurrentIndex(idx);
         return;
     }
-    if (pc.allprobs.size() == 0)
-        pc.fillallprob();
-    pc.NewNotifyHasArrived = false; // чтобы перестала мигать надпись "Внимание"
-    sys_probsdialog *probDialog = new sys_probsdialog;
-    int ids = MainTW->addTab(probDialog, "Сообщения: "+QString::number(pc.allprobs.size()));
+    SysProblemsDialog *probDialog = new SysProblemsDialog;
+    probDialog->setObjectName("ProblemsDialog");
+    int ids = MainTW->addTab(probDialog, "Сообщения: "+QString::number(probDialog->ProblemsList.size()));
     MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_PROB));
     MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
     MainTW->tabBar()->setCurrentIndex(ids);
     connect (this, SIGNAL(newnotify()), probDialog, SLOT(updatemainTV()));
     connect (probDialog, SIGNAL(editdirneeded()), this, SLOT(executeDirDialog()));
-    connect (probDialog, SIGNAL(updateprobsnumber()), this, SLOT(updateprobsnumberintabtext()));
+    connect (probDialog, SIGNAL(ProblemsNumberUpdated()), this, SLOT(UpdateProblemsNumberInTab()));
     MainTW->repaint();
 }
 
@@ -450,7 +448,7 @@ void supik::WhIncome()
         return;
     if (!(pc.access & (ACC_SYS_WR | ACC_WH_WR)))
     {
-        ERMSG(PublicClass::ER_SUPIK,__LINE__,"Недостаточно прав для продолжения!");
+        SUPIKER("Недостаточно прав для продолжения!");
         return;
     }
 
@@ -504,7 +502,7 @@ void supik::WhEditor()
         return;
     if (!(pc.access & (ACC_SYS_WR | ACC_WH_WR)))
     {
-        ERMSG(PublicClass::ER_SUPIK,__LINE__,"Недостаточно прав для продолжения!");
+        SUPIKER("Недостаточно прав для продолжения!");
         return;
     }
 
@@ -524,7 +522,7 @@ void supik::DevDoc() // редактор документов на издели�
         return;
     if (!(pc.access & (ACC_ALT_WR | ACC_SYS_WR | ACC_WH_WR)))
     {
-        ERMSG(PublicClass::ER_SUPIK,__LINE__,"Недостаточно прав для продолжения!");
+        SUPIKER("Недостаточно прав для продолжения!");
         return;
     }
 
@@ -544,7 +542,7 @@ void supik::DevDev() // редактор изделий (классификат�
         return;
     if (!(pc.access & (ACC_SYS_WR | ACC_DOC_WR)))
     {
-        ERMSG(PublicClass::ER_SUPIK,__LINE__,"Недостаточно прав для продолжения!");
+        SUPIKER("Недостаточно прав для продолжения!");
         return;
     }
 
@@ -635,9 +633,14 @@ void supik::periodic1s()
     pc.DateTime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
     s_tqLabel *le = this->findChild<s_tqLabel *>("datetime");
     le->setText(pc.DateTime);
-/*    QAction *ta = this->findChild<QAction *>("warning");
-    if (pc.NewNotifyHasArrived)
+    if (ProblemsDetected)
     {
+        QAction *ta = this->findChild<QAction *>("warning");
+        if (ta == 0)
+        {
+            SUPIKDBG;
+            return;
+        }
         int idx = CheckForWidget(pc.TW_PROB);
         if (idx == -1)
         {
@@ -646,45 +649,51 @@ void supik::periodic1s()
             else
                 ta->setVisible(true);
         }
-        else
-            pc.NewNotifyHasArrived = false;
     }
-    else if (pc.allprobs.size())
-        ta->setVisible(true);
-    else
-        ta->setVisible(false); */
 }
 
-void supik::periodicxm()
+void supik::NewProblemsDetected(PublicClass::ProblemStruct &prob)
 {
-    if (!pc.allprobs.size())
-    {
-        pc.NewNotifyHasArrived = false;
-        QAction *ta = this->findChild<QAction *>("warning");
-        ta->setVisible(false);
-    }
-    pc.minutetest();
-    if ((pc.NewNotifyHasArrived) && !pc.UpdateInProgress) // если пришли новые сообщения и не обновляется список сообщений в настоящий момент
-    {
-        pc.fillallprob();
-        emit newnotify();
-        updateprobsnumberintabtext();
-        if ((pc.notify & PR_Q) && !pc.Acknowledged)
-        {
-//            INFOMSG(PublicClass::ER_SUPIK,__LINE__,"Поступили новые элементы в карантин");
-            pc.Acknowledged = true;
-        }
-    }
+    ProblemsDetected = true;
+    SysProblemsDialog *dlg = this->findChild<SysProblemsDialog *>("ProblemsDialog");
+    if (dlg != 0)
+        dlg->AddProblem(prob);
+    UpdateProblemsNumberInTab();
 }
 
-void supik::updateprobsnumberintabtext()
+void supik::ClearProblems()
+{
+    ProblemsDetected = false;
+    QAction *ta = this->findChild<QAction *>("warning");
+    if (ta == 0)
+    {
+        SUPIKDBG;
+        return;
+    }
+    int idx = CheckForWidget(pc.TW_PROB);
+    if (idx == -1)
+        ta->setVisible(false);
+}
+
+void supik::UpdateProblemsNumberInTab()
 {
     S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
     if (MainTW == 0)
         return;
     int idx = CheckForWidget(pc.TW_PROB);
     if (idx != -1)
-        MainTW->tabBar()->setTabText(idx, "Сообщения: "+QString::number(pc.allprobs.size()));
+    {
+        SysProblemsDialog *dlg = this->findChild<SysProblemsDialog *>("ProblemsDialog");
+        if (dlg != 0)
+        {
+            MainTW->tabBar()->setTabText(idx, "Сообщения: "+QString::number(dlg->ProblemsList.size()));
+            if (dlg->ProblemsList.isEmpty()) // убрали все проблемы
+            {
+                dlg->close();
+                ClearProblems();
+            }
+        }
+    }
 }
 
 void supik::resizeEvent(QResizeEvent *e)
@@ -718,7 +727,10 @@ void supik::ShowOrHideSlideER()
 {
     ErrorProtocolWidget *w = this->findChild<ErrorProtocolWidget *>("errorwidget");
     if (w == 0)
+    {
+        SUPIKDBG;
         return;
+    }
     if (w->isHidden())
         w->show();
     if (ERHide)
@@ -746,7 +758,7 @@ void supik::UpdateErrorProtocol()
     ErrorProtocolWidget *ErWidget = this->findChild<ErrorProtocolWidget *>("errorwidget");
     if (ErWidget == 0)
     {
-        DBGMSG(PublicClass::ER_SUPIK,__LINE__);
+        SUPIKDBG;
         return;
     }
     if (pc.ermsgpool.isEmpty())

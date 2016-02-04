@@ -13,11 +13,12 @@ TreeView::TreeView(int Proxy, QWidget *parent) :
     IsProxyModel = (Proxy == TV_PLAIN) ? false : true;
     setAttribute(Qt::WA_TranslucentBackground, true);
     setFrameStyle(QFrame::NoFrame);
+    setStyleSheet("QTreeView {background-color: rgba(0,0,0,0);}");
     setShowGrid(false);
-    horizontalScrollBar()->setStyleSheet("QScrollBar {background-color: rgba(0,0,0,0);}");
+/*    horizontalScrollBar()->setStyleSheet("QScrollBar {background-color: rgba(0,0,0,0);}");
     verticalScrollBar()->setStyleSheet("QScrollBar {background-color: rgba(0,0,0,0);}");
     horizontalScrollBar()->setAttribute(Qt::WA_TranslucentBackground, true);
-    verticalScrollBar()->setAttribute(Qt::WA_TranslucentBackground, true);
+    verticalScrollBar()->setAttribute(Qt::WA_TranslucentBackground, true); */
     horizontalHeader()->setVisible(false);
     verticalHeader()->setVisible(false);
     connect(this, SIGNAL(clicked(QModelIndex)), this, SLOT(setTVexpanded(QModelIndex)));

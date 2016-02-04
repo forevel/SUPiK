@@ -170,7 +170,7 @@ void s_tqChooseWidget::pbclicked()
         for (int i = 1; i < count; i++)
             dlg->AddTable(ff.link.at(i));
         connect(dlg,SIGNAL(changeshasbeenMade(QString)),this,SLOT(accepted(QString)));
-        dlg->SetTvCurrentText(le->text());
+//        dlg->SetTvCurrentText(le->text());
         dlg->exec();
         break;
     }

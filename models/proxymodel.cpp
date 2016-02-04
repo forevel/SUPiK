@@ -1,5 +1,4 @@
 #include "proxymodel.h"
-#include "s_ntmodel.h"
 #include "treemodel.h"
 
 ProxyModel::ProxyModel(QObject *parent) :
@@ -25,16 +24,15 @@ bool ProxyModel::setData(const QModelIndex &index, const QVariant &value, int ro
     return sourceModel()->setData(SourceIndex, value, role);
 }
 
+/*
 // добавление в список открытых корней дерева по событию expanded от view
 
 void ProxyModel::addExpandedIndex(const QModelIndex &index)
 {
     if (index.isValid())
     {
-        s_ntmodel *mdl = static_cast<s_ntmodel *>(sourceModel());
+        TreeModel *mdl = static_cast<TreeModel *>(sourceModel());
         mdl->addExpandedIndex(mapToSource(index));
-//        TreeModel *mdl = static_cast<TreeModel *>(sourceModel());
-//        mdl->GoIntoIndex(mapToSource(index));
     }
 }
 
@@ -44,32 +42,26 @@ void ProxyModel::removeExpandedIndex(const QModelIndex &index)
 {
     if (index.isValid())
     {
-        s_ntmodel *mdl = static_cast<s_ntmodel *>(sourceModel());
+        TreeModel *mdl = static_cast<TreeModel *>(sourceModel());
         mdl->removeExpandedIndex(mapToSource(index));
     }
-}
+} */
 
-QModelIndexList ProxyModel::match(const QModelIndex &start, int role, const QVariant &value, int hits, Qt::MatchFlags flags) const
+QModelIndex ProxyModel::Find(int column, const QVariant &value)
 {
-    Q_UNUSED(flags);
-    QModelIndexList mil;
-    int StartRow = start.row();
-    int StartColumn = start.column();
-    for (int i=StartRow; i<rowCount(); i++)
+    for (int i=0; i<rowCount(); i++)
     {
-        for (int j=StartColumn; j<columnCount(); j++)
+        for (int j=column; j<columnCount(); j++)
         {
             QModelIndex idx = index(i, j, QModelIndex());
             if (!idx.isValid())
                 continue;
-            QVariant vl = data(idx, role);
+            QVariant vl = data(idx, Qt::DisplayRole);
             if (vl == value)
-                mil.append(idx);
-            if (hits >= mil.size())
-                return mil;
+                return idx;
         }
     }
-    return mil;
+   return QModelIndex();
 }
 
 /*

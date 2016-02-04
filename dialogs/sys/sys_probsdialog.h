@@ -5,36 +5,39 @@
 #include <QPoint>
 #include <QStringListModel>
 
-#include "../../models/s_ncmodel.h"
+#include "../../models/treemodel.h"
+#include "../../gen/publicclass.h"
 
-class sys_probsdialog : public QDialog
+class SysProblemsDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit sys_probsdialog(QWidget *parent = 0);
+    explicit SysProblemsDialog(QWidget *parent = 0);
+
+    QList<PublicClass::ProblemStruct> ProblemsList;
+    void AddProblem(PublicClass::ProblemStruct &prob);
 
 signals:
     void editdirneeded();
-    void updateprobsnumber();
+    void ProblemsNumberUpdated();
 
 public slots:
-    void updatemainTV();
+    void UpdateMainTv();
 
 private:
     void SetupUI();
     void diredit(QString tble);
 
     QStringListModel *slmodel;
-    s_ncmodel *mainmodel;
+    TreeModel *mainmodel;
     QString field;
     QString tble;
 //    QSqlDatabase db;
     QDialog *dlg;
 
 private slots:
-    void mainTVcontextmenu(QPoint);
-    void removeProb(QModelIndex);
-    void removeProb();
+    void MainTvContextMenu(QPoint);
+    void RemoveProb();
     void refresh();
     void addcol();
 };

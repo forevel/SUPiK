@@ -20,8 +20,10 @@ public:
 
     QString Data(int Column) const;
     QString LinksData(int Column) const;
+    QString HeaderData(int Column) const;
     void SetData(int Column, const QString &Data);
     void SetLinksData(int Column, const QString &Data);
+    void SetHeaderData(int Column, const QString &Data);
     bool IsEmpty(QList<int> ColumnsToCheck);
     void SetColor(int Column, QColor Color);
     void SetFont(int Column, QFont Font);
@@ -36,7 +38,8 @@ public:
 
 private:
     QStringList ItemData; // содержимое строки
-    QStringList LData; // содержимое вспомогательного поля
+    QStringList LData; // содержимое поля со ссылками
+    QStringList HData; // содержимое вспомогательного поля
     QString CellInfo; // вспомогательное содержимое для всего итема
     QStringList TableNumbers; // вспомогательное содержимое для каждой ячейки итема
     QList<QColor> ItemColor;

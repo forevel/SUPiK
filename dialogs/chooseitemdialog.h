@@ -41,7 +41,6 @@ private slots:
     void ShowFilterLineEdit();
     void Unfilter();
     void AddItem();
-    void ResizemainTV();
 
 protected:
     void paintEvent(QPaintEvent *e);

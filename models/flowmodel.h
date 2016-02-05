@@ -15,12 +15,12 @@
 #define NCMDBG      DBGMSG(PublicClass::ER_NCMODEL, __LINE__)
 #define NCMINFO(a)  INFOMSG(PublicClass::ER_NCMODEL, __LINE__, a)
 
-class s_ncmodel : public QAbstractTableModel
+class FlowModel : public QAbstractTableModel
 {
     Q_OBJECT
 public:
-    explicit s_ncmodel(QObject *parent = 0);
-    ~s_ncmodel();
+    explicit FlowModel(QObject *parent = 0);
+    ~FlowModel();
 
     int result;
 

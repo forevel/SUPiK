@@ -1,14 +1,14 @@
-#include "s_ncmodel.h"
+#include "flowmodel.h"
 #include <QFile>
 #include "../gen/s_sql.h"
 #include "../gen/s_tablefields.h"
 
-static const QMap<QString, int> OPER_MAP = s_ncmodel::opers();
+static const QMap<QString, int> OPER_MAP = FlowModel::opers();
 
 
 // ######################################## Переопределение методов QAbstractTableModel ####################################
 
-s_ncmodel::s_ncmodel(QObject *parent) :
+FlowModel::FlowModel(QObject *parent) :
     QAbstractTableModel(parent)
 {
     colors[0] = Qt::black;
@@ -32,18 +32,18 @@ s_ncmodel::s_ncmodel(QObject *parent) :
     rcount = 0;
 }
 
-s_ncmodel::~s_ncmodel()
+FlowModel::~FlowModel()
 {
 }
 
-QVariant s_ncmodel::headerData(int section, Qt::Orientation orientation, int role) const
+QVariant FlowModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
     if ((orientation == Qt::Horizontal) && (role == Qt::DisplayRole || role == Qt::EditRole) && (section < hdr.size()))
         return hdr.at(section);
     return QVariant();
 }
 
-bool s_ncmodel::setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role)
+bool FlowModel::setHeaderData(int section, Qt::Orientation orientation, const QVariant &value, int role)
 {
     if (section < maxcolswidth.size())
     {
@@ -53,7 +53,7 @@ bool s_ncmodel::setHeaderData(int section, Qt::Orientation orientation, const QV
     return QAbstractTableModel::setHeaderData(section, orientation, value, role);
 }
 
-QVariant s_ncmodel::data(const QModelIndex &index, int role) const
+QVariant FlowModel::data(const QModelIndex &index, int role) const
 {
     if (index.isValid())
     {
@@ -81,7 +81,7 @@ QVariant s_ncmodel::data(const QModelIndex &index, int role) const
 // value должен представлять из себя запись вида: <value>.<links>, где links - вспомогательное поле, определяющее
 // порядок работы с полем - подставляемый делегат, ссылку на списки и формат отображения
 
-bool s_ncmodel::setData(const QModelIndex &index, const QVariant &value, int role)
+bool FlowModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     QString tmpString;
     PublicClass::FieldFormat ff;
@@ -171,7 +171,7 @@ bool s_ncmodel::setData(const QModelIndex &index, const QVariant &value, int rol
     return false;
 }
 
-Qt::ItemFlags s_ncmodel::flags(const QModelIndex &index) const
+Qt::ItemFlags FlowModel::flags(const QModelIndex &index) const
 {
     if (!index.isValid())
             return Qt::ItemIsEnabled;
@@ -180,13 +180,13 @@ Qt::ItemFlags s_ncmodel::flags(const QModelIndex &index) const
     return QAbstractItemModel::flags(index) | Qt::ItemIsSelectable; // | Qt::ItemIsEditable;
 }
 
-QModelIndex s_ncmodel::index(int row, int column, const QModelIndex &index) const
+QModelIndex FlowModel::index(int row, int column, const QModelIndex &index) const
 {
     Q_UNUSED(index);
     return createIndex(row, column);
 }
 
-bool s_ncmodel::insertColumns(int position, int columns, const QModelIndex &index)
+bool FlowModel::insertColumns(int position, int columns, const QModelIndex &index)
 {
     Q_UNUSED(index);
     beginInsertColumns(QModelIndex(), position, position+columns-1);
@@ -201,7 +201,7 @@ bool s_ncmodel::insertColumns(int position, int columns, const QModelIndex &inde
     return true;
 }
 
-bool s_ncmodel::removeColumns(int position, int columns, const QModelIndex &index)
+bool FlowModel::removeColumns(int position, int columns, const QModelIndex &index)
 {
     beginRemoveColumns(index, position, position + columns - 1);
     if (!maindata.isEmpty())
@@ -214,7 +214,7 @@ bool s_ncmodel::removeColumns(int position, int columns, const QModelIndex &inde
     return true;
 }
 
-bool s_ncmodel::insertRows(int position, int rows, const QModelIndex &index)
+bool FlowModel::insertRows(int position, int rows, const QModelIndex &index)
 {
     int i, j;
     Q_UNUSED(index);
@@ -233,7 +233,7 @@ bool s_ncmodel::insertRows(int position, int rows, const QModelIndex &index)
     return true;
 }
 
-bool s_ncmodel::removeRows(int position, int rows, const QModelIndex &index)
+bool FlowModel::removeRows(int position, int rows, const QModelIndex &index)
 {
     beginRemoveRows(index, position, position + rows - 1);
     if ((position+rows) > maindata.size())
@@ -250,13 +250,13 @@ bool s_ncmodel::removeRows(int position, int rows, const QModelIndex &index)
     return true;
 }
 
-int s_ncmodel::columnCount(const QModelIndex &index) const
+int FlowModel::columnCount(const QModelIndex &index) const
 {
     Q_UNUSED(index);
     return hdr.size();
 }
 
-int s_ncmodel::rowCount(const QModelIndex &index) const
+int FlowModel::rowCount(const QModelIndex &index) const
 {
     Q_UNUSED(index);
     return maindata.size();
@@ -264,21 +264,21 @@ int s_ncmodel::rowCount(const QModelIndex &index) const
 
 // ###################################### Свои методы ############################################
 
-int s_ncmodel::getHeaderPosition(QVariant hdrtext, Qt::Orientation orientation, int role)
+int FlowModel::getHeaderPosition(QVariant hdrtext, Qt::Orientation orientation, int role)
 {
     if ((orientation == Qt::Horizontal) && (role == Qt::DisplayRole || role == Qt::EditRole))
         return hdr.indexOf(hdrtext.toString());
     return -1;
 }
 
-void s_ncmodel::addColumn(const QString hdrtext)
+void FlowModel::addColumn(const QString hdrtext)
 {
     int lastEntry = hdr.size();
     insertColumns(lastEntry, 1, QModelIndex());
     hdr.replace(lastEntry, hdrtext);
 }
 
-void s_ncmodel::AddColumns(QStringList hdrs)
+void FlowModel::AddColumns(QStringList hdrs)
 {
     while (!hdrs.isEmpty())
     {
@@ -287,19 +287,19 @@ void s_ncmodel::AddColumns(QStringList hdrs)
     }
 }
 
-void s_ncmodel::addRow()
+void FlowModel::addRow()
 {
     int lastEntry = maindata.size();
     insertRows(lastEntry, 1, QModelIndex());
 }
 
-void s_ncmodel::setcolumnlinks(int column, QString links)
+void FlowModel::setcolumnlinks(int column, QString links)
 {
     for (int i = 0; i < rowCount(); i++)
         setData(index(i, column, QModelIndex()), QVariant(links), Qt::UserRole);
 }
 
-void s_ncmodel::setcolumnlinks(int column, QStringList links)
+void FlowModel::setcolumnlinks(int column, QStringList links)
 {
     for (int i = 0; i < rowCount(); i++)
     {
@@ -310,7 +310,7 @@ void s_ncmodel::setcolumnlinks(int column, QStringList links)
     }
 }
 
-void s_ncmodel::setrowlinks(int row, QStringList links)
+void FlowModel::setrowlinks(int row, QStringList links)
 {
     for (int i = 0; i < columnCount(QModelIndex()); i++)
     {
@@ -324,7 +324,7 @@ void s_ncmodel::setrowlinks(int row, QStringList links)
 // подготовка модели для того, чтобы можно было писать в links до записи, собственно, данных
 // в sl передаётся список размеров столбцов
 
-void s_ncmodel::prepareModel(QList<int> sl)
+void FlowModel::prepareModel(QList<int> sl)
 {
     int i;
     if (sl.size()>hdr.size()) // в переданном списке больше колонок, чем в модели
@@ -343,12 +343,12 @@ void s_ncmodel::prepareModel(QList<int> sl)
     }
 }
 
-void s_ncmodel::setDataToWrite(QList<QStringList> sl)
+void FlowModel::setDataToWrite(QList<QStringList> sl)
 {
     DataToWrite = sl;
 }
 
-void s_ncmodel::fillModel()
+void FlowModel::fillModel()
 {
     int i;
     int j;
@@ -387,7 +387,7 @@ void s_ncmodel::fillModel()
 
 // выдать значения по столбцу column в выходной QStringList
 
-QStringList s_ncmodel::cvalues(int column)
+QStringList FlowModel::cvalues(int column)
 {
     if (column > columnCount())
         return QStringList();
@@ -400,7 +400,7 @@ QStringList s_ncmodel::cvalues(int column)
 
 // выдать значения по строке row в выходной QStringList
 
-QStringList s_ncmodel::rvalues(int row)
+QStringList FlowModel::rvalues(int row)
 {
     if (row > rowCount())
         return QStringList();
@@ -411,7 +411,7 @@ QStringList s_ncmodel::rvalues(int row)
     return tmpsl;
 }
 
-QString s_ncmodel::value(int row, int column)
+QString FlowModel::value(int row, int column)
 {
     PublicClass::ValueStruct vs;
     QIcon ic = data(index(row,column,QModelIndex()),Qt::DecorationRole).value<QIcon>();
@@ -428,7 +428,8 @@ QString s_ncmodel::value(int row, int column)
         vl.insert(0,'_');
     }
     vs.Value = vl;
-    vl = tfl.vtoid(links, vs);
+    vs.Links = links;
+    vl = tfl.vtoid(vs);
     if (tfl.result)
     {
         result=1;
@@ -438,7 +439,7 @@ QString s_ncmodel::value(int row, int column)
     return vl;
 }
 
-QString s_ncmodel::getEq(QString arg1, QString arg2, int oper, const QModelIndex index, bool byRow) const
+QString FlowModel::getEq(QString arg1, QString arg2, int oper, const QModelIndex index, bool byRow) const
 {
     float operand1 = getOperand(arg1, index, byRow);
     float operand2 = getOperand(arg2, index, byRow);
@@ -457,7 +458,7 @@ QString s_ncmodel::getEq(QString arg1, QString arg2, int oper, const QModelIndex
     }
 }
 
-float s_ncmodel::getOperand(QString str, const QModelIndex index, bool byRow) const
+float FlowModel::getOperand(QString str, const QModelIndex index, bool byRow) const
 {
     int i = 0;
     float res, result;
@@ -539,7 +540,7 @@ float s_ncmodel::getOperand(QString str, const QModelIndex index, bool byRow) co
     return result;
 }
 
-bool s_ncmodel::checkforEmptyRows()
+bool FlowModel::checkforEmptyRows()
 {
     for (int i = 0; i < maindata.size(); i++)
         if (maindata.at(i)->isEmpty(fieldstoCheck))
@@ -547,7 +548,7 @@ bool s_ncmodel::checkforEmptyRows()
     return false;
 }
 
-void s_ncmodel::setCellAttr(QModelIndex index, int fcset, int icon)
+void FlowModel::setCellAttr(QModelIndex index, int fcset, int icon)
 {
     if (icon != -1)
         maindata.at(index.row())->setIcon(index.column(), icons[icon]);
@@ -557,7 +558,7 @@ void s_ncmodel::setCellAttr(QModelIndex index, int fcset, int icon)
 
 // процедура выдаёт длину строки максимальную, среди строк столбца №column
 
-int s_ncmodel::maxcolwidth(int column)
+int FlowModel::maxcolwidth(int column)
 {
     if (column < maxcolswidth.size())
         return maxcolswidth.at(column);
@@ -567,21 +568,21 @@ int s_ncmodel::maxcolwidth(int column)
 
 // процедура выдаёт размер массива длин строк
 
-int s_ncmodel::maxcolwidthsize()
+int FlowModel::maxcolwidthsize()
 {
     return maxcolswidth.size();
 }
 
 // процедура выдаёт значение атрибута links у ячейки
 
-QString s_ncmodel::getCellType(int row, int column)
+QString FlowModel::getCellType(int row, int column)
 {
     return data(index(row,column,QModelIndex()), Qt::UserRole).toString().split(".").at(0);
 }
 
 // процедура заполнения модели из таблицы tble в sup.tablefields
 
-void s_ncmodel::setup(QString tble)
+void FlowModel::setup(QString tble)
 {
     int i;
     result = 0;
@@ -612,7 +613,7 @@ void s_ncmodel::setup(QString tble)
     return;
 }
 
-void s_ncmodel::Add(QString tble)
+void FlowModel::Add(QString tble)
 {
     result = 0;
     QStringList headers, links;
@@ -638,7 +639,7 @@ void s_ncmodel::Add(QString tble)
 // процедура заполнения модели значениями headers и по table:tablefields из таблицы tble в sup.tablefields по одному id
 // предназначена для диалога редактирования справочников (s_2cdialog)
 
-void s_ncmodel::setup(QString tble, QString id)
+void FlowModel::setup(QString tble, QString id)
 {
     int i;
     ClearModel();
@@ -679,7 +680,7 @@ void s_ncmodel::setup(QString tble, QString id)
     fillModel();
 }
 
-void s_ncmodel::setupcolumn(QString tble, QString header)
+void FlowModel::setupcolumn(QString tble, QString header)
 {
     ClearModel();
     DataToWrite.clear();
@@ -698,7 +699,7 @@ void s_ncmodel::setupcolumn(QString tble, QString header)
     fillModel();
 }
 
-int s_ncmodel::setupraw(QString db, QString tble, QStringList fl, QString orderfield)
+int FlowModel::setupraw(QString db, QString tble, QStringList fl, QString orderfield)
 {
     result = 0;
     ClearModel();
@@ -737,7 +738,7 @@ int s_ncmodel::setupraw(QString db, QString tble, QStringList fl, QString orderf
     return 0;
 }
 
-void s_ncmodel::ClearModel()
+void FlowModel::ClearModel()
 {
     beginResetModel();
     while (rowCount() > 0)
@@ -751,7 +752,7 @@ void s_ncmodel::ClearModel()
     endResetModel();
 }
 
-QModelIndexList s_ncmodel::match(QString text)
+QModelIndexList FlowModel::match(QString text)
 {
     QModelIndexList mdlidxl;
     for (int i=0; i<maindata.size(); i++)

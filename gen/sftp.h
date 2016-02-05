@@ -5,7 +5,7 @@
 #include <QtFtp/QtFtp>
 #include <QIODevice>
 #include <QTimer>
-#include <QUrlInfo>
+#include <QtFtp/QUrlInfo>
 #include <QStack>
 
 #include "publicclass.h"

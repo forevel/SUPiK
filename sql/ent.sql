@@ -1,8 +1,8 @@
--- MySQL dump 10.13  Distrib 5.6.22, for Win64 (x86_64)
+-- MySQL dump 10.13  Distrib 5.6.23, for Win32 (x86)
 --
 -- Host: localhost    Database: enterprise
 -- ------------------------------------------------------
--- Server version	5.6.22
+-- Server version	5.6.23
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -322,12 +322,12 @@ DROP TABLE IF EXISTS `eskd_class`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `eskd_class` (
   `ideskd_class` int(11) NOT NULL,
-  `alias` varchar(128) DEFAULT NULL,
+  `description` varchar(128) DEFAULT NULL,
   `idalias` varchar(128) DEFAULT NULL,
   `idpers` varchar(128) DEFAULT NULL,
   `date` varchar(128) DEFAULT NULL,
   `deleted` int(1) NOT NULL DEFAULT '0',
-  `class` varchar(128) DEFAULT NULL,
+  `eskd_class` varchar(128) DEFAULT NULL,
   PRIMARY KEY (`ideskd_class`),
   UNIQUE KEY `idESKD_class_UNIQUE` (`ideskd_class`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -783,7 +783,7 @@ DROP TABLE IF EXISTS `unitset`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `unitset` (
   `idunitset` int(11) NOT NULL AUTO_INCREMENT,
-  `alias` varchar(45) DEFAULT NULL,
+  `unitset` varchar(45) DEFAULT NULL,
   `idalias` varchar(45) DEFAULT NULL,
   `deleted` int(1) DEFAULT '0',
   `idpers` varchar(45) DEFAULT NULL,
@@ -841,7 +841,7 @@ DROP TABLE IF EXISTS `whplaces`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `whplaces` (
   `idwhplaces` int(11) NOT NULL,
-  `alias` varchar(128) DEFAULT NULL,
+  `whplaces` varchar(128) DEFAULT NULL,
   `idalias` varchar(128) DEFAULT NULL,
   `idpers` varchar(128) DEFAULT NULL,
   `date` varchar(128) DEFAULT NULL,
@@ -936,4 +936,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2016-01-25 23:38:39
+-- Dump completed on 2016-02-05 17:59:05

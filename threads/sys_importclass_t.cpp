@@ -32,7 +32,7 @@ void sys_ImportClass_T::run()
         else
         {
             QString ParentClass = ClassNum.left(position-1);
-            ParentID = sqlc.GetValueFromTableByField(sqlc.GetDB(TableDB),TableName,"id"+TableName,"class",ParentClass);
+            ParentID = sqlc.GetValueFromTableByField(sqlc.GetDB(TableDB),TableName,"id"+TableName,TableName,ParentClass);
             if (sqlc.result)
             {
                 SYSICTER("Не найден родитель для класса "+ClassNum);
@@ -40,8 +40,8 @@ void sys_ImportClass_T::run()
                 return;
             }
         }
-        QString tmps = sqlc.GetValueFromTableByField(sqlc.GetDB(TableDB),TableName,"id"+TableName,"class",ClassNum);
-        QStringList fl = QStringList() << "class" << "alias" << "idalias";
+        QString tmps = sqlc.GetValueFromTableByField(sqlc.GetDB(TableDB),TableName,"id"+TableName,TableName,ClassNum);
+        QStringList fl = QStringList() << TableName << "description" << "idalias";
         QStringList vl = QStringList() << ClassNum << ClassDescription << ParentID;
         if (sqlc.result == 1) // нет такой записи
         {

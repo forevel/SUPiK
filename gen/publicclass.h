@@ -154,7 +154,8 @@ public:
         ER_TMODEL,   // treemodel
         ER_EMODEL,   // editmodel
         ER_CHIDLG,   // chooseitemdialog
-        ER_CTHREAD  // checkthread
+        ER_CTHREAD,  // checkthread
+        ER_DEVMAIN  // DevMainDialog
     };
 
     // диалоговые окна в СУПиКе

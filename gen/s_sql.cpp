@@ -682,7 +682,7 @@ QString s_sql::GetFullPathToChild(QSqlDatabase db, QString tble, QString idalias
     QStringList field, values;
 
     values = sqlc.GetColumnsFromTable(db, tble);
-    if ((values.indexOf("alias") == -1) || (values.indexOf("idalias") == -1))
+    if ((values.indexOf(tble) == -1) || (values.indexOf("idalias") == -1))
     {
         path = GetValueFromTableByID(db, tble, tble, idalias);
         if (path.isEmpty())
@@ -692,7 +692,7 @@ QString s_sql::GetFullPathToChild(QSqlDatabase db, QString tble, QString idalias
         }
         return path;
     }
-    field << "alias" << "idalias";
+    field << tble << "idalias";
     values << "temp" << "temp"; // для выполнения следующего сравнения
 
     while (values.at(1) != "0") // пока не дошли до корня дерева

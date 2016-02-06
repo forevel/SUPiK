@@ -3,7 +3,6 @@
 
 #include <QPoint>
 #include <QDialog>
-#include <QPainter>
 #include <QPaintEvent>
 #include <QModelIndex>
 
@@ -43,9 +42,7 @@ protected:
     void paintEvent(QPaintEvent *event);
 
 private slots:
-    void SetSlave(QModelIndex);
-    void SetSlave();
-    void EditTable(QModelIndex);
+    void SetSlave(QModelIndex idx);
     void EditTable();
     void NewTable();
     void DeleteTable();

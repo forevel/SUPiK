@@ -5,10 +5,9 @@
 #include <QInputDialog>
 #include <QVBoxLayout>
 #include "sysmenueditor.h"
-#include "../../widgets/s_tqtreeview.h"
-#include "../../models/s_ncmodel.h"
-#include "../../models/s_ntmodel.h"
-#include "../../models/s_duniversal.h"
+#include "../../widgets/treeview.h"
+#include "../../models/treemodel.h"
+#include "../../models/griddelegate.h"
 #include "../../gen/s_tablefields.h"
 #include "../../gen/publicclass.h"
 #include "../../gen/s_sql.h"
@@ -26,32 +25,26 @@ void SysmenuEditor::SetupUI(QString tble) // tble - имя таблицы, из 
 {
     this->tble = tble;
     QVBoxLayout *lyout = new QVBoxLayout;
-    s_tqTreeView *tv = new s_tqTreeView;
+    TreeView *tv = new TreeView;
     tv->setObjectName("tv");
     QApplication::setOverrideCursor(Qt::WaitCursor);
-    s_ntmodel *treemodel = new s_ntmodel;
+    TreeModel *treemodel = new TreeModel;
     int res = treemodel->Setup(tble + "_сокращ");
     if (res)
     {
         QApplication::restoreOverrideCursor();
-        WARNMSG(PublicClass::ER_SYSMENU,__LINE__);
+        SYSMWARN;
         return;
     }
     tv->setModel(treemodel);
-    connect(tv, SIGNAL(expanded(QModelIndex)), treemodel, SLOT(addExpandedIndex(QModelIndex)));
-    connect(tv, SIGNAL(collapsed(QModelIndex)), treemodel, SLOT(removeExpandedIndex(QModelIndex)));
-    tv->header()->setDefaultAlignment(Qt::AlignCenter);
-    tv->header()->setVisible(true);
-    tv->setIndentation(2);
-    tv->setAnimated(false);
-    s_duniversal *gridItemDelegate = new s_duniversal;
+    GridDelegate *gridItemDelegate = new GridDelegate;
     tv->setItemDelegate(gridItemDelegate);
-    tv->ResizeColumnsToContents();
     tv->setContextMenuPolicy(Qt::CustomContextMenu);
     connect (tv, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(Context(QPoint)));
-    connect (tv, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(ChangeFields(QModelIndex)));
+    connect (tv, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(ChangeFieldsSlot(QModelIndex)));
     lyout->addWidget(tv);
     setLayout(lyout);
+    tv->resizeColumnsToContents();
     QApplication::restoreOverrideCursor();
 }
 
@@ -90,25 +83,27 @@ void SysmenuEditor::Context(QPoint pt)
     ContextMenu->exec(QCursor::pos());
 }
 
-void SysmenuEditor::ChangeFields(QModelIndex idx)
+void SysmenuEditor::ChangeFieldsSlot(QModelIndex idx)
 {
-    s_tqTreeView *tv = this->findChild<s_tqTreeView *>("tv");
+    TreeView *tv = this->findChild<TreeView *>("tv");
     if (tv == 0)
     {
-        DBGMSG(PublicClass::ER_SYSMENU,__LINE__);
+        SYSMDBG;
         return;
     }
-    if (tv->model()->rowCount(tv->currentIndex()) != 0); // для родителей запрещено иметь дополнительные поля
+    TreeModel *mdl= static_cast<TreeModel *>(tv->model());
+    int row = idx.row();
+    if (mdl->HaveChildren(row)); // родителям запрещено иметь дополнительные поля
     else
     {
         tv->setCurrentIndex(idx);
-        ChangeFields(GetIndex(0));
+        ChangeFields(GetMainIndex(0));
     }
 }
 
 void SysmenuEditor::ChangeFields()
 {
-    ChangeFields(GetIndex(0)); // взять ИД элемента
+    ChangeFields(GetMainIndex(0)); // взять ИД элемента
 }
 
 void SysmenuEditor::ChangeFields(QString str)
@@ -123,18 +118,18 @@ void SysmenuEditor::ChangeFields(QString str)
     }
     else
     {
-        WARNMSG(PublicClass::ER_SYSMENU,__LINE__);
+        SYSMWARN;
         return;
     }
 }
 
 void SysmenuEditor::Delete()
 {
-    QString tmpString = GetIndex(0);
+    QString tmpString = GetMainIndex(0);
     QStringList sl = tfl.tablefields(tble+"_полн", "ИД"); // возьмём реальное имя таблицы из tablefields. sl(0) - <table>, sl(1) - <tablefields>, sl(2) - <links>
     if (tfl.result)
     {
-        WARNMSG(PublicClass::ER_SYSMENU,__LINE__);
+        SYSMWARN;
         return;
     }
     QString tmpdb = sl.at(0).split(".").at(0);
@@ -148,16 +143,16 @@ void SysmenuEditor::Delete()
             tfl.remove(tble+"_полн", tmpString);
             if (tfl.result)
             {
-                WARNMSG(PublicClass::ER_SYSMENU,__LINE__);
+                SYSMWARN;
                 return;
             }
             sqlc.DeleteFromDB(sqlc.GetDB(tmpdb), tmptble, "idalias", tmpString);
             if (sqlc.result)
             {
-                WARNMSG(PublicClass::ER_SYSMENU,__LINE__);
+                SYSMWARN;
                 return;
             }
-            INFOMSG(PublicClass::ER_DIRMAIN,__LINE__,"Записано успешно!");
+            SYSMINFO("Записано успешно!");
         }
     }
     else
@@ -167,18 +162,18 @@ void SysmenuEditor::Delete()
             tfl.remove(tble+"_полн", tmpString);
             if (tfl.result)
             {
-                WARNMSG(PublicClass::ER_SYSMENU,__LINE__);
+                SYSMWARN;
                 return;
             }
         }
-        INFOMSG(PublicClass::ER_DIRMAIN,__LINE__,"Записано успешно!");
+        SYSMINFO("Записано успешно!");
     }
     UpdateTree();
 }
 
 void SysmenuEditor::AddChild()
 {
-    AddToTree(GetIndex(0));
+    AddToTree(GetMainIndex(0));
 }
 
 void SysmenuEditor::AddRoot()
@@ -202,7 +197,7 @@ void SysmenuEditor::AddToTree(QString str)
     QString newID = tfl.insert(tble+"_полн");
     if (tfl.result)
     {
-        WARNMSG(PublicClass::ER_SYSMENU,__LINE__);
+        SYSMWARN;
         return;
     }
     fields.insert(0,"ИД");
@@ -211,7 +206,7 @@ void SysmenuEditor::AddToTree(QString str)
     if (!tfl.result)
         ChangeFields(newID);
     else
-        WARNMSG(PublicClass::ER_SYSMENU,__LINE__);
+        SYSMWARN;
 }
 /*
 void SysmenuEditor::ChangeName()
@@ -219,7 +214,7 @@ void SysmenuEditor::ChangeName()
     QString tmpString, tmpValue;
     bool ok;
 
-    tmpString = GetIndex(1);
+    tmpString = GetMainIndex(1);
 
     tmpValue = QInputDialog::getText(this, "Изменение наименования",
                                       "Введите новое наименование",
@@ -230,7 +225,7 @@ void SysmenuEditor::ChangeName()
         tmpString = tfl.toid(tble, "Наименование", tmpString);
         if (tfl.result)
         {
-            WARNMSG(PublicClass::ER_SYSMENU,__LINE__);
+            SYSMWARN;
             return;
         }
         QStringList fl = QStringList() << "Наименование" << "ИД";
@@ -238,7 +233,7 @@ void SysmenuEditor::ChangeName()
         tfl.idtois(tble,fl,vl);
         if (tfl.result)
         {
-            WARNMSG(PublicClass::ER_SYSMENU,__LINE__);
+            SYSMWARN;
             return;
         }
         INFOMSG(PublicClass::ER_CMPMAIN,__LINE__,"Изменение проведено!");
@@ -246,34 +241,42 @@ void SysmenuEditor::ChangeName()
     UpdateTree();
 } */
 
-QString SysmenuEditor::GetIndex(int column)
+QString SysmenuEditor::GetMainIndex(int column)
 {
-    s_tqTreeView *tv = this->findChild<s_tqTreeView *>("tv");
+    TreeView *tv = this->findChild<TreeView *>("tv");
     if (tv == 0)
     {
-        DBGMSG(PublicClass::ER_SYSMENU,__LINE__);
+        SYSMDBG;
         return QString();
     }
     QModelIndex index = tv->model()->index(tv->currentIndex().row(), column, tv->model()->parent(tv->currentIndex()));
 
     QString tmpString = index.data(Qt::DisplayRole).toString();
+    while (tmpString.at(0) == 0xFFFF)
+        tmpString.remove(0, 1);
+    if (!column) // в нулевом столбце всегда ИД элемента с нулями в начале, надо незначащие нули убрать
+    {
+        QStringList tmpsl = tmpString.split(".");
+        if (tmpsl.size() > 1)
+            tmpString = tmpsl.at(1);
         tmpString = QString::number(tmpString.toInt(0));
+    }
     return tmpString;
 }
 
 void SysmenuEditor::UpdateTree()
 {
-    s_tqTreeView *tv = this->findChild<s_tqTreeView *>("tv");
+    TreeView *tv = this->findChild<TreeView *>("tv");
     if (tv == 0)
     {
-        DBGMSG(PublicClass::ER_SYSMENU,__LINE__);
+        SYSMDBG;
         return;
     }
-    s_ntmodel *mdl = dynamic_cast<s_ntmodel *>(tv->model());
+    TreeModel *mdl = dynamic_cast<TreeModel *>(tv->model());
     int res = mdl->Setup(tble + "_сокращ");
     if (res)
     {
-        WARNMSG(PublicClass::ER_SYSMENU,__LINE__);
+        SYSMWARN;
         return;
     }
 }

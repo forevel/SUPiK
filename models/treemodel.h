@@ -37,8 +37,12 @@ public:
     bool removeColumns(int column, int count, const QModelIndex &parent = QModelIndex());
     bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex());
     int Setup(QStringList Tables, int Type=TT_TYPE1);
-    int Setup(QString Table, bool IsEditable = false);
+    int Setup(QString Table);
     void Refresh();
+    bool HaveChildren(int row);
+    void SetLastItem(QColor Color, QFont Font, QIcon Icon, QString AData="0");
+    void ClearModel();
+    void AddItemToTree(QList<PublicClass::ValueStruct> Fields);
 
     // роли для моделей
     enum Roles
@@ -88,10 +92,7 @@ private:
     int SetTable(int Table, QString Id);
     int SetNextTree(int Table, QString Id);
     int SetNextTable(int Table, QString Id);
-    void AddItemToTree(QList<PublicClass::ValueStruct> Fields);
     int PrepareTable(QString Table); // подготовить очередные TableHeaders, DBs и Tables по таблице Table
-    void SetLastItem(QColor Color, QFont Font, QIcon Icon, QString AData="0");
-    void ClearModel();
     void ClearOnlyData();
 };
 

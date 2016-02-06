@@ -9,7 +9,7 @@ class TreeView : public QTableView
 {
     Q_OBJECT
 public:
-    explicit TreeView(int Proxy, QWidget *parent = 0);
+    explicit TreeView(int Proxy=TV_PLAIN, bool HeaderVisible=false, QWidget *parent = 0);
 
     enum tv_proxies
     {
@@ -19,6 +19,7 @@ public:
 
 signals:
     void datachanged();
+    void CellClicked(QModelIndex idx);
 
 public slots:
     void setTVexpanded(QModelIndex index);

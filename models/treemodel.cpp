@@ -131,8 +131,8 @@ Qt::ItemFlags TreeModel::flags(const QModelIndex &index) const
 {
     if (!index.isValid())
             return Qt::ItemIsEnabled;
-    if (IsEditable)
-        return Qt::ItemIsEditable | Qt::ItemIsEnabled;
+//    if (IsEditable)
+//        return Qt::ItemIsEditable | Qt::ItemIsEnabled;
     return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
 }
 
@@ -263,6 +263,14 @@ void TreeModel::GoIntoIndex(QModelIndex idx)
     }
 }
 
+// проверка наличия потомков у элемента
+
+bool TreeModel::HaveChildren(int row)
+{
+    QString AData = data(index(row, 0, QModelIndex()), CellInfoRole).toString();
+    return (AData == TM_ELEMENT_WITH_CHILDREN);
+}
+
 // установка цвета, шрифта и иконки у последнедобавленного элемента
 
 void TreeModel::SetLastItem(QColor Color, QFont Font, QIcon Icon, QString AData)
@@ -279,9 +287,9 @@ void TreeModel::SetLastItem(QColor Color, QFont Font, QIcon Icon, QString AData)
     setData(index(LastIndex, 0, QModelIndex()), AData, CellInfoRole);
 }
 
-// процедура инициализации модели данными из таблицы table и построение дерева по полям alias и idalias
+// процедура инициализации модели данными из таблицы table и построение дерева по полям <tble> и idalias
 
-int TreeModel::Setup(QString Table, bool IsEditable)
+int TreeModel::Setup(QString Table)
 {
     this->IsEditable = IsEditable;
     QStringList sl = QStringList() << Table;
@@ -294,8 +302,8 @@ int TreeModel::Setup(QStringList Tables, int Type)
     ClearModel();
 
     // 1. взять столбцы tablefields из tablefields, где tablename=table
-    // 2. найти среди них столбцы <db>.<tble>.alias и <db>.<tble>.idalias. Если нет - это не дерево, выход
-    // 3. взять значения столбцов alias и idalias из таблицы <db>.<tble>
+    // 2. найти среди них столбцы <db>.<tble>.<tble> и <db>.<tble>.idalias. Если нет - это не дерево, выход
+    // 3. взять значения столбцов <tble> и idalias из таблицы <db>.<tble>
     // 4. построить по ним дерево
 
     // 1
@@ -343,7 +351,7 @@ int TreeModel::PrepareTable(QString Table)
     QString PlainTable;
     if (tmpsl.size()>1)
         PlainTable = tmpsl.at(1);
-    // ищем ключевые поля - <tble>, alias и id<tble>
+    // ищем ключевые поля - tble, <tble> и id<tble>
     for (i = 0; i < vl.size(); i++)
     {
         QStringList sl = vl.at(i);
@@ -375,7 +383,7 @@ int TreeModel::PrepareTable(QString Table)
             TreeType = TT_TABLE;
         TableIsTree.append(false);
     }
-    else if (!IsAliasExist) // если есть idalias, но нет alias - это не дело
+    else if (!IsAliasExist) // если есть idalias, но нет <tble> - это не дело
     {
         TMODELINFO("Не найдено поле " + PlainTable + " в таблице "+Table);
         return 1;

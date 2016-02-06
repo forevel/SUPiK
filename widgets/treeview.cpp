@@ -7,7 +7,7 @@
 #include <QDialog>
 #include <QScrollBar>
 
-TreeView::TreeView(int Proxy, QWidget *parent) :
+TreeView::TreeView(int Proxy, bool HeaderVisible, QWidget *parent) :
     QTableView(parent)
 {
     IsProxyModel = (Proxy == TV_PLAIN) ? false : true;
@@ -19,7 +19,7 @@ TreeView::TreeView(int Proxy, QWidget *parent) :
     verticalScrollBar()->setStyleSheet("QScrollBar {background-color: rgba(0,0,0,0);}");
     horizontalScrollBar()->setAttribute(Qt::WA_TranslucentBackground, true);
     verticalScrollBar()->setAttribute(Qt::WA_TranslucentBackground, true); */
-    horizontalHeader()->setVisible(false);
+    horizontalHeader()->setVisible(HeaderVisible);
     verticalHeader()->setVisible(false);
     connect(this, SIGNAL(clicked(QModelIndex)), this, SLOT(setTVexpanded(QModelIndex)));
 }

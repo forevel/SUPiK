@@ -1,4 +1,5 @@
 #include "dev_devdialog.h"
+#include "dev_maindialog.h"
 #include <QAction>
 #include <QMenu>
 #include <QIcon>
@@ -11,16 +12,15 @@
 #include <QApplication>
 #include "../s_2cdialog.h"
 #include "../../models/proxymodel.h"
-#include "../../models/s_duniversal.h"
-#include "../../models/s_ntmodel.h"
+#include "../../models/griddelegate.h"
+#include "../../models/treemodel.h"
 #include "../../widgets/s_tqgroupbox.h"
 #include "../../widgets/s_tqlabel.h"
 #include "../../widgets/s_tqlineedit.h"
 #include "../../widgets/s_tqcombobox.h"
 #include "../../widgets/s_tqpushbutton.h"
 #include "../../widgets/s_tqcheckbox.h"
-#include "../../widgets/s_tqtreeview.h"
-#include "../../widgets/s_tqtableview.h"
+#include "../../widgets/treeview.h"
 #include "../../widgets/s_tqframe.h"
 #include "../../widgets/s_tqsplitter.h"
 #include "../../widgets/s_tqwidget.h"
@@ -85,13 +85,13 @@ void dev_devdialog::SetupUI()
     hlyout->setAlignment(lbl, Qt::AlignRight);
 
     lyout->addLayout(hlyout);
-    s_tqTableView *MainTV = new s_tqTableView;
-    s_duniversal *gridItemDelegate = new s_duniversal;
+    TreeView *MainTV = new TreeView(TreeView::TV_PROXY, true);
+    GridDelegate *gridItemDelegate = new GridDelegate;
     MainTV->setItemDelegate(gridItemDelegate);
     MainTV->setObjectName("mtv");
     MainTV->setSelectionMode(QAbstractItemView::NoSelection);
     MainTV->setSortingEnabled(true);
-    MainTV->sortByColumn(0, Qt::AscendingOrder);
+    MainTV->sortByColumn(1, Qt::AscendingOrder); // сортировка по децимальному номеру
     MainTV->setContextMenuPolicy(Qt::CustomContextMenu);
     connect (MainTV, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(MainContextMenu(QPoint)));
     connect (MainTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(EditDev()));
@@ -102,19 +102,19 @@ void dev_devdialog::SetupUI()
 
 void dev_devdialog::Refresh()
 {
-    s_tqTableView *tv = this->findChild<s_tqTableView *>("mtv");
+    TreeView *tv = this->findChild<TreeView *>("mtv");
     if (tv == 0)
     {
         DEVDOCDBG;
         return;
     }
     ProxyModel *tvmodel = new ProxyModel;
-    s_ncmodel *mdl = new s_ncmodel;
+    TreeModel *mdl = new TreeModel;
     tvmodel->setSourceModel(mdl);
     QItemSelectionModel *m = tv->selectionModel();
     tv->setModel(tvmodel);
     delete m;
-    mdl->setup("Изделия_сокращ");
+    mdl->Setup("Изделия_сокращ");
     ResizeMainTV();
 }
 
@@ -134,18 +134,14 @@ void dev_devdialog::Unfilter()
 
 void dev_devdialog::AddNewDev()
 {
-    s_2cdialog *dlg = new s_2cdialog("Изделия:Добавить");
     QString newID = tfl.insert("Изделия_полн");
     if (tfl.result)
     {
         DEVDOCWARN;
         return;
     }
-    dlg->setup("Изделия_полн",MODE_EDITNEW,newID);
-    if (dlg->result)
-        DEVDOCWARN;
-    else
-        dlg->exec();
+    DevMainDialog *dlg = new DevMainDialog(newID);
+    dlg->exec();
     Refresh();
 }
 
@@ -172,15 +168,22 @@ void dev_devdialog::DeleteDev()
 
 QString dev_devdialog::GetIndex(int column)
 {
-    s_tqTableView *MainTV = this->findChild<s_tqTableView *>("mtv");
+    TreeView *MainTV = this->findChild<TreeView *>("mtv");
     if (MainTV == 0)
     {
         DEVDOCDBG;
         return QString();
     }
     QString tmpString = MainTV->model()->index(MainTV->currentIndex().row(), column, QModelIndex()).data(Qt::DisplayRole).toString();
+    while (tmpString.at(0) == 0xFFFF)
+        tmpString.remove(0, 1);
     if (!column) // в нулевом столбце всегда ИД элемента с нулями в начале, надо незначащие нули убрать
+    {
+        QStringList tmpsl = tmpString.split(".");
+        if (tmpsl.size() > 1)
+            tmpString = tmpsl.at(1);
         tmpString = QString::number(tmpString.toInt(0));
+    }
     return tmpString;
 }
 
@@ -192,12 +195,8 @@ void dev_devdialog::EditDev()
         DEVDOCWARN;
         return;
     }
-    s_2cdialog *dlg = new s_2cdialog("Изделия:Изменить");
-    dlg->setup("Изделия_полн",MODE_EDIT,ID);
-    if (dlg->result)
-        DEVDOCWARN;
-    else
-        dlg->exec();
+    DevMainDialog *dlg = new DevMainDialog(ID);
+    dlg->exec();
     Refresh();
 }
 
@@ -224,12 +223,11 @@ void dev_devdialog::MainContextMenu(QPoint)
 
 void dev_devdialog::ResizeMainTV()
 {
-    s_tqTableView *tv = this->findChild<s_tqTableView *>("mtv");
+    TreeView *tv = this->findChild<TreeView *>("mtv");
     if (tv == 0)
     {
         DEVDOCDBG;
         return;
     }
-    for (int i = 0; i < tv->horizontalHeader()->count(); i++)
-        tv->resizeColumnToContents(i);
+    tv->resizeColumnsToContents();
 }

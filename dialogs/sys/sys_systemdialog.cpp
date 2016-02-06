@@ -6,11 +6,9 @@
 #include "../../gen/s_sql.h"
 #include "../../gen/publicclass.h"
 #include "../../gen/s_tablefields.h"
-#include "../../models/s_ntmodel.h"
-#include "../../models/s_ncmodel.h"
-#include "../../models/s_duniversal.h"
-#include "../../widgets/s_tqtreeview.h"
-#include "../../widgets/s_tqtableview.h"
+#include "../../models/treemodel.h"
+#include "../../models/griddelegate.h"
+#include "../../widgets/treeview.h"
 #include "../../widgets/s_tqframe.h"
 #include "../../widgets/s_tqlabel.h"
 #include "../../widgets/s_tqsplitter.h"
@@ -19,6 +17,7 @@
 #include "sysmenueditor.h"
 #include "sysdireditor.h"
 
+#include <QPainter>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QApplication>
@@ -72,7 +71,7 @@ void sys_systemdialog::SetupUI()
     hlyout->addWidget(lbl, 0);
     hlyout->setAlignment(lbl, Qt::AlignRight);
     lyout->addLayout(hlyout);
-    s_tqTreeView *MainTV = new s_tqTreeView;
+    TreeView *MainTV = new TreeView;
     s_tqStackedWidget *wdgt = new s_tqStackedWidget;
     connect(this,SIGNAL(closeslvdlg()),this,SLOT(RemoveWidget()));
     MainTV->setObjectName("MainTV");
@@ -110,7 +109,7 @@ void sys_systemdialog::SetupUI()
 void sys_systemdialog::SetSysTree()
 {
     QApplication::setOverrideCursor(Qt::WaitCursor);
-    s_tqTreeView *MainTV = this->findChild<s_tqTreeView *>("MainTV");
+    TreeView *MainTV = this->findChild<TreeView *>("MainTV");
     if (MainTV == 0)
     {
         SYSSDBG;
@@ -119,41 +118,32 @@ void sys_systemdialog::SetSysTree()
     MainTV->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(MainTV,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(SetSlave(QModelIndex)));
 
-    s_ntmodel *mainmodel = new s_ntmodel;
+    TreeModel *mainmodel = new TreeModel;
     mainmodel->Setup("Системное меню_сокращ");
     MainTV->setModel(mainmodel);
-    connect(MainTV, SIGNAL(expanded(QModelIndex)), mainmodel, SLOT(addExpandedIndex(QModelIndex)));
-    connect(MainTV, SIGNAL(collapsed(QModelIndex)), mainmodel, SLOT(removeExpandedIndex(QModelIndex)));
-    connect(MainTV,SIGNAL(clicked(QModelIndex)),this,SLOT(SetSlave(QModelIndex)));
-    MainTV->header()->setVisible(false);
-    MainTV->setIndentation(2);
-    MainTV->setAnimated(false);
-    s_duniversal *gridItemDelegate = new s_duniversal;
+//    connect(MainTV,SIGNAL(clicked(QModelIndex)),this,SLOT(SetSlave(QModelIndex)));
+    GridDelegate *gridItemDelegate = new GridDelegate;
     MainTV->setItemDelegate(gridItemDelegate);
-    MainTV->ResizeColumnsToContents();
+    MainTV->resizeColumnsToContents();
     QApplication::restoreOverrideCursor();
 }
 
 // ############################################ SLOTS ####################################################
 
-void sys_systemdialog::SetSlave(QModelIndex index)
-{
-    Q_UNUSED(index);
-    SetSlave();
-}
-
 // отображение соответствующего дочернего дерева
 
-void sys_systemdialog::SetSlave()
+void sys_systemdialog::SetSlave(QModelIndex idx)
 {
     emit closeslvdlg();
-    s_tqTreeView *MainTV = this->findChild<s_tqTreeView *>("MainTV");
+    TreeView *MainTV = this->findChild<TreeView *>("MainTV");
     if (MainTV == 0)
     {
         SYSSDBG;
         return;
     }
-    if (MainTV->model()->rowCount(MainTV->currentIndex()) != 0); // ветви, имеющие потомков, не имеют своего дочернего дерева
+    TreeModel *mdl = static_cast<TreeModel *>(MainTV->model());
+    int row = idx.row();
+    if (mdl->HaveChildren(row)); // ветви, имеющие потомков, не имеют своего дочернего дерева
     else
     {
         QString tmpString = getMainIndex(1);
@@ -288,13 +278,15 @@ void sys_systemdialog::SetSlave()
 
 QString sys_systemdialog::getMainIndex(int column)
 {
-    s_tqTreeView *MainTV = this->findChild<s_tqTreeView *>("MainTV");
+    TreeView *MainTV = this->findChild<TreeView *>("MainTV");
     if (MainTV == 0)
     {
         SYSSDBG;
         return QString();
     }
-    QString tmpString = MainTV->model()->index(MainTV->currentIndex().row(), column, MainTV->model()->parent(MainTV->currentIndex())).data(Qt::DisplayRole).toString();
+    QString tmpString = MainTV->model()->index(MainTV->currentIndex().row(), column, QModelIndex()).data(Qt::DisplayRole).toString();
+    while (tmpString.at(0) == 0xFFFF)
+        tmpString.remove(0, 1);
     if (!column) // в нулевом столбце всегда ИД элемента с нулями в начале, надо незначащие нули убрать
         tmpString = QString::number(tmpString.toInt(0));
     return tmpString;
@@ -362,45 +354,40 @@ void sys_systemdialog::TablesEditor()
     wdt = new s_tqWidget;
     wdt->setObjectName("tableseditorwidget");
     wdt->setAttribute(Qt::WA_DeleteOnClose);
-    s_tqTableView *tv = new s_tqTableView;
-    s_ncmodel *mdl = new s_ncmodel;
-    QList<QStringList> lsl;
+    TreeView *tv = new TreeView;
+    TreeModel *mdl = new TreeModel;
+    mdl->ClearModel();
+    QList<PublicClass::ValueStruct> lsl;
     QStringList ids, vls;
     int i = 0;
     QSqlQuery get_tables(sqlc.GetDB("sup"));
     get_tables.exec("SELECT DISTINCT `tablename` FROM `tablefields` ORDER BY `tablename` ASC;");
     while (get_tables.next())
     {
-        i++;
-        ids << QString("%1").arg(i, 5, 10, QChar('0'));
-        vls << get_tables.value(0).toString();
+        PublicClass::ValueStruct vl;
+        vl.Type = VS_STRING;
+        vl.Value = QString("%1").arg(i, 5, 10, QChar('0'));
+        lsl.append(vl);
+        vl.Value = get_tables.value(0).toString();
+        lsl.append(vl);
+        mdl->AddItemToTree(lsl);
+        mdl->SetLastItem(Qt::black,QFont("MS Sans Serif", -1, QFont::Normal),QIcon(":/res/hr.png"),TM_SIMPLE_ELEMENT);
     }
-    if (!vls.isEmpty())
-    {
-        lsl.append(ids);
-        lsl.append(vls);
-        mdl->setDataToWrite(lsl);
-        mdl->setcolumnlinks(0,"7.8");
-        mdl->setcolumnlinks(1,"7.8");
-        mdl->fillModel();
-        tv->setModel(mdl);
-        tv->setContextMenuPolicy(Qt::CustomContextMenu);
-        connect (tv, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(TablesEditorContextMenu(QPoint)));
-        s_duniversal *GridItemDelegate = new s_duniversal;
-        tv->setItemDelegate(GridItemDelegate);
-        tv->horizontalHeader()->setVisible(false);
-        tv->verticalHeader()->setVisible(false);
-        tv->resizeColumnsToContents();
-        tv->resizeRowsToContents();
-        tv->setObjectName("tabletv");
-        connect(tv,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(EditTable(QModelIndex)));
-        QVBoxLayout *lyout = new QVBoxLayout;
-        lyout->addWidget(tv);
-        wdt->setLayout(lyout);
-        connect(this,SIGNAL(closeslvdlg()),wdt,SLOT(close()));
-        wdgt->addWidget(wdt);
-        wdgt->repaint();
-    }
+    tv->setModel(mdl);
+    tv->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect (tv, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(TablesEditorContextMenu(QPoint)));
+    GridDelegate *GridItemDelegate = new GridDelegate;
+    tv->setItemDelegate(GridItemDelegate);
+    tv->resizeColumnsToContents();
+    tv->resizeRowsToContents();
+    tv->setObjectName("tabletv");
+    connect(tv,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(EditTable()));
+    QVBoxLayout *lyout = new QVBoxLayout;
+    lyout->addWidget(tv);
+    wdt->setLayout(lyout);
+    connect(this,SIGNAL(closeslvdlg()),wdt,SLOT(close()));
+    wdgt->addWidget(wdt);
+    wdgt->repaint();
 }
 
 void sys_systemdialog::TablesEditorContextMenu(QPoint pt)
@@ -450,13 +437,7 @@ void sys_systemdialog::NewTable()
 
 void sys_systemdialog::EditTable()
 {
-    this->EditTable(QModelIndex());
-}
-
-void sys_systemdialog::EditTable(QModelIndex idx)
-{
-    Q_UNUSED(idx);
-    s_tqTableView *tv = this->findChild<s_tqTableView *>("tabletv");
+    TreeView *tv = this->findChild<TreeView *>("tabletv");
     if (tv == 0)
     {
         SYSSDBG;
@@ -477,7 +458,7 @@ void sys_systemdialog::EditTable(QModelIndex idx)
 
 void sys_systemdialog::DeleteTable()
 {
-    s_tqTableView *tv = this->findChild<s_tqTableView *>("tabletv");
+    TreeView *tv = this->findChild<TreeView *>("tabletv");
     if (tv == 0)
     {
         SYSSDBG;
@@ -501,7 +482,7 @@ void sys_systemdialog::DeleteTable()
         }
     }
     SYSSINFO("Удалено успешно!");
-    SetSlave();
+    SetSlave(QModelIndex());
 }
 
 void sys_systemdialog::DirEditor()

@@ -37,6 +37,25 @@ void information(QWidget *parent, const QString &title,
     messageBox->exec();
 }
 
+void error(QWidget *parent, const QString &title,
+                 const QString &text, const QString &detailedText)
+{
+#if QT_VERSION >= 0x040600
+    QScopedPointer<QMessageBox> messageBox(new QMessageBox(parent));
+#else
+    QSharedPointer<QMessageBox> messageBox(new QMessageBox(parent));
+#endif
+    if (parent)
+        messageBox->setWindowModality(Qt::WindowModal);
+    messageBox->setWindowTitle(QString("%1 - %2").arg(QApplication::applicationName()).arg(title));
+    messageBox->setText(text);
+    if (!detailedText.isEmpty())
+        messageBox->setInformativeText(detailedText);
+    messageBox->setIcon(QMessageBox::Critical);
+    messageBox->addButton(QMessageBox::Ok);
+    messageBox->exec();
+}
+
 bool question(QWidget *parent, const QString &title,
               const QString &text, const QString &detailedText,
               const QString &yesText, const QString &noText)

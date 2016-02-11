@@ -28,6 +28,9 @@ namespace MessageBox
 void information(QWidget *parent, const QString &title,
                  const QString &text, const QString &detailedText=QString());
 
+void error(QWidget *parent, const QString &title,
+                 const QString &text, const QString &detailedText=QString());
+
 bool question(QWidget *parent, const QString &title,
               const QString &text, const QString &detailedText=QString(),
               const QString &yesText=QObject::tr("&Ага"),

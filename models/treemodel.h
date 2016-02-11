@@ -10,7 +10,7 @@
 #include "../gen/publicclass.h"
 
 #define TMODELDBG         DBGMSG(PublicClass::ER_TMODEL,__LINE__)
-#define TMODELWARN        WARNMSG(PublicClass::ER_TMODEL,__LINE__)
+#define TMODELWARN(a)     WARNMSG(PublicClass::ER_TMODEL,__LINE__,a)
 #define TMODELINFO(a)     INFOMSG(PublicClass::ER_TMODEL,__LINE__,a)
 
 #define TM_SIMPLE_ELEMENT           "0"

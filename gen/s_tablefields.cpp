@@ -30,7 +30,7 @@ QStringList s_tablefields::htovl(QString tble, QString header)
     if (sqlc.result == 2) // ошибка
     {
         result = 1;
-        TFWARN;
+        TFWARN(sqlc.LastError);
         return QStringList();
     }
     result = 0;
@@ -45,13 +45,13 @@ QStringList s_tablefields::htovlc(QString tble, QString header, QString cheader,
     QStringList sl = tablefields(tble, header); // sl.at(0) = <table>, sl.at(1) = <tablefields>
     if (result)
     {
-        TFWARN;
+        TFWARN("");
         return QStringList();
     }
     QStringList cl = tablefields(tble, cheader); // cl.at(1) = <tablefields>
     if (result)
     {
-        TFWARN;
+        TFWARN("");
         return QStringList();
     }
     QString db = sl.at(0).split(".").at(0);
@@ -60,7 +60,7 @@ QStringList s_tablefields::htovlc(QString tble, QString header, QString cheader,
     if ((sqlc.result) || tmpsl.isEmpty())
     {
         result = 1;
-        TFWARN;
+        TFWARN(sqlc.LastError);
         return QStringList();
     }
     result = 0;
@@ -78,14 +78,14 @@ QList<QStringList> s_tablefields::tbvll(QString tble)
     int i;
     if (result)
     {
-        TFWARN;
+        TFWARN("");
         return QList<QStringList>();
     }
     lsl.append(sl);
     sl = tableheaders(tble); // берём header
     if (result)
     {
-        TFWARN;
+        TFWARN("");
         return QList<QStringList>();
     }
     lsl.insert(0, sl); // на поз. 0 заголовки, на поз. 1 - links
@@ -106,7 +106,7 @@ QString s_tablefields::tov(QString tble, QString header, QString tbleid)
     QStringList sl = tablefields(tble, header); // sl.at(0) = <table>, sl.at(1) = <tablefields>
     if (result)
     {
-        TFWARN;
+        TFWARN("");
         return QString();
     }
     QString db = sl.at(0).split(".").at(0);
@@ -115,7 +115,7 @@ QString s_tablefields::tov(QString tble, QString header, QString tbleid)
     if (sqlc.result == 2) // если ошибка в запросе SQL
     {
         result = 1;
-        TFWARN;
+        TFWARN(sqlc.LastError);
         return QString();
     }
     result = 0;
@@ -147,7 +147,7 @@ PublicClass::ValueStruct s_tablefields::idtov(QString links, QString id)
             id = tmpsl.at(1);
         vl.Value = tov(ff.link.at(0), "Наименование", id);
         if (result)
-            TFWARN;
+            TFWARN("");
         break;
     }
     case FW_LINK:
@@ -158,7 +158,7 @@ PublicClass::ValueStruct s_tablefields::idtov(QString links, QString id)
             id = tmpsl.at(1);
         vl.Value = tov(ff.link.at(0), ff.link.at(1), id);
         if (result)
-            TFWARN;
+            TFWARN("");
         break;
     }
     case FW_AUTONUM:
@@ -179,12 +179,12 @@ PublicClass::ValueStruct s_tablefields::idtov(QString links, QString id)
         if (tmpi*2+1 > ff.link.size()) // нет в перечислении links таблицы с таким номером
         {
             result = 1;
-            TFWARN;
+            TFWARN("");
             return vl;
         }
         vl.Value = "_"+sl.at(0)+tov(ff.link.at(tmpi*2), ff.link.at(tmpi*2+1), sl.at(1)); // _ - признак того, что в ячейку надо сохранить доп. информацию о номере таблицы
         if (result)
-            TFWARN;
+            TFWARN("");
         break;
     }
     case FW_RIGHTS:
@@ -194,7 +194,7 @@ PublicClass::ValueStruct s_tablefields::idtov(QString links, QString id)
         if (!ok)
         {
             result = 1;
-            TFWARN;
+            TFDBG;
             return vl;
         }
         QString outs;
@@ -229,7 +229,7 @@ PublicClass::ValueStruct s_tablefields::idtov(QString links, QString id)
         if (!ok)
         {
             result = 1;
-            TFWARN;
+            TFDBG;
             return vl;
         }
         vl.Type = VS_ICON;
@@ -260,13 +260,13 @@ QStringList s_tablefields::idtovl(QString links)
         QString id = toid(ff.link.at(0), "Наименование", ff.link.at(1)); // взять ИД элемента, по ИД_а которого отбирать список элементов
         if (result)
         {
-            TFWARN;
+            TFWARN("");
             return QStringList();
         }
         tmpsl = htovlc(ff.link.at(0), "Наименование", "ИД_а", id);
         if (result)
         {
-            TFWARN;
+            TFWARN("");
             return QStringList();
         }
         break;
@@ -277,7 +277,7 @@ QStringList s_tablefields::idtovl(QString links)
         tmpsl = htovl(ff.link.at(0), ff.link.at(1));
         if (result)
         {
-            TFWARN;
+            TFWARN("");
             return QStringList();
         }
         break;
@@ -310,10 +310,10 @@ QString s_tablefields::vtoid(PublicClass::ValueStruct vl)
             else
                 outs = toid(ff.link.at(0), "Наименование", vl.Value);
             if (result)
-                TFWARN;
+                TFWARN("");
         }
         else
-            TFWARN;
+            TFWARN("");
         break;
     }
     case FW_LINK:
@@ -321,7 +321,7 @@ QString s_tablefields::vtoid(PublicClass::ValueStruct vl)
     {
         outs = toid(ff.link.at(0), ff.link.at(1), vl.Value);
         if (result)
-            TFWARN;
+            TFWARN("");
         break;
     }
     case FW_AUTONUM:
@@ -348,7 +348,7 @@ QString s_tablefields::vtoid(PublicClass::ValueStruct vl)
             if (tmpi*2+1 > ff.link.size()) // нет в перечислении links таблицы с таким номером
             {
                 result = 1;
-                TFWARN;
+                TFWARN("");
                 return QString();
             }
             tmps.remove(0, 2);
@@ -357,7 +357,7 @@ QString s_tablefields::vtoid(PublicClass::ValueStruct vl)
             tmpi = 0;
         outs = toid(ff.link.at(tmpi*2), ff.link.at(tmpi*2+1), tmps);
         if (result)
-            TFWARN;
+            TFWARN("");
         break;
     }
     case FW_RIGHTS:
@@ -404,15 +404,15 @@ QString s_tablefields::vtoid(PublicClass::ValueStruct vl)
             else if (vl.Value == ":/res/cross.png")
                 outs = "0";
             else
-                TFWARN;
+                TFWARN("");
         }
         else
-            TFWARN;
+            TFWARN("");
         break;
     }
     default:
     {
-        TFWARN;
+        TFWARN("");
         break;
     }
     }
@@ -427,7 +427,7 @@ QString s_tablefields::toid(QString tble, QString header, QString value)
     QStringList sl = tablefields(tble, header); // sl.at(0) = <table>, sl.at(1) = <tablefields>
     if (result)
     {
-        TFWARN;
+        TFWARN("");
         return QString();
     }
     QString db = sl.at(0).split(".").at(0);
@@ -436,7 +436,7 @@ QString s_tablefields::toid(QString tble, QString header, QString value)
     if (sqlc.result)
     {
         result = 1;
-        TFWARN;
+        TFWARN(sqlc.LastError);
         return QString();
     }
     result = 0;
@@ -451,7 +451,7 @@ void s_tablefields::idtois(QString tble, QStringList headers, QStringList values
     if (headers.size() != values.size())
     {
         result = 1;
-        TFWARN;
+        TFDBG;
         return;
     }
     // Сначала найдём для данной таблицы ключевое поле ("v") и по нему вытащим реальную БД, таблицу и наименование поля
@@ -462,7 +462,7 @@ void s_tablefields::idtois(QString tble, QStringList headers, QStringList values
     if (sqlc.result)
     {
         result = 1;
-        TFWARN;
+        TFWARN(sqlc.LastError);
         return;
     }
     QStringList tmpsl = keydbtble.at(0).split(".");
@@ -471,7 +471,7 @@ void s_tablefields::idtois(QString tble, QStringList headers, QStringList values
     int ididx = headers.indexOf(keydbtble.at(3)); // вытаскиваем индекс ключевого поля
     if (ididx == -1)
     {
-        TFWARN;
+        TFWARN("Не найдено ключевое поле "+keydbtble.at(3)+" в таблице "+keydbtble.at(1));
         result = 1;
         return;
     }
@@ -481,7 +481,7 @@ void s_tablefields::idtois(QString tble, QStringList headers, QStringList values
     else
     {
         result = 1;
-        TFWARN;
+        TFWARN("Не найдено ключевое поле "+keydbtble.at(3)+" в таблице "+keydbtble.at(1));
         return;
     }
     keyid = QString::number(keyid.toInt()); // убираем незначащие нули
@@ -504,7 +504,7 @@ void s_tablefields::idtois(QString tble, QStringList headers, QStringList values
                 dbtble = tablefields(tble, headers.at(i));
                 if (dbtble.size() == 0)
                 {
-                    TFWARN;
+                    TFWARN("");
                     return;
                 }
                 if (dbtble.at(0) == tmpdbtble) // здесь проверка на дефис не нужна, т.к. сравнение ведётся с tmpdbtble, который уже проверен ранее
@@ -523,7 +523,7 @@ void s_tablefields::idtois(QString tble, QStringList headers, QStringList values
             tmpvalues << pc.DateTime << QString::number(pc.idPers);
             result = sqlc.UpdateValuesInTable(sqlc.GetDB(tmpdb), tmptble, tmptablefields, tmpvalues, keydbtble.at(2), keyid);
             if (result)
-                TFWARN;
+                TFWARN(sqlc.LastError);
         }
     }
     return;
@@ -540,14 +540,14 @@ QString s_tablefields::insert(QString tble)
     if (sqlc.result)
     {
         result = 1;
-        TFWARN;
+        TFWARN(sqlc.LastError);
         return QString();
     }
     QString newid = sqlc.InsertValuesToTable(sqlc.GetDB(keydbtble.split(".").at(0)), keydbtble.split(".").at(1), QStringList(), QStringList()); // вставка новой пустой строки
     if (sqlc.result)
     {
         result = 1;
-        TFWARN;
+        TFWARN(sqlc.LastError);
         return QString();
     }
     result = 0;
@@ -565,14 +565,14 @@ QString s_tablefields::NewID(QString tble)
     if (sqlc.result)
     {
         result = 1;
-        TFWARN;
+        TFWARN(sqlc.LastError);
         return QString();
     }
     int newid = sqlc.GetNextFreeIndex(sqlc.GetDB(keydbtble.split(".").at(0)), keydbtble.split(".").at(1));
     if (sqlc.result)
     {
         result = 1;
-        TFWARN;
+        TFWARN(sqlc.LastError);
         return QString();
     }
     result = 0;
@@ -591,13 +591,13 @@ void s_tablefields::remove(QString tble, QString id)
     QStringList keydbtble = sqlc.GetValuesFromTableByFields(sqlc.GetDB("sup"), "tablefields", fl, cmpfl, cmpvl);
     if (sqlc.result)
     {
-        TFWARN;
+        TFWARN(sqlc.LastError);
         result = 1;
         return;
     }
     result = sqlc.DeleteFromDB(sqlc.GetDB(keydbtble.at(0).split(".").at(0)), keydbtble.at(0).split(".").at(1), keydbtble.at(1), id);
     if (result)
-        TFWARN;
+        TFWARN(sqlc.LastError);
 }
 
 // remove - реальное удаление записи с индексом id из таблицы tble
@@ -612,13 +612,13 @@ void s_tablefields::Delete(QString tble, QString id)
     QStringList keydbtble = sqlc.GetValuesFromTableByFields(sqlc.GetDB("sup"), "tablefields", fl, cmpfl, cmpvl);
     if (sqlc.result)
     {
-        TFWARN;
+        TFWARN(sqlc.LastError);
         result = 1;
         return;
     }
     result = sqlc.RealDeleteFromDB(sqlc.GetDB(keydbtble.at(0).split(".").at(0)), keydbtble.at(0).split(".").at(1), QStringList(keydbtble.at(1)), QStringList(id));
     if (result)
-        TFWARN;
+        TFWARN(sqlc.LastError);
 }
 
 bool s_tablefields::Check(QString tble, QString cmpfield, QString cmpvalue)
@@ -626,7 +626,7 @@ bool s_tablefields::Check(QString tble, QString cmpfield, QString cmpvalue)
     QStringList sl = tfl.tablefields(tble,cmpfield);
     if (result)
     {
-        TFWARN;
+        TFWARN("");
         return false;
     }
     QString cmpdb = sl.at(0).split(".").at(0); // реальное имя БД
@@ -648,7 +648,7 @@ QStringList s_tablefields::valuesbyfield(QString tble, QStringList fl, QString c
     QStringList sl = tfl.tablefields(tble,cmpfield);
     if (result)
     {
-        TFWARN;
+        TFWARN("");
         return QStringList();
     }
     QString cmpdb = sl.at(0).split(".").at(0); // реальное имя БД
@@ -659,7 +659,7 @@ QStringList s_tablefields::valuesbyfield(QString tble, QStringList fl, QString c
         sl = tablefields(tble,fl.at(i));
         if (result)
         {
-            TFWARN;
+            TFWARN("");
             return QStringList();
         }
         fl.replace(i, sl.at(1)); // заменяем русское наименование поля на его реальное название
@@ -667,7 +667,7 @@ QStringList s_tablefields::valuesbyfield(QString tble, QStringList fl, QString c
     sl = sqlc.GetValuesFromTableByField(sqlc.GetDB(cmpdb),cmptble,fl,cmpfield,cmpvalue);
     if ((sqlc.result) && (Warn))
     {
-        TFWARN;
+        TFWARN(sqlc.LastError);
         result = 1;
         return QStringList();
     }
@@ -680,7 +680,7 @@ QStringList s_tablefields::valuesbyfields(QString tble, QStringList fl, QStringL
     if ((cmpfields.size() != cmpvalues.size()) || (cmpfields.size() == 0) || (fl.size() == 0))
     {
         result = 1;
-        TFWARN;
+        TFDBG;
         return QStringList();
     }
     QStringList cmpfl, tmpsl;
@@ -690,7 +690,7 @@ QStringList s_tablefields::valuesbyfields(QString tble, QStringList fl, QStringL
         tmpsl = tablefields(tble,cmpfields.at(i));
         if (result)
         {
-            TFWARN;
+            TFWARN("");
             return QStringList();
         }
         cmpfl << tmpsl.at(1);
@@ -700,7 +700,7 @@ QStringList s_tablefields::valuesbyfields(QString tble, QStringList fl, QStringL
         QStringList sl = tablefields(tble,fl.at(i));
         if (result)
         {
-            TFWARN;
+            TFWARN("");
             return QStringList();
         }
         fl.replace(i, sl.at(1)); // заменяем русское наименование поля на его реальное название
@@ -710,7 +710,7 @@ QStringList s_tablefields::valuesbyfields(QString tble, QStringList fl, QStringL
     QStringList tmps = sqlc.GetValuesFromTableByFields(sqlc.GetDB(cmpdb),cmptble,fl,cmpfl,cmpvalues);
     if ((sqlc.result) && (Warn))
     {
-        TFWARN;
+        TFWARN(sqlc.LastError);
         result = 1;
         return QStringList();
     }
@@ -723,7 +723,7 @@ QStringList s_tablefields::TableColumn(QString tble, QString field)
     QStringList sl = sqlc.GetValuesFromTableByColumnAndField(sqlc.GetDB("sup"), "tablefields", field, "tablename", tble, "fieldsorder");
     if (sqlc.result)
     {
-        TFWARN;
+        TFWARN(sqlc.LastError);
         result = 1;
         return QStringList();
     }
@@ -739,7 +739,7 @@ QStringList s_tablefields::tablefields(QString tble, QString header)
     QStringList sl = sqlc.GetValuesFromTableByFields(sqlc.GetDB("sup"), "tablefields", fl, cmpfl, cmpvl);
     if ((sqlc.result) || (sl.isEmpty()))
     {
-        TFWARN;
+        TFWARN(sqlc.LastError);
         result = 1;
         return QStringList();
     }
@@ -752,7 +752,7 @@ QStringList s_tablefields::tableheaders(QString tble)
     QStringList sl = sqlc.GetValuesFromTableByColumnAndField(sqlc.GetDB("sup"), "tablefields", "header", "tablename", tble, "fieldsorder", true);
     if ((sqlc.result) || (sl.isEmpty()))
     {
-        TFWARN;
+        TFWARN(sqlc.LastError);
         result = 1;
         return QStringList();
     }
@@ -765,7 +765,7 @@ QStringList s_tablefields::tablelinks(QString tble)
     QStringList sl = sqlc.GetValuesFromTableByColumnAndField(sqlc.GetDB("sup"), "tablefields", "links", "tablename", tble, "fieldsorder", true);
     if ((sqlc.result) || (sl.isEmpty()))
     {
-        TFWARN;
+        TFWARN(sqlc.LastError);
         result = 1;
         return QStringList();
     }

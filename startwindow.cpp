@@ -4,11 +4,13 @@
 #include <QApplication>
 #include <QEventLoop>
 #include <QTime>
+#include <QInputDialog>
 #include <QGridLayout>
 
 #include "startwindow.h"
 #include "gen/s_sql.h"
 #include "widgets/s_tqcheckbox.h"
+#include "dialogs/messagebox.h"
 #include "gen/sftp.h"
 
 StartWindow::StartWindow(QWidget *parent) : QMainWindow(parent)
@@ -83,8 +85,11 @@ void StartWindow::SetupUI()
     StartWindowLayout->addWidget(PasswdLE, 1, 1, 1, 2);
     StartWindowLayout->addWidget(SaveL, 2, 0);
     StartWindowLayout->addWidget(SaveCB, 2, 1, 1, 2);
-    StartWindowLayout->addWidget(OkPB, 3, 0, 1, 2);
-    StartWindowLayout->addWidget(SystemPB, 3, 2);
+    s_tqPushButton *pb = new s_tqPushButton("Сменить пароль");
+    connect(pb,SIGNAL(clicked()),this,SLOT(ChangePassword()));
+    StartWindowLayout->addWidget(pb, 3, 0, 1, 3);
+    StartWindowLayout->addWidget(OkPB, 4, 0, 1, 2);
+    StartWindowLayout->addWidget(SystemPB, 4, 2);
 
     StartWindowLayout->setColumnStretch(0, 0);
     StartWindowLayout->setColumnStretch(2, 0);
@@ -100,6 +105,44 @@ void StartWindow::SetupUI()
     connect (SystemPB, SIGNAL(clicked()), this, SLOT(OpenSettingsDialog()));
     connect (UNameLE, SIGNAL(returnPressed()), this, SLOT(UNameLEReturnPressed()));
     connect (PasswdLE, SIGNAL(returnPressed()), this, SLOT(PasswdLEReturnPressed()));
+}
+
+void StartWindow::ChangePassword()
+{
+    s_tqLineEdit *UNameLE = this->findChild<s_tqLineEdit *>("UNameLE");
+    s_tqLineEdit *PasswdLE = this->findChild<s_tqLineEdit *>("PasswdLE");
+    if ((UNameLE == 0) || (PasswdLE == 0))
+    {
+        MessageBox::error(this,"Системная ошибка","Отсутствуют элементы в диалоге, строка "+QString::number(__LINE__));
+        return;
+    }
+    QString login = UNameLE->text();
+    QString psw = PasswdLE->text();
+    QStringList cmpfl = QStringList() << "login" << "psw";
+    QStringList cmpvl = QStringList() << login << psw;
+    sqlc.GetValueFromTableByFields(sqlc.GetDB("sup"),"personel","idpersonel",cmpfl,cmpvl);
+    if (sqlc.result)
+        MessageBox::error(this,"Ошибка!","Не найден пользователь с таким логином/паролем");
+    else
+    {
+        bool ok = false;
+        QString newpsw = QInputDialog::getText(this,"Сменить пароль","Новый пароль:", QLineEdit::Password, "", &ok);
+        if (!ok)
+            return;
+        QString new2psw = QInputDialog::getText(this,"Сменить пароль","Повторите ввод:", QLineEdit::Password, "", &ok);
+        if (!ok)
+            return;
+        if (newpsw != new2psw)
+        {
+            MessageBox::error(this,"Ошибка!","Введённые строки не совпадают");
+            return;
+        }
+        sqlc.UpdateValuesInTable(sqlc.GetDB("sup"),"personel",QStringList("psw"),QStringList(newpsw),"login",login);
+        if (sqlc.result)
+            MessageBox::error(this,"Ошибка!","Ошибка при смене пароля");
+        else
+            PasswdLE->setText(newpsw);
+    }
 }
 
 void StartWindow::OkPBClicked()

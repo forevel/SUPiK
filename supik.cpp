@@ -30,13 +30,14 @@ supik::supik()
     connect(thr,SIGNAL(started()),CThread,SLOT(Start()));
     connect(thr,SIGNAL(finished()),CThread,SLOT(deleteLater()));
     connect(thr,SIGNAL(finished()),thr,SLOT(deleteLater()));
-    connect(CThread,SIGNAL(NewProblemsDetected(PublicClass::ProblemStruct &)),this,SLOT(NewProblemsDetected(PublicClass::ProblemStruct &)));
+    connect(this,SIGNAL(stopall()),CThread,SLOT(Finish()));
     thr->start();
     ERTimer = new QTimer;
     ERTimer->setInterval(5000);
     connect(ERTimer,SIGNAL(timeout()),this,SLOT(HideErrorProtocol()));
     ERTimerIsOn = false;
-    ProblemsDetected = false;
+    IsProblemsDetected = false;
+    PeriodicOddSecond = true;
     SetSupikWindow();
     SetSupikStatusBar();
     pc.supikprocs << "ExitSupik" << "SysStructEdit" << "SettingsEdit" << "Components" << "Directories" << "BackupDir" << "RestoreDir" << "ProbCheck";
@@ -68,6 +69,12 @@ void supik::showEvent(QShowEvent *event)
     connect (timer1s, SIGNAL(timeout()), this, SLOT(periodic1s()));
     timer1s->start();
     event->accept();
+}
+
+void supik::closeEvent(QCloseEvent *e)
+{
+    emit stopall();
+    e->accept();
 }
 
 void supik::SetSupikWindow()
@@ -431,12 +438,10 @@ void supik::ProbCheck()
     }
     SysProblemsDialog *probDialog = new SysProblemsDialog;
     probDialog->setObjectName("ProblemsDialog");
-    int ids = MainTW->addTab(probDialog, "Сообщения: "+QString::number(probDialog->ProblemsList.size()));
+    int ids = MainTW->addTab(probDialog, "Сообщения: "+QString::number(pc.ProblemsList.size()));
     MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_PROB));
     MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
     MainTW->tabBar()->setCurrentIndex(ids);
-    connect (this, SIGNAL(newnotify()), probDialog, SLOT(updatemainTV()));
-    connect (probDialog, SIGNAL(editdirneeded()), this, SLOT(executeDirDialog()));
     connect (probDialog, SIGNAL(ProblemsNumberUpdated()), this, SLOT(UpdateProblemsNumberInTab()));
     MainTW->repaint();
 }
@@ -630,10 +635,11 @@ void supik::executeDirDialog()
 
 void supik::periodic1s()
 {
+    PeriodicOddSecond = !PeriodicOddSecond;
     pc.DateTime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
     s_tqLabel *le = this->findChild<s_tqLabel *>("datetime");
     le->setText(pc.DateTime);
-    if (ProblemsDetected)
+    if (IsProblemsDetected)
     {
         QAction *ta = this->findChild<QAction *>("warning");
         if (ta == 0)
@@ -644,26 +650,17 @@ void supik::periodic1s()
         int idx = CheckForWidget(pc.TW_PROB);
         if (idx == -1)
         {
-            if (ta->isVisible())
-                ta->setVisible(false);
+            if (PeriodicOddSecond)
+                ta->setEnabled(false);
             else
-                ta->setVisible(true);
+                ta->setEnabled(true);
         }
     }
 }
 
-void supik::NewProblemsDetected(PublicClass::ProblemStruct &prob)
-{
-    ProblemsDetected = true;
-    SysProblemsDialog *dlg = this->findChild<SysProblemsDialog *>("ProblemsDialog");
-    if (dlg != 0)
-        dlg->AddProblem(prob);
-    UpdateProblemsNumberInTab();
-}
-
 void supik::ClearProblems()
 {
-    ProblemsDetected = false;
+    IsProblemsDetected = false;
     QAction *ta = this->findChild<QAction *>("warning");
     if (ta == 0)
     {
@@ -686,8 +683,8 @@ void supik::UpdateProblemsNumberInTab()
         SysProblemsDialog *dlg = this->findChild<SysProblemsDialog *>("ProblemsDialog");
         if (dlg != 0)
         {
-            MainTW->tabBar()->setTabText(idx, "Сообщения: "+QString::number(dlg->ProblemsList.size()));
-            if (dlg->ProblemsList.isEmpty()) // убрали все проблемы
+            MainTW->tabBar()->setTabText(idx, "Сообщения: "+QString::number(pc.ProblemsList.size()));
+            if (pc.ProblemsList.isEmpty()) // убрали все проблемы
             {
                 dlg->close();
                 ClearProblems();

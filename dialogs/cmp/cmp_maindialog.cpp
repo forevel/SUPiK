@@ -22,6 +22,7 @@
 
 cmp_maindialog::cmp_maindialog(QWidget *parent) : QDialog(parent)
 {
+    setWindowFlags(Qt::CustomizeWindowHint | Qt::WindowContextHelpButtonHint);
     Changed = PartNumberCreatorEnabled = ChangeEnabled = false;
     RevNotes = 0;
     QVBoxLayout *lyout = new QVBoxLayout;
@@ -749,14 +750,22 @@ void cmp_maindialog::SetCWData(QString cwname, QVariant data)
 {
     s_tqChooseWidget *cw = this->findChild<s_tqChooseWidget *>(cwname);
     if (cw != 0)
-        cw->SetValue(data);
+    {
+        PublicClass::ValueStruct vl;
+        vl.Type = VS_STRING;
+        vl.Value = data.toString();
+        cw->SetData(vl);
+    }
 }
 
 QString cmp_maindialog::CWData(QString cwname)
 {
     s_tqChooseWidget *cw = this->findChild<s_tqChooseWidget *>(cwname);
     if (cw != 0)
-        return cw->Value();
+    {
+        PublicClass::ValueStruct vl = cw->Data();
+        return vl.Value;
+    }
     else
         return QString();
 }

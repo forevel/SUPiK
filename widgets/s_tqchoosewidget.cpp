@@ -144,8 +144,7 @@ void s_tqChooseWidget::pbclicked()
     {
     case FW_ALLINK:
     {
-        ChooseItemDialog *chooseDialog = new ChooseItemDialog(hdr);
-        chooseDialog->Setup(ff.link.at(0), true); // диалог с "корневой кнопкой"
+        ChooseItemDialog *chooseDialog = new ChooseItemDialog(ff.link.at(0), hdr, true); // диалог с "корневой кнопкой"
         connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
         chooseDialog->setTvCurrentText(le->text());
         chooseDialog->exec();
@@ -153,8 +152,7 @@ void s_tqChooseWidget::pbclicked()
     }
     case FW_LINK:
     {
-        ChooseItemDialog *chooseDialog = new ChooseItemDialog(hdr);
-        chooseDialog->Setup(ff.link.at(0));
+        ChooseItemDialog *chooseDialog = new ChooseItemDialog(ff.link.at(0), hdr);
         connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
         chooseDialog->setTvCurrentText(le->text());
         chooseDialog->exec();

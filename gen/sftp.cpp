@@ -15,7 +15,7 @@ s_ftp::s_ftp(QObject *parent) : QObject(parent)
 
 s_ftp::~s_ftp()
 {
-    FtpDisconnect();
+//    FtpDisconnect();
 }
 
 // Установка связи и проверка соединения с FTP-сервером
@@ -278,7 +278,7 @@ void s_ftp::FtpDisconnect()
         QObject::disconnect(FtpListConnection);
     if (ftp)
     {
-        ftp->abort();
+//        ftp->abort();
         ftp->close();
         ftp->deleteLater();
         ftp = 0;

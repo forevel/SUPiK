@@ -252,15 +252,7 @@ QString SysmenuEditor::GetMainIndex(int column)
     QModelIndex index = tv->model()->index(tv->currentIndex().row(), column, tv->model()->parent(tv->currentIndex()));
 
     QString tmpString = index.data(Qt::DisplayRole).toString();
-    while (tmpString.at(0) == 0xFFFF)
-        tmpString.remove(0, 1);
-    if (!column) // в нулевом столбце всегда ИД элемента с нулями в начале, надо незначащие нули убрать
-    {
-        QStringList tmpsl = tmpString.split(".");
-        if (tmpsl.size() > 1)
-            tmpString = tmpsl.at(1);
-        tmpString = QString::number(tmpString.toInt(0));
-    }
+    tmpString = pc.ConvertId(!column, tmpString);
     return tmpString;
 }
 

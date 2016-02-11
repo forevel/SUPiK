@@ -12,9 +12,8 @@ class ChooseItemDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit ChooseItemDialog(QString hdr="", QWidget *parent = 0);
+    explicit ChooseItemDialog(QString tble, QString hdr="", bool RootNeeded=false, QWidget *parent = 0);
     void SetupUI();
-    void Setup(QString tble, bool RootNeeded=false);
     void sortModel();
     void setTvCurrentText(QString text);
 
@@ -41,6 +40,7 @@ private slots:
     void ShowFilterLineEdit();
     void Unfilter();
     void AddItem();
+    void ResizeMainTV();
 
 protected:
     void paintEvent(QPaintEvent *e);

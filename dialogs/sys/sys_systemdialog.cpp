@@ -285,10 +285,7 @@ QString sys_systemdialog::getMainIndex(int column)
         return QString();
     }
     QString tmpString = MainTV->model()->index(MainTV->currentIndex().row(), column, QModelIndex()).data(Qt::DisplayRole).toString();
-    while (tmpString.at(0) == 0xFFFF)
-        tmpString.remove(0, 1);
-    if (!column) // в нулевом столбце всегда ИД элемента с нулями в начале, надо незначащие нули убрать
-        tmpString = QString::number(tmpString.toInt(0));
+    tmpString = pc.ConvertId(!column, tmpString);
     return tmpString;
 }
 
@@ -371,7 +368,7 @@ void sys_systemdialog::TablesEditor()
         vl.Value = get_tables.value(0).toString();
         lsl.append(vl);
         mdl->AddItemToTree(lsl);
-        mdl->SetLastItem(Qt::black,QFont("MS Sans Serif", -1, QFont::Normal),QIcon(":/res/hr.png"),TM_SIMPLE_ELEMENT);
+        mdl->SetLastItem(Qt::black,Qt::transparent,QFont("MS Sans Serif", -1, QFont::Normal),QIcon(":/res/hr.png"),TM_SIMPLE_ELEMENT);
     }
     tv->setModel(mdl);
     tv->setContextMenuPolicy(Qt::CustomContextMenu);

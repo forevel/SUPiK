@@ -32,11 +32,12 @@ public:
 
 signals:
     void newnotify();
+    void stopall();
 
 public slots:
 
 private:
-    bool ERHide, ERTimerIsOn, ProblemsDetected;
+    bool ERHide, ERTimerIsOn, IsProblemsDetected, PeriodicOddSecond;
     QTimer *ERTimer;
     QRect ERGeometry;
     int WarningActionIndex;
@@ -72,7 +73,6 @@ private slots:
     void executeDirDialog();
     void UpdateProblemsNumberInTab();
     void periodic1s();
-    void NewProblemsDetected(PublicClass::ProblemStruct &prob);
     void MouseMove();
     void UpdateErrorProtocol();
     void HideErrorProtocol();
@@ -84,6 +84,7 @@ private slots:
 protected:
     void showEvent(QShowEvent *event);
     void resizeEvent(QResizeEvent *e);
+    void closeEvent(QCloseEvent *e);
 };
 
 #endif // SUPIK_H

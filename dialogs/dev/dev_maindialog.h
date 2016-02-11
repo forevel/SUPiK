@@ -30,6 +30,7 @@ private slots:
     void Unfilter();
     int Fill(QString DevID);
     void SetDecimalByManuf(QVariant Manuf);
+    void SetClassByManuf(QVariant Class);
 
 protected:
     void paintEvent(QPaintEvent *);

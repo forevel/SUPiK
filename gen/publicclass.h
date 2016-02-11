@@ -17,6 +17,7 @@ QT_END_NAMESPACE
 #include <QColor>
 #include <QFont>
 #include <QIcon>
+#include <QMutex>
 
 #include <QtSql/QSqlDatabase>
 #include <QtSql/QSqlError>
@@ -24,7 +25,7 @@ QT_END_NAMESPACE
 
 #include "publiclang.h"
 
-#define PROGVER    "1.0.294"
+#define PROGVER    "1.0.296"
 
 // Макросы для выдачи сообщений
 #define ERMSG(...)     pc.AddErrMsg(PublicClass::ER_MSG,__VA_ARGS__)
@@ -116,7 +117,6 @@ QT_END_NAMESPACE
 #define VS_STRING   0 // простая строка
 #define VS_ICON     1 // значение в виде ссылки на иконку
 
-
 class PublicClass
 {
 public:
@@ -155,8 +155,46 @@ public:
         ER_EMODEL,   // editmodel
         ER_CHIDLG,   // chooseitemdialog
         ER_CTHREAD,  // checkthread
-        ER_DEVMAIN  // DevMainDialog
+        ER_DEVMAIN,  // DevMainDialog
+        ER_PROBS    // SysProblemsDialog
     };
+
+    static QMap<int, QString> ermsgs()
+    {
+        QMap<int, QString>map;
+        map.insert(ER_SUPIK, QString::fromLocal8Bit("Супик"));
+        map.insert(ER_COMP, QString::fromLocal8Bit("Комп"));
+        map.insert(ER_CMPMAIN, QString::fromLocal8Bit("Комп_гл"));
+        map.insert(ER_CMPNS, QString::fromLocal8Bit("Комп_новкатег"));
+        map.insert(ER_DIRADD, QString::fromLocal8Bit("Доб_справ"));
+        map.insert(ER_WH, QString::fromLocal8Bit("Работа со складом"));
+        map.insert(ER_WHED, QString::fromLocal8Bit("Редактор_складов"));
+        map.insert(ER_SYS, QString::fromLocal8Bit("Система"));
+        map.insert(ER_DIRMAIN, QString::fromLocal8Bit("Справочники_гл"));
+        map.insert(ER_CHWDG, QString::fromLocal8Bit("Строка_выбора"));
+        map.insert(ER_SYSMENU, QString::fromLocal8Bit("Ред_сист_меню"));
+        map.insert(ER_SYSDIR, QString::fromLocal8Bit("Ред_сист_справ"));
+        map.insert(ER_2TDLG, QString::fromLocal8Bit("Диалог_2_дерева"));
+        map.insert(ER_2CTDLG, QString::fromLocal8Bit("Диалог_дерево"));
+        map.insert(ER_2CDLG, QString::fromLocal8Bit("Диалог_таблица"));
+        map.insert(ER_NCMODEL, QString::fromLocal8Bit("Модель_таблица"));
+        map.insert(ER_NTMODEL, QString::fromLocal8Bit("Модель_дерево"));
+        map.insert(ER_TFIELD, QString::fromLocal8Bit("Таблицы"));
+        map.insert(ER_SQL, QString::fromLocal8Bit("БД"));
+        map.insert(ER_START, QString::fromLocal8Bit("Вход_в_систему"));
+        map.insert(ER_DEVDOC, QString::fromLocal8Bit("Изделия_документы"));
+        map.insert(ER_ACC, QString::fromLocal8Bit("Права_доступа"));
+        map.insert(ER_SFTP, QString::fromLocal8Bit("Ftp_клиент"));
+        map.insert(ER_SYSSET, QString::fromLocal8Bit("Система_настройки"));
+        map.insert(ER_SYSICT, QString::fromLocal8Bit("Система_импортЕСКД_т"));
+        map.insert(ER_TMODEL, QString::fromLocal8Bit("Дерево_модель"));
+        map.insert(ER_EMODEL, QString::fromLocal8Bit("Табл_ред_модель"));
+        map.insert(ER_CHIDLG, QString::fromLocal8Bit("Выбор_элем_диалог"));
+        map.insert(ER_CTHREAD, QString::fromLocal8Bit("Проверки_поток"));
+        map.insert(ER_DEVMAIN, QString::fromLocal8Bit("Ред_изделий"));
+        map.insert(ER_PROBS, QString::fromLocal8Bit("Проблемы_диалог"));
+        return map;
+    }
 
     // диалоговые окна в СУПиКе
     enum SupikDialogWindows
@@ -188,6 +226,32 @@ public:
         PT_ALL
     };
 
+    static QMap<int, QColor> ProblemBackgroundColors()
+    {
+        QMap<int, QColor> map;
+        map.insert(PT_SYS, QColor(194, 194, 194));
+        map.insert(PT_ALT, QColor(153, 204, 153));
+        map.insert(PT_WH, QColor(204, 204, 51));
+        map.insert(PT_SADM, QColor(102, 102, 153));
+        map.insert(PT_TB, QColor(255, 204, 204));
+        map.insert(PT_DOC, QColor(255, 255, 255));
+        map.insert(PT_ALL, QColor(153, 153, 153));
+        return map;
+    }
+
+    static QMap<int, QColor> ProblemForegroundColors()
+    {
+        QMap<int, QColor> map;
+        map.insert(PT_SYS, Qt::black);
+        map.insert(PT_ALT, Qt::black);
+        map.insert(PT_WH, Qt::black);
+        map.insert(PT_SADM, Qt::white);
+        map.insert(PT_TB, Qt::black);
+        map.insert(PT_DOC, Qt::black);
+        map.insert(PT_ALL, Qt::black);
+        return map;
+    }
+
     enum ProblemSubTypes
     {
         PST_FIELDMISSED,    // отсутствует поле ProblemField в таблице ProblemTable
@@ -216,6 +280,9 @@ public:
         QString ProblemId2;
         QString ProblemPerson;
     };
+
+    QList<ProblemStruct> ExchangeProblemsList, ProblemsList;
+    QMutex EPLMutex;
 
     // структура возвращаемых значений по полю links
     struct ValueStruct
@@ -369,6 +436,7 @@ public:
     QList<ermsg> ermsgpool;
 
     void AddErrMsg(ermsgtype msgtype, quint64 ernum, quint64 ersubnum, QString msg="");
+    QString ConvertId (bool ColumnZero, QString Id); // преобразование <tble>.000<id> в нормальный id
 
 private:
     void openBD(QSqlDatabase &db, QString dbid, QString dbname, QString login, QString psw);

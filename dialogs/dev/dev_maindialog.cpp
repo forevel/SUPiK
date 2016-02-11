@@ -74,7 +74,7 @@ void DevMainDialog::SetupUI()
     hlyout->setAlignment(lbl, Qt::AlignRight);
     lyout->addLayout(hlyout);
 
-    s_tqGroupBox *gb = new s_tqGroupBox;
+//    s_tqGroupBox *gb = new s_tqGroupBox;
     hlyout = new QHBoxLayout;
     lbl = new s_tqLabel("ИД изделия:");
     hlyout->addWidget(lbl);
@@ -82,14 +82,14 @@ void DevMainDialog::SetupUI()
     le->setObjectName("devidle");
     le->setEnabled(false);
     hlyout->addWidget(le, 10);
-    hlyout->addStretch(20);
+    hlyout->addStretch(5);
     lbl = new s_tqLabel("Дата внесения в классификатор:");
     hlyout->addWidget(lbl);
     le = new s_tqLineEdit;
     le->setObjectName("datele");
     le->setEnabled(false);
     hlyout->addWidget(le, 10);
-    hlyout->addStretch(20);
+    hlyout->addStretch(5);
     lbl = new s_tqLabel("Внёс:");
     hlyout->addWidget(lbl);
     le = new s_tqLineEdit;
@@ -101,16 +101,17 @@ void DevMainDialog::SetupUI()
     hlyout = new QHBoxLayout;
     lbl = new s_tqLabel("Фирма-изготовитель:");
     hlyout->addWidget(lbl);
-    s_tqChooseWidget *cw = new s_tqChooseWidget;
+    s_tqChooseWidget *cw = new s_tqChooseWidget(true);
     cw->Setup("2.2..Производители_сокращ.Наименование");
     cw->setObjectName("manufcw");
     connect(cw,SIGNAL(textchanged(QVariant)),this,SLOT(SetDecimalByManuf(QVariant)));
     hlyout->addWidget(cw, 10);
     lbl = new s_tqLabel("Класс:");
     hlyout->addWidget(lbl);
-    cw = new s_tqChooseWidget;
+    cw = new s_tqChooseWidget(true);
     cw->Setup("2.2..Классификатор ЕСКД_сокращ.Наименование");
     cw->setObjectName("classcw");
+    connect(cw,SIGNAL(textchanged(QVariant)),this,SLOT(SetClassByManuf(QVariant)));
     hlyout->addWidget(cw, 10);
     lbl = new s_tqLabel("Децимальный номер:");
     hlyout->addWidget(lbl);
@@ -155,7 +156,43 @@ void DevMainDialog::Unfilter()
 
 int DevMainDialog::Fill(QString DevID)
 {
+//    QString
     return 0;
+}
+
+void DevMainDialog::SetClassByManuf(QVariant Class)
+{
+    s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("decimalle");
+    if (le == 0)
+    {
+        DEVMAINDBG;
+        return;
+    }
+    QString tmps = le->text();
+    QStringList tmpsl = tmps.split(".");
+/*    QStringList ClassDecimals = tfl.htovlc("Классификатор ЕСКД_полн","Наименование","ИД",Class.toString());
+    if (ClassDecimals.isEmpty())
+    {
+        DEVMAINWARN;
+        return;
+    }
+    QString ClassDecimal = ClassDecimals.at(0);
+    if (tfl.result)
+    {
+        DEVMAINWARN;
+        return;
+    }
+    if (ClassDecimal.isEmpty())
+    {
+        DEVMAINER("У данного производителя отсутствует код предприятия");
+        return;
+    } */
+    if (tmpsl.size()>1)
+        tmpsl.replace(1, Class.toString());
+    else
+        tmpsl.append(Class.toString());
+    tmps=tmpsl.join(".");
+    le->setText(tmps);
 }
 
 void DevMainDialog::SetDecimalByManuf(QVariant Manuf)
@@ -169,6 +206,11 @@ void DevMainDialog::SetDecimalByManuf(QVariant Manuf)
     QString tmps = le->text();
     QStringList tmpsl = tmps.split(".");
     QStringList ManufDecimals = tfl.htovlc("Производители_полн","Код предприятия","Наименование",Manuf.toString());
+    if (ManufDecimals.isEmpty())
+    {
+        DEVMAINWARN;
+        return;
+    }
     QString ManufDecimal = ManufDecimals.at(0);
     if (tfl.result)
     {

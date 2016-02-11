@@ -113,7 +113,7 @@ QStringList s_sql::GetColumnsFromTable(QSqlDatabase db, QString tble)
     if (!exec_db.isActive())
     {
         result = 1;
-        SQLWARN;
+        LastError = exec_db.lastError().text();
         return QStringList();
     }
     while (exec_db.next())
@@ -162,7 +162,7 @@ void s_sql::CreateTable(QSqlDatabase db, QString tble, QStringList fl, bool Simp
         return;
     }
     result = 1;
-    SQLWARN;
+    LastError = exec_db.lastError().text();
     return;
 }
 
@@ -179,7 +179,7 @@ void s_sql::AlterTable(QSqlDatabase db, QString tble, QStringList DeleteList, QS
     bool DeletedExist = (sl.indexOf("deleted") != -1);
     if (result)
     {
-        SQLWARN;
+        LastError = exec_db.lastError().text();
         return;
     }
     QString tmpString = "ALTER TABLE `"+tble+"` ";
@@ -221,7 +221,7 @@ void s_sql::AlterTable(QSqlDatabase db, QString tble, QStringList DeleteList, QS
         return;
     }
     result = 1;
-    SQLWARN;
+    LastError = exec_db.lastError().text();
     return;
 }
 
@@ -237,7 +237,7 @@ void s_sql::DropTable(QSqlDatabase db, QString tble)
         return;
     }
     result = 1;
-    SQLWARN;
+    LastError = exec_db.lastError().text();
     return;
 }
 
@@ -254,7 +254,7 @@ void s_sql::AddColumn(QSqlDatabase db, QString tble, QString col, QString def)
         result = 0;
     else
     {
-        SQLWARN;
+        LastError = exec_db.lastError().text();
         result = 1;
     }
     return;
@@ -278,7 +278,7 @@ int s_sql::GetNextFreeIndex(QSqlDatabase db, QString tble)
     else
     {
         result = 1;
-        SQLWARN;
+        LastError = exec_db.lastError().text();
         return -1;
     }
 }
@@ -301,7 +301,7 @@ int s_sql::GetNextFreeIndexSimple(QSqlDatabase db, QString tble)
     else
     {
         result = 1;
-        SQLWARN;
+        LastError = exec_db.lastError().text();
         return -1;
     }
 }
@@ -364,7 +364,7 @@ QStringList s_sql::GetValuesFromTableByField(QSqlDatabase db, QString tble, QStr
         return vl;
     }
     result=1;
-    SQLWARN;
+    LastError = exec_db.lastError().text();
     return QStringList();
 }
 
@@ -390,7 +390,7 @@ QStringList s_sql::GetValuesFromTableByColumn(QSqlDatabase db, QString tble, QSt
     if (!exec_db.isActive())
     {
         result = 2;
-        SQLWARN;
+        LastError = exec_db.lastError().text();
         return QStringList();
     }
     vl.clear();
@@ -427,7 +427,7 @@ QList<QStringList> s_sql::GetValuesFromTableByColumns(QSqlDatabase db, QString t
     if (vl.isEmpty())
     {
         result=1;
-        SQLWARN;
+        LastError = exec_db.lastError().text();
         return QList<QStringList>();
     }
     else
@@ -460,7 +460,7 @@ QStringList s_sql::GetValuesFromTableByColumnAndField(QSqlDatabase db, QString t
     if (!exec_db.isActive())
     {
         result = 1;
-        SQLWARN;
+        LastError = exec_db.lastError().text();
         return QStringList();
     }
     vl.clear();
@@ -483,7 +483,7 @@ QString s_sql::GetValueFromTableByField (QSqlDatabase db, QString tble, QString 
     if (!exec_db.isActive())
     {
         result = SQLC_FAILED;
-        SQLWARN;
+        LastError = exec_db.lastError().text();
         return QString();
     }
     exec_db.next();
@@ -528,7 +528,7 @@ QString s_sql::GetValueFromTableByFields (QSqlDatabase db, QString tble, QString
     if (!exec_db.isActive())
     {
         result =SQLC_FAILED;
-        SQLWARN;
+        LastError = exec_db.lastError().text();
         return QString();
     }
     exec_db.next();
@@ -576,7 +576,7 @@ QStringList s_sql::GetValuesFromTableByFields (QSqlDatabase db, QString tble, QS
     if (!exec_db.isActive())
     {
         result = 2;
-        SQLWARN;
+        LastError = exec_db.lastError().text();
         return QStringList();
     }
     while (exec_db.next())
@@ -606,7 +606,7 @@ QString s_sql::GetLastValueFromTableByField (QSqlDatabase db, QString tble, QStr
         return vl;
     }
     result = 1;
-    SQLWARN;
+    LastError = exec_db.lastError().text();
     return QString();
 }
 
@@ -638,7 +638,7 @@ QString s_sql::InsertValuesToTable(QSqlDatabase db, QString tble, QStringList fl
         result = 0;
         return newID; // всё ок
     }
-    SQLWARN;
+    LastError = exec_db.lastError().text();
     result=2;
     return QString(); // проблемы с записью
 }
@@ -661,7 +661,7 @@ int s_sql::UpdateValuesInTable(QSqlDatabase db, QString tble, QStringList fl, QS
     if (exec_db.isActive())
         return 0; // всё ок
     result = 2;
-    SQLWARN;
+    LastError = exec_db.lastError().text();
     return 2; // проблемы с записью
 }
 
@@ -729,7 +729,7 @@ int s_sql::DeleteFromDB(QSqlDatabase db, QString tble, QString field, QString va
     else
     {
         result = 1;
-        SQLWARN;
+        LastError = exec_db.lastError().text();
         return 1;
     }
 }
@@ -741,7 +741,7 @@ int s_sql::RealDeleteFromDB(QSqlDatabase db, QString tble, QStringList fields, Q
     QSqlQuery exec_db(db);
     if (fields.size() != values.size())
     {
-        SQLWARN;
+        LastError = exec_db.lastError().text();
         result = 1;
         return 1;
     }
@@ -759,28 +759,24 @@ int s_sql::RealDeleteFromDB(QSqlDatabase db, QString tble, QStringList fields, Q
     else
     {
         result = 1;
-        SQLWARN;
+        LastError = exec_db.lastError().text();
         return 1;
     }
 }
 
-// процедура ищет записи с пустыми полями fields и записывает их в список probid, при этом возвращая ненулевой результат
+// процедура ищет записи с пустыми полями fields и записывает их ИД в список probid, при этом возвращая ненулевой результат
 
-int s_sql::CheckDBForEmptyFields(QSqlDatabase db, QString tble, QStringList fields, QStringList &probid)
+int s_sql::CheckDBForEmptyFields(QSqlDatabase db, QString tble, QString field, QStringList &probid)
 {
-    int i;
     probid.clear();
 
     QSqlQuery exec_db (db);
-    for (i = 0; i < fields.size(); i++)
-    {
-        QString tmpString = "SELECT `id" + tble + "` FROM `" + tble + "` WHERE `" + fields.at(i) + "` IS NULL AND `deleted`=0;";
-        exec_db.exec(tmpString);
-        if (!exec_db.isActive())
-            SQLWARN;
-        while (exec_db.next())
-            probid << exec_db.value(0).toString();
-    }
+    QString tmpString = "SELECT `id" + tble + "` FROM `" + tble + "` WHERE `" + field + "` IS NULL AND `deleted`=0;";
+    exec_db.exec(tmpString);
+    if (!exec_db.isActive())
+        LastError = exec_db.lastError().text();
+    while (exec_db.next())
+        probid << exec_db.value(0).toString();
     if (probid.isEmpty())
         return 0;
     return 1;
@@ -804,6 +800,12 @@ QList<QStringList> s_sql::SearchInTableLike(QSqlDatabase db, QString tble, QStri
     tmpString.chop(1);
     tmpString +=  "FROM `"+tble+"` WHERE `"+field+"` RLIKE '"+regexpstr+"' AND `deleted`=0;";
     exec_db.exec(tmpString);
+    if (!exec_db.isActive())
+    {
+        LastError = exec_db.lastError().text();
+        result = 2;
+        return QList<QStringList>();
+    }
     while (exec_db.next())
     {
         tmpsl.clear();
@@ -814,7 +816,7 @@ QList<QStringList> s_sql::SearchInTableLike(QSqlDatabase db, QString tble, QStri
     if (sl.isEmpty())
     {
         result = 1;
-        SQLWARN;
+        LastError = exec_db.lastError().text();
         return sl;
     }
     result = 0;
@@ -849,6 +851,7 @@ QList<QStringList> s_sql::GetMoreValuesFromTableByField(QSqlDatabase db, QString
     exec_db.exec(tmpString);
     if (!exec_db.isActive())
     {
+        LastError = exec_db.lastError().text();
         result = 2;
         return QList<QStringList>();
     }

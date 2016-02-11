@@ -151,22 +151,30 @@ QString PublicClass::getlinksfromFF(PublicClass::FieldFormat ff)
 
 void PublicClass::AddErrMsg(ermsgtype msgtype, quint64 ernum, quint64 ersubnum, QString msg)
 {
-    QStringList filessl = QStringList() << "Супик" << "Компоненты" << "Компоненты_гл" << "Компоненты_новкатег" << "Добавление_справочника" \
-                                        << "Работа со складом" << "Редактор_складов" << "Система" << "Справочники_гл" << "Комплексная_строка" \
-                                        << "Ред_сист_меню" << "Ред_сист_справ" << "Диалог_2_дерева" << "Диалог_дерево" \
-                                        << "Диалог_таблица" << "Модель_таблица" << "Модель_дерево" << "Таблицы" << "БД" << "Вход_в_систему" \
-                                        << "Изделия_документы" << "Права_доступа" << "Ftp-клиент" << "Система_настройки" << "Система_импортЕСКД_т" \
-                                        << "Дерево_модель" << "Табл_ред_модель" << "Выбор_элем_диалог" << "Проверки_поток" << "Ред_изделий";
     if (ermsgpool.size()>=ER_BUFMAX)
         ermsgpool.removeFirst();
     ermsg tmpm;
     tmpm.DateTime = DateTime;
     tmpm.type = msgtype;
-    if (ernum < filessl.size())
-        tmpm.module = filessl.at(ernum);
+    if (ernum < ermsgs().size())
+        tmpm.module = ermsgs().value(ernum).toUtf8();
     else
         tmpm.module = "Неизвестно";
     tmpm.line = ersubnum;
     tmpm.msg = msg;
     ermsgpool.append(tmpm);
+}
+
+QString PublicClass::ConvertId(bool ColumnZero, QString Id)
+{
+    while (Id.at(0) == 0xFFFF)
+        Id.remove(0, 1);
+    if (ColumnZero) // в нулевом столбце всегда ИД элемента с нулями в начале, надо незначащие нули убрать
+    {
+        QStringList tmpsl = Id.split(".");
+        if (tmpsl.size() > 1)
+            Id = tmpsl.at(1);
+        Id = QString::number(Id.toInt(0));
+    }
+    return Id;
 }

@@ -17,44 +17,29 @@
 #include <QApplication>
 #include <QDesktopWidget>
 
-ChooseItemDialog::ChooseItemDialog(QString hdr, QWidget *parent) :
+ChooseItemDialog::ChooseItemDialog(QString tble, QString hdr, bool RootNeeded, QWidget *parent) :
     QDialog(parent)
 {
+    this->tble = tble;
+    this->RootNeeded = RootNeeded;
     this->hdr=hdr;
     setStyleSheet("QDialog {background-color: rgba(204,204,153);}");
     setAttribute(Qt::WA_DeleteOnClose);
-//    QSizePolicy fixed(QSizePolicy::Fixed, QSizePolicy::Fixed);
-//    setSizePolicy(fixed);
+    SetupUI();
 }
 
 void ChooseItemDialog::SetupUI()
 {
     QVBoxLayout *mainLayout = new QVBoxLayout;
-    QHBoxLayout *pbLayout = new QHBoxLayout;
     TreeView *MainTV = new TreeView(TreeView::TV_PROXY);
     MainTV->setObjectName("MainTV");
-    s_tqPushButton *pbOk = new s_tqPushButton("Ага");
-    pbOk->setIcon(QIcon(":/res/ok.png"));
-    s_tqPushButton *pbCancel = new s_tqPushButton("Неа");
-    pbCancel->setIcon(QIcon(":/res/cross.png"));
     s_tqLabel *lbl = new s_tqLabel;
     lbl->setText(hdr);
     QFont font;
     font.setPointSize(10);
     lbl->setFont(font);
-    pbLayout->addWidget(pbOk, 0);
-    pbLayout->addWidget(pbCancel, 0);
-    connect (pbOk, SIGNAL(clicked()), this, SLOT(accepted()));
-    connect (pbCancel, SIGNAL(clicked()), this, SLOT(cancelled()));
-    MainModel = new TreeModel;
-    pMainModel = new ProxyModel;
-    pMainModel->setSourceModel(MainModel);
-    pMainModel->setFilterKeyColumn(1);
-    pMainModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
-    MainTV->setModel(pMainModel);
-    GridDelegate *MainDelegate = new GridDelegate;
-    MainTV->setItemDelegate(MainDelegate);
     mainLayout->addWidget(lbl, 0, Qt::AlignRight);
+
     QHBoxLayout *hlyout = new QHBoxLayout;
     s_tqPushButton *pb = new s_tqPushButton;
     pb->setIcon(QIcon(":/res/lupa.gif"));
@@ -73,28 +58,37 @@ void ChooseItemDialog::SetupUI()
     hlyout->addWidget(pb);
     hlyout->addStretch(1);
     mainLayout->addLayout(hlyout);
+
+    MainModel = new TreeModel;
+    pMainModel = new ProxyModel;
+    pMainModel->setSourceModel(MainModel);
+    pMainModel->setFilterKeyColumn(1);
+    pMainModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
+    MainTV->setModel(pMainModel);
+    GridDelegate *MainDelegate = new GridDelegate;
+    MainTV->setItemDelegate(MainDelegate);
     mainLayout->addWidget(MainTV, 100);
+
     s_tqPushButton *rootpb = new s_tqPushButton("Корневой");
     connect(rootpb,SIGNAL(clicked()),this,SLOT(Root()));
     if (RootNeeded)
         mainLayout->addWidget(rootpb);
+
+    QHBoxLayout *pbLayout = new QHBoxLayout;
+    s_tqPushButton *pbOk = new s_tqPushButton("Ага");
+    pbOk->setIcon(QIcon(":/res/ok.png"));
+    s_tqPushButton *pbCancel = new s_tqPushButton("Неа");
+    pbCancel->setIcon(QIcon(":/res/cross.png"));
+    pbLayout->addWidget(pbOk, 0);
+    pbLayout->addWidget(pbCancel, 0);
+    connect (pbOk, SIGNAL(clicked()), this, SLOT(accepted()));
+    connect (pbCancel, SIGNAL(clicked()), this, SLOT(cancelled()));
     mainLayout->addLayout(pbLayout);
     connect(MainTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(accepted(QModelIndex)));
+    connect(MainModel,SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)),this,SLOT(ResizeMainTV()));
     setLayout(mainLayout);
-    MainTV->resizeColumnsToContents();
-}
-
-// процедура подготавливает дерево выбора tble по таблице tablefields
-
-void ChooseItemDialog::Setup(QString tble, bool RootNeeded)
-{
-    this->tble = tble;
-    this->RootNeeded = RootNeeded;
-    SetupUI();
     MainModel->Setup(tble);
-    TreeView *tv = this->findChild<TreeView *>("MainTV");
-    if (tv != 0)
-        tv->resizeColumnsToContents();
+    ResizeMainTV();
 }
 
 void ChooseItemDialog::paintEvent(QPaintEvent *e)
@@ -234,4 +228,25 @@ void ChooseItemDialog::Update()
     TreeView *tv = this->findChild<TreeView *>("MainTV");
     if (tv != 0)
         tv->resizeColumnsToContents();
+}
+
+void ChooseItemDialog::ResizeMainTV()
+{
+    TreeView *tv = this->findChild<TreeView *>("MainTV");
+    if (tv == 0)
+    {
+        CHIDLGDBG;
+        return;
+    }
+    tv->resizeColumnsToContents();
+    int wdth = 0;
+    for (int i = 0; i < tv->model()->columnCount(); i++)
+        wdth += tv->columnWidth(i);
+    tv->setMinimumWidth(wdth+30);
+    int hgth = 0;
+    for (int i = 0; i < tv->model()->rowCount(); i++)
+        hgth += tv->rowHeight(i);
+    int tmpi = QApplication::desktop()->availableGeometry().height()-350; // -350 - чтобы высота диалога не выходила за пределы видимой части экрана
+    hgth = (hgth > tmpi) ? tmpi : hgth;
+    tv->setMinimumHeight(hgth+10);
 }

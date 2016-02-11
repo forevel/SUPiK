@@ -273,14 +273,15 @@ bool TreeModel::HaveChildren(int row)
 
 // установка цвета, шрифта и иконки у последнедобавленного элемента
 
-void TreeModel::SetLastItem(QColor Color, QFont Font, QIcon Icon, QString AData)
+void TreeModel::SetLastItem(QColor FColor, QColor BColor, QFont Font, QIcon Icon, QString AData)
 {
     if (rowCount() == 0)
         return;
     int LastIndex = rowCount()-1;
     for (int i=0; i<columnCount(); i++)
     {
-        setData(index(LastIndex, i, QModelIndex()), Color, Qt::ForegroundRole);
+        setData(index(LastIndex, i, QModelIndex()), FColor, Qt::ForegroundRole);
+        setData(index(LastIndex, i, QModelIndex()), BColor, Qt::BackgroundRole);
         setData(index(LastIndex, i, QModelIndex()), Font, Qt::FontRole);
     }
     setData(index(LastIndex, 0, QModelIndex()), Icon, Qt::DecorationRole);
@@ -515,7 +516,7 @@ int TreeModel::SetFirstTreeElements()
             vl.append(tmpvl);
         }
         AddItemToTree(vl);
-        SetLastItem(Colors[4], Fonts[4], Icons[4], TM_ELEMENT_WITH_CHILDREN); // раскрытая книга
+        SetLastItem(Colors[4], Qt::transparent, Fonts[4], Icons[4], TM_ELEMENT_WITH_CHILDREN); // раскрытая книга
         Indentation++;
     }
     return 0;
@@ -560,9 +561,9 @@ int TreeModel::SetTree(int Table, QString Id)
         }
         // если есть хотя бы один потомок, надо ставить "книжку"
         if (tmps.isEmpty()) // нет потомков
-            SetLastItem(Colors[0],Fonts[4],Icons[0],TM_SIMPLE_ELEMENT);
+            SetLastItem(Colors[0],Qt::transparent,Fonts[4],Icons[0],TM_SIMPLE_ELEMENT);
         else
-            SetLastItem(Colors[4],Fonts[4],Icons[3],TM_ELEMENT_WITH_CHILDREN); // закрытая книга
+            SetLastItem(Colors[4],Qt::transparent,Fonts[4],Icons[3],TM_ELEMENT_WITH_CHILDREN); // закрытая книга
     }
     return 0;
 }
@@ -616,12 +617,12 @@ int TreeModel::SetTable(int Table, QString Id)
                 }
                 // если есть хотя бы один потомок, надо ставить "книжку"
                 if (tmps.isEmpty()) // нет потомков
-                    SetLastItem(Colors[0],Fonts[4],Icons[0],TM_SIMPLE_ELEMENT);
+                    SetLastItem(Colors[0],Qt::transparent,Fonts[4],Icons[0],TM_SIMPLE_ELEMENT);
                 else
-                    SetLastItem(Colors[4],Fonts[4],Icons[3],TM_ELEMENT_WITH_CHILDREN); // закрытая книга
+                    SetLastItem(Colors[4],Qt::transparent,Fonts[4],Icons[3],TM_ELEMENT_WITH_CHILDREN); // закрытая книга
             }
             else
-                SetLastItem(Colors[0],Fonts[0],Icons[0],TM_SIMPLE_ELEMENT);
+                SetLastItem(Colors[0],Qt::transparent,Fonts[0],Icons[0],TM_SIMPLE_ELEMENT);
         }
     }
     return 0;
@@ -666,9 +667,9 @@ int TreeModel::SetNextTree(int Table, QString Id)
         }
         // если есть хотя бы один потомок, надо ставить "книжку"
         if (tmps.isEmpty()) // нет потомков
-            SetLastItem(Colors[0],Fonts[4],Icons[0],TM_SIMPLE_ELEMENT);
+            SetLastItem(Colors[0],Qt::transparent,Fonts[4],Icons[0],TM_SIMPLE_ELEMENT);
         else
-            SetLastItem(Colors[4],Fonts[4],Icons[3],TM_ELEMENT_WITH_CHILDREN); // закрытая книга
+            SetLastItem(Colors[4],Qt::transparent,Fonts[4],Icons[3],TM_ELEMENT_WITH_CHILDREN); // закрытая книга
     }
     return 0;
 }
@@ -733,7 +734,7 @@ int TreeModel::SetNextTable(int Table, QString Id)
                     vl.append(tmpvl);
                 }
                 AddItemToTree(vl);
-                SetLastItem(Colors[4],Fonts[4],Icons[3], TM_ELEMENT_WITH_CHILDREN); // закрытая книга, т.к. если есть запись в таблице 2, значит, есть соответствующая запись в таблице 3
+                SetLastItem(Colors[4],Qt::transparent,Fonts[4],Icons[3], TM_ELEMENT_WITH_CHILDREN); // закрытая книга, т.к. если есть запись в таблице 2, значит, есть соответствующая запись в таблице 3
             }
         }
     }
@@ -778,18 +779,18 @@ int TreeModel::SetNextTable(int Table, QString Id)
                 }
                 // если есть хотя бы один потомок, надо ставить "книжку"
                 if (tmps.isEmpty()) // нет потомков
-                    SetLastItem(Colors[0],Fonts[4],Icons[0],TM_SIMPLE_ELEMENT);
+                    SetLastItem(Colors[0],Qt::transparent,Fonts[4],Icons[0],TM_SIMPLE_ELEMENT);
                 else
-                    SetLastItem(Colors[4],Fonts[4],Icons[3], TM_ELEMENT_WITH_CHILDREN); // закрытая книга
+                    SetLastItem(Colors[4],Qt::transparent,Fonts[4],Icons[3], TM_ELEMENT_WITH_CHILDREN); // закрытая книга
             }
             else
-                SetLastItem(Colors[0],Fonts[0],Icons[0],TM_SIMPLE_ELEMENT);
+                SetLastItem(Colors[0],Qt::transparent,Fonts[0],Icons[0],TM_SIMPLE_ELEMENT);
         }
     }
     return 0;
 }
 
-void TreeModel::AddItemToTree(QList<PublicClass::ValueStruct> vl)
+void TreeModel::AddItemToTree(QList<PublicClass::ValueStruct> &vl)
 {
     int LastIndex = rowCount();
     insertRows(LastIndex, 1);

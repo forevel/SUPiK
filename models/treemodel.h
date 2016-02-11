@@ -40,9 +40,9 @@ public:
     int Setup(QString Table);
     void Refresh();
     bool HaveChildren(int row);
-    void SetLastItem(QColor Color, QFont Font, QIcon Icon, QString AData="0");
+    void SetLastItem(QColor FColor, QColor BColor, QFont Font, QIcon Icon, QString AData="0");
     void ClearModel();
-    void AddItemToTree(QList<PublicClass::ValueStruct> Fields);
+    void AddItemToTree(QList<PublicClass::ValueStruct> &Fields);
 
     // роли для моделей
     enum Roles

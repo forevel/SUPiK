@@ -57,10 +57,11 @@ public:
     int GetNextFreeIndex(QSqlDatabase db, QString tble); // вернуть ИД первого попавшегося свободного места, в порядке по возрастанию ИД, в таблице поле ИД идёт как id<tble>
     int GetNextFreeIndexSimple(QSqlDatabase db, QString tble); // вернуть ИД первого попавшегося свободного места, в порядке по возрастанию ИД, в таблице поле ИД идёт как id
     QString GetFullPathToChild(QSqlDatabase db, QString tble, QString idalias);
-    int CheckDBForEmptyFields (QSqlDatabase db, QString tble, QStringList fields, QStringList &probid);
+    int CheckDBForEmptyFields (QSqlDatabase db, QString tble, QString field, QStringList &probid);
     int RealDeleteFromDB (QSqlDatabase db, QString tble, QStringList fields, QStringList values); // процедура реально удаляет строку, для которой field равно value
 
     int result;
+    QString LastError;
 };
 
 extern s_sql sqlc;

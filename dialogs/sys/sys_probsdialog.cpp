@@ -4,6 +4,8 @@
 #include <QAction>
 #include <QCursor>
 #include <QApplication>
+#include <QTimer>
+#include <QPainter>
 
 #include "sys_probsdialog.h"
 #include "../../widgets/s_tqlabel.h"
@@ -16,26 +18,56 @@
 SysProblemsDialog::SysProblemsDialog(QWidget *parent) :
     QDialog(parent)
 {
+    QTimer *tmr = new QTimer;
+    tmr->setInterval(2000);
+    connect(tmr,SIGNAL(timeout()),this,SLOT(UpdateProblems()));
     slmodel = new QStringListModel;
+    mainmodel = new TreeModel;
     setAttribute(Qt::WA_DeleteOnClose);
     SetupUI();
+    tmr->start();
+}
+
+void SysProblemsDialog::paintEvent(QPaintEvent *e)
+{
+    QPainter painter(this);
+    painter.drawPixmap(rect(), QPixmap(":/res/Sys2WallPaper.png"));
+    e->accept();
 }
 
 void SysProblemsDialog::SetupUI()
 {
     QVBoxLayout *mainLayout = new QVBoxLayout;
+    QHBoxLayout *hlyout = new QHBoxLayout;
+    s_tqPushButton *pb = new s_tqPushButton;
+    pb->setIcon(QIcon(":/res/cross.png"));
+    connect(pb, SIGNAL(clicked()), this, SLOT(close()));
+    pb->setToolTip("Закрыть вкладку");
+    hlyout->addWidget(pb);
+
+    hlyout->addStretch(300);
+    s_tqLabel *lbl = new s_tqLabel("Список проблем");
+    QFont font;
+    font.setPointSize(15);
+    lbl->setFont(font);
+    hlyout->addWidget(lbl, 0);
+    hlyout->setAlignment(lbl, Qt::AlignRight);
+    mainLayout->addLayout(hlyout);
     TreeView *mainTV = new TreeView(TreeView::TV_PLAIN);
     mainTV->setObjectName("mainTV");
     mainTV->setContextMenuPolicy(Qt::CustomContextMenu);
     connect (mainTV, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(MainTvContextMenu(QPoint)));
     connect (mainTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(RemoveProb()));
     mainLayout->addWidget(mainTV, 100);
-    s_tqPushButton *pb = new s_tqPushButton("Обновить");
+/*    s_tqPushButton *pb = new s_tqPushButton("Обновить");
     pb->setIcon(QIcon(":/res/refresh.png"));
     connect(pb, SIGNAL(clicked()), this, SLOT(refresh()));
-    mainLayout->addWidget(pb, 0);
+    mainLayout->addWidget(pb, 100); */
     setLayout(mainLayout);
-    UpdateMainTv();
+    mainmodel->ClearModel();
+    mainmodel->insertColumns(0, 1, QModelIndex());
+    mainTV->setModel(mainmodel);
+    InitialModelFill();
 }
 
 void SysProblemsDialog::MainTvContextMenu(QPoint)
@@ -119,54 +151,83 @@ void SysProblemsDialog::RemoveProb()
     } */
 }
 
-void SysProblemsDialog::AddProblem(PublicClass::ProblemStruct &prob)
+void SysProblemsDialog::InitialModelFill()
 {
-    if (prob.ProblemType == PublicClass::PT_ALL)
-        ProblemsList.append(prob);
-    else if ((pc.access & ACC_SYS_RO) && (prob.ProblemType == PublicClass::PT_SYS))
-        ProblemsList.append(prob);
-    else if ((pc.access & ACC_WH_RO) && (prob.ProblemType == PublicClass::PT_WH))
-        ProblemsList.append(prob);
-    else if ((pc.access & ACC_TB_RO) && (prob.ProblemType == PublicClass::PT_TB))
-        ProblemsList.append(prob);
-    else if ((pc.access & ACC_SADM_RO) && (prob.ProblemType == PublicClass::PT_SADM))
-        ProblemsList.append(prob);
-    else if ((pc.access & ACC_DOC_RO) && (prob.ProblemType == PublicClass::PT_DOC))
-        ProblemsList.append(prob);
-    else if ((pc.access & ACC_ALT_RO) && (prob.ProblemType == PublicClass::PT_ALT))
-        ProblemsList.append(prob);
+    QFont font = QFont("MS Sans Serif", -1, QFont::Normal);
+    for (int i=0; i<pc.ProblemsList.size(); i++)
+    {
+        PublicClass::ProblemStruct pl = pc.ProblemsList.at(i);
+        PublicClass::ValueStruct vl;
+        vl.Type=VS_STRING;
+        vl.Value = ProbStringCombiner(pl);
+        QList<PublicClass::ValueStruct> lvl;
+        lvl.append(vl);
+        mainmodel->AddItemToTree(lvl);
+        mainmodel->SetLastItem(PublicClass::ProblemForegroundColors()[pl.ProblemType], PublicClass::ProblemBackgroundColors()[pl.ProblemType], \
+                               font, QIcon());
+    }
+    UpdateMainTv();
+}
+
+void SysProblemsDialog::NewProblemsDetected()
+{
+    QFont font = QFont("MS Sans Serif", -1, QFont::Normal);
+    pc.EPLMutex.lock();
+    while (!pc.ExchangeProblemsList.isEmpty())
+    {
+        PublicClass::ProblemStruct pl = pc.ExchangeProblemsList.takeFirst();
+        pc.ProblemsList.append(pl); // перекидываем из временного хранилища проблем в постоянное
+        PublicClass::ValueStruct vl;
+        vl.Type=VS_STRING;
+        vl.Value = ProbStringCombiner(pl);
+        QList<PublicClass::ValueStruct> lvl;
+        lvl.append(vl);
+        mainmodel->AddItemToTree(lvl);
+        mainmodel->SetLastItem(PublicClass::ProblemForegroundColors()[pl.ProblemType], PublicClass::ProblemBackgroundColors()[pl.ProblemType], \
+                               font, QIcon());
+    }
+    pc.EPLMutex.unlock();
+    emit ProblemsNumberUpdated();
     UpdateMainTv();
 }
 
 void SysProblemsDialog::UpdateMainTv()
 {
-/*    int i;
-    s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
-    if (mainmodel == (void*)0) delete mainmodel;
-    QList<int> setlist;
-    pc.fillallprob();
-    for (i = 0; i < pc.allprobs.size(); i++)
+    TreeView *tv = this->findChild<TreeView *>("mainTV");
+    if (tv == 0)
     {
-        if (pc.allprobs.at(i).mid(0, 1) == "!")
-        {
-            setlist << 1;
-            pc.allprobs.replace(i, pc.allprobs.at(i).right(pc.allprobs.at(i).size()-1));
-        }
-        else if (pc.allprobs.at(i).mid(0, 1) == "@")
-        {
-            setlist << 2;
-            pc.allprobs.replace(i, pc.allprobs.at(i).right(pc.allprobs.at(i).size()-1));
-        }
-        else
-            setlist << 4;
+        PROBSDBG;
+        return;
     }
-    QList<QStringList> tmpsl;
-    tmpsl.clear();
-    tmpsl.append(pc.allprobs);
-//    mainmodel = new s_ncmodel(tmpsl, setlist);
-    mainmodel->isEditable = false;
-    tv->setModel(mainmodel);
-    tv->resizeColumnsToContents(); */
+    tv->resizeColumnsToContents();
+}
+
+QString SysProblemsDialog::ProbStringCombiner(PublicClass::ProblemStruct vl)
+{
+    QString tmps;
+    switch (vl.ProblemSubType)
+    {
+    case PublicClass::PST_FIELDMISSED:
+    {
+        tmps = "Отсутствует поле " + vl.ProblemField + " в таблице " + vl.ProblemTable;
+        break;
+    }
+    case PublicClass::PST_FIELDEMPTY:
+    {
+        tmps = "Не заполнено поле " + vl.ProblemField + " в таблице " + vl.ProblemTable + " по индексу " + vl.ProblemId;
+        break;
+    }
+    case PublicClass::PST_NOSUCHID:
+    {
+        tmps = "В таблице " + vl.ProblemTable + " поле " + vl.ProblemField + " в строке " + vl.ProblemId + "ссылается на несуществующий ИД";
+        break;
+    }
+    case PublicClass::PST_INCORRECT:
+    {
+
+    }
+    }
+    return tmps;
 }
 
 void SysProblemsDialog::refresh()
@@ -209,4 +270,10 @@ void SysProblemsDialog::addcol()
         emit ProblemsNumberUpdated();
     }
     dlg->close(); */
+}
+
+void SysProblemsDialog::UpdateProblems()
+{
+    if (!pc.ExchangeProblemsList.isEmpty())
+        NewProblemsDetected();
 }

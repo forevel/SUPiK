@@ -12,8 +12,9 @@ TreeView::TreeView(int Proxy, bool HeaderVisible, QWidget *parent) :
 {
     IsProxyModel = (Proxy == TV_PLAIN) ? false : true;
     setAttribute(Qt::WA_TranslucentBackground, true);
+    setAttribute(Qt::WA_NoSystemBackground, true);
     setFrameStyle(QFrame::NoFrame);
-    setStyleSheet("QTreeView {background-color: rgba(0,0,0,0);}");
+    setStyleSheet("QTableView {background-color: rgba(0,0,0,0);}");
     setShowGrid(false);
 /*    horizontalScrollBar()->setStyleSheet("QScrollBar {background-color: rgba(0,0,0,0);}");
     verticalScrollBar()->setStyleSheet("QScrollBar {background-color: rgba(0,0,0,0);}");

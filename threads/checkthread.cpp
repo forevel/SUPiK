@@ -1,9 +1,12 @@
 #include "checkthread.h"
 
+//#include <QtDebug>
+#include <QCoreApplication>
 #include <QColor>
 #include <QDate>
 #include <QDateTime>
 #include <QTimer>
+#include <QThread>
 #include "../gen/s_sql.h"
 
 CheckThread::CheckThread(QObject *parent) : QObject(parent)
@@ -11,6 +14,7 @@ CheckThread::CheckThread(QObject *parent) : QObject(parent)
     NewNotifyHasArrived = false;
     Acknowledged = false;
     UpdateInProgress = false;
+    IsAboutToFinish = false;
 }
 
 CheckThread::~CheckThread()
@@ -22,118 +26,96 @@ void CheckThread::Start()
     QTimer *tmr = new QTimer(this);
     tmr->setInterval(60000); // 1 минута
     connect(tmr,SIGNAL(timeout()),this,SLOT(MinuteTest()));
+    CTHREADINFO("Проверка целостности БД начата");
     MainCheck();
+    CTHREADINFO("Проверка целостности БД закончена");
     tmr->start();
+    while (!IsAboutToFinish)
+        Wait(100);
+    emit finished();
 }
 
 // проверка целостности основных баз данных
 
 void CheckThread::MainCheck()
 {
-/*    sysMessages.clear();
-    whMessages.clear();
-    altMessages.clear();
-    giMessages.clear();
-    sadmMessages.clear();
     QStringList fields, values, tmpprob;
     QString tmpString;
     int i, j, res;
-    // 1. проверим справочники на пустые поля (alias, idalias, <idtble>, <tble>, idpers, date, deleted)
+    // 1. проверим таблицы на пустые поля (alias, idalias, <idtble>, <tble>, idpers, date, deleted) и вообще на их наличие
     QStringList databases, tables;
-    databases = db.keys();
-    if (access & ACC_SYS_WR)
+    databases = pc.db.keys();
+    PublicClass::ProblemStruct vl;
+    if (pc.access & ACC_SYS_WR)
     {
+        vl.ProblemType = PublicClass::PT_SYS;
         for (i = 0; i < databases.size(); i++)
         {
-            tables = sqlc.GetTablesFromDB(db[databases.at(i)]);
-            for (j = 0; j < tables.size(); j++)
+            if (databases.at(i) != "alt") // БД Altium построена по другому принципу
             {
-                values = sqlc.GetColumnsFromTable(db[databases.at(i)], tables.at(j));
-                if (sqlc.result) addmessage(sysMessages, "!Невозможно получить данные по столбцам таблицы " + tables.at(j));
-                if (values.indexOf("idpers") == -1)
-                    addmessage(sysMessages, "!Отсутствует поле idpers в таблице " + tables.at(j));
-                if (values.indexOf("deleted") == -1)
-                    addmessage(sysMessages, "!Отсутствует поле deleted в таблице " + tables.at(j));
-                if (values.indexOf("date") == -1)
-                    addmessage(sysMessages, "!Отсутствует поле date в таблице " + tables.at(j));
-                fields.clear();
-                if (values.indexOf(tables.at(j)) != -1) // есть поле <tble>
+                tables = sqlc.GetTablesFromDB(pc.db[databases.at(i)]);
+                for (j = 0; j < tables.size(); j++)
                 {
-                    fields << tables.at(j);
-                    res = sqlc.CheckDBForEmptyFields(pc.sup, "syslist", fields, tmpprob);
-                    if (res)
+                    Wait(50);
+                    vl.ProblemTable = databases.at(i) + "." + tables.at(j);
+                    vl.ProblemSubType = PublicClass::PST_FIELDMISSED;
+                    values = sqlc.GetColumnsFromTable(pc.db[databases.at(i)], tables.at(j));
+                    if (values.indexOf("idpers") == -1)
                     {
-                        while (!tmpprob.isEmpty())
-                        {
-                            addmessage(sysMessages, "!Не заполнено поле " + tables.at(j) + " в таблице "+tables.at(j)+" по индексу " + tmpprob.at(0));
-                            tmpprob.removeAt(0);
-                        }
+                        vl.ProblemField = "idpers";
+                        AddProblemToList(vl);
                     }
-                }
-                else if ((values.indexOf("idalias") != -1) && (values.indexOf("alias") != -1))
-                {
-                    fields << "alias" << "idalias";
-                    res = sqlc.CheckDBForEmptyFields(pc.sup, "syslist", fields, tmpprob);
-                    if (res)
+                    if (values.indexOf("deleted") == -1)
                     {
-                        while (!tmpprob.isEmpty())
-                        {
-                            addmessage(sysMessages, "!Не заполнено поле (id)alias в таблице "+tables.at(j)+" по индексу " + tmpprob.at(0));
-                            tmpprob.removeAt(0);
-                        }
+                        vl.ProblemField = "deleted";
+                        AddProblemToList(vl);
                     }
-                }
-                else
-                    addmessage(sysMessages, "!Отсутствует поле " + tables.at(j) + " или набор полей alias+idalias в таблице " + tables.at(j));
-            }
-        }
-        // 3. проверим системные справочники (personel, syslist, dirlist на корректность данных и заполненность полей)
-        QSqlQuery dirlist(pc.sup);
-        dirlist.exec("SELECT `iddirlist`,`dirlist`,`pc` FROM `dirlist` WHERE `iddirlist`>2;");
-        if (dirlist.isActive())
-        {
-            while (dirlist.next())
-            {
-                if ((dirlist.value(1).toString() != "") && (dirlist.value(2).toString()!=""))
-                {
-                    tmpString = dirlist.value(2).toString();
-                    QSqlDatabase db = sqlc.GetDB(tmpString.mid(0,3));
-                    if (db.isValid())
+                    if (values.indexOf("date") == -1)
                     {
-                        QSqlQuery tryopen(db);
-                        tmpString = tmpString.right(tmpString.size()-4);
-                        tryopen.exec("SELECT `"+tmpString+"` FROM `"+tmpString+"`;");
-                        if (tryopen.isActive());
-                        else
-                        {
-                            tryopen.exec("SELECT `alias`,`idalias` FROM `"+tmpString+"`;");
-                            if (tryopen.isActive());
-                            else
-                                addmessage(sysMessages, "@В справочнике "+dirlist.value(1).toString()+", на который ссылается строка №" \
-                                           +dirlist.value(0).toString()+" dirlist нет необходимых полей или справочник не существует");
-                        }
+                        vl.ProblemField = "date";
+                        AddProblemToList(vl);
                     }
+                    if (values.indexOf(tables.at(j)) != -1) // есть поле <tble>
+                        fields << tables.at(j);
                     else
-                        addmessage(sysMessages, "@Некорректная ссылка в dirlist, строка №"+dirlist.value(0).toString());
+                    {
+                        vl.ProblemField = tables.at(j);
+                        AddProblemToList(vl);
+                    }
+                    if (values.indexOf("idalias") != -1)
+                        fields << "idalias";
+                    while (!fields.isEmpty())
+                    {
+                        Wait(50);
+                        QString tmps = fields.takeFirst();
+                        res = sqlc.CheckDBForEmptyFields(pc.db[databases.at(i)], tables.at(j), tmps, tmpprob);
+                        if (res)
+                        {
+                            vl.ProblemSubType = PublicClass::PST_FIELDEMPTY;
+                            while (!tmpprob.isEmpty())
+                            {
+                                vl.ProblemField = tmps;
+                                vl.ProblemId = tmpprob.takeFirst();
+                                AddProblemToList(vl);
+                            }
+                        }
+                    }
                 }
-                else
-                    addmessage(sysMessages, "@Пустые поля в dirlist, строка №"+dirlist.value(0).toString());
             }
-
         }
-        else
-            addmessage(sysMessages, "!Невозможно подключиться к БД dirlist");
-    // 4. проверим справочники на правильность ссылок (наличие таких элементов в таблице, на которую дана ссылка)
+        // 2. проверим для каждой таблицы в tablefields поля со ссылками - есть ли такие элементы, на которые они ссылаются
+
+        // 4. проверим справочники на правильность ссылок (наличие таких элементов в таблице, на которую дана ссылка)
     // 5. проверим справочники на наличие дублирующихся элементов (по основному полю - alias либо <tble>)
     // 6. проверим правильность полей date (дата не позднее текущей)
         // 7. проверим каждый элемент в каждой таблице (кроме symbols) в Altium на соответствие полей: NominalValue должно быть равно Nominal+Unit
         // 8. проверим все таблицы на предмет пустых строк (все поля пустые, исключая из проверки id<tble>,idpers,date,deleted)
-    }
-    if (access & ACC_WH_WR)
+    } // конец проверки системных проблем
+    if (pc.access & ACC_WH_WR)
     {
         // проверим наличие элементов номенклатуры, у которых не задана группа
         // проверим наличие у каждого элемента в БД Altium, Schemagee и т.д. однозначного соответствия элементу в справочнике номенклатуры (кроме symbols)
-    } */
+    }
     // здесь следует проверка на просроченность экзаменов по ТБ для sys|gi
     // далее следует проверка на приближение сроков окончания регистрации доменов, антивирусных лицензий для sadm
     // далее следует проверка на наличие изделий, находящихся в ремонте (БД repair) для alt
@@ -174,4 +156,39 @@ void CheckThread::MinuteTest()
     } */
     // 2. проверим, нет ли новых уведомлений об изменениях в каталогах проектов
     // 3. проверим, не назначено ли нашему idpers каких-то заданий
+}
+
+void CheckThread::AddProblemToList(PublicClass::ProblemStruct prob)
+{
+    pc.EPLMutex.lock();
+    if (prob.ProblemType == PublicClass::PT_ALL)
+        pc.ExchangeProblemsList.append(prob);
+    else if ((pc.access & ACC_SYS_RO) && (prob.ProblemType == PublicClass::PT_SYS))
+        pc.ExchangeProblemsList.append(prob);
+    else if ((pc.access & ACC_WH_RO) && (prob.ProblemType == PublicClass::PT_WH))
+        pc.ExchangeProblemsList.append(prob);
+    else if ((pc.access & ACC_TB_RO) && (prob.ProblemType == PublicClass::PT_TB))
+        pc.ExchangeProblemsList.append(prob);
+    else if ((pc.access & ACC_SADM_RO) && (prob.ProblemType == PublicClass::PT_SADM))
+        pc.ExchangeProblemsList.append(prob);
+    else if ((pc.access & ACC_DOC_RO) && (prob.ProblemType == PublicClass::PT_DOC))
+        pc.ExchangeProblemsList.append(prob);
+    else if ((pc.access & ACC_ALT_RO) && (prob.ProblemType == PublicClass::PT_ALT))
+        pc.ExchangeProblemsList.append(prob);
+//    qDebug() << QString::number(pc.ExchangeProblemsList.size());
+    pc.EPLMutex.unlock();
+}
+
+void CheckThread::Finish()
+{
+    IsAboutToFinish = true;
+}
+
+void CheckThread::Wait(int msec)
+{
+    this->thread()->msleep(msec);
+/*    QTime tme;
+    tme.start();
+    while (tme.elapsed() < msec) */
+        qApp->processEvents(QEventLoop::AllEvents);
 }

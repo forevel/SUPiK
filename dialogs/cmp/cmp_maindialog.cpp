@@ -833,7 +833,7 @@ void cmp_maindialog::CancelAndClose()
 {
     if (Changed)
     {
-        if (!(MessageBox::question(this, "Выйти?", "Данные были изменены\nВсё равно выйти?")))
+        if (!(MessageBox2::question(this, "Выйти?", "Данные были изменены\nВсё равно выйти?")))
             return;
     }
     emit cancelled();

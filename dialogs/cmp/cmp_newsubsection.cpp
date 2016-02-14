@@ -102,7 +102,7 @@ void cmp_newsubsection::Cancel()
 {
     if (SomethingChanged)
     {
-        if (MessageBox::question(this,"Данные были изменены","Данные были изменены, всё равно выйти?"))
+        if (MessageBox2::question(this,"Данные были изменены","Данные были изменены, всё равно выйти?"))
             this->close();
         else
             return;

@@ -13,6 +13,7 @@
 #include "../messagebox.h"
 #include "../s_2cdialog.h"
 
+#include <QMessageBox>
 #include <QHBoxLayout>
 #include <QIcon>
 #include <QFont>
@@ -175,7 +176,7 @@ void Wh_Editor::ChangeWh(QString str)
     {
         if (SomethingChanged)
         {
-            if (MessageBox::question(this, "Данные были изменены", "Сохранить изменения?"))
+            if (MessageBox2::question(this, "Данные были изменены", "Сохранить изменения?"))
                 WhModel->Save(); // если модель уже существует, надо сохранить данные в БД, чтобы не потерялись
             else
                 WhModel->DeleteNew();
@@ -466,7 +467,7 @@ void Wh_Editor::ChangePlace(QVariant PlaceName)
     {
         if (PlaceType.at(0).toInt() != 0) // непустое размещение
         {
-            if (!(MessageBox::question(this, "Размещение уже имеется", "Вы уверены, что хотите расформировать старое размещение?")))
+            if (!(MessageBox2::question(this, "Размещение уже имеется", "Вы уверены, что хотите расформировать старое размещение?")))
                 return;
             Disband(CurID);
         }

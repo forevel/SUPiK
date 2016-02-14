@@ -113,7 +113,7 @@ void StartWindow::ChangePassword()
     s_tqLineEdit *PasswdLE = this->findChild<s_tqLineEdit *>("PasswdLE");
     if ((UNameLE == 0) || (PasswdLE == 0))
     {
-        MessageBox::error(this,"Системная ошибка","Отсутствуют элементы в диалоге, строка "+QString::number(__LINE__));
+        MessageBox2::error(this,"Системная ошибка","Отсутствуют элементы в диалоге, строка "+QString::number(__LINE__));
         return;
     }
     QString login = UNameLE->text();
@@ -122,7 +122,7 @@ void StartWindow::ChangePassword()
     QStringList cmpvl = QStringList() << login << psw;
     sqlc.GetValueFromTableByFields(sqlc.GetDB("sup"),"personel","idpersonel",cmpfl,cmpvl);
     if (sqlc.result)
-        MessageBox::error(this,"Ошибка!","Не найден пользователь с таким логином/паролем");
+        MessageBox2::error(this,"Ошибка!","Не найден пользователь с таким логином/паролем");
     else
     {
         bool ok = false;
@@ -134,12 +134,12 @@ void StartWindow::ChangePassword()
             return;
         if (newpsw != new2psw)
         {
-            MessageBox::error(this,"Ошибка!","Введённые строки не совпадают");
+            MessageBox2::error(this,"Ошибка!","Введённые строки не совпадают");
             return;
         }
         sqlc.UpdateValuesInTable(sqlc.GetDB("sup"),"personel",QStringList("psw"),QStringList(newpsw),"login",login);
         if (sqlc.result)
-            MessageBox::error(this,"Ошибка!","Ошибка при смене пароля");
+            MessageBox2::error(this,"Ошибка!","Ошибка при смене пароля");
         else
             PasswdLE->setText(newpsw);
     }

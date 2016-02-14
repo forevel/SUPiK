@@ -113,7 +113,7 @@ void SysDirEditor::DeleteDir()
         return;
     }
     QString dirname = tv->model()->data(tv->model()->index(tv->currentIndex().row(),1,QModelIndex()),Qt::DisplayRole).toString();
-    if (!(MessageBox::question(this, "Уверены?", "Вы уверены, что хотите удалить все сведения о справочнике?")))
+    if (!(MessageBox2::question(this, "Уверены?", "Вы уверены, что хотите удалить все сведения о справочнике?")))
         return;
     QStringList fl = QStringList() << "dirlist";
     QStringList vl = QStringList() << dirname;

@@ -1,6 +1,14 @@
 #include <QApplication>
 #include <QPushButton>
+#include <QMessageBox>
 #include "messagebox.h"
+
+#if QT_VERSION >= 0x040600
+#include <QScopedPointer>
+#else
+#include <QSharedPointer>
+#endif
+
 
 /*
     Copyright (c) 2009-10 Qtrac Ltd. All rights reserved.
@@ -15,7 +23,7 @@
     the GNU General Public License for more details.
 */
 
-namespace MessageBox
+namespace MessageBox2
 {
 
 void information(QWidget *parent, const QString &title,

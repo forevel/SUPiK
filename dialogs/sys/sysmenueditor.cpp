@@ -138,7 +138,7 @@ void SysmenuEditor::Delete()
     sl = sqlc.GetValuesFromTableByField(sqlc.GetDB(tmpdb), tmptble, sl, "idalias", tmpString);
     if (!sqlc.result) // есть записи с данным idalias
     {
-        if (MessageBox::question(this, "Вы уверены?", "Категория содержит подкатегории.\nВы уверены, что хотите удалить её?"))
+        if (MessageBox2::question(this, "Вы уверены?", "Категория содержит подкатегории.\nВы уверены, что хотите удалить её?"))
         {
             tfl.remove(tble+"_полн", tmpString);
             if (tfl.result)
@@ -157,7 +157,7 @@ void SysmenuEditor::Delete()
     }
     else
     {
-        if (MessageBox::question(this, "Вы уверены?", "Вы уверены?"))
+        if (MessageBox2::question(this, "Вы уверены?", "Вы уверены?"))
         {
             tfl.remove(tble+"_полн", tmpString);
             if (tfl.result)

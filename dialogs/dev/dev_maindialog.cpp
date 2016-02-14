@@ -26,6 +26,7 @@
 #include "../../widgets/s_tqwidget.h"
 #include "../../gen/publicclass.h"
 #include "../../gen/s_tablefields.h"
+#include "../../gen/sftp.h"
 #include "../messagebox.h"
 
 DevMainDialog::DevMainDialog(QString DevID, QWidget *parent) : QDialog(parent)
@@ -81,14 +82,14 @@ void DevMainDialog::SetupUI()
     s_tqLineEdit *le = new s_tqLineEdit;
     le->setObjectName("devidle");
     le->setEnabled(false);
-    hlyout->addWidget(le, 10);
+    hlyout->addWidget(le, 5);
     hlyout->addStretch(5);
     lbl = new s_tqLabel("Дата внесения в классификатор:");
     hlyout->addWidget(lbl);
     le = new s_tqLineEdit;
     le->setObjectName("datele");
     le->setEnabled(false);
-    hlyout->addWidget(le, 10);
+    hlyout->addWidget(le, 5);
     hlyout->addStretch(5);
     lbl = new s_tqLabel("Внёс:");
     hlyout->addWidget(lbl);
@@ -120,6 +121,24 @@ void DevMainDialog::SetupUI()
     le->setEnabled(false);
     hlyout->addWidget(le, 10);
     lyout->addLayout(hlyout);
+
+    hlyout = new QHBoxLayout;
+    lbl = new s_tqLabel("Наименование:");
+    hlyout->addWidget(lbl);
+    le = new s_tqLineEdit;
+    le->setObjectName("namele");
+    hlyout->addWidget(le,10);
+    lbl = new s_tqLabel("Редакция:");
+    hlyout->addWidget(lbl);
+    s_tqComboBox *cb = new s_tqComboBox;
+    cb->setObjectName("revisioncb");
+    hlyout->addWidget(cb, 2);
+    lyout->addLayout(hlyout);
+
+    s_tqFrame *line = new s_tqFrame;
+    line->setFrameShape(QFrame::HLine);
+    line->setFrameShadow(QFrame::Sunken);
+    lyout->addWidget(line);
 
 
     setLayout(lyout);
@@ -156,7 +175,35 @@ void DevMainDialog::Unfilter()
 
 int DevMainDialog::Fill(QString DevID)
 {
-//    QString
+    QString DevDesc = sqlc.GetValueFromTableByID(sqlc.GetDB("dev"), "devices", "description", DevID);
+    if (sqlc.result)
+    {
+        DEVMAINWARN;
+        return 1;
+    }
+    sftp.ChangeDir("/");
+    while (sftp.Busy)
+        qApp->processEvents();
+    if (sftp.Error) // нет такого каталога
+    {
+        DEVMAINER("Невозможно перейти к корневому каталогу");
+        return 1;
+    }
+    QString Dir = DevDesc;
+    sftp.ChangeDir(Dir);
+    while (sftp.Busy)
+        qApp->processEvents();
+    if (sftp.Error) // нет такого каталога
+    {
+        sftp.MakeDir(Dir);
+        while (sftp.Busy)
+            qApp->processEvents();
+        if (sftp.Error)
+        {
+            DEVMAINER("Невозможно создать каталог "+DevDesc+" на ftp-сервере");
+            return 1;
+        }
+    }
     return 0;
 }
 

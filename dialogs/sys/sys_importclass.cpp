@@ -64,7 +64,7 @@ void sys_ImportClass::ImpExpPBPressed()
     s_tqChooseWidget *cw = this->findChild<s_tqChooseWidget *>("loadfilecw");
     if (cw == 0)
     {
-        MessageBox::information(this,"","Элемент CW не найден");
+        MessageBox2::information(this,"","Элемент CW не найден");
         return;
     }
     sys_ImportClass_T *t = new sys_ImportClass_T(cw->Value());

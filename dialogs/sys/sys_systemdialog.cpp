@@ -465,7 +465,7 @@ void sys_systemdialog::DeleteTable()
     QStringList TableHeaders = tfl.tableheaders(tblename);
     if (tfl.result)
         return;
-    if (!(MessageBox::question(this, "Уверены?", "Вы уверены, что хотите удалить все сведения о таблице?")))
+    if (!(MessageBox2::question(this, "Уверены?", "Вы уверены, что хотите удалить все сведения о таблице?")))
         return;
     for (int i=0; i<TableHeaders.size(); i++)
     {

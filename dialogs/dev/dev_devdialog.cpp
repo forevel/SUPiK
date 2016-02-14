@@ -8,6 +8,7 @@
 #include <QVBoxLayout>
 #include <QHeaderView>
 #include <QPainter>
+#include <QMessageBox>
 #include <QPaintEvent>
 #include <QApplication>
 #include "../s_2cdialog.h"

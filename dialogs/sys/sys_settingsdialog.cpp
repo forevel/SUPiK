@@ -185,6 +185,7 @@ void sys_settingsdialog::OKPBClicked()
         pc.LandP->setValue("settings/lang",pc.CurLang);
         pc.LandP->setValue("settings/SQLPath",pc.SQLPath);
         pc.LandP->setValue("settings/timerperiod",pc.timerperiod);
+        pc.LandP->setValue("settings/FtpServer",pc.FtpServer);
 
         if (!pl.InitLang())
             pl.SetDefaultLang();

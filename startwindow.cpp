@@ -151,13 +151,22 @@ void StartWindow::OkPBClicked()
 
     s_tqLineEdit *UNameLE = this->findChild<s_tqLineEdit *>("UNameLE");
     if (UNameLE == 0)
+    {
+        MessageBox2::error(this, "Ошибка!", "Отладочная ошибка в строке "+QString::number(__LINE__));
         return;
+    }
     s_tqLineEdit *PasswdLE = this->findChild<s_tqLineEdit *>("PasswdLE");
     if (PasswdLE == 0)
+    {
+        MessageBox2::error(this, "Ошибка!", "Отладочная ошибка в строке "+QString::number(__LINE__));
         return;
+    }
     s_tqCheckBox *SaveCB = this->findChild<s_tqCheckBox *>("SaveCB");
     if (SaveCB == 0)
+    {
+        MessageBox2::error(this, "Ошибка!", "Отладочная ошибка в строке "+QString::number(__LINE__));
         return;
+    }
     tmpString = sqlc.GetValueFromTableByField(pc.sup, "personel", "psw", "login", UNameLE->text());
     if (tmpString == PasswdLE->text())
     {
@@ -177,6 +186,11 @@ void StartWindow::OkPBClicked()
         QStringList sl, vl;
         sl << "idpersonel" << "personel" << "group";
         vl = sqlc.GetValuesFromTableByField(pc.sup, "personel", sl, "login", UNameLE->text());
+        if (sqlc.result)
+        {
+            MessageBox2::error(this, "Ошибка!", sqlc.LastError);
+            return;
+        }
         if (!vl.isEmpty())
         {
             pc.idPers=vl.at(0).toInt();
@@ -185,7 +199,7 @@ void StartWindow::OkPBClicked()
         }
         else
         {
-            STARTER("Пользователь не найден!");
+            MessageBox2::error(this, "Ошибка!", "Пользователь не найден!");
             return;
         }
 
@@ -195,7 +209,7 @@ void StartWindow::OkPBClicked()
             pc.access = tmpString.toLong(0, 16); // права доступа - в hex формате
         else // не нашли запись
         {
-            STARTER("Не найдена группа доступа, обратитесь к администратору!");
+            MessageBox2::error(this, "Ошибка!", "Не найдена группа доступа, обратитесь к администратору!");
             return;
         }
 
@@ -218,8 +232,8 @@ void StartWindow::OkPBClicked()
     }
     else
     {
-        ERMSG(PublicClass::ER_START,__LINE__,"Нет такого пользователя или пароль неверен!");
-        UNameLE->setFocus();
+        MessageBox2::error(this, "Ошибка!", "Нет такого пользователя или пароль неверен!");
+        return;
     }
 }
 
@@ -243,13 +257,22 @@ void StartWindow::Startup()
 {
     s_tqLineEdit *UNameLE = this->findChild<s_tqLineEdit *>("UNameLE");
     if (UNameLE == 0)
+    {
+        MessageBox2::error(this, "Ошибка!", "Отладочная ошибка в строке "+QString::number(__LINE__));
         return;
+    }
     s_tqLineEdit *PasswdLE = this->findChild<s_tqLineEdit *>("PasswdLE");
     if (PasswdLE == 0)
+    {
+        MessageBox2::error(this, "Ошибка!", "Отладочная ошибка в строке "+QString::number(__LINE__));
         return;
+    }
     s_tqCheckBox *SaveCB = this->findChild<s_tqCheckBox *>("SaveCB");
     if (SaveCB == 0)
+    {
+        MessageBox2::error(this, "Ошибка!", "Отладочная ошибка в строке "+QString::number(__LINE__));
         return;
+    }
     UNameLE->setText(pc.LandP->value("login/login","").toString());
     PasswdLE->setText(pc.LandP->value("login/psw","").toString());
     SaveCB->setChecked(pc.LandP->value("login/ischecked",false).toBool());

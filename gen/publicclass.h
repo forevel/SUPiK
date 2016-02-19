@@ -156,7 +156,8 @@ public:
         ER_CHIDLG,   // chooseitemdialog
         ER_CTHREAD,  // checkthread
         ER_DEVMAIN,  // DevMainDialog
-        ER_PROBS    // SysProblemsDialog
+        ER_PROBS,    // SysProblemsDialog
+        ER_FTP      // Ftp
     };
 
     static QMap<int, QString> ermsgs()
@@ -193,6 +194,7 @@ public:
         map.insert(ER_CTHREAD, QString::fromLocal8Bit("Проверки_поток"));
         map.insert(ER_DEVMAIN, QString::fromLocal8Bit("Ред_изделий"));
         map.insert(ER_PROBS, QString::fromLocal8Bit("Проблемы_диалог"));
+        map.insert(ER_FTP, QString::fromLocal8Bit("Ftp"));
         return map;
     }
 

@@ -1,5 +1,6 @@
 #include <QApplication>
 #include <QFile>
+#include <QTcpSocket>
 
 #include "sftp.h"
 

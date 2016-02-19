@@ -8,8 +8,9 @@
 #include "gen/publicclass.h"
 #include "gen/publiclang.h"
 
-#define STARTER(a)  ERMSG(PublicClass::ER_START,__LINE__,a)
-#define STARTWARN   WARNMSG(PublicClass::ER_START,__LINE__)
+#define STARTER(a)      ERMSG(PublicClass::ER_START,__LINE__,a)
+#define STARTWARN       WARNMSG(PublicClass::ER_START,__LINE__)
+#define STARTINFO(a)    INFOMSG(PublicClass::ER_START,__LINE__,a)
 
 class StartWindow : public QMainWindow
 {

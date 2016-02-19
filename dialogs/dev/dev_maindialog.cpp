@@ -26,7 +26,7 @@
 #include "../../widgets/s_tqwidget.h"
 #include "../../gen/publicclass.h"
 #include "../../gen/s_tablefields.h"
-#include "../../gen/sftp.h"
+#include "../../gen/ftp.h"
 #include "../messagebox.h"
 
 DevMainDialog::DevMainDialog(QString DevID, QWidget *parent) : QDialog(parent)
@@ -181,28 +181,21 @@ int DevMainDialog::Fill(QString DevID)
         DEVMAINWARN;
         return 1;
     }
-    sftp.ChangeDir("/");
-    while (sftp.Busy)
-        qApp->processEvents();
-    if (sftp.Error) // нет такого каталога
+    if (!Ftps->ChDir("/"))
     {
         DEVMAINER("Невозможно перейти к корневому каталогу");
         return 1;
     }
     QString Dir = DevDesc;
-    sftp.ChangeDir(Dir);
-    while (sftp.Busy)
-        qApp->processEvents();
-    if (sftp.Error) // нет такого каталога
+    if (!Ftps->ChDir(Dir))
     {
-        sftp.MakeDir(Dir);
-        while (sftp.Busy)
-            qApp->processEvents();
-        if (sftp.Error)
+        if (!Ftps->MkDir(Dir))
         {
             DEVMAINER("Невозможно создать каталог "+DevDesc+" на ftp-сервере");
             return 1;
         }
+        else
+            DEVMAININFO("Каталог создан успешно");
     }
     return 0;
 }

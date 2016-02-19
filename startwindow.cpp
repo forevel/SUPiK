@@ -11,7 +11,7 @@
 #include "gen/s_sql.h"
 #include "widgets/s_tqcheckbox.h"
 #include "dialogs/messagebox.h"
-#include "gen/sftp.h"
+#include "gen/ftp.h"
 
 StartWindow::StartWindow(QWidget *parent) : QMainWindow(parent)
 {
@@ -37,7 +37,6 @@ StartWindow::StartWindow(QWidget *parent) : QMainWindow(parent)
 
 StartWindow::~StartWindow()
 {
-
 }
 
 void StartWindow::showEvent(QShowEvent *event)
@@ -151,13 +150,22 @@ void StartWindow::OkPBClicked()
 
     s_tqLineEdit *UNameLE = this->findChild<s_tqLineEdit *>("UNameLE");
     if (UNameLE == 0)
+    {
+        MessageBox2::error(this, "Ошибка!", "Отладочная ошибка в строке "+QString::number(__LINE__));
         return;
+    }
     s_tqLineEdit *PasswdLE = this->findChild<s_tqLineEdit *>("PasswdLE");
     if (PasswdLE == 0)
+    {
+        MessageBox2::error(this, "Ошибка!", "Отладочная ошибка в строке "+QString::number(__LINE__));
         return;
+    }
     s_tqCheckBox *SaveCB = this->findChild<s_tqCheckBox *>("SaveCB");
     if (SaveCB == 0)
+    {
+        MessageBox2::error(this, "Ошибка!", "Отладочная ошибка в строке "+QString::number(__LINE__));
         return;
+    }
     tmpString = sqlc.GetValueFromTableByField(pc.sup, "personel", "psw", "login", UNameLE->text());
     if (tmpString == PasswdLE->text())
     {
@@ -177,6 +185,11 @@ void StartWindow::OkPBClicked()
         QStringList sl, vl;
         sl << "idpersonel" << "personel" << "group";
         vl = sqlc.GetValuesFromTableByField(pc.sup, "personel", sl, "login", UNameLE->text());
+        if (sqlc.result)
+        {
+            MessageBox2::error(this, "Ошибка!", sqlc.LastError);
+            return;
+        }
         if (!vl.isEmpty())
         {
             pc.idPers=vl.at(0).toInt();
@@ -185,7 +198,7 @@ void StartWindow::OkPBClicked()
         }
         else
         {
-            STARTER("Пользователь не найден!");
+            MessageBox2::error(this, "Ошибка!", "Пользователь не найден!");
             return;
         }
 
@@ -195,7 +208,7 @@ void StartWindow::OkPBClicked()
             pc.access = tmpString.toLong(0, 16); // права доступа - в hex формате
         else // не нашли запись
         {
-            STARTER("Не найдена группа доступа, обратитесь к администратору!");
+            MessageBox2::error(this, "Ошибка!", "Не найдена группа доступа, обратитесь к администратору!");
             return;
         }
 
@@ -206,20 +219,38 @@ void StartWindow::OkPBClicked()
         StartWindowSplashScreen->show();
 
         StartWindowSplashScreen->showMessage("Проверка наличия подключения к каталогу СУПиК...", Qt::AlignRight, Qt::white);
-        bool FtpCheck = sftp.CheckFtp();
-        if (!FtpCheck)
-            STARTER("Каталог СУПиК недоступен");
+        Ftps = new Ftp;
+        if (!Ftps->Connect(pc.FtpServer))
+            STARTER("Сервер ftp недоступен");
+        else if (!Ftps->Login("supik","wdbpy(WcTtTZzA_TEc-<"))
+            STARTER("Имя или пароль доступа к ftp-серверу неверны");
+        else
+        {
+            QByteArray *ba = new QByteArray;
+//            ba->resize(10000);
+            if (!Ftps->GetFile("xmHXP_FW~h", ba, 10000))
+                STARTER("Каталог СУПиК недоступен");
+            else
+            {
+                QString tmps = QString::fromLocal8Bit(ba->data());
+                if (tmps != "supik\r\n")
+                    STARTER("Неправильный каталог СУПиК");
+                else
+                    STARTINFO("Подключение к FTP-серверу выполнено успешно");
+            }
+        }
 
         StartWindowSplashScreen->finish(this);
 
         supik *supik_main_window = new supik;
+        connect(supik_main_window,SIGNAL(stopall()),Ftps,SLOT(StopThreads()));
         supik_main_window->setVisible(true);
         supik_main_window->setEnabled(true);
     }
     else
     {
-        ERMSG(PublicClass::ER_START,__LINE__,"Нет такого пользователя или пароль неверен!");
-        UNameLE->setFocus();
+        MessageBox2::error(this, "Ошибка!", "Нет такого пользователя или пароль неверен!");
+        return;
     }
 }
 
@@ -243,13 +274,22 @@ void StartWindow::Startup()
 {
     s_tqLineEdit *UNameLE = this->findChild<s_tqLineEdit *>("UNameLE");
     if (UNameLE == 0)
+    {
+        MessageBox2::error(this, "Ошибка!", "Отладочная ошибка в строке "+QString::number(__LINE__));
         return;
+    }
     s_tqLineEdit *PasswdLE = this->findChild<s_tqLineEdit *>("PasswdLE");
     if (PasswdLE == 0)
+    {
+        MessageBox2::error(this, "Ошибка!", "Отладочная ошибка в строке "+QString::number(__LINE__));
         return;
+    }
     s_tqCheckBox *SaveCB = this->findChild<s_tqCheckBox *>("SaveCB");
     if (SaveCB == 0)
+    {
+        MessageBox2::error(this, "Ошибка!", "Отладочная ошибка в строке "+QString::number(__LINE__));
         return;
+    }
     UNameLE->setText(pc.LandP->value("login/login","").toString());
     PasswdLE->setText(pc.LandP->value("login/psw","").toString());
     SaveCB->setChecked(pc.LandP->value("login/ischecked",false).toBool());

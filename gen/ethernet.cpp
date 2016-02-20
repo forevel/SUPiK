@@ -26,6 +26,7 @@ void Ethernet::Run()
     connect(sock,SIGNAL(disconnected()),this,SIGNAL(disconnected()));
     sock->connectToHost(Host,Port,QIODevice::ReadWrite,QAbstractSocket::IPv4Protocol);
     connect(sock,SIGNAL(readyRead()),this,SLOT(CheckForData()));
+    connect(sock,SIGNAL(bytesWritten(qint64)),this,SIGNAL(byteswritten(qint64)));
     while (1)
     {
         OutDataBufMtx.lock();

@@ -69,6 +69,7 @@ bool Ftp::SendCmd(int Command, QString Args)
 {
     CurrentCommand = Command;
     Busy = true;
+    TimeoutTimer->start();
     QString CommandString;
     switch (Command)
     {
@@ -92,6 +93,11 @@ bool Ftp::SendCmd(int Command, QString Args)
         CommandString = "RETR " + Args + "\n";
         break;
     }
+    case CMD_STOR:
+    {
+        CommandString = "STOR " + Args + "\n";
+        break;
+    }
     case CMD_QUIT:
     {
         CommandString = "QUIT \n";
@@ -107,6 +113,11 @@ bool Ftp::SendCmd(int Command, QString Args)
         CommandString = "MKD " + Args + "\n";
         break;
     }
+    case CMD_LIST:
+    {
+        CommandString = "LIST \n";
+        break;
+    }
     }
     if (CanLog)
     {
@@ -118,6 +129,7 @@ bool Ftp::SendCmd(int Command, QString Args)
     emit FtpSend(&ba);
     while (Busy)
         qApp->processEvents(QEventLoop::AllEvents);
+    TimeoutTimer->stop();
     if (!CmdOk)
         return false;
     return true;
@@ -148,6 +160,16 @@ bool Ftp::ChDir(QString Dir)
     return true;
 }
 
+bool Ftp::List()
+{
+    if (!StartPASV(CMD_LIST))
+    {
+        FTPER("Команда LIST не прошла");
+        return false;
+    }
+    return true;
+}
+
 bool Ftp::MkDir(QString Dir)
 {
     if (!SendCmd(CMD_MKD, Dir))
@@ -158,12 +180,28 @@ bool Ftp::MkDir(QString Dir)
     return true;
 }
 
-bool Ftp::GetFile(QString Filename, QByteArray *ba, int size)
+bool Ftp::StartPASV(int Command, QString Filename, QByteArray *ba, int size)
 {
-    RcvData = ba;
-    RcvDataSize = size;
-//    if (size != 0)
-//        RcvData->resize(size);
+    switch (Command)
+    {
+    case CMD_RETR:
+    case CMD_LIST:
+    {
+        RcvData = ba;
+        RcvDataSize = size;
+        ReadBytes = 0;
+        break;
+    }
+    case CMD_STOR:
+    {
+        XmitData = ba;
+        XmitDataSize = size;
+        WrittenBytes = 0;
+        break;
+    }
+    default:
+        break;
+    }
     if (!SendCmd(CMD_PASV))
         return false;
     FileConnected = false;
@@ -174,7 +212,10 @@ bool Ftp::GetFile(QString Filename, QByteArray *ba, int size)
     connect(thr,SIGNAL(finished()),thr,SLOT(deleteLater()));
     connect(thr,SIGNAL(started()),eth,SLOT(Run()));
     connect(eth,SIGNAL(connected()),this,SLOT(FtpFileConnected()));
-    connect(eth,SIGNAL(newdataarrived(QByteArray *)),this,SLOT(FileGet(QByteArray *)));
+    if (Command == CMD_STOR)
+        connect(eth,SIGNAL(byteswritten(qint64)),this,SLOT(SetBytesWritten(qint64)));
+    else
+        connect(eth,SIGNAL(newdataarrived(QByteArray *)),this,SLOT(FileGet(QByteArray *)));
     eth->SetIpAndPort(FileHost, FilePort);
     TimeoutTimer->start();
     thr->start();
@@ -188,7 +229,7 @@ bool Ftp::GetFile(QString Filename, QByteArray *ba, int size)
     }
     FileBusy = true;
     TimeoutTimer->start();
-    if (!SendCmd(CMD_RETR, Filename))
+    if (!SendCmd(Command, Filename))
     {
         eth->Stop();
         return false;
@@ -199,6 +240,11 @@ bool Ftp::GetFile(QString Filename, QByteArray *ba, int size)
     return true;
 }
 
+bool Ftp::GetFile(QString Filename, QByteArray *ba, int size)
+{
+    return StartPASV(CMD_RETR, Filename, ba, size);
+}
+
 void Ftp::FtpFileConnected()
 {
     FileBusy = false;
@@ -206,10 +252,15 @@ void Ftp::FtpFileConnected()
     TimeoutTimer->stop();
 }
 
-bool Ftp::SendFile(QString Filename, QByteArray *ba)
+bool Ftp::SendFile(QString Filename, QByteArray *ba, int size)
 {
-    XmitData = ba;
-    return true;
+    return StartPASV(CMD_STOR, Filename, ba, size);
+}
+
+void Ftp::SetBytesWritten(qint64 bytes)
+{
+    WrittenBytes += bytes;
+    emit BytesWritten(WrittenBytes);
 }
 
 void Ftp::FtpGet(QByteArray *ba)
@@ -225,11 +276,16 @@ void Ftp::FtpGet(QByteArray *ba)
 
 void Ftp::FileGet(QByteArray *ba)
 {
+    int basize = ba->size();
+    ReadBytes += basize;
+    LogFile->write(QString("---FILE---\n").toLocal8Bit());
+    QString tmps = *ba;
+    LogFile->write(QString(tmps).to());
+    emit BytesRead(ReadBytes);
     FileBusy = false;
     TimeoutTimer->stop();
     if (RcvData != 0)
     {
-        int basize = ba->size();
         int rcvsize = RcvData->size() + basize;
         if (rcvsize < RcvDataSize)
             RcvData->append(*ba);
@@ -314,6 +370,7 @@ void Ftp::ParseReply()
             break;
         }
         case CMD_RETR:
+        case CMD_STOR:
         {
             if (FtpResult == FTP_FILESTATOK)
                 return;
@@ -337,6 +394,10 @@ void Ftp::ParseReply()
         {
             if (FtpResult == FTP_QUITOK)
                 CmdOk = true;
+            break;
+        }
+        case CMD_LIST:
+        {
             break;
         }
         }

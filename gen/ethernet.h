@@ -84,6 +84,7 @@ signals:
     void disconnected();
     void finished();
     void newdataarrived(QByteArray *);
+    void byteswritten(qint64 bytes);
 
 private slots:
     void CheckForData();

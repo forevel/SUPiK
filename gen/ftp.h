@@ -71,7 +71,8 @@ public:
     bool Login(QString User, QString Password);
     bool ChDir(QString Dir);
     bool MkDir(QString Dir);
-    bool SendFile(QString Filename, QByteArray *ba);
+    bool List();
+    bool SendFile(QString Filename, QByteArray *ba, int size = 0);
     bool GetFile(QString Filename, QByteArray *ba, int size = 0);
     void Disconnect();
 
@@ -80,6 +81,8 @@ public slots:
 
 signals:
     void FtpSend(QByteArray *);
+    void BytesRead(qint64 bytes);
+    void BytesWritten(qint64 bytes);
 
 private:
     QByteArray *BufData, *RcvData, *XmitData;
@@ -90,7 +93,8 @@ private:
     QTextStream *LogStream;
     QString FileHost;
     quint16 FilePort;
-    int CurrentCommand, RcvDataSize;
+    qint64 WrittenBytes, ReadBytes;
+    int CurrentCommand, RcvDataSize, XmitDataSize;
 
     enum Commands
     {
@@ -99,6 +103,7 @@ private:
     };
 
     void StartFtp(QString Host, quint16 Port);
+    bool StartPASV(int Command, QString Filename = "", QByteArray *ba = 0, int size = 0);
     void ParseReply();
     bool SendCmd(int Command, QString Args="");
 
@@ -109,6 +114,7 @@ private slots:
     void FtpFileConnected();
     void Timeout();
     void FtpErr(int error);
+    void SetBytesWritten(qint64 bytes);
 };
 
 extern Ftp *Ftps;

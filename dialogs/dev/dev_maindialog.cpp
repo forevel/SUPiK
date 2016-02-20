@@ -187,7 +187,7 @@ int DevMainDialog::Fill(QString DevID)
         return 1;
     }
     QString Dir = DevDesc;
-    if (!Ftps->ChDir(Dir))
+/*    if (!Ftps->ChDir(Dir))
     {
         if (!Ftps->MkDir(Dir))
         {
@@ -196,6 +196,11 @@ int DevMainDialog::Fill(QString DevID)
         }
         else
             DEVMAININFO("Каталог создан успешно");
+    } */
+    if (!Ftps->List())
+    {
+        DEVMAINER("Невозможно получить данные с FTP-сервера");
+        return 1;
     }
     return 0;
 }

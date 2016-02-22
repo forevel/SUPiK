@@ -213,7 +213,10 @@ bool Ftp::StartPASV(int Command, QString Filename, QByteArray *ba, int size)
     connect(thr,SIGNAL(started()),eth,SLOT(Run()));
     connect(eth,SIGNAL(connected()),this,SLOT(FtpFileConnected()));
     if (Command == CMD_STOR)
+    {
         connect(eth,SIGNAL(byteswritten(qint64)),this,SLOT(SetBytesWritten(qint64)));
+        connect(this,SIGNAL(FileSend(QByteArray *)),eth,SLOT(InitiateWriteDataToPort(QByteArray *)));
+    }
     else
         connect(eth,SIGNAL(newdataarrived(QByteArray *)),this,SLOT(FileGet(QByteArray *)));
     eth->SetIpAndPort(FileHost, FilePort);
@@ -234,6 +237,17 @@ bool Ftp::StartPASV(int Command, QString Filename, QByteArray *ba, int size)
         eth->Stop();
         return false;
     }
+    if (Command == CMD_STOR)
+    {
+        QFile *file = new QFile(Filename);
+        if (!file->open(QIODevice::WriteOnly))
+        {
+            FTPER("Ошибка открытия файла: "+Filename);
+            return false;
+        }
+        QByteArray *tmpba = new QByteArray(file->readAll());
+        emit FileSend(tmpba);
+    }
     while (FileBusy)
         qApp->processEvents(QEventLoop::AllEvents);
     eth->Stop();
@@ -242,6 +256,39 @@ bool Ftp::StartPASV(int Command, QString Filename, QByteArray *ba, int size)
 
 bool Ftp::GetFile(QString Filename, QByteArray *ba, int size)
 {
+    QByteArray *tmpba = new QByteArray;
+    if (!StartPASV(CMD_LIST, Filename, tmpba, size))
+    {
+        FTPER("Не прошла команда LIST");
+        return false;
+    }
+
+    // в tmpba содержится вывод команды LIST в виде:
+    // -rwxrwxr-x    1 1004       supik         6811190 Feb 22 22:00 [Cold_Cut]-Autumn_Leaves_(Irresistable_Force_Mix_Trip_2).mp3\n
+    // drwxr-xr-x    2 1004       supik             512 Dec 18 22:45 incoming\n
+
+    QStringList tmpsl = (QString::fromUtf8(tmpba->data())).split("\n");
+    qint64 fsize;
+    while (!tmpsl.isEmpty())
+    {
+        QString tmps = tmpsl.takeFirst();
+        tmps.remove("  "); // дублированные пробелы убираем
+        QStringList tmpsl = tmps.split(" ");
+        if (tmpsl.size() > 8) // подразумеваем вывод в Unix-стиле
+        {
+            tmps.clear();
+            for (int i=8; i<tmpsl.size(); i++)
+                tmps += tmpsl.at(i) + " ";
+            if (tmps.endsWith(' '))
+                tmps.chop(1);
+            if (tmpsl.at(8) == Filename)
+            {
+                fsize = tmpsl.at(4).toInt();
+                break;
+            }
+        }
+    }
+    emit BytesOverall(fsize);
     return StartPASV(CMD_RETR, Filename, ba, size);
 }
 
@@ -278,9 +325,12 @@ void Ftp::FileGet(QByteArray *ba)
 {
     int basize = ba->size();
     ReadBytes += basize;
-    LogFile->write(QString("---FILE---\n").toLocal8Bit());
     QString tmps = *ba;
-    LogFile->write(QString(tmps).to());
+    if (CanLog)
+    {
+        LogFile->write(QString("---FILE---\n").toLocal8Bit());
+        LogFile->write(QString(tmps).toLocal8Bit());
+    }
     emit BytesRead(ReadBytes);
     FileBusy = false;
     TimeoutTimer->stop();

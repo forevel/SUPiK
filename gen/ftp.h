@@ -81,6 +81,8 @@ public slots:
 
 signals:
     void FtpSend(QByteArray *);
+    void FileSend(QByteArray *);
+    void BytesOverall(qint64 bytes);
     void BytesRead(qint64 bytes);
     void BytesWritten(qint64 bytes);
 

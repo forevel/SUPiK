@@ -144,17 +144,19 @@ void s_tqChooseWidget::pbclicked()
     {
     case FW_ALLINK:
     {
-        ChooseItemDialog *chooseDialog = new ChooseItemDialog(ff.link.at(0), hdr, true); // диалог с "корневой кнопкой"
+        ChooseItemDialog *chooseDialog = new ChooseItemDialog;
+        chooseDialog->SetupTable(ff.link.at(0), hdr, true); // диалог с "корневой кнопкой"
         connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
-        chooseDialog->setTvCurrentText(le->text());
+        chooseDialog->SetTvCurrentText(le->text());
         chooseDialog->exec();
         break;
     }
     case FW_LINK:
     {
-        ChooseItemDialog *chooseDialog = new ChooseItemDialog(ff.link.at(0), hdr);
+        ChooseItemDialog *chooseDialog = new ChooseItemDialog;
+        chooseDialog->SetupTable(ff.link.at(0), hdr);
         connect(chooseDialog, SIGNAL(changeshasbeenMade(QString)), this, SLOT(accepted(QString)));
-        chooseDialog->setTvCurrentText(le->text());
+        chooseDialog->SetTvCurrentText(le->text());
         chooseDialog->exec();
         break;
     }
@@ -207,7 +209,7 @@ void s_tqChooseWidget::pbclicked()
     }
     case FW_FLLINK:
     {
-        s_2cdialog *dlg = new s_2cdialog("");
+        ChooseItemDialog *dlg = new ChooseItemDialog;
         dlg->SetupFile(ff.link.at(0)+"."+ff.link.at(1),ff.link.at(2),le->text()); // ff.link.at(0) - имя файла, (1) - расширение, (2) - StringToFind
         connect(dlg,SIGNAL(changeshasbeenMade(QString)),this,SLOT(accepted(QString)));
         dlg->exec();

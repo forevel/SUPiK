@@ -38,6 +38,7 @@ public:
     bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex());
     int Setup(QStringList Tables, int Type=TT_TYPE1);
     int Setup(QString Table);
+    int SetupFile(QString Filename, QString StringToFind);
     void Refresh();
     bool HaveChildren(int row);
     void SetLastItem(QColor FColor, QColor BColor, QFont Font, QIcon Icon, QString AData="0");

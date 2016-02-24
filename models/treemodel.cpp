@@ -3,6 +3,7 @@
 #include "../gen/s_tablefields.h"
 #include <QSqlDatabase>
 #include <QSqlQuery>
+#include <QFile>
 #include <QMap>
 #include <QSortFilterProxyModel>
 
@@ -131,8 +132,6 @@ Qt::ItemFlags TreeModel::flags(const QModelIndex &index) const
 {
     if (!index.isValid())
             return Qt::ItemIsEnabled;
-//    if (IsEditable)
-//        return Qt::ItemIsEditable | Qt::ItemIsEnabled;
     return Qt::ItemIsEnabled | Qt::ItemIsSelectable;
 }
 
@@ -288,11 +287,59 @@ void TreeModel::SetLastItem(QColor FColor, QColor BColor, QFont Font, QIcon Icon
     setData(index(LastIndex, 0, QModelIndex()), AData, CellInfoRole);
 }
 
+int TreeModel::SetupFile(QString Filename, QString StringToFind)
+{
+    ClearModel();
+    TreeType = TT_SIMPLE;
+    QString tmpString;
+    char *tmpChar;
+    int filepos = 0;
+    QFile file;
+    file.setFileName(Filename);
+    if (!file.open(QIODevice::ReadOnly))
+    {
+        TMODELWARN("Невозможно открыть файл "+Filename);
+        return 1;
+    }
+    QByteArray ba = file.readAll();
+    while ((filepos = ba.indexOf(StringToFind, filepos)) != -1)
+    {
+        tmpChar = ba.data();
+        tmpChar += filepos;
+        while (*tmpChar)
+        {
+            if (tmpChar[0] == '=')
+            {
+                tmpChar++;
+                filepos++;
+                tmpString = "";
+                while ((tmpChar[0]) && (tmpChar[0] != '|'))
+                {
+                    tmpString += QString::fromLocal8Bit(tmpChar,1);
+                    tmpChar++;
+                    filepos++;
+                }
+                break;
+            }
+            tmpChar++;
+            filepos++;
+        }
+        QList<PublicClass::ValueStruct> vl;
+        PublicClass::ValueStruct tmpvl;
+        tmpvl.Type = VS_STRING;
+        tmpvl.Value = tmpString;
+        vl.append(tmpvl);
+        AddItemToTree(vl);
+        SetLastItem(Colors[0], Qt::transparent, Fonts[0], Icons[0], TM_SIMPLE_ELEMENT);
+    }
+    file.close();
+    return 0;
+}
+
 // процедура инициализации модели данными из таблицы table и построение дерева по полям <tble> и idalias
 
 int TreeModel::Setup(QString Table)
 {
-    this->IsEditable = IsEditable;
     QStringList sl = QStringList() << Table;
     return Setup(sl, TT_SIMPLE);
 }

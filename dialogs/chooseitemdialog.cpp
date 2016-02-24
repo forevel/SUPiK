@@ -17,15 +17,32 @@
 #include <QApplication>
 #include <QDesktopWidget>
 
-ChooseItemDialog::ChooseItemDialog(QString tble, QString hdr, bool RootNeeded, QWidget *parent) :
+ChooseItemDialog::ChooseItemDialog(QWidget *parent) :
     QDialog(parent)
 {
-    this->tble = tble;
-    this->RootNeeded = RootNeeded;
-    this->hdr=hdr;
     setStyleSheet("QDialog {background-color: rgba(204,204,153);}");
     setAttribute(Qt::WA_DeleteOnClose);
+}
+
+bool ChooseItemDialog::SetupTable(QString tble, QString hdr, bool RootNeeded)
+{
+    this->hdr=hdr;
+    this->RootNeeded = RootNeeded;
+    this->tble = tble;
     SetupUI();
+    if (MainModel->Setup(tble) != 0)
+        return false;
+    ResizeMainTV();
+    return true;
+}
+
+bool ChooseItemDialog::SetupFile(QString Filename, QString StringToFind, QString Str)
+{
+    SetupUI();
+    if (MainModel->SetupFile(Filename, StringToFind) != 0)
+        return false;
+    SetTvCurrentText(Str);
+    return true;
 }
 
 void ChooseItemDialog::SetupUI()
@@ -87,8 +104,6 @@ void ChooseItemDialog::SetupUI()
     connect(MainTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(accepted(QModelIndex)));
     connect(MainModel,SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)),this,SLOT(ResizeMainTV()));
     setLayout(mainLayout);
-    MainModel->Setup(tble);
-    ResizeMainTV();
 }
 
 void ChooseItemDialog::paintEvent(QPaintEvent *e)
@@ -130,7 +145,7 @@ void ChooseItemDialog::cancelled()
     this->close();
 }
 
-void ChooseItemDialog::setTvCurrentText(QString text)
+void ChooseItemDialog::SetTvCurrentText(QString text)
 {
     if (text.isEmpty())
         return;

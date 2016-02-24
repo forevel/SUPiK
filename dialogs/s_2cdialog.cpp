@@ -61,70 +61,6 @@ void s_2cdialog::setup(QString tble, int Mode, QString id, QString matchtext, bo
 
 void s_2cdialog::SetupFile(QString Filename, QString StringToFind, QString str)
 {
-/*    WaitWidget *w = new WaitWidget;
-    w->Start();
-    QStringList tmpList;
-    QString tmpString;
-    char *tmpChar;
-    int filepos = 0;
-    Mode = MODE_FILE;
-    setupUI();
-    Mode = MODE_CHOOSE;
-
-    tmpList.clear();
-    QFile file;
-    file.setFileName(Filename);
-    if (!file.open(QIODevice::ReadOnly))
-    {
-        CD2WARN;
-        w->Stop();
-        return;
-    }
-
-    QByteArray ba = file.readAll();
-    while ((filepos = ba.indexOf(StringToFind, filepos)) != -1)
-    {
-        tmpChar = ba.data();
-        tmpChar += filepos;
-        while (*tmpChar)
-        {
-            if (tmpChar[0] == '=')
-            {
-                tmpChar++;
-                filepos++;
-                tmpString = "";
-                while ((tmpChar[0]) && (tmpChar[0] != '|'))
-                {
-                    tmpString += QString::fromLocal8Bit(tmpChar,1);
-                    tmpChar++;
-                    filepos++;
-                }
-                break;
-            }
-            tmpChar++;
-            filepos++;
-        }
-        tmpList << tmpString;
-    }
-    file.close();
-    QList<QStringList> tmpsl;
-    tmpsl.append(tmpList);
-    QList<int> il;
-    il << tmpList.size();
-    mainmodel->prepareModel(il);
-    mainmodel->setcolumnlinks(0, "7.8");
-    mainmodel->setDataToWrite(tmpsl);
-    mainmodel->fillModel();
-    if (mainmodel->result)
-    {
-        CD2WARN;
-        w->Stop();
-        return;
-    }
-    fillModelAdata();
-    IsQuarantine = false;
-    SetTvCurrentText(str);
-    w->Stop(); */
 }
 
 void s_2cdialog::setupUI()
@@ -157,7 +93,7 @@ void s_2cdialog::setupUI()
     mainTV->resizeColumnsToContents();
     mainTV->resizeRowsToContents();
     mainLayout->addWidget(lbl, 0, Qt::AlignRight);
-/*    if (Mode == MODE_CHOOSE)
+    if (Mode == MODE_CHOOSE)
     {
         QHBoxLayout *hlyout = new QHBoxLayout;
         s_tqPushButton *pb = new s_tqPushButton;
@@ -177,7 +113,7 @@ void s_2cdialog::setupUI()
         hlyout->addWidget(pb);
         hlyout->addStretch(1);
         mainLayout->addLayout(hlyout);
-    } */
+    }
     mainLayout->addWidget(mainTV);
     mainLayout->addLayout(pbLayout);
     setLayout(mainLayout);

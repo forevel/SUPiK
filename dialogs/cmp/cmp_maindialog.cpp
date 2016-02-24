@@ -259,7 +259,7 @@ void cmp_maindialog::SetAltDialog()
         PathString += tmpsl.value(i++);
     }
     tmps = pc.PathToLibs + "Symbols" + PathString + "/" + CompTble + ".SchLib"; */
-    QString tmps = pc.PathToLibs + "Symbols" + CompUrlPrefix + CompTble + ".SchLib";
+    QString tmps = pc.PathToLibs + "/Symbols" + CompUrlPrefix + CompTble + ".SchLib";
     cw->Setup("2.17.."+tmps+"."+pc.symfind);
     glyout->addWidget(cw,0,1,1,1);
     lbl = new s_tqLabel("Посадочное место");
@@ -268,7 +268,7 @@ void cmp_maindialog::SetAltDialog()
     connect(cw,SIGNAL(textchanged(QVariant)),this,SLOT(SomethingChanged()));
     cw->setObjectName("footref");
 //    tmps = pc.PathToLibs + "Footprints" + PathString + "/" + CompTble + ".PcbLib";
-    tmps = pc.PathToLibs + "Footprints" + CompUrlPrefix + CompTble + ".PcbLib";
+    tmps = pc.PathToLibs + "/Footprints" + CompUrlPrefix + CompTble + ".PcbLib";
     cw->Setup("2.17.."+tmps+"."+pc.footfind);
     glyout->addWidget(cw,1,1,1,1);
     gb->setLayout(glyout);

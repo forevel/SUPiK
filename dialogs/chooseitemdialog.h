@@ -12,10 +12,14 @@ class ChooseItemDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit ChooseItemDialog(QString tble, QString hdr="", bool RootNeeded=false, QWidget *parent = 0);
+    explicit ChooseItemDialog(QWidget *parent = 0);
+    // установка списка выбора по содержимому таблицы
+    bool SetupTable(QString tble, QString hdr="", bool RootNeeded=false);
+    // установка списка выбора по внутренностям файла
+    bool SetupFile(QString Filename, QString StringToFind, QString Str);
     void SetupUI();
     void sortModel();
-    void setTvCurrentText(QString text);
+    void SetTvCurrentText(QString text);
 
 signals:
     void changeshasbeenMade(QString);

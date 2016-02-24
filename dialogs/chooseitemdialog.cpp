@@ -3,6 +3,7 @@
 #include "../widgets/s_tqpushbutton.h"
 #include "../widgets/s_tqlabel.h"
 #include "../widgets/s_tqlineedit.h"
+#include "../widgets/waitwidget.h"
 #include "../gen/s_sql.h"
 #include "../gen/publicclass.h"
 #include "../gen/s_tablefields.h"
@@ -11,6 +12,7 @@
 
 #include <QHBoxLayout>
 #include <QPaintEvent>
+#include <QThread>
 #include <QPainter>
 #include <QPixmap>
 #include <QHeaderView>
@@ -38,10 +40,13 @@ bool ChooseItemDialog::SetupTable(QString tble, QString hdr, bool RootNeeded)
 
 bool ChooseItemDialog::SetupFile(QString Filename, QString StringToFind, QString Str)
 {
+    QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
     SetupUI();
     if (MainModel->SetupFile(Filename, StringToFind) != 0)
         return false;
+    ResizeMainTV();
     SetTvCurrentText(Str);
+    QApplication::restoreOverrideCursor();
     return true;
 }
 

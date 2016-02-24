@@ -39,12 +39,61 @@ void CheckThread::Start()
 
 void CheckThread::MainCheck()
 {
+    QMap<QString, QSqlDatabase> db;
+    QSqlDatabase tmpdb = OpenDB("TLA", "altium");
+    if (!tmpdb.open())
+    {
+        CTHREADER("Не открывается БД");
+        return;
+    }
+    db["alt"]=tmpdb;
+    tmpdb = OpenDB("PUS","supik");
+    if (!tmpdb.open())
+    {
+        CTHREADER("Не открывается БД");
+        return;
+    }
+    db["sup"]=tmpdb;
+    tmpdb = OpenDB("TNE", "enterprise");
+    if (!tmpdb.open())
+    {
+        CTHREADER("Не открывается БД");
+        return;
+    }
+    db["ent"]=tmpdb;
+    tmpdb = OpenDB("VED", "devices");
+    if (!tmpdb.open())
+    {
+        CTHREADER("Не открывается БД");
+        return;
+    }
+    db["dev"]=tmpdb;
+    tmpdb = OpenDB("LOS", "solidworks");
+    if (!tmpdb.open())
+    {
+        CTHREADER("Не открывается БД");
+        return;
+    }
+    db["sol"]=tmpdb;
+    tmpdb = OpenDB("HCS", "schemagee");
+    if (!tmpdb.open())
+    {
+        CTHREADER("Не открывается БД");
+        return;
+    }
+    db["sch"]=tmpdb;
+    tmpdb = OpenDB("NOC", "constructives");
+    if (!tmpdb.open())
+    {
+        CTHREADER("Не открывается БД");
+        return;
+    }
+    db["con"]=tmpdb;
     QStringList fields, values, tmpprob;
-    QString tmpString;
     int i, j, res;
     // 1. проверим таблицы на пустые поля (alias, idalias, <idtble>, <tble>, idpers, date, deleted) и вообще на их наличие
     QStringList databases, tables;
-    databases = pc.db.keys();
+    databases = db.keys();
     PublicClass::ProblemStruct vl;
     if (pc.access & ACC_SYS_WR)
     {
@@ -53,13 +102,13 @@ void CheckThread::MainCheck()
         {
             if (databases.at(i) != "alt") // БД Altium построена по другому принципу
             {
-                tables = sqlc.GetTablesFromDB(pc.db[databases.at(i)]);
+                tables = sqlc.GetTablesFromDB(db[databases.at(i)]);
                 for (j = 0; j < tables.size(); j++)
                 {
                     Wait(50);
                     vl.ProblemTable = databases.at(i) + "." + tables.at(j);
                     vl.ProblemSubType = PublicClass::PST_FIELDMISSED;
-                    values = sqlc.GetColumnsFromTable(pc.db[databases.at(i)], tables.at(j));
+                    values = sqlc.GetColumnsFromTable(db[databases.at(i)], tables.at(j));
                     if (values.indexOf("idpers") == -1)
                     {
                         vl.ProblemField = "idpers";
@@ -88,7 +137,7 @@ void CheckThread::MainCheck()
                     {
                         Wait(50);
                         QString tmps = fields.takeFirst();
-                        res = sqlc.CheckDBForEmptyFields(pc.db[databases.at(i)], tables.at(j), tmps, tmpprob);
+                        res = sqlc.CheckDBForEmptyFields(db[databases.at(i)], tables.at(j), tmps, tmpprob);
                         if (res)
                         {
                             vl.ProblemSubType = PublicClass::PST_FIELDEMPTY;
@@ -191,4 +240,16 @@ void CheckThread::Wait(int msec)
     tme.start();
     while (tme.elapsed() < msec) */
         qApp->processEvents(QEventLoop::AllEvents);
+}
+
+QSqlDatabase CheckThread::OpenDB(QString dbid, QString dbname)
+{
+    QSqlDatabase db;
+    db = QSqlDatabase::addDatabase("QMYSQL", dbid);
+    db.setHostName(pc.SQLPath);
+    db.setDatabaseName(dbname);
+    db.setUserName("supik");
+    db.setPassword("sysupik");
+    db.setPort(3306);
+    return db;
 }

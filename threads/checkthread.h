@@ -43,6 +43,7 @@ signals:
 private:
     void AddProblemToList(PublicClass::ProblemStruct prob);
     void Wait(int msec);
+    QSqlDatabase OpenDB(QString dbid, QString dbname);
 
 private slots:
     void MinuteTest();

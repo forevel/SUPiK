@@ -290,6 +290,7 @@ void TreeModel::SetLastItem(QColor FColor, QColor BColor, QFont Font, QIcon Icon
 int TreeModel::SetupFile(QString Filename, QString StringToFind)
 {
     ClearModel();
+    insertColumns(0,1,QModelIndex());
     TreeType = TT_SIMPLE;
     QString tmpString;
     char *tmpChar;

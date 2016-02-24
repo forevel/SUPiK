@@ -12,14 +12,13 @@ public:
     ~WaitWidget();
     bool Finished;
 
-    void Start();
-    void Stop();
-
 signals:
     void finished();
 
 public slots:
     void SetMessage(QString msg);
+    void Start();
+    void Stop();
 
 private slots:
     void Rotate();

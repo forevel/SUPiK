@@ -1,5 +1,6 @@
 #include <QThread>
 #include <QCoreApplication>
+#include <QRegularExpression>
 #include <QDateTime>
 
 #include "ftp.h"
@@ -32,6 +33,12 @@ bool Ftp::Connect(QString Host)
     TimeoutTimer = new QTimer;
     TimeoutTimer->setInterval(10000);
     connect(TimeoutTimer,SIGNAL(timeout()),this,SLOT(Timeout()));
+    GetComReplyTimer = new QTimer;
+    GetComReplyTimer->setInterval(200); // таймер на получение данных, если за 200 мс ничего не принято, считаем, что посылка закончена, и можно её обрабатывать
+    connect(GetComReplyTimer,SIGNAL(timeout()),this,SLOT(ParseReply()));
+    GetFileTimer = new QTimer;
+    GetFileTimer->setInterval(500); // таймер на получение файлов, если за 500 мс ничего не принято, считаем, что файл окончен
+    connect(GetFileTimer,SIGNAL(timeout()),this,SLOT(GetFileTimerTimeout()));
     MainEthernet = new Ethernet;
     QThread *thr = new QThread;
     MainEthernet->moveToThread(thr);
@@ -272,16 +279,14 @@ bool Ftp::GetFile(QString Filename, QByteArray *ba, int size)
     while (!tmpsl.isEmpty())
     {
         QString tmps = tmpsl.takeFirst();
-        tmps.remove("  "); // дублированные пробелы убираем
-        QStringList tmpsl = tmps.split(" ");
+        QStringList tmpsl = tmps.split(QRegularExpression("\\s+")); // используем любые разделители
         if (tmpsl.size() > 8) // подразумеваем вывод в Unix-стиле
         {
             tmps.clear();
             for (int i=8; i<tmpsl.size(); i++)
                 tmps += tmpsl.at(i) + " ";
-            if (tmps.endsWith(' '))
-                tmps.chop(1);
-            if (tmpsl.at(8) == Filename)
+            tmps.remove(QRegularExpression("\\s+"));
+            if (tmps == Filename)
             {
                 fsize = tmpsl.at(4).toInt();
                 break;
@@ -318,7 +323,7 @@ void Ftp::FtpGet(QByteArray *ba)
         LogFile->write(QString("---SERVER---\n").toLocal8Bit());
         LogFile->write(*BufData);
     }
-    ParseReply();
+    GetComReplyTimer->start();
 }
 
 void Ftp::FileGet(QByteArray *ba)
@@ -332,7 +337,7 @@ void Ftp::FileGet(QByteArray *ba)
         LogFile->write(QString(tmps).toLocal8Bit());
     }
     emit BytesRead(ReadBytes);
-    FileBusy = false;
+    GetFileTimer->start();
     TimeoutTimer->stop();
     if (RcvData != 0)
     {
@@ -342,9 +347,15 @@ void Ftp::FileGet(QByteArray *ba)
     }
 }
 
+void Ftp::GetFileTimerTimeout()
+{
+    FileBusy = false;
+}
+
 void Ftp::ParseReply()
 {
     CmdOk = false;
+    GetComReplyTimer->stop();
     QString FtpResultString = QString::fromLocal8Bit(*BufData);
     BufData->clear();
     QStringList FtpResultStringList = FtpResultString.split("\n");
@@ -426,6 +437,7 @@ void Ftp::ParseReply()
                 return;
             if (FtpResult == FTP_CHANCLOSED)
                 CmdOk = true;
+            FileBusy = false;
             break;
         }
         case CMD_CWD:
@@ -448,6 +460,10 @@ void Ftp::ParseReply()
         }
         case CMD_LIST:
         {
+            if (FtpResult == FTP_CHANCLOSED)
+                CmdOk = true;
+            else
+                CmdOk = false;
             break;
         }
         }

@@ -4,7 +4,6 @@
 #include "../widgets/s_tqpushbutton.h"
 #include "../widgets/s_tqlineedit.h"
 #include "../widgets/s_tqlabel.h"
-#include "../widgets/waitwidget.h"
 #include "../gen/s_sql.h"
 #include "../gen/publicclass.h"
 #include "../gen/s_tablefields.h"
@@ -41,8 +40,7 @@ s_2cdialog::s_2cdialog(QString caption, QWidget *parent) :
 
 void s_2cdialog::setup(QString tble, int Mode, QString id, QString matchtext, bool isQuarantine)
 {
-    WaitWidget *w = new WaitWidget;
-    w->Start();
+    QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
     this->tble.clear();
     this->tble.append(tble);
     this->Mode = Mode;
@@ -56,7 +54,7 @@ void s_2cdialog::setup(QString tble, int Mode, QString id, QString matchtext, bo
     FillHeaderData();
     this->IsQuarantine = isQuarantine;
     result = 0;
-    w->Stop();
+    QApplication::restoreOverrideCursor();
 }
 
 void s_2cdialog::SetupFile(QString Filename, QString StringToFind, QString str)

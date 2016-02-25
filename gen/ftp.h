@@ -89,7 +89,7 @@ signals:
 private:
     QByteArray *BufData, *RcvData, *XmitData;
     Ethernet *MainEthernet, *FileEthernet;
-    QTimer *TimeoutTimer;
+    QTimer *TimeoutTimer, *GetComReplyTimer, *GetFileTimer;
     bool Busy, FileBusy, Connected, FileConnected, CmdOk, CanLog;
     QFile *LogFile;
     QTextStream *LogStream;
@@ -106,8 +106,8 @@ private:
 
     void StartFtp(QString Host, quint16 Port);
     bool StartPASV(int Command, QString Filename = "", QByteArray *ba = 0, int size = 0);
-    void ParseReply();
     bool SendCmd(int Command, QString Args="");
+    QString RemoveSpaces(QString str);
 
 private slots:
     void FtpGet(QByteArray *);
@@ -117,6 +117,8 @@ private slots:
     void Timeout();
     void FtpErr(int error);
     void SetBytesWritten(qint64 bytes);
+    void ParseReply();
+    void GetFileTimerTimeout();
 };
 
 extern Ftp *Ftps;

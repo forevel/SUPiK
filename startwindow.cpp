@@ -227,7 +227,6 @@ void StartWindow::OkPBClicked()
         else
         {
             QByteArray *ba = new QByteArray;
-//            ba->resize(10000);
             if (!Ftps->GetFile("xmHXP_FW~h", ba, 10000))
                 STARTER("Каталог СУПиК недоступен");
             else

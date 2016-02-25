@@ -165,12 +165,12 @@ RESOURCES += \
 
 CONFIG += embed_manifest_exe
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../mysql-5.6.23-win32/lib/ -llibmysql
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../mysql-5.6.23-win32/lib/ -llibmysqld
-else:unix: LIBS += -L$$PWD/../../mysql-5.6.23-win32/lib/ -llibmysql
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../mysql/lib/ -llibmysql
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../mysql/lib/ -llibmysqld
+else:unix: LIBS += -L$$PWD/../../mysql/lib/ -llibmysql
 
-INCLUDEPATH += $$PWD/../../mysql-5.6.23-win32/include
-DEPENDPATH += $$PWD/../../mysql-5.6.23-win32/include
+INCLUDEPATH += $$PWD/../../mysql/include
+DEPENDPATH += $$PWD/../../mysql/include
 
 INCLUDEPATH += $$PWD/../xlsxwriter/src/xlsx
 DEPENDPATH += $$PWD/../xlsxwriter/src/xlsx

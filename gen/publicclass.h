@@ -1,8 +1,6 @@
 ﻿#ifndef PUBLICCLASS_H
 #define PUBLICCLASS_H
 
-#define SUPIK_VERS  "SUPiK v1.0"
-
 #include <QObject>
 
 QT_BEGIN_NAMESPACE
@@ -25,7 +23,7 @@ QT_END_NAMESPACE
 
 #include "publiclang.h"
 
-#define PROGVER    "1.0.296"
+#define PROGVER    "1.0.303"
 
 // Макросы для выдачи сообщений
 #define ERMSG(...)     pc.AddErrMsg(PublicClass::ER_MSG,__VA_ARGS__)

@@ -33,6 +33,7 @@ public:
 
     // условные операции
     QString InsertValuesToTable (QSqlDatabase db, QString tble, QStringList fl, QStringList vl); // вставить в таблицу tble значения vl по полям fl
+    QString InsertValuesSimple (QSqlDatabase db, QString tble, QStringList fl, QStringList vl); // добавление новой пустой записи и возврат нового ИД
     int UpdateValuesInTable (QSqlDatabase db, QString tble, QStringList fl, QStringList vl, QString field, QString value); // обновить данные в полях fl значениями vl, где field = value
     int DeleteFromDB (QSqlDatabase db, QString tble, QString field, QString value); // "удалить" (поставить "deleted"=1) запись, где field=value
     QList<QStringList> SearchInTableLike (QSqlDatabase db, QString tble, QString field, QString regexpstr); // вернуть список из записей, для которых field похож на regexpstr

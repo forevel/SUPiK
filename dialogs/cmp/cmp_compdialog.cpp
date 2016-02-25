@@ -217,12 +217,12 @@ void cmp_compdialog::SlaveItemChoosed(QModelIndex idx)
         COMPINFO("Не выбран раздел в левой части");
         return;
     }
-    StartCompDialog(CompIDs);
+    StartCompDialog(CompIDs, CMPMODE_ED);
 }
 
-void cmp_compdialog::StartCompDialog(QString Id, bool ByExisting)
+void cmp_compdialog::StartCompDialog(QString Id, int Mode, bool ByExisting)
 {
-    cmp_maindialog *dlg = new cmp_maindialog;
+    cmp_maindialog *dlg = new cmp_maindialog(Mode);
     dlg->SetupUI(CompType,CompTble,Id.toInt());
     if (ByExisting)
         dlg->SetID();
@@ -262,7 +262,7 @@ void cmp_compdialog::AddNewItem()
         return;
     }
     Cancelled = false;
-    StartCompDialog(QString::number(CompID));
+    StartCompDialog(QString::number(CompID), CMPMODE_NEW);
     // теперь добавим в перечень номенклатуры, если такового ещё нет
     if (!Cancelled)
         CheckNkAndAdd(CompID);
@@ -278,7 +278,7 @@ void cmp_compdialog::AddNewOnExistingItem()
     }
     QString CompIDs = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole).toString();
     Cancelled = false;
-    StartCompDialog(CompIDs,true); // создаём на базе компонента CompIDs компонент с новым индексом
+    StartCompDialog(CompIDs,CMPMODE_EX,true); // создаём на базе компонента CompIDs компонент с новым индексом
     if (!Cancelled)
         CheckNkAndAdd(CompIDs.toInt());
 }

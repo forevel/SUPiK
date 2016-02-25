@@ -20,8 +20,9 @@
 #include <QVBoxLayout>
 #include <QFont>
 
-cmp_maindialog::cmp_maindialog(QWidget *parent) : QDialog(parent)
+cmp_maindialog::cmp_maindialog(int Mode, QWidget *parent) : QDialog(parent)
 {
+    CompMode = Mode;
     setWindowFlags(Qt::CustomizeWindowHint | Qt::WindowContextHelpButtonHint);
     Changed = PartNumberCreatorEnabled = ChangeEnabled = false;
     RevNotes = 0;
@@ -874,7 +875,10 @@ void cmp_maindialog::WriteAndClose()
     default:
         break;
     }
-    sqlc.UpdateValuesInTable(sqlc.GetDB("alt"),CompTble,fl,vl,"id",CompId);
+    if (CompMode == CMPMODE_ED)
+        sqlc.UpdateValuesInTable(sqlc.GetDB("alt"),CompTble,fl,vl,"id",CompId);
+    else
+        sqlc.InsertValuesSimple(sqlc.GetDB("alt"),CompTble,fl,vl);
     if (sqlc.result)
     {
         CMPWARN;

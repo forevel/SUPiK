@@ -41,7 +41,7 @@ private slots:
     void AddNewItem();
     void AddNewOnExistingItem();
     void DeleteItem();
-    void StartCompDialog(QString Id, bool ByExisting = false);
+    void StartCompDialog(QString Id, int Mode, bool ByExisting = false);
     void SlaveContextMenu(QPoint);
     void EditCancelled();
 

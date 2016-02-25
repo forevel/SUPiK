@@ -610,6 +610,31 @@ QString s_sql::GetLastValueFromTableByField (QSqlDatabase db, QString tble, QStr
     return QString();
 }
 
+// добавление новой пустой записи и возврат нового ИД для БД Altium
+
+QString s_sql::InsertValuesSimple(QSqlDatabase db, QString tble, QStringList fl, QStringList vl)
+{
+    int i;
+    QSqlQuery exec_db (db);
+    QString newID = QString::number(GetNextFreeIndexSimple(db, tble));
+    QString tmpString = "INSERT INTO `" + tble + "` (`id`";
+    for (i = 0; i < fl.size(); i++)
+        tmpString += ",`" + fl.at(i) + "`";
+    tmpString += ") VALUES(\"" + newID + "\"";
+    for (i = 0; i < vl.size(); i++)
+        tmpString += ",\"" + vl.at(i) + "\"";
+    tmpString += ");";
+    exec_db.exec(tmpString);
+    if (exec_db.isActive())
+    {
+        result = 0;
+        return newID; // всё ок
+    }
+    LastError = exec_db.lastError().text();
+    result=2;
+    return QString(); // проблемы с записью
+}
+
 // процедура вставляет новую запись с первым свободным индексом в db:tble, используя имена полей из fl и значения из vl
 
 QString s_sql::InsertValuesToTable(QSqlDatabase db, QString tble, QStringList fl, QStringList vl)

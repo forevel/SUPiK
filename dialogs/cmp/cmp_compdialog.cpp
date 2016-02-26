@@ -266,6 +266,7 @@ void cmp_compdialog::AddNewItem()
     // теперь добавим в перечень номенклатуры, если такового ещё нет
     if (!Cancelled)
         CheckNkAndAdd(CompID);
+    MainItemChoosed(QModelIndex());
 }
 
 void cmp_compdialog::AddNewOnExistingItem()
@@ -281,6 +282,7 @@ void cmp_compdialog::AddNewOnExistingItem()
     StartCompDialog(CompIDs,CMPMODE_EX,true); // создаём на базе компонента CompIDs компонент с новым индексом
     if (!Cancelled)
         CheckNkAndAdd(CompIDs.toInt());
+    MainItemChoosed(QModelIndex());
 }
 
 void cmp_compdialog::DeleteItem()

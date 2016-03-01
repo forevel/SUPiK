@@ -4,6 +4,12 @@
 #
 #-------------------------------------------------
 
+QMAKE_TARGET_COMPANY = EvelSoft
+QMAKE_TARGET_COPYRIGHT = EvelSoft
+QMAKE_TARGET_PRODUCT = SUPiK
+RC_ICONS = res/SUPiK.ico
+VERSION = 1.0.0307
+
 QT       += core gui sql xlsx ftp
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
@@ -11,7 +17,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = SUPiK
 TEMPLATE = app
 
-RC_FILE = SUPiK.rc
+# RC_FILE = SUPiK.rc
 
 SOURCES += main.cpp\
         startwindow.cpp \

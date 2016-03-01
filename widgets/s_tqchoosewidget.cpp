@@ -226,7 +226,7 @@ void s_tqChooseWidget::pbclicked()
         }
         if (Template.isEmpty())
             return;
-        QString filename = QFileDialog::getOpenFileName(this,"Открыть файл","",Template,0,QFileDialog::DontUseNativeDialog);
+        QString filename = QFileDialog::getOpenFileName(this,"Открыть файл","",Template);
         accepted(filename);
         break;
     }

@@ -17,14 +17,15 @@ Ftp::~Ftp()
 
 bool Ftp::Connect(QString Host)
 {
-    LogFile = new QFile("ftp.log");
+/*    LogFile = new QFile("ftp.log");
     if (!LogFile->open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text))
     {
         FTPER("Невозможно создать log-файл");
         CanLog = false;
     }
     else
-        CanLog = true;
+        CanLog = true; */
+    CanLog = false;
     QString tmps = "Log started at " + QDateTime::currentDateTime().toString("dd-MM-yyyy hh:mm:ss");
     if (CanLog)
         LogFile->write(tmps.toLocal8Bit());

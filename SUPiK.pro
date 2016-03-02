@@ -52,7 +52,6 @@ SOURCES += main.cpp\
     widgets/s_maskedle.cpp \
     gen/s_tablefields.cpp \
     gen/ftp.cpp \
-    startwindow.cpp \
     widgets/s_tqsplitter.cpp \
     dialogs/cmp/cmp_compdialog.cpp \
     dialogs/cmp/cmp_maindialog.cpp \
@@ -124,7 +123,6 @@ HEADERS  += startwindow.h \
     widgets/s_colortabwidget.h \
     widgets/s_maskedle.h \
     gen/s_tablefields.h \
-    startwindow.h \
     widgets/s_tqsplitter.h \
     dialogs/cmp/cmp_compdialog.h \
     dialogs/cmp/cmp_maindialog.h \

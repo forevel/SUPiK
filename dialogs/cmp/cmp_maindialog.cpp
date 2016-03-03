@@ -854,6 +854,10 @@ void cmp_maindialog::WriteAndClose()
               "RevNotes" << "Discontinued" << "Description" << "Notes" << "Modify Date" << "Creator" << "prefix" << "isSMD" << \
               "Nominal" << "Unit" << "par4" << "par5";
         vl = GetAltData();
+        fl << "Library Path" << "Footprint Path";
+        QString LPath = pc.PathToLibs + "/Symbols" + CompUrlPrefix + CompTble + ".SchLib";
+        QString FPath = pc.PathToLibs + "/Footprints" + CompUrlPrefix + CompTble + ".PcbLib";
+        vl << LPath << FPath;
         break;
     }
     case CTYPE_SCH:

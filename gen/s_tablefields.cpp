@@ -57,7 +57,7 @@ QStringList s_tablefields::htovlc(QString tble, QString header, QString cheader,
     QString db = sl.at(0).split(".").at(0);
     tble = sl.at(0).split(".").at(1);
     QStringList tmpsl = sqlc.GetValuesFromTableByColumnAndField(sqlc.GetDB(db), tble, sl.at(1), cl.at(1), value);
-    if ((sqlc.result) || tmpsl.isEmpty())
+    if (sqlc.result) // || tmpsl.isEmpty())
     {
         result = 1;
         TFWARN(sqlc.LastError);

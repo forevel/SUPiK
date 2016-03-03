@@ -4,6 +4,12 @@
 #
 #-------------------------------------------------
 
+QMAKE_TARGET_COMPANY = EvelSoft
+QMAKE_TARGET_COPYRIGHT = EvelSoft
+QMAKE_TARGET_PRODUCT = SUPiK
+RC_ICONS = res/SUPiK.ico
+VERSION = 1.0.0307
+
 QT       += core gui sql xlsx ftp
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
@@ -11,7 +17,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = SUPiK
 TEMPLATE = app
 
-RC_FILE = SUPiK.rc
+# RC_FILE = SUPiK.rc
 
 SOURCES += main.cpp\
         startwindow.cpp \
@@ -46,7 +52,6 @@ SOURCES += main.cpp\
     widgets/s_maskedle.cpp \
     gen/s_tablefields.cpp \
     gen/ftp.cpp \
-    startwindow.cpp \
     widgets/s_tqsplitter.cpp \
     dialogs/cmp/cmp_compdialog.cpp \
     dialogs/cmp/cmp_maindialog.cpp \
@@ -118,7 +123,6 @@ HEADERS  += startwindow.h \
     widgets/s_colortabwidget.h \
     widgets/s_maskedle.h \
     gen/s_tablefields.h \
-    startwindow.h \
     widgets/s_tqsplitter.h \
     dialogs/cmp/cmp_compdialog.h \
     dialogs/cmp/cmp_maindialog.h \

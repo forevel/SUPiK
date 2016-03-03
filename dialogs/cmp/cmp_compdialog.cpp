@@ -218,6 +218,7 @@ void cmp_compdialog::SlaveItemChoosed(QModelIndex idx)
         return;
     }
     StartCompDialog(CompIDs, CMPMODE_ED);
+    CheckNkAndAdd(CompIDs.toInt());
 }
 
 void cmp_compdialog::StartCompDialog(QString Id, int Mode, bool ByExisting)
@@ -266,6 +267,7 @@ void cmp_compdialog::AddNewItem()
     // теперь добавим в перечень номенклатуры, если такового ещё нет
     if (!Cancelled)
         CheckNkAndAdd(CompID);
+    MainItemChoosed(QModelIndex());
 }
 
 void cmp_compdialog::AddNewOnExistingItem()
@@ -281,6 +283,7 @@ void cmp_compdialog::AddNewOnExistingItem()
     StartCompDialog(CompIDs,CMPMODE_EX,true); // создаём на базе компонента CompIDs компонент с новым индексом
     if (!Cancelled)
         CheckNkAndAdd(CompIDs.toInt());
+    MainItemChoosed(QModelIndex());
 }
 
 void cmp_compdialog::DeleteItem()
@@ -342,43 +345,49 @@ void cmp_compdialog::CheckNkAndAdd(int id)
     cmpvl.insert(0, vl.at(0)); // вставка перед производителем наименования компонента
     QStringList nkidsl = tfl.valuesbyfields("Номенклатура_полн",fl,cmpfl,cmpvl);
     QString tmps;
-    if (tfl.result) // нет такого или ошибка
+    QString ManufId = cmpvl.at(1);
+    if ((tfl.result) || (nkidsl.isEmpty())) // нет такого или ошибка
     {
-        // создаём новый элемент в БД карантинной номенклатуры
-        QString newID = tfl.insert("Номенклатура карантин_полн");
-        // найдём сначала описание категории в таблице описания для данной БД
-        fl = QStringList() << "Описание";
-        tmps = QString::number(CompTble); // убираем старшие незначащие нули
-        QStringList sl = tfl.valuesbyfield(CompLetter+"Компоненты_описание_полн",fl,"ИД",tmps); // взяли имя таблицы в БД, описание которой выбрали в главной таблице
-        if (tfl.result)
+        nkidsl = tfl.valuesbyfields("Номенклатура карантин_полн",fl,cmpfl,cmpvl);
+        if (nkidsl.isEmpty())
         {
-            COMPWARN;
-            return;
-        }
-        // теперь возьмём ИД в таблице категорий
-        fl = QStringList() << "ИД";
-        if (!sl.isEmpty())
-            tmps = sl.at(0);
-        else
-        {
-            COMPWARN;
-            return;
-        }
-        sl = tfl.valuesbyfield("Категории_сокращ",fl,"Наименование",tmps);
-        if ((tfl.result) || (sl.isEmpty()))
-        {
-            COMPWARN;
-            return;
-        }
-        fl = QStringList() << "ИД" << "Наименование" << "Категория" << "Производитель" << ElementString;
-        vl.insert(1,sl.at(0)); // vl уже содержит PartNumber (0) и Manufacturer (1), вставляем ИД категории
-        vl.append(QString::number(id)); // добавляем ИД компонента по его БД
-        vl.insert(0, newID);
-        tfl.idtois("Номенклатура карантин_полн", fl, vl);
-        if (tfl.result)
-        {
-            COMPWARN;
-            return;
+            // создаём новый элемент в БД карантинной номенклатуры
+            QString newID = tfl.insert("Номенклатура карантин_полн");
+            // найдём сначала описание категории в таблице описания для данной БД
+            fl = QStringList() << "Описание";
+            tmps = QString::number(CompTble); // убираем старшие незначащие нули
+            QStringList sl = tfl.valuesbyfield(CompLetter+"Компоненты_описание_полн",fl,"ИД",tmps); // взяли имя таблицы в БД, описание которой выбрали в главной таблице
+            if (tfl.result)
+            {
+                COMPWARN;
+                return;
+            }
+            // теперь возьмём ИД в таблице категорий
+            fl = QStringList() << "ИД";
+            if (!sl.isEmpty())
+                tmps = sl.at(0);
+            else
+            {
+                COMPWARN;
+                return;
+            }
+            sl = tfl.valuesbyfield("Категории_сокращ",fl,"Наименование",tmps);
+            if ((tfl.result) || (sl.isEmpty()))
+            {
+                COMPWARN;
+                return;
+            }
+            fl = QStringList() << "ИД" << "Наименование" << "Категория" << "Производитель" << ElementString;
+            vl.insert(1,sl.at(0)); // vl уже содержит PartNumber (0) и Manufacturer (1), вставляем ИД категории
+            vl.append(QString::number(id)); // добавляем ИД компонента по его БД
+            vl.insert(0, newID);
+            vl.replace(3, ManufId); // меняем наименование производителя на его ИД
+            tfl.idtois("Номенклатура карантин_полн", fl, vl);
+            if (tfl.result)
+            {
+                COMPWARN;
+                return;
+            }
         }
     }
     else

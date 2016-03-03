@@ -29,8 +29,6 @@ void sys_settingsdialog::paintEvent(QPaintEvent *event)
 
 void sys_settingsdialog::SetupUI ()
 {
-    QString tmps = "Супик "+QString(PROGVER);
-    setWindowTitle(tmps);
     setMinimumSize(QSize(384, 194));
     setMaximumSize(QSize(16661, 11616));
     QIcon qssdIcon;

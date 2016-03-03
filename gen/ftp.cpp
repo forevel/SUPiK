@@ -70,7 +70,7 @@ void Ftp::Disconnect()
 {
     SendCmd(CMD_QUIT);
     MainEthernet->Stop();
-    LogFile->close();
+//    LogFile->close();
 }
 
 bool Ftp::SendCmd(int Command, QString Args)

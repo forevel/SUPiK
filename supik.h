@@ -21,6 +21,7 @@
 #define SUPIKINFO(a)  INFOMSG(PublicClass::ER_SUPIK, __LINE__, a)
 #define SUPIKWARN     WARNMSG(PublicClass::ER_SUPIK,__LINE__)
 
+#define PROGVER    "1.0.308"
 
 #define SYSSTYLESHEET "background-image: url(:/res/SysWallpaper.png);"
 

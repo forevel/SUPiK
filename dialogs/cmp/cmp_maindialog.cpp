@@ -856,7 +856,9 @@ void cmp_maindialog::WriteAndClose()
         vl = GetAltData();
         fl << "Library Path" << "Footprint Path";
         QString LPath = pc.PathToLibs + "/Symbols" + CompUrlPrefix + CompTble + ".SchLib";
+        LPath.replace("/","\\\\");
         QString FPath = pc.PathToLibs + "/Footprints" + CompUrlPrefix + CompTble + ".PcbLib";
+        FPath.replace("/","\\\\");
         vl << LPath << FPath;
         break;
     }

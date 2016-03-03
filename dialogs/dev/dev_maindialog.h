@@ -31,6 +31,9 @@ private slots:
     int Fill(QString DevID);
     void SetDecimalByManuf(QVariant Manuf);
     void SetClassByManuf(QVariant Class);
+    void History();
+    void Objects();
+    void Trips();
 
 protected:
     void paintEvent(QPaintEvent *);

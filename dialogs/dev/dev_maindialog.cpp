@@ -140,6 +140,67 @@ void DevMainDialog::SetupUI()
     line->setFrameShadow(QFrame::Sunken);
     lyout->addWidget(line);
 
+    QGridLayout *glyout = new QGridLayout;
+    s_tqGroupBox *gb = new s_tqGroupBox;
+    gb->setTitle("Схемы");
+    gb->setObjectName("sch");
+    gb->setMinimumHeight(70);
+    glyout->addWidget(gb, 0, 0, 1, 1);
+    gb = new s_tqGroupBox;
+    gb->setTitle("Чертежи");
+    gb->setObjectName("chert");
+    gb->setMinimumHeight(70);
+    glyout->addWidget(gb, 0, 1, 1, 1);
+    gb = new s_tqGroupBox;
+    gb->setTitle("Изготовление");
+    gb->setObjectName("izg");
+    gb->setMinimumHeight(70);
+    glyout->addWidget(gb, 0, 2, 1, 1);
+
+    gb = new s_tqGroupBox;
+    gb->setTitle("Проектные");
+    gb->setObjectName("pr");
+    gb->setMinimumHeight(70);
+    glyout->addWidget(gb, 1, 0, 1, 1);
+    gb = new s_tqGroupBox;
+    gb->setTitle("Эксплуатационные");
+    gb->setObjectName("eksp");
+    gb->setMinimumHeight(70);
+    glyout->addWidget(gb, 1, 1, 1, 1);
+    gb = new s_tqGroupBox;
+    gb->setTitle("Прогр. обесп.");
+    gb->setObjectName("po");
+    gb->setMinimumHeight(70);
+    glyout->addWidget(gb, 1, 2, 1, 1);
+
+    gb = new s_tqGroupBox;
+    gb->setTitle("Модели");
+    gb->setObjectName("mod");
+    gb->setMinimumHeight(70);
+    glyout->addWidget(gb, 2, 0, 1, 1);
+    gb = new s_tqGroupBox;
+    gb->setTitle("");
+    gb->setEnabled(false);
+    gb->setMinimumHeight(70);
+    glyout->addWidget(gb, 2, 1, 1, 1);
+    gb = new s_tqGroupBox;
+    gb->setTitle("");
+    gb->setEnabled(false);
+    gb->setMinimumHeight(70);
+    glyout->addWidget(gb, 2, 2, 1, 1);
+    lyout->addLayout(glyout);
+
+    pb = new s_tqPushButton("История");
+    connect(pb,SIGNAL(clicked()),this,SLOT(History()));
+    lyout->addWidget(pb);
+
+    pb = new s_tqPushButton("Объекты");
+    connect(pb,SIGNAL(clicked()),this,SLOT(Objects()));
+    lyout->addWidget(pb);
+
+    pb = new s_tqPushButton("Командировки");
+    connect(pb,SIGNAL(clicked()),this,SLOT(Trips()));
+    lyout->addWidget(pb);
 
     setLayout(lyout);
     Refresh();
@@ -270,4 +331,19 @@ void DevMainDialog::SetDecimalByManuf(QVariant Manuf)
     tmpsl.replace(0, ManufDecimal);
     tmps=tmpsl.join(".");
     le->setText(tmps);
+}
+
+void DevMainDialog::History()
+{
+
+}
+
+void DevMainDialog::Objects()
+{
+
+}
+
+void DevMainDialog::Trips()
+{
+
 }

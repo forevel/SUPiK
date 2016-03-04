@@ -407,6 +407,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
                 return;
         }
         // нет ссылки или она неправильная, записываем её методом обновления
+        ElementSl.removeFirst(); // убираем первый пустой элемент, т.к. он был создан только для корректных индексов и уже не нужен
         // 1. Взять все значения, где ИД = nkidsl.at(0)
         QStringList sl = QStringList() << "Наименование" << "Категория" << "Производитель" << ElementSl;
         QStringList vl = tfl.valuesbyfield("Номенклатура_полн",sl,"ИД",nkidsl.at(0));

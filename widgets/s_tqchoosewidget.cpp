@@ -200,9 +200,8 @@ void s_tqChooseWidget::pbclicked()
     }
     case FW_SPECIAL:
     {
-        s_2tdialog *dlg = new s_2tdialog;
         QStringList tmpsl = QStringList() << ff.link.at(0) << ff.link.at(1);
-        dlg->Setup(tmpsl, le->text());
+        s_2tdialog *dlg = new s_2tdialog(tmpsl, le->text());
         connect(dlg,SIGNAL(finished(QString)),this,SLOT(accepted(QString)));
         dlg->exec();
         break;
@@ -247,6 +246,11 @@ void s_tqChooseWidget::accepted(QString str)
     if (le == 0)
         return;
     PublicClass::ValueStruct vs = tfl.idtov(pc.getlinksfromFF(ff),str);
+/*    QStringList tmpsl = vs.Value.split(".");
+    if (tmpsl.size()>1) // ИД с индексом таблицы
+        le->setText(QString::number(tmpsl.at(1).toInt()));
+    else
+        le->setText(QString::number(vs.Value.toInt())); */
     le->setText(vs.Value);
     emit textchanged(QVariant(vs.Value));
 }

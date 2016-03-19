@@ -5,15 +5,12 @@
 #include "../../gen/s_tablefields.h"
 #include "../../gen/publicclass.h"
 #include "../../widgets/s_tqlabel.h"
-#include "../../widgets/s_tqtreeview.h"
 #include "../../widgets/treeview.h"
 #include "../../widgets/s_tqframe.h"
-#include "../../widgets/s_tqtableview.h"
 #include "../../widgets/s_tqsplitter.h"
-#include "../../models/s_duniversal.h"
 #include "../../models/griddelegate.h"
-#include "../../models/s_ntmodel.h"
-#include "../../models/s_ncmodel.h"
+#include "../../widgets/s_tqstackedwidget.h"
+#include "../../widgets/s_tqwidget.h"
 
 #include <QApplication>
 #include <QPainter>
@@ -35,6 +32,11 @@ dir_maindialog::dir_maindialog(QString tble, QWidget *parent) :
 
 void dir_maindialog::SetupUI()
 {
+    QVBoxLayout *mlyout = new QVBoxLayout;
+    s_tqStackedWidget *cw = new s_tqStackedWidget;
+    cw->setObjectName("cw");
+    s_tqWidget *wdgt = new s_tqWidget;
+    wdgt->setAttribute(Qt::WA_DeleteOnClose,true);
     QVBoxLayout *lyout = new QVBoxLayout;
     QHBoxLayout *hlyout = new QHBoxLayout;
     s_tqPushButton *pb = new s_tqPushButton;
@@ -65,15 +67,9 @@ void dir_maindialog::SetupUI()
     lyout->addLayout(hlyout);
 
     TreeView *SlaveTV = new TreeView(TreeView::TV_PLAIN);
-//    s_tqTableView *MainTV = new s_tqTableView;
     TreeView *MainTV = new TreeView(TreeView::TV_PLAIN);
-//    MainTableModel = new s_ncmodel;
     MainTableModel = new TreeModel;
-//    MainProxyModel = new ProxyModel;
-//    MainProxyModel->setSourceModel(MainTableModel);
     SlaveTreeModel = new TreeModel;
-//    SlaveProxyModel = new ProxyModel;
-//    SlaveProxyModel->setSourceModel(SlaveTreeModel);
     MainTV->setObjectName("MainTV");
     SlaveTV->setObjectName("SlaveTV");
     SlaveTV->setModel(SlaveTreeModel);
@@ -83,7 +79,6 @@ void dir_maindialog::SetupUI()
 
     QApplication::setOverrideCursor(Qt::WaitCursor);
     if (MainTableModel->Setup(MainTable+"_сокращ"))
-//    if (MainTableModel->result)
     {
         DIRMER("Ошибка при построении таблицы "+MainTable);
         QApplication::restoreOverrideCursor();
@@ -92,18 +87,16 @@ void dir_maindialog::SetupUI()
     MainTV->setModel(MainTableModel);
     MainTV->horizontalHeader()->setVisible(false);
     MainTV->verticalHeader()->setVisible(false);
-//    s_duniversal *gridItemDelegate = new s_duniversal;
     GridDelegate *MainDelegate = new GridDelegate;
     MainTV->setItemDelegate(MainDelegate);
     SlaveTV->setItemDelegate(MainDelegate);
-//    MainProxyModel->sort(1, Qt::AscendingOrder);
     MainTV->resizeColumnsToContents();
     MainTV->resizeRowsToContents();
     QApplication::restoreOverrideCursor();
     MainTV->setContextMenuPolicy(Qt::CustomContextMenu);
     SlaveTV->setContextMenuPolicy(Qt::CustomContextMenu);
     connect (MainTV, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(mainContextMenu(QPoint)));
-    connect(MainTV, SIGNAL(clicked(QModelIndex)), this, SLOT(showDirDialog(QModelIndex)));
+    connect(MainTV, SIGNAL(clicked(QModelIndex)), this, SLOT(ShowSlave(QModelIndex)));
     connect (SlaveTV, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(SystemSlaveContextMenu(QPoint)));
     connect (SlaveTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(EditItem()));
 
@@ -121,7 +114,10 @@ void dir_maindialog::SetupUI()
     spl->addWidget(right);
     spl->setOrientation(Qt::Horizontal);
     lyout->addWidget(spl, 90);
-    setLayout(lyout);
+    wdgt->setLayout(lyout);
+    cw->addWidget(wdgt);
+    mlyout->addWidget(cw);
+    setLayout(mlyout);
 }
 
 void dir_maindialog::paintEvent(QPaintEvent *e)
@@ -132,7 +128,7 @@ void dir_maindialog::paintEvent(QPaintEvent *e)
     e->accept();
 }
 
-void dir_maindialog::showDirDialog(QModelIndex idx)
+void dir_maindialog::ShowSlave(QModelIndex idx)
 {
     Q_UNUSED(idx);
     QString tmpString = getMainIndex(1);
@@ -193,7 +189,6 @@ void dir_maindialog::ShowSlaveTree(QString str)
 
 QString dir_maindialog::getMainIndex(int column)
 {
-//    s_tqTableView *MainTV = this->findChild<s_tqTableView *>("MainTV");
     TreeView *MainTV = this->findChild<TreeView *>("MainTV");
     if (MainTV == 0)
     {
@@ -203,6 +198,7 @@ QString dir_maindialog::getMainIndex(int column)
     QString tmpString = MainTV->model()->index(MainTV->currentIndex().row(), column, QModelIndex()).data(Qt::DisplayRole).toString();
     if (!column) // в нулевом столбце всегда ИД элемента с нулями в начале, надо незначащие нули убрать
         tmpString = QString::number(tmpString.toInt(0));
+    tmpString.remove(QChar(0xFFFF));
     return tmpString;
 }
 
@@ -216,6 +212,7 @@ QString dir_maindialog::getSlaveIndex(int column)
         return QString();
     }
     tmpString = SlaveTV->model()->index(SlaveTV->currentIndex().row(), column, QModelIndex()).data(Qt::DisplayRole).toString();
+    tmpString.remove(QChar(0xFFFF));
     return tmpString;
 }
 
@@ -261,10 +258,15 @@ void dir_maindialog::EditItem(QString str)
         Id = QString::number(str.toInt());
     }
     QString SecondPart = getSlaveIndex(1);
-    SecondPart.remove(QChar(0xFFFF));
+    s_tqStackedWidget *cw = this->findChild<s_tqStackedWidget *>("cw");
+    if (cw == 0)
+    {
+        DIRMWARN;
+        return;
+    }
     s_2cdialog *newdialog = new s_2cdialog(tmps+":"+SecondPart);
     int Mode = (isNewID) ? MODE_EDITNEW : MODE_EDIT;
-    newdialog->setup(Table+"_полн",Mode,Id);
+    newdialog->setup(Table+"_полн",Mode,Id,IsQuarantine);
     if (newdialog->result)
         DIRMWARN;
     else
@@ -365,7 +367,7 @@ void dir_maindialog::EditDirDialog()
 void dir_maindialog::mainContextMenu(QPoint)
 {
     QAction *OpenAction = new QAction("Открыть", this);
-    connect (OpenAction, SIGNAL(triggered()), this, SLOT(showDirDialog()));
+    connect (OpenAction, SIGNAL(triggered()), this, SLOT(ShowSlave()));
     QAction *EditAction = new QAction("Редактировать справочник", this);
     connect (EditAction, SIGNAL(triggered()), this, SLOT(EditDirDialog()));
     QAction *AddAction = new QAction("Добавить справочник", this);

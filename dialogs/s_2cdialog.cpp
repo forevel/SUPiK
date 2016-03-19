@@ -38,7 +38,7 @@ s_2cdialog::s_2cdialog(QString caption, QWidget *parent) :
     setAttribute(Qt::WA_DeleteOnClose);
 }
 
-void s_2cdialog::setup(QString tble, int Mode, QString id, QString matchtext, bool isQuarantine)
+void s_2cdialog::setup(QString tble, int Mode, QString id, bool isQuarantine)
 {
     QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
     this->tble.clear();
@@ -48,6 +48,7 @@ void s_2cdialog::setup(QString tble, int Mode, QString id, QString matchtext, bo
     setupUI();
     if (MainModel->Setup(tble, id))
     {
+        QApplication::restoreOverrideCursor();
         CD2WARN;
         return;
     }

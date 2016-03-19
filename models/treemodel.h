@@ -39,6 +39,7 @@ public:
     int Setup(QStringList Tables, int Type=TT_TYPE1);
     int Setup(QString Table);
     int SetupFile(QString Filename, QString StringToFind);
+    int SetupRaw(QString db, QString tble);
     void Refresh();
     bool HaveChildren(int row);
     void SetLastItem(QColor FColor, QColor BColor, QFont Font, QIcon Icon, QString AData="0");
@@ -85,7 +86,7 @@ private:
     int TablesNum; // количество таблиц, участвующих в работе
     QStack<QString> RootIDs; // элементы записываются в виде: <номер_таблицы>.<ИД>
     int Indentation;
-    bool IsEditable;
+    bool IsEditable, IsRaw;
 
     int BuildTree ();
     int SetFirstTreeElements();

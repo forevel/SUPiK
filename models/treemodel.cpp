@@ -376,6 +376,32 @@ int TreeModel::Setup(QStringList Tables, int Type)
     return 0;
 }
 
+// инициализация таблицы по реальным именам в БД
+
+int TreeModel::SetupRaw(QString db, QString tble)
+{
+    ClearModel();
+    IsRaw = true;
+    QStringList TableHeadersSl = QStringList() << "id" << "PartNumber";
+    QStringList TableLinksSl = QStringList() << "4.19..7" << "1.8";
+    TableHeaders.append(TableHeadersSl);
+    TableLinks.append(TableLinksSl);
+    TableIsTree.append(false);
+    DBs.append(db);
+    Tables.append(tble);
+    TablesNum++; // количество таблиц увеличиваем
+    TreeType = TT_SIMPLE;
+    for (int i = columnCount(); i < TableHeadersSl.size(); i++) // добавим нехватающее количество столбцов в общую модель
+        insertColumns(i,1,QModelIndex());
+
+    if (BuildTree()) // элементы записываются в виде: <номер_таблицы>.<ИД>
+    {
+        TMODELWARN("");
+        return 1;
+    }
+    return 0;
+}
+
 int TreeModel::PrepareTable(QString Table)
 {
     if (Table.isEmpty())
@@ -575,9 +601,10 @@ int TreeModel::SetTree(int Table, QString Id)
     QString IndentSpaces;
     IndentSpaces.fill(0xFFFF, Indentation);
     QStringList tmpsl = TableHeaders.at(Table);
-    tmpsl.insert(0, "id"+Tables.at(Table));
+    if (!IsRaw)
+        tmpsl.insert(0, "id"+Tables.at(Table));
     QList<QStringList> vl = sqlc.GetMoreValuesFromTableByField(sqlc.GetDB(DBs.at(Table)), Tables.at(Table), tmpsl, "idalias", Id, Tables.at(Table));
-    if (sqlc.result)
+    if (sqlc.result == 2) // пустой ответ вполне имеет право быть, т.к. есть ещё проверка на подчинённые таблицы с данным ИД
     {
         TMODELWARN(sqlc.LastError);
         return 1;
@@ -588,18 +615,18 @@ int TreeModel::SetTree(int Table, QString Id)
         QString RootId = tmpsl.at(0);
         QString tmps = QString::number(Table)+"."+QString("%1").arg(RootId.toInt(0), 7, 10, QChar('0')); // добавка нулей
         tmps.insert(0, IndentSpaces);
-        QList<PublicClass::ValueStruct> vl;
+        QList<PublicClass::ValueStruct> vsl;
         PublicClass::ValueStruct tmpvl;
         tmpvl.Type = VS_STRING;
         tmpvl.Value = tmps;
-        vl.append(tmpvl);
+        vsl.append(tmpvl);
         for (int j=1; j<tmpsl.size(); j++)
         {
             PublicClass::ValueStruct tmpvl = tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j));
             tmpvl.Value.insert(0, IndentSpaces);
-            vl.append(tmpvl);
+            vsl.append(tmpvl);
         }
-        AddItemToTree(vl);
+        AddItemToTree(vsl);
         // проверка наличия потомков у элемента
         tmps = sqlc.GetValueFromTableByField(sqlc.GetDB(DBs.at(Table)), Tables.at(Table), Tables.at(Table), "idalias", RootId);
         if (sqlc.result == SQLC_FAILED)
@@ -608,10 +635,25 @@ int TreeModel::SetTree(int Table, QString Id)
             return 1;
         }
         // если есть хотя бы один потомок, надо ставить "книжку"
-        if (tmps.isEmpty()) // нет потомков
-            SetLastItem(Colors[0],Qt::transparent,Fonts[4],Icons[0],TM_SIMPLE_ELEMENT);
-        else
+        if (!tmps.isEmpty()) // есть потомки
             SetLastItem(Colors[4],Qt::transparent,Fonts[4],Icons[3],TM_ELEMENT_WITH_CHILDREN); // закрытая книга
+        else // нет потомков в своей таблице - надо покопаться в подчинённой
+        {
+            int NextTable = Table+1;
+            if (NextTable < TablesNum) // есть ещё таблицы
+            {
+                if (IsRaw)
+                    tmps = sqlc.GetValueFromTableByField(sqlc.GetDB(DBs.at(NextTable)), Tables.at(NextTable),"id","id"+Tables.at(Table), RootId);
+                else
+                    tmps = sqlc.GetValueFromTableByField(sqlc.GetDB(DBs.at(NextTable)), Tables.at(NextTable),"id"+Tables.at(NextTable),"id"+Tables.at(Table), RootId);
+                if (!tmps.isEmpty())
+                    SetLastItem(Colors[4],Qt::transparent,Fonts[4],Icons[3],TM_ELEMENT_WITH_CHILDREN); // закрытая книга
+                else
+                    SetLastItem(Colors[0],Qt::transparent,Fonts[4],Icons[0],TM_SIMPLE_ELEMENT);
+            }
+            else
+                SetLastItem(Colors[0],Qt::transparent,Fonts[4],Icons[0],TM_SIMPLE_ELEMENT);
+        }
     }
     return 0;
 }
@@ -624,8 +666,9 @@ int TreeModel::SetTable(int Table, QString Id)
         IndentSpaces.fill(0xFFFF, Indentation);
         QString MainTable = Tables.at(Table);
         QStringList tmpsl = TableHeaders.at(Table);
-        tmpsl.insert(0, "id"+MainTable);
-        QList<QStringList> vl = sqlc.GetMoreValuesFromTableByField(sqlc.GetDB(DBs.at(Table)), MainTable, tmpsl, "deleted", "0", MainTable);
+        if (!IsRaw)
+            tmpsl.insert(0, "id"+MainTable);
+        QList<QStringList> vl = sqlc.GetMoreValuesFromTableByField(sqlc.GetDB(DBs.at(Table)), MainTable, tmpsl, "deleted", "0", tmpsl.at(0));
         if (sqlc.result)
         {
             TMODELWARN(sqlc.LastError);
@@ -654,10 +697,11 @@ int TreeModel::SetTable(int Table, QString Id)
             // проверка наличия потомков у элемента
             if (NewTableExist) // если дальше ещё есть таблицы
             {
+                QString NewTableId = (IsRaw) ? "id" : "id"+Tables.at(NewTable+1);
                 if ((TreeType == TT_TYPE2) && (Tables.size() >= (NewTable+1)))
-                    tmps = sqlc.GetValueFromTableByField(sqlc.GetDB(DBs.at(NewTable+1)), Tables.at(NewTable+1), "id"+Tables.at(NewTable+1), "id"+MainTable, RootId);
+                    tmps = sqlc.GetValueFromTableByField(sqlc.GetDB(DBs.at(NewTable+1)), Tables.at(NewTable+1), NewTableId, "id"+MainTable, RootId);
                 else
-                    tmps = sqlc.GetValueFromTableByField(sqlc.GetDB(DBs.at(NewTable)), Tables.at(NewTable), "id"+Tables.at(NewTable), "id"+MainTable, RootId);
+                    tmps = sqlc.GetValueFromTableByField(sqlc.GetDB(DBs.at(NewTable)), Tables.at(NewTable), NewTableId, "id"+MainTable, RootId);
                 if (sqlc.result == SQLC_FAILED)
                 {
                     TMODELWARN(sqlc.LastError);
@@ -681,8 +725,9 @@ int TreeModel::SetNextTree(int Table, QString Id)
     QString IndentSpaces;
     IndentSpaces.fill(0xFFFF, Indentation);
     QStringList tmpsl = TableHeaders.at(Table);
-    tmpsl.insert(0, "id"+Tables.at(Table));
-    QList<QStringList> vl = sqlc.GetMoreValuesFromTableByField(sqlc.GetDB(DBs.at(Table)), Tables.at(Table), tmpsl, "id"+Tables.at(Table-1), Id, Tables.at(Table));
+    if (!IsRaw)
+        tmpsl.insert(0, "id"+Tables.at(Table));
+    QList<QStringList> vl = sqlc.GetMoreValuesFromTableByField(sqlc.GetDB(DBs.at(Table)), Tables.at(Table), tmpsl, "id"+Tables.at(Table-1), Id, tmpsl.at(0));
     if (sqlc.result)
     {
         TMODELWARN(sqlc.LastError);
@@ -737,10 +782,11 @@ int TreeModel::SetNextTable(int Table, QString Id)
             return 1;
         }
         tmpsl = TableHeaders.at(Table+1);
-        tmpsl.insert(0, "id"+Tables.at(Table+1));
+        if (!IsRaw)
+            tmpsl.insert(0, "id"+Tables.at(Table+1));
         if (tmpsl.indexOf("id"+Tables.at(Table)) == -1)
             tmpsl.append("id"+Tables.at(Table));
-        vl = sqlc.GetMoreValuesFromTableByField(sqlc.GetDB(DBs.at(Table+1)), Tables.at(Table+1), tmpsl, "id"+Tables.at(Table-1), Id, Tables.at(Table+1));
+        vl = sqlc.GetMoreValuesFromTableByField(sqlc.GetDB(DBs.at(Table+1)), Tables.at(Table+1), tmpsl, "id"+Tables.at(Table-1), Id, tmpsl.at(0));
         if (sqlc.result)
         {
             TMODELWARN(sqlc.LastError);
@@ -760,7 +806,8 @@ int TreeModel::SetNextTable(int Table, QString Id)
                 idsl << vl.at(i).at(tmpidx);
         }
         tmpsl = TableHeaders.at(Table);
-        tmpsl.insert(0, "id"+Tables.at(Table));
+        if (!IsRaw)
+            tmpsl.insert(0, "id"+Tables.at(Table));
         for (int i=0; i<idsl.size(); i++)
         {
             QStringList sl = sqlc.GetValuesFromTableByField(sqlc.GetDB(DBs.at(Table)), Tables.at(Table), tmpsl, "id"+Tables.at(Table), idsl.at(i));
@@ -790,8 +837,9 @@ int TreeModel::SetNextTable(int Table, QString Id)
     {
         MainTable = Tables.at(Table);
         tmpsl = TableHeaders.at(Table);
-        tmpsl.insert(0, "id"+Tables.at(Table));
-        vl = sqlc.GetMoreValuesFromTableByField(sqlc.GetDB(DBs.at(Table)), Tables.at(Table), tmpsl, "id"+Tables.at(Table-1), Id, Tables.at(Table));
+        if (!IsRaw)
+            tmpsl.insert(0, "id"+Tables.at(Table));
+        vl = sqlc.GetMoreValuesFromTableByField(sqlc.GetDB(DBs.at(Table)), Tables.at(Table), tmpsl, "id"+Tables.at(Table-1), Id, tmpsl.at(0));
         if (sqlc.result == 2)
         {
             TMODELWARN(sqlc.LastError);
@@ -868,6 +916,7 @@ void TreeModel::ClearModel()
     TableHeaders.clear();
     TableLinks.clear();
     TableIsTree.clear();
+    IsRaw = false;
     endResetModel();
 }
 

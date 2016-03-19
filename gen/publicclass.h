@@ -171,9 +171,9 @@ public:
         map.insert(ER_CHWDG, QString::fromLocal8Bit("Строка_выбора"));
         map.insert(ER_SYSMENU, QString::fromLocal8Bit("Ред_сист_меню"));
         map.insert(ER_SYSDIR, QString::fromLocal8Bit("Ред_сист_справ"));
-        map.insert(ER_2TDLG, QString::fromLocal8Bit("Диалог_2_дерева"));
-        map.insert(ER_2CTDLG, QString::fromLocal8Bit("Диалог_дерево"));
-        map.insert(ER_2CDLG, QString::fromLocal8Bit("Диалог_таблица"));
+        map.insert(ER_2TDLG, QString::fromLocal8Bit("Д_2_табл"));
+        map.insert(ER_2CTDLG, QString::fromLocal8Bit("Д_дерево"));
+        map.insert(ER_2CDLG, QString::fromLocal8Bit("Д_таблица"));
         map.insert(ER_NCMODEL, QString::fromLocal8Bit("Модель_таблица"));
         map.insert(ER_NTMODEL, QString::fromLocal8Bit("Модель_дерево"));
         map.insert(ER_TFIELD, QString::fromLocal8Bit("Таблицы"));
@@ -189,7 +189,7 @@ public:
         map.insert(ER_CHIDLG, QString::fromLocal8Bit("Выбор_элем_диалог"));
         map.insert(ER_CTHREAD, QString::fromLocal8Bit("Проверки_поток"));
         map.insert(ER_DEVMAIN, QString::fromLocal8Bit("Ред_изделий"));
-        map.insert(ER_PROBS, QString::fromLocal8Bit("Проблемы_диалог"));
+        map.insert(ER_PROBS, QString::fromLocal8Bit("Д_проблемы"));
         map.insert(ER_FTP, QString::fromLocal8Bit("Ftp"));
         return map;
     }

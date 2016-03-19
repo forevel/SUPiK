@@ -219,7 +219,7 @@ void StartWindow::OkPBClicked()
         StartWindowSplashScreen->show();
 
         StartWindowSplashScreen->showMessage("Проверка наличия подключения к каталогу СУПиК...", Qt::AlignRight, Qt::white);
-        Ftps = new Ftp;
+/* !!!       Ftps = new Ftp;
         if (!Ftps->Connect(pc.FtpServer))
             STARTER("Сервер ftp недоступен");
         else if (!Ftps->Login("supik","wdbpy(WcTtTZzA_TEc-<"))
@@ -237,12 +237,12 @@ void StartWindow::OkPBClicked()
                 else
                     STARTINFO("Подключение к FTP-серверу выполнено успешно");
             }
-        }
+        } !!! */
 
         StartWindowSplashScreen->finish(this);
 
         supik *supik_main_window = new supik;
-        connect(supik_main_window,SIGNAL(stopall()),Ftps,SLOT(StopThreads()));
+// !!!        connect(supik_main_window,SIGNAL(stopall()),Ftps,SLOT(StopThreads()));
         supik_main_window->setVisible(true);
         supik_main_window->setEnabled(true);
     }

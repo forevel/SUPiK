@@ -332,7 +332,7 @@ QString s_sql::GetValueFromTableByID(QSqlDatabase db, QString tble, QString fiel
 {
     QString vl;
 
-    vl = GetValueFromTableByField(db, tble, field, "id"+tble, id);
+    vl = GetValueFromTableByField(db, tble, field, "id"+tble, QString::number(id.toInt()));
     return vl;
 }
 
@@ -889,6 +889,7 @@ QList<QStringList> s_sql::GetMoreValuesFromTableByField(QSqlDatabase db, QString
     }
     if (sl.isEmpty())
     {
+        LastError = "Пустой ответ";
         result=1;
         return QList<QStringList>();
     }

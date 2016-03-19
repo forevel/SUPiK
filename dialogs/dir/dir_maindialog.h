@@ -27,7 +27,7 @@ public slots:
 private slots:
     void mainContextMenu(QPoint);
     void SystemSlaveContextMenu (QPoint);
-    void showDirDialog(QModelIndex idx = QModelIndex());
+    void ShowSlave(QModelIndex idx = QModelIndex());
     void AddDirDialog();
     void EditDirDialog();
     void EditItem ();

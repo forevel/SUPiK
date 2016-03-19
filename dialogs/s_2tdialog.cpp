@@ -15,7 +15,6 @@
 #include <QDesktopWidget>
 #include <QFileSystemModel>
 #include "s_2tdialog.h"
-#include "../widgets/s_tqtableview.h"
 #include "../widgets/s_tqpushbutton.h"
 #include "../widgets/s_tqlabel.h"
 #include "../widgets/s_tqsplitter.h"
@@ -23,18 +22,31 @@
 #include "../gen/s_sql.h"
 #include "../gen/publicclass.h"
 #include "../gen/s_tablefields.h"
-#include "../models/s_ncmodel.h"
-#include "../models/s_ntmodel.h"
-#include "../models/s_duniversal.h"
+#include "../models/griddelegate.h"
 
-s_2tdialog::s_2tdialog(QWidget *parent) :
+s_2tdialog::s_2tdialog(QStringList links, QString MainSlaveItemId, QString hdr, QWidget *parent) :
     QDialog(parent)
 {
+    FirstRun = true;
+    if (links.size()<2)
+    {
+        D2TDLGWARN;
+        return;
+    }
+    SetupUI(links, hdr, MainSlaveItemId);
 }
 
-
-void s_2tdialog::SetupUI(QString hdr)
+// в MainSlaveItemId находится совмещённый индекс элемента в виде <T1>.<T2>, где T1 - индекс по первой таблице, T2 - по второй
+void s_2tdialog::SetupUI(QStringList links, QString hdr, QString MainSlaveItemId)
 {
+    QString TableName = links.at(0); // имя таблицы на русском (Компоненты_описание_полн)
+    QString TableField = links.at(1); // имя поля на русском (Описание)
+    int MainId=0, SlaveId=0;
+    QStringList tmpsl = MainSlaveItemId.split(".");
+    if (tmpsl.size()>0)
+        MainId = tmpsl.at(0).toInt();
+    if (tmpsl.size()>1)
+        SlaveId = tmpsl.at(1).toInt();
     QVBoxLayout *lyout = new QVBoxLayout;
     s_tqLabel *lbl = new s_tqLabel(hdr);
     QFont font;
@@ -42,14 +54,21 @@ void s_2tdialog::SetupUI(QString hdr)
     lbl->setFont(font);
     lyout->addWidget(lbl, 0);
     lyout->setAlignment(lbl, Qt::AlignRight);
-    s_tqTableView *SlaveTV = new s_tqTableView;
-    s_tqTableView *MainTV = new s_tqTableView;
+    TreeView *MainTV = new TreeView(TreeView::TV_PLAIN);
+    TreeView *SlaveTV = new TreeView(TreeView::TV_PLAIN);
+    MainModel = new TreeModel;
+    SlaveModel = new TreeModel;
     MainTV->setObjectName("MainTV");
     SlaveTV->setObjectName("SlaveTV");
-    connect (MainTV, SIGNAL(clicked(QModelIndex)), this, SLOT(MainItemChoosed(QModelIndex)));
-    connect(MainTV, SIGNAL(datachanged()), this, SLOT(resizemainTV()));
-    connect (SlaveTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(SlaveItemChoosed(QModelIndex)));
-    connect(SlaveTV,SIGNAL(datachanged()),this,SLOT(resizeslaveTV()));
+    MainTV->horizontalHeader()->setVisible(false);
+    MainTV->verticalHeader()->setVisible(false);
+    SlaveTV->horizontalHeader()->setVisible(true);
+    SlaveTV->verticalHeader()->setVisible(false);
+    connect (MainTV, SIGNAL(clicked(QModelIndex)), this, SLOT(MainItemChoosed()));
+    connect (SlaveTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(SlaveItemChoosed()));
+    GridDelegate *GD = new GridDelegate;
+    MainTV->setItemDelegate(GD);
+    SlaveTV->setItemDelegate(GD);
     s_tqSplitter *spl = new s_tqSplitter;
     s_tqFrame *left = new s_tqFrame;
     QVBoxLayout *leftlyout = new QVBoxLayout;
@@ -70,60 +89,90 @@ void s_2tdialog::SetupUI(QString hdr)
     QHBoxLayout *hbl = new QHBoxLayout;
     s_tqPushButton *pbOk = new s_tqPushButton("Готово");
     s_tqPushButton *pbCancel = new s_tqPushButton("Отмена");
-    connect(pbOk,SIGNAL(clicked()),this,SLOT(accepted()));
-    connect(pbCancel,SIGNAL(clicked()),this,SLOT(cancelled()));
+    connect(pbOk,SIGNAL(clicked()),this,SLOT(SlaveItemChoosed()));
+    connect(pbCancel,SIGNAL(clicked()),this,SLOT(close()));
     hbl->addWidget(pbOk);
     hbl->addWidget(pbCancel);
     lyout->addLayout(hbl);
     setLayout(lyout);
-}
-
-void s_2tdialog::Setup(QStringList links, QString cursel, QString hdr)
-{
-    SetupUI(hdr);
-    s_ncmodel *mainmodel = new s_ncmodel;
-    s_tqTableView *MainTV = this->findChild<s_tqTableView *>("MainTV");
-    if (MainTV == 0)
-    {
-        WARNMSG(PublicClass::ER_2TDLG,__LINE__);
-        return;
-    }
     QApplication::setOverrideCursor(Qt::WaitCursor);
-    mainmodel->setupcolumn(links.at(0), links.at(1));
-    if (mainmodel->result)
+    MainModel->Setup(TableName); // подготовили главную таблицу
+    MainTV->setModel(MainModel);
+//    MainTV->resizeRowsToContents();
+    SlaveTV->setModel(SlaveModel);
+    // установить текущий элемент основной таблицы
+    FindAndSetId(MainTV, QString::number(MainId));
+    // заполним второстепенную таблицу в зависимости от переданного id
+    // найдём реальное наименование столбца таблицы (tablefields) по ссылке
+/*    tmpsl = tfl.tablefields(TableName,TableField);
+    if (tmpsl.size()>1)
+        MainTableFieldInRus = tmpsl.at(1);
+    else
     {
         QApplication::restoreOverrideCursor();
-        WARNMSG(PublicClass::ER_2TDLG,__LINE__);
+        D2TDLGWARN;
+        return;
+    } */
+    tmpsl = tfl.tablefields(TableName, "Наименование"); // берём table, tablefields, links из tablefields таблицы links.at(0) с headers="Наименование"
+    if (tfl.result)
+    {
+        QApplication::restoreOverrideCursor();
+        D2TDLGWARN;
         return;
     }
-    QStringList tmpsl = tfl.tablefields(links.at(0),links.at(1));
-    tblename = links.at(0); // имя таблицы на русском (Компоненты_описание_полн)
-    tblefield = links.at(1); // имя поля на русском (Описание)
-    tablefield = tmpsl.at(1); // сохраняем имя колонки для последующего использования (descriptionfull)
-    MainTV->setModel(mainmodel);
-    MainTV->horizontalHeader()->setVisible(false);
-    MainTV->verticalHeader()->setVisible(false);
-    s_duniversal *gridItemDelegate = new s_duniversal;
-    connect(gridItemDelegate,SIGNAL(error(int,int)),this,SIGNAL(error(int,int)));
-    MainTV->setItemDelegate(gridItemDelegate);
-    MainTV->resizeColumnsToContents();
-    MainTV->resizeRowsToContents();
-
-    if ((!cursel.isEmpty()) && (cursel.contains('.')))
-    {
-        QStringList curselsl = cursel.split('.');
-        QStringList tmpsl = tfl.htovlc(tblename, tblefield, "ИД", curselsl.at(0)); // берём из главной таблицы данные, для которого ИД=текущему элементу
-        if (tfl.result)
-        {
-            QApplication::restoreOverrideCursor();
-            WARNMSG(PublicClass::ER_2TDLG,__LINE__);
-            return;
-        }
-        SetMainTvCurrentText(tmpsl.at(0)); // устанавливаем текущий элемент главной таблицы в соответствии с переданной строкой
-        MainItemChoosed(QModelIndex()); // принудительно вызываем слот вывода подчинённой таблицы по текущему элементу главной
-        SetSlaveTvCurrentText(curselsl.at(1));
-    }
+    MainTableField = tmpsl.at(1); // сохраняем имя колонки для последующего использования (descriptionfull)
+    MainDb = tmpsl.at(0).split(".").at(0); // table = <db>.<tble> (alt)
+    MainTble = tmpsl.at(0).split(".").at(1); // (description)
+    MainItemChoosed(); // принудительно вызываем слот для отображения подчинённой таблицы
+    // установить текущий элемент дополнительной таблицы
+    FindAndSetId(SlaveTV, QString::number(SlaveId));
     QApplication::restoreOverrideCursor();
+}
+
+void s_2tdialog::FindAndSetId(TreeView *tv, QString id)
+{
+    int IdFound = -1, CurRow = 0;
+    TreeModel *mdl = static_cast<TreeModel *>(tv->model());
+    while ((IdFound == -1) && (CurRow < mdl->rowCount()))
+    {
+        if (TvData(tv, CurRow, 0) == id)
+            IdFound = CurRow;
+        CurRow++;
+    }
+    if (IdFound == -1)
+        IdFound = 0;
+    tv->setCurrentIndex(mdl->index(IdFound, 0, QModelIndex()));
+}
+
+QString s_2tdialog::TvData(TreeView *tv, int row, int column)
+{
+    QString tmpString = tv->model()->index(row, column, QModelIndex()).data(Qt::DisplayRole).toString();
+    QStringList tmpsl = tmpString.split(".");
+    if (tmpsl.size()>1) // если составной ИД
+        tmpString = tmpsl.at(1);
+    if (!column) // в нулевом столбце всегда ИД элемента с нулями в начале, надо незначащие нули убрать
+        tmpString = QString::number(tmpString.toInt(0));
+    tmpString.remove(QChar(0xFFFF));
+    return tmpString;
+
+}
+
+void s_2tdialog::Refresh()
+{
+    TreeView *MainTV = this->findChild<TreeView *>("MainTV");
+    TreeView *SlaveTV = this->findChild<TreeView *>("SlaveTV");
+    if ((MainTV == 0) || (SlaveTV == 0))
+    {
+        D2TDLGDBG;
+        return;
+    }
+    ResizeTv(MainTV);
+    ResizeTv(SlaveTV);
+}
+
+void s_2tdialog::Setup()
+{
+//    QStringList tmpsl = tfl.tablefields(links.at(0),links.at(1));
 }
 
 void s_2tdialog::paintEvent(QPaintEvent *e)
@@ -133,89 +182,64 @@ void s_2tdialog::paintEvent(QPaintEvent *e)
     e->accept();
 }
 
-void s_2tdialog::MainItemChoosed(QModelIndex idx)
+void s_2tdialog::showEvent(QShowEvent *e)
 {
-    Q_UNUSED(idx);
-    s_tqTableView *MainTV = this->findChild<s_tqTableView *>("MainTV");
-    if (MainTV == 0)
+    if (FirstRun)
     {
-        DBGMSG(PublicClass::ER_2TDLG,__LINE__);
-        return;
+        Refresh();
+        FirstRun = false;
     }
-    QString tmpString = MainTV->model()->index(MainTV->currentIndex().row(), 0, QModelIndex()).data(Qt::DisplayRole).toString();
-    QStringList tmpsl = tfl.tablefields(tblename, "Наименование"); // берём из главной таблицы данные столбца "Наименование", т.к. в нём содержатся названия таблиц, из которых брать элементы подчинённой таблицы
-    if (tfl.result)
+    e->accept();
+}
+
+void s_2tdialog::MainItemChoosed()
+{
+    TreeView *MainTV = this->findChild<TreeView *>("MainTV");
+    TreeView *SlaveTV = this->findChild<TreeView *>("SlaveTV");
+    if ((MainTV == 0) || (SlaveTV == 0))
     {
-        WARNMSG(PublicClass::ER_2TDLG,__LINE__);
-        return;
-    }
-    QString db = tmpsl.at(0).split(".").at(0); // table = <db>.<tble>
-    QString mntble = tmpsl.at(0).split(".").at(1);
-    QString sltble = sqlc.GetValueFromTableByField(sqlc.GetDB(db),mntble,tmpsl.at(1),tablefield,tmpString); // берём из главной таблицы значение по полю "Наименование", для которого сохранённое tablefield равен текущему элементу таблицы
-    if (sqlc.result)
-    {
-        WARNMSG(PublicClass::ER_2TDLG,__LINE__);
-        return;
-    }
-    s_ncmodel *slavemodel = new s_ncmodel;
-    s_tqTableView *SlaveTV = this->findChild<s_tqTableView *>("SlaveTV");
-    if (SlaveTV == 0)
-    {
-        DBGMSG(PublicClass::ER_2TDLG,__LINE__);
+        D2TDLGDBG;
         return;
     }
     QApplication::setOverrideCursor(Qt::WaitCursor);
-    slavemodel->setupraw(db, sltble);
-    if (slavemodel->result)
+    QString MainID = TvData(MainTV, MainTV->currentIndex().row(), 0);
+    QString sltble = sqlc.GetValueFromTableByField(sqlc.GetDB(MainDb),MainTble,MainTableField,"id"+MainTble,MainID); // берём из главной таблицы значение по полю "Наименование", для которого сохранённое tablefield равен текущему элементу таблицы
+    if (sqlc.result)
     {
         QApplication::restoreOverrideCursor();
-        WARNMSG(PublicClass::ER_2TDLG,__LINE__);
+        D2TDLGWARN;
         return;
     }
-    SlaveTV->setModel(slavemodel);
-    SlaveTV->horizontalHeader()->setVisible(true);
-    SlaveTV->verticalHeader()->setVisible(false);
-    s_duniversal *gridItemDelegate = new s_duniversal;
-    connect(gridItemDelegate,SIGNAL(error(int,int)),this,SIGNAL(error(int,int)));
-    SlaveTV->setItemDelegate(gridItemDelegate);
-    SlaveTV->resizeColumnsToContents();
-    SlaveTV->resizeRowsToContents();
+    if (SlaveModel->SetupRaw(MainDb, sltble))
+    {
+        QApplication::restoreOverrideCursor();
+        D2TDLGWARN;
+        return;
+    }
+//    SlaveTV->resizeRowsToContents();
+    Refresh();
     QApplication::restoreOverrideCursor();
 }
 
-void s_2tdialog::SlaveItemChoosed(QModelIndex idx)
+void s_2tdialog::SlaveItemChoosed()
 {
-    Q_UNUSED(idx);
-    s_tqTableView *MainTV = this->findChild<s_tqTableView *>("MainTV");
-    if (MainTV == 0)
+    TreeView *MainTV = this->findChild<TreeView *>("MainTV");
+    TreeView *SlaveTV = this->findChild<TreeView *>("SlaveTV");
+    if ((MainTV == 0) || (SlaveTV == 0))
     {
-        DBGMSG(PublicClass::ER_2TDLG,__LINE__);
+        D2TDLGDBG;
         return;
     }
-    QString tmpString = MainTV->model()->index(MainTV->currentIndex().row(), 0, QModelIndex()).data(Qt::DisplayRole).toString();
-    s_tqTableView *SlaveTV = this->findChild<s_tqTableView *>("SlaveTV");
-    if (SlaveTV == 0)
-    {
-        DBGMSG(PublicClass::ER_2TDLG,__LINE__);
-        return;
-    }
-    QString tmpString2 = SlaveTV->model()->index(SlaveTV->currentIndex().row(), 0, QModelIndex()).data(Qt::DisplayRole).toString();
+    QString MainId = TvData(MainTV, MainTV->currentIndex().row(), 0);
+    QString SlaveId = TvData(SlaveTV, SlaveTV->currentIndex().row(), 0);
 
-    QStringList tmpsl = tfl.htovlc(tblename, "ИД", tblefield, tmpString); // берём из главной таблицы данные столбца "ИД", для которого описание=текущему элементу главной таблицы
-    if (tfl.result)
-    {
-        WARNMSG(PublicClass::ER_2TDLG,__LINE__);
-        return;
-    }
-    emit finished(tmpsl.at(0)+"."+tmpString2);
+    emit finished(MainId+"."+SlaveId);
     this->close();
 }
 
-void s_2tdialog::resizemainTV()
+void s_2tdialog::ResizeTv(TreeView *tv)
 {
-    s_tqTableView *tv = this->findChild<s_tqTableView *>("MainTV");
-    if (tv == 0)
-        return;
+    tv->resizeRowsToContents();
     tv->resizeColumnsToContents();
     int wdth = 0;
     for (int i = 0; i < tv->model()->columnCount(); i++)
@@ -227,57 +251,4 @@ void s_2tdialog::resizemainTV()
     int tmpi = QApplication::desktop()->availableGeometry().height()-150; // -150 - чтобы высота диалога не выходила за пределы видимой части экрана
     hgth = (hgth > tmpi) ? tmpi : hgth;
     tv->setMinimumHeight(hgth+10);
-}
-
-void s_2tdialog::resizeslaveTV()
-{
-    s_tqTableView *tv = this->findChild<s_tqTableView *>("SlaveTV");
-    if (tv == 0)
-        return;
-    tv->resizeColumnsToContents();
-    int wdth = 0;
-    for (int i = 0; i < tv->model()->columnCount(); i++)
-        wdth += tv->columnWidth(i);
-    tv->setMinimumWidth(wdth+10);
-    int hgth = 0;
-    for (int i = 0; i < tv->model()->rowCount(); i++)
-        hgth += tv->rowHeight(i);
-    int tmpi = QApplication::desktop()->availableGeometry().height()-150; // -150 - чтобы высота диалога не выходила за пределы видимой части экрана
-    hgth = (hgth > tmpi) ? tmpi : hgth;
-    tv->setMinimumHeight(hgth+10);
-}
-
-void s_2tdialog::SetMainTvCurrentText(QString text)
-{
-    s_tqTableView *tv = this->findChild<s_tqTableView *>("MainTV");
-    if (tv == 0)
-        return;
-    if (text.isEmpty())
-        return;
-    QList<QModelIndex> item = tv->model()->match(tv->model()->index(0, 0), Qt::DisplayRole, QVariant::fromValue(text), 1, Qt::MatchRecursive);
-    if (!item.isEmpty())
-        tv->setCurrentIndex(item.at(0));
-}
-
-void s_2tdialog::SetSlaveTvCurrentText(QString text)
-{
-    s_tqTableView *tv = this->findChild<s_tqTableView *>("SlaveTV");
-    if (tv == 0)
-        return;
-    if (text.isEmpty())
-        return;
-    s_ncmodel *mdl = static_cast<s_ncmodel *>(tv->model());
-    QList<QModelIndex> item = mdl->match(text);
-    if (!item.isEmpty())
-        tv->setCurrentIndex(item.at(0));
-}
-
-void s_2tdialog::accepted()
-{
-    SlaveItemChoosed(QModelIndex());
-}
-
-void s_2tdialog::cancelled()
-{
-    this->close();
 }

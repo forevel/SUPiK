@@ -9,6 +9,7 @@ Ftp *Ftps;
 
 Ftp::Ftp(QObject *parent) : QObject(parent)
 {
+    Connected = false;
 }
 
 Ftp::~Ftp()
@@ -145,6 +146,8 @@ bool Ftp::SendCmd(int Command, QString Args)
 
 bool Ftp::Login(QString User, QString Password)
 {
+    if (!Connected)
+        return false;
     if (!SendCmd(CMD_USER, User))
     {
         FTPER("Неверное имя");
@@ -160,6 +163,8 @@ bool Ftp::Login(QString User, QString Password)
 
 bool Ftp::ChDir(QString Dir)
 {
+    if (!Connected)
+        return false;
     if (!SendCmd(CMD_CWD, Dir))
     {
         FTPER("Что-то не так с именем каталога");
@@ -170,6 +175,8 @@ bool Ftp::ChDir(QString Dir)
 
 bool Ftp::List()
 {
+    if (!Connected)
+        return false;
     if (!StartPASV(CMD_LIST))
     {
         FTPER("Команда LIST не прошла");
@@ -180,6 +187,8 @@ bool Ftp::List()
 
 bool Ftp::MkDir(QString Dir)
 {
+    if (!Connected)
+        return false;
     if (!SendCmd(CMD_MKD, Dir))
     {
         FTPER("Невозможно создать каталог "+Dir);
@@ -190,6 +199,8 @@ bool Ftp::MkDir(QString Dir)
 
 bool Ftp::StartPASV(int Command, QString Filename, QByteArray *ba, int size)
 {
+    if (!Connected)
+        return false;
     switch (Command)
     {
     case CMD_RETR:
@@ -264,6 +275,8 @@ bool Ftp::StartPASV(int Command, QString Filename, QByteArray *ba, int size)
 
 bool Ftp::GetFile(QString Filename, QByteArray *ba, int size)
 {
+    if (!Connected)
+        return false;
     QByteArray *tmpba = new QByteArray;
     if (!StartPASV(CMD_LIST, Filename, tmpba, size))
     {
@@ -307,6 +320,8 @@ void Ftp::FtpFileConnected()
 
 bool Ftp::SendFile(QString Filename, QByteArray *ba, int size)
 {
+    if (!Connected)
+        return false;
     return StartPASV(CMD_STOR, Filename, ba, size);
 }
 

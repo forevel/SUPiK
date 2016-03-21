@@ -19,7 +19,7 @@ QWidget* PlaceDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem
 /*    QString PlaceID = index.data(Qt::UserRole).toString(); // достаём ИД размещения по БД whplaces
     s_tqWidget *wdgt = new s_tqWidget(parent);
     wdgt->setAData(PlaceID); // присваиваем данному виджету ИД размещения для обработки в слоте */
-    s_tqPushButton* pb = new s_tqPushButton( index.data().toString(), parent );
+    s_tqPushButton* pb = new s_tqPushButton( index.data().toString(), 0,0,0,0,parent );
     pb->setAutoDefault( true );
     pb->setAData(index.data(Qt::UserRole));
     connect( pb, SIGNAL( clicked(s_tqPushButton *) ), this, SLOT( buttonPressed(s_tqPushButton*)) );

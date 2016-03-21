@@ -4,6 +4,7 @@
 #include "../widgets/s_tqpushbutton.h"
 #include "../widgets/s_tqlineedit.h"
 #include "../widgets/s_tqlabel.h"
+#include "../widgets/s_tqwidget.h"
 #include "../gen/s_sql.h"
 #include "../gen/publicclass.h"
 #include "../gen/s_tablefields.h"
@@ -66,6 +67,20 @@ void s_2cdialog::setupUI()
 {
     setStyleSheet("QDialog {background-color: rgba(204,204,153);}");
     QVBoxLayout *mainLayout = new QVBoxLayout;
+    QHBoxLayout *hlyout = new QHBoxLayout;
+    s_tqPushButton *pb = new s_tqPushButton;
+    pb->setIcon(QIcon(":/res/cross.png"));
+    connect(pb, SIGNAL(clicked()), this, SLOT(cancelled()));
+    pb->setToolTip("Закрыть вкладку");
+    hlyout->addWidget(pb);
+    hlyout->addStretch(300);
+    s_tqLabel *lbl = new s_tqLabel;
+    lbl->setText(caption);
+    QFont font;
+    font.setPointSize(15);
+    lbl->setFont(font);
+    hlyout->addWidget(lbl, 0, Qt::AlignRight);
+    mainLayout->addLayout(hlyout);
     QHBoxLayout *pbLayout = new QHBoxLayout;
     s_tqTableView *mainTV = new s_tqTableView; // autoResize = true
     mainTV->setObjectName("mainTV");
@@ -74,13 +89,10 @@ void s_2cdialog::setupUI()
     pbOk->setIcon(QIcon(":/res/ok.png"));
     s_tqPushButton *pbCancel = new s_tqPushButton("Неа");
     pbCancel->setIcon(QIcon(":/res/cross.png"));
-    s_tqLabel *lbl = new s_tqLabel;
-    lbl->setText(caption);
-    QFont font;
-    font.setPointSize(10);
-    lbl->setFont(font);
     pbLayout->addWidget(pbOk, 0);
     pbLayout->addWidget(pbCancel, 0);
+    connect (pbOk, SIGNAL(clicked()), this, SLOT(accepted()));
+    connect (pbCancel, SIGNAL(clicked()), this, SLOT(cancelled()));
     MainModel = new EditModel;
     connect(MainModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(resizemainTV(QModelIndex,QModelIndex)));
     mainTV->setModel(MainModel);
@@ -91,7 +103,7 @@ void s_2cdialog::setupUI()
     mainTV->setItemDelegate(uniDelegate);
     mainTV->resizeColumnsToContents();
     mainTV->resizeRowsToContents();
-    mainLayout->addWidget(lbl, 0, Qt::AlignRight);
+    connect (mainTV,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(accepted(QModelIndex)));
     if (Mode == MODE_CHOOSE)
     {
         QHBoxLayout *hlyout = new QHBoxLayout;
@@ -114,11 +126,10 @@ void s_2cdialog::setupUI()
         mainLayout->addLayout(hlyout);
     }
     mainLayout->addWidget(mainTV);
+    mainLayout->setAlignment(mainTV, Qt::AlignLeft);
+    mainLayout->addStretch(100);
     mainLayout->addLayout(pbLayout);
     setLayout(mainLayout);
-    connect (mainTV,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(accepted(QModelIndex)));
-    connect (pbOk, SIGNAL(clicked()), this, SLOT(accepted()));
-    connect (pbCancel, SIGNAL(clicked()), this, SLOT(cancelled()));
 }
 
 void s_2cdialog::AddItem()

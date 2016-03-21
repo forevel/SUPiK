@@ -17,6 +17,7 @@ public:
     ~DevMainDialog();
 
 signals:
+    void DialogClosed();
 
 public slots:
 

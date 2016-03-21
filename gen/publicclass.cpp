@@ -55,6 +55,8 @@ void PublicClass::InitiatePublicClass()
     PathToSup = LandP->value("settings/pathtosup","").toString();
     timerperiod = LandP->value("settings/timerperiod","1").toInt();
     FtpServer = LandP->value("settings/FtpServer","ftp.asu-vei.ru").toString();
+    ErWidgetPeriod = LandP->value("settings/ErPeriod","2000").toInt();
+    ErWidgetShowing = LandP->value("settings/ErShow","true").toBool();
     openBD(alt, "ALT", "altium", "supik", "sysupik");
     openBD(con, "CON", "constructives", "supik", "sysupik");
     openBD(dev, "DEV", "devices", "supik", "sysupik");

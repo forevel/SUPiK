@@ -13,6 +13,8 @@
 #include "../../gen/publicclass.h"
 #include "sys_settingsdialog.h"
 #include "../../widgets/s_tqchoosewidget.h"
+#include "../../widgets/s_tqcheckbox.h"
+#include "../messagebox.h"
 
 sys_settingsdialog::sys_settingsdialog(QWidget *parent) :
     QDialog(parent)
@@ -116,10 +118,30 @@ void sys_settingsdialog::SetupUI ()
     spb->setValue(pc.timerperiod);
     glyout->addWidget(spb,5,1,1,1);
 
+    lbl = new s_tqLabel("Показывать сообщения:");
+    glyout->setAlignment(lbl,Qt::AlignRight);
+    glyout->addWidget(lbl,6,0,1,1);
+    s_tqCheckBox *cb = new s_tqCheckBox;
+    cb->setChecked(pc.ErWidgetShowing);
+    connect(cb,SIGNAL(toggled(bool)),this,SLOT(ErWidgetEnabled(bool)));
+    glyout->addWidget(cb,6,1,1,1);
+    lbl = new s_tqLabel("Задержка появления экрана сообщений (мс):");
+    glyout->setAlignment(lbl,Qt::AlignRight);
+    glyout->addWidget(lbl,7,0,1,1);
+    spb = new s_tqSpinBox;
+    spb->setMinimum(500);
+    spb->setMaximum(5000);
+    spb->setDecimals(1);
+    spb->setSingleStep(1);
+    connect(spb,SIGNAL(valueChanged(double)),this,SLOT(ErWidgetPeriodChoosed(double)));
+    spb->setValue(pc.ErWidgetPeriod);
+    glyout->addWidget(spb,7,1,1,1);
+
+
     hlyout = new QHBoxLayout;
     hlyout->addWidget(isOKPB);
     hlyout->addWidget(CancelPB);
-    glyout->addLayout(hlyout,6,0,1,2);
+    glyout->addLayout(hlyout,8,0,1,2);
 
     lyout->addLayout(glyout);
     lyout->addSpacing(500);
@@ -160,6 +182,16 @@ void sys_settingsdialog::TimerPeriodChoosed(double dbl)
     pc.timerperiod = dbl;
 }
 
+void sys_settingsdialog::ErWidgetPeriodChoosed(double value)
+{
+    pc.ErWidgetPeriod = value;
+}
+
+void sys_settingsdialog::ErWidgetEnabled(bool enabled)
+{
+    pc.ErWidgetShowing = enabled;
+}
+
 void sys_settingsdialog::CancelPBClicked()
 {
     this->close();
@@ -184,9 +216,12 @@ void sys_settingsdialog::OKPBClicked()
         pc.LandP->setValue("settings/SQLPath",pc.SQLPath);
         pc.LandP->setValue("settings/timerperiod",pc.timerperiod);
         pc.LandP->setValue("settings/FtpServer",pc.FtpServer);
+        pc.LandP->setValue("settings/ErPeriod",pc.ErWidgetPeriod);
+        pc.LandP->setValue("settings/ErShow",pc.ErWidgetShowing);
         if (!pl.InitLang())
             pl.SetDefaultLang();
 
+        MessageBox2::information(this,"Внимание","Некоторые настройки вступят в силу \nтолько после перезапуска СУПиКа");
         this->close();
     }
 }

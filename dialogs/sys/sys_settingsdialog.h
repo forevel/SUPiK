@@ -28,6 +28,8 @@ public:
 private slots:
     void LangChoosed(QString);
     void TimerPeriodChoosed(double);
+    void ErWidgetPeriodChoosed(double);
+    void ErWidgetEnabled(bool enabled);
     void CancelPBClicked();
     void OKPBClicked();
     void PathToLibsChoosed(QVariant);

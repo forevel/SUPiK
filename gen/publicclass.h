@@ -290,7 +290,8 @@ public:
         QString Links; // строка ссылок
     };
 
-    double timerperiod;
+    double timerperiod, ErWidgetPeriod;
+    bool ErWidgetShowing;
     QString SQLUser, SQLPsw;
     QSqlDatabase ent, alt, sup, con, sol, sch, dev;
     QMap<QString, QSqlDatabase> db;

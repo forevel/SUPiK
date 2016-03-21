@@ -36,7 +36,7 @@ void dir_maindialog::SetupUI()
     s_tqStackedWidget *cw = new s_tqStackedWidget;
     cw->setObjectName("cw");
     s_tqWidget *wdgt = new s_tqWidget;
-    wdgt->setAttribute(Qt::WA_DeleteOnClose,true);
+//    wdgt->setAttribute(Qt::WA_DeleteOnClose,true);
     QVBoxLayout *lyout = new QVBoxLayout;
     QHBoxLayout *hlyout = new QHBoxLayout;
     s_tqPushButton *pb = new s_tqPushButton;
@@ -268,10 +268,14 @@ void dir_maindialog::EditItem(QString str)
     int Mode = (isNewID) ? MODE_EDITNEW : MODE_EDIT;
     newdialog->setup(Table+"_полн",Mode,Id,IsQuarantine);
     if (newdialog->result)
+    {
         DIRMWARN;
-    else
-        newdialog->exec();
-    RefreshSlaveTV();
+        return;
+    }
+    cw->addWidget(newdialog);
+    cw->setCurrentWidget(newdialog);
+    cw->repaint();
+//    RefreshSlaveTV();
 }
 
 void dir_maindialog::AddNew()

@@ -33,7 +33,7 @@ supik::supik()
     connect(this,SIGNAL(stopall()),CThread,SLOT(Finish()));
     thr->start();
     ERTimer = new QTimer;
-    ERTimer->setInterval(5000);
+    ERTimer->setInterval(pc.ErWidgetPeriod);
     connect(ERTimer,SIGNAL(timeout()),this,SLOT(HideErrorProtocol()));
     ERTimerIsOn = false;
     IsProblemsDetected = false;
@@ -707,6 +707,8 @@ void supik::resizeEvent(QResizeEvent *e)
 
 void supik::MouseMove()
 {
+    if (!pc.ErWidgetShowing)
+        return;
     QPoint curPos = mapFromGlobal(QCursor::pos());
     if ((abs(curPos.y() - height()) < 10) && (curPos.x() > 0) && (curPos.x() < width()))
     {
@@ -760,7 +762,7 @@ void supik::UpdateErrorProtocol()
     }
     if (pc.ermsgpool.isEmpty())
         return;
-    if (!ERTimerIsOn)
+    if ((!ERTimerIsOn) && (pc.ErWidgetShowing))
     {
         ERTimerIsOn = true;
         ERHide = true;
@@ -771,7 +773,8 @@ void supik::UpdateErrorProtocol()
         ErWidget->AddRowToProt(pc.ermsgpool.first());
         pc.ermsgpool.removeFirst();
     }
-    ERTimer->start();
+    if (pc.ErWidgetShowing)
+        ERTimer->start();
 }
 
 void supik::HideErrorProtocol()

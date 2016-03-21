@@ -9,10 +9,11 @@ s_tqPushButton::s_tqPushButton(QWidget *parent) :
     connect (this, SIGNAL(clicked()), this, SLOT(PBclicked()));
 }
 
-s_tqPushButton::s_tqPushButton(QString str, QWidget *parent) : QPushButton(parent)
+s_tqPushButton::s_tqPushButton(QString str, int r, int g, int b, int a, QWidget *parent) : QPushButton(parent)
 {
     setText(str);
-    setStyleSheet("QPushButton {background-color: rgba(0,0,0,0); border: 2px solid gray; border-radius: 3px; border-style: outset; padding: 2px 5px;}"
+    setStyleSheet("QPushButton {background-color: rgba("+QString::number(r)+","+QString::number(g)+","+QString::number(b)+","+QString::number(a)+"); "
+                  "border: 2px solid gray; border-radius: 3px; border-style: outset; padding: 2px 5px;}"
                   "QPushButton:pressed {border-style: inset;}"
                   "QPushButton:disabled {border: none;}");
     connect (this, SIGNAL(clicked()), this, SLOT(PBclicked()));

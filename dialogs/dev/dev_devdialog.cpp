@@ -24,6 +24,7 @@
 #include "../../widgets/treeview.h"
 #include "../../widgets/s_tqframe.h"
 #include "../../widgets/s_tqsplitter.h"
+#include "../../widgets/s_tqstackedwidget.h"
 #include "../../widgets/s_tqwidget.h"
 #include "../../gen/publicclass.h"
 #include "../../gen/s_tablefields.h"
@@ -52,6 +53,10 @@ void dev_devdialog::paintEvent(QPaintEvent *event)
 
 void dev_devdialog::SetupUI()
 {
+    QVBoxLayout *mlyout = new QVBoxLayout;
+    s_tqStackedWidget *stw = new s_tqStackedWidget;
+    stw->setObjectName("stw");
+    s_tqWidget *w = new s_tqWidget;
     QVBoxLayout *lyout = new QVBoxLayout;
     QHBoxLayout *hlyout = new QHBoxLayout;
 
@@ -97,7 +102,10 @@ void dev_devdialog::SetupUI()
     connect (MainTV, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(MainContextMenu(QPoint)));
     connect (MainTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(EditDev()));
     lyout->addWidget(MainTV);
-    setLayout(lyout);
+    w->setLayout(lyout);
+    stw->addWidget(w);
+    mlyout->addWidget(stw);
+    setLayout(mlyout);
     Refresh();
 }
 
@@ -189,8 +197,18 @@ void dev_devdialog::EditDev()
         return;
     }
     DevMainDialog *dlg = new DevMainDialog(ID);
-    dlg->exec();
-    Refresh();
+    connect(dlg,SIGNAL(DialogClosed()),this,SLOT(Refresh()));
+    s_tqStackedWidget *stw = this->findChild<s_tqStackedWidget *>("stw");
+    if (stw == 0)
+    {
+        DEVDOCDBG;
+        return;
+    }
+    stw->addWidget(dlg);
+    stw->setCurrentWidget(dlg);
+    stw->repaint();
+//    dlg->exec();
+//    Refresh();
 }
 
 void dev_devdialog::MainContextMenu(QPoint)

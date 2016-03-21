@@ -22,7 +22,6 @@ public slots:
 private:
     void SetupUI();
     void ResizeMainTV();
-    void Refresh();
     QString GetIndex(int column);
 
 private slots:
@@ -32,6 +31,7 @@ private slots:
     void MainContextMenu(QPoint pt);
     void Filter();
     void Unfilter();
+    void Refresh();
 
 protected:
     void paintEvent(QPaintEvent *);

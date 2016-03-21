@@ -1,9 +1,5 @@
 #include <QSplashScreen>
 #include <QSettings>
-#include <QMessageBox>
-#include <QApplication>
-#include <QEventLoop>
-#include <QTime>
 #include <QInputDialog>
 #include <QGridLayout>
 
@@ -20,10 +16,6 @@ StartWindow::StartWindow(QWidget *parent) : QMainWindow(parent)
     StartWindowSplashScreen->show();
 
     StartWindowSplashScreen->showMessage("Загрузка языков...", Qt::AlignRight, Qt::white);
-/*    QTime tmr;
-    tmr.start();
-    while (tmr.elapsed() < 1000)
-        QCoreApplication::processEvents(QEventLoop::AllEvents, 100); */
     LoadLanguage();
 
     StartWindowSplashScreen->showMessage("Настройка пользовательского окружения...", Qt::AlignRight, Qt::white);
@@ -219,7 +211,7 @@ void StartWindow::OkPBClicked()
         StartWindowSplashScreen->show();
 
         StartWindowSplashScreen->showMessage("Проверка наличия подключения к каталогу СУПиК...", Qt::AlignRight, Qt::white);
-/* !!!       Ftps = new Ftp;
+        Ftps = new Ftp;
         if (!Ftps->Connect(pc.FtpServer))
             STARTER("Сервер ftp недоступен");
         else if (!Ftps->Login("supik","wdbpy(WcTtTZzA_TEc-<"))
@@ -237,12 +229,12 @@ void StartWindow::OkPBClicked()
                 else
                     STARTINFO("Подключение к FTP-серверу выполнено успешно");
             }
-        } !!! */
+        }
 
         StartWindowSplashScreen->finish(this);
 
         supik *supik_main_window = new supik;
-// !!!        connect(supik_main_window,SIGNAL(stopall()),Ftps,SLOT(StopThreads()));
+        connect(supik_main_window,SIGNAL(stopall()),Ftps,SLOT(StopThreads()));
         supik_main_window->setVisible(true);
         supik_main_window->setEnabled(true);
     }

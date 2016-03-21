@@ -23,6 +23,7 @@
 #include "../../widgets/treeview.h"
 #include "../../widgets/s_tqframe.h"
 #include "../../widgets/s_tqsplitter.h"
+#include "../../widgets/s_tqstackedwidget.h"
 #include "../../widgets/s_tqwidget.h"
 #include "../../gen/publicclass.h"
 #include "../../gen/s_tablefields.h"
@@ -57,27 +58,25 @@ void DevMainDialog::paintEvent(QPaintEvent *event)
 
 void DevMainDialog::SetupUI()
 {
+/*    QVBoxLayout *mlyout = new QVBoxLayout;
+    s_tqStackedWidget *stw = new s_tqStackedWidget;
+    stw->setObjectName("stw");
+    s_tqWidget *w = new s_tqWidget; */
     QVBoxLayout *lyout = new QVBoxLayout;
     QHBoxLayout *hlyout = new QHBoxLayout;
 
     s_tqPushButton *pb = new s_tqPushButton;
     pb->setIcon(QIcon(":/res/cross.png"));
+    connect(pb,SIGNAL(clicked(bool)),this,SIGNAL(DialogClosed()));
     connect(pb, SIGNAL(clicked()), this, SLOT(close()));
     pb->setToolTip("Закрыть вкладку");
-    hlyout->addWidget(pb);
-
-    hlyout->addStretch(300);
-    s_tqLabel *lbl = new s_tqLabel("Редактор изделий");
-    QFont font;
-    font.setPointSize(15);
-    lbl->setFont(font);
-    hlyout->addWidget(lbl, 0);
-    hlyout->setAlignment(lbl, Qt::AlignRight);
+    hlyout->addWidget(pb,0);
+    hlyout->addStretch(100);
     lyout->addLayout(hlyout);
 
 //    s_tqGroupBox *gb = new s_tqGroupBox;
     hlyout = new QHBoxLayout;
-    lbl = new s_tqLabel("ИД изделия:");
+    s_tqLabel *lbl = new s_tqLabel("ИД изделия:");
     hlyout->addWidget(lbl);
     s_tqLineEdit *le = new s_tqLineEdit;
     le->setObjectName("devidle");
@@ -141,44 +140,44 @@ void DevMainDialog::SetupUI()
     lyout->addWidget(line);
 
     QGridLayout *glyout = new QGridLayout;
-    s_tqGroupBox *gb = new s_tqGroupBox;
+    s_tqGroupBox *gb = new s_tqGroupBox(255,255,51,40);
     gb->setTitle("Схемы");
     gb->setObjectName("sch");
     gb->setMinimumHeight(70);
     glyout->addWidget(gb, 0, 0, 1, 1);
-    gb = new s_tqGroupBox;
+    gb = new s_tqGroupBox(0,51,255,40);
     gb->setTitle("Чертежи");
     gb->setObjectName("chert");
     gb->setMinimumHeight(70);
     glyout->addWidget(gb, 0, 1, 1, 1);
-    gb = new s_tqGroupBox;
+    gb = new s_tqGroupBox(0, 204, 51, 40);
     gb->setTitle("Изготовление");
     gb->setObjectName("izg");
     gb->setMinimumHeight(70);
     glyout->addWidget(gb, 0, 2, 1, 1);
 
-    gb = new s_tqGroupBox;
+    gb = new s_tqGroupBox(153,153,51,40);
     gb->setTitle("Проектные");
     gb->setObjectName("pr");
     gb->setMinimumHeight(70);
     glyout->addWidget(gb, 1, 0, 1, 1);
-    gb = new s_tqGroupBox;
+    gb = new s_tqGroupBox(255,204,51,40);
     gb->setTitle("Эксплуатационные");
     gb->setObjectName("eksp");
     gb->setMinimumHeight(70);
     glyout->addWidget(gb, 1, 1, 1, 1);
-    gb = new s_tqGroupBox;
+    gb = new s_tqGroupBox(255,0,102,40);
     gb->setTitle("Прогр. обесп.");
     gb->setObjectName("po");
     gb->setMinimumHeight(70);
     glyout->addWidget(gb, 1, 2, 1, 1);
 
-    gb = new s_tqGroupBox;
+    gb = new s_tqGroupBox(0,153,204,40);
     gb->setTitle("Модели");
     gb->setObjectName("mod");
     gb->setMinimumHeight(70);
     glyout->addWidget(gb, 2, 0, 1, 1);
-    gb = new s_tqGroupBox;
+/*    gb = new s_tqGroupBox;
     gb->setTitle("");
     gb->setEnabled(false);
     gb->setMinimumHeight(70);
@@ -187,21 +186,20 @@ void DevMainDialog::SetupUI()
     gb->setTitle("");
     gb->setEnabled(false);
     gb->setMinimumHeight(70);
-    glyout->addWidget(gb, 2, 2, 1, 1);
+    glyout->addWidget(gb, 2, 2, 1, 1); */
     lyout->addLayout(glyout);
 
-    pb = new s_tqPushButton("История");
+    pb = new s_tqPushButton("История",153,255,204,40);
     connect(pb,SIGNAL(clicked()),this,SLOT(History()));
     lyout->addWidget(pb);
 
-    pb = new s_tqPushButton("Объекты");
+    pb = new s_tqPushButton("Объекты",255,102,0,40);
     connect(pb,SIGNAL(clicked()),this,SLOT(Objects()));
     lyout->addWidget(pb);
 
-    pb = new s_tqPushButton("Командировки");
+    pb = new s_tqPushButton("Командировки",255,102,102,40);
     connect(pb,SIGNAL(clicked()),this,SLOT(Trips()));
     lyout->addWidget(pb);
-
     setLayout(lyout);
     Refresh();
 }

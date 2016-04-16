@@ -90,7 +90,9 @@ SOURCES += main.cpp\
     widgets/s_tqtreewidget.cpp \
     widgets/s_tqwidget.cpp \
     widgets/treeview.cpp \
-    widgets/waitwidget.cpp
+    widgets/waitwidget.cpp \
+    gen/client.cpp \
+    gen/log.cpp
 
 HEADERS  += startwindow.h \
     supik.h \
@@ -162,19 +164,23 @@ HEADERS  += startwindow.h \
     widgets/s_tqtreewidget.h \
     widgets/s_tqwidget.h \
     widgets/treeview.h \
-    widgets/waitwidget.h
+    widgets/waitwidget.h \
+    gen/client.h \
+    gen/log.h
 
 RESOURCES += \
     pic.qrc
 
 CONFIG += embed_manifest_exe
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../mysql/lib/ -llibmysql
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../mysql/lib/ -llibmysqld
-else:unix: LIBS += -L$$PWD/../../mysql/lib/ -llibmysql
+win32:CONFIG(release, debug|release): LIBS += -LD:/mysql/lib/ -llibmysql
+else:win32:CONFIG(debug, debug|release): LIBS += -LD:/mysql/lib/ -llibmysqld
+else:unix: LIBS += -LD:/mysql/lib/ -llibmysql
 
-INCLUDEPATH += $$PWD/../../mysql/include
-DEPENDPATH += $$PWD/../../mysql/include
+INCLUDEPATH += D:/mysql/include
+DEPENDPATH += D:/mysql/include
 
 INCLUDEPATH += $$PWD/../xlsxwriter/src/xlsx
 DEPENDPATH += $$PWD/../xlsxwriter/src/xlsx
+
+LIBS += -llibeay32 -lssleay32

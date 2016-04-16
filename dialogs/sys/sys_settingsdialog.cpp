@@ -83,23 +83,39 @@ void sys_settingsdialog::SetupUI ()
     le->setText(pc.FtpServer);
     glyout->addWidget(le,2,1,1,1);
 
-    lbl = new s_tqLabel("Адрес SQL-сервера:");
+    lbl = new s_tqLabel("Адрес сервера СУПиК:");
     glyout->addWidget(lbl,3,0,1,1);
+    glyout->setAlignment(lbl,Qt::AlignRight);
+    le = new s_tqLineEdit;
+    connect(le,SIGNAL(textChanged(QString)),this,SLOT(SupikServerChoosed(QString)));
+    le->setText(pc.SupikServer);
+    glyout->addWidget(le,3,1,1,1);
+
+    lbl = new s_tqLabel("Порт сервера СУПиК:");
+    glyout->addWidget(lbl,4,0,1,1);
+    glyout->setAlignment(lbl,Qt::AlignRight);
+    le = new s_tqLineEdit;
+    connect(le,SIGNAL(textChanged(QString)),this,SLOT(SupikPortChoosed(QString)));
+    le->setText(pc.SupikPort);
+    glyout->addWidget(le,4,1,1,1);
+
+    lbl = new s_tqLabel("Адрес SQL-сервера:");
+    glyout->addWidget(lbl,5,0,1,1);
     glyout->setAlignment(lbl,Qt::AlignRight);
     le = new s_tqLineEdit;
     connect(le,SIGNAL(textChanged(QString)),this,SLOT(SqlPathChoosed(QString)));
     le->setText(pc.SQLPath);
-    glyout->addWidget(le, 3, 1, 1, 1);
+    glyout->addWidget(le, 5, 1, 1, 1);
 
     lbl = new s_tqLabel("Язык системы:");
-    glyout->addWidget(lbl,4,0,1,1);
+    glyout->addWidget(lbl,6,0,1,1);
     glyout->setAlignment(lbl,Qt::AlignRight);
     s_tqComboBox *LangCB = new s_tqComboBox;
     connect(LangCB,SIGNAL(currentIndexChanged(QString)),this,SLOT(LangChoosed(QString)));
     LangCB->addItem(QIcon(":/res/LangRU.png"), "RU");
     LangCB->addItem(QIcon(":/res/langGB.png"), "EN");
     LangCB->setCurrentText(pc.CurLang);
-    glyout->addWidget(LangCB, 4, 1, 1, 1);
+    glyout->addWidget(LangCB, 6, 1, 1, 1);
 
     s_tqPushButton *isOKPB = new s_tqPushButton (QColor(0,135,0), "Ага");
     s_tqPushButton *CancelPB = new s_tqPushButton (QColor(185,0,0), "Неа");
@@ -108,7 +124,7 @@ void sys_settingsdialog::SetupUI ()
 
     lbl = new s_tqLabel("Период обновления информации (мин)");
     glyout->setAlignment(lbl,Qt::AlignRight);
-    glyout->addWidget(lbl,5,0,1,1);
+    glyout->addWidget(lbl,7,0,1,1);
     s_tqSpinBox *spb = new s_tqSpinBox;
     spb->setMinimum(0.1);
     spb->setMaximum(9999.0);
@@ -116,18 +132,18 @@ void sys_settingsdialog::SetupUI ()
     spb->setSingleStep(0.1);
     connect(spb,SIGNAL(valueChanged(double)),this,SLOT(TimerPeriodChoosed(double)));
     spb->setValue(pc.timerperiod);
-    glyout->addWidget(spb,5,1,1,1);
+    glyout->addWidget(spb,7,1,1,1);
 
     lbl = new s_tqLabel("Показывать сообщения:");
     glyout->setAlignment(lbl,Qt::AlignRight);
-    glyout->addWidget(lbl,6,0,1,1);
+    glyout->addWidget(lbl,8,0,1,1);
     s_tqCheckBox *cb = new s_tqCheckBox;
     cb->setChecked(pc.ErWidgetShowing);
     connect(cb,SIGNAL(toggled(bool)),this,SLOT(ErWidgetEnabled(bool)));
-    glyout->addWidget(cb,6,1,1,1);
+    glyout->addWidget(cb,8,1,1,1);
     lbl = new s_tqLabel("Задержка появления экрана сообщений (мс):");
     glyout->setAlignment(lbl,Qt::AlignRight);
-    glyout->addWidget(lbl,7,0,1,1);
+    glyout->addWidget(lbl,9,0,1,1);
     spb = new s_tqSpinBox;
     spb->setMinimum(500);
     spb->setMaximum(5000);
@@ -135,13 +151,13 @@ void sys_settingsdialog::SetupUI ()
     spb->setSingleStep(1);
     connect(spb,SIGNAL(valueChanged(double)),this,SLOT(ErWidgetPeriodChoosed(double)));
     spb->setValue(pc.ErWidgetPeriod);
-    glyout->addWidget(spb,7,1,1,1);
+    glyout->addWidget(spb,9,1,1,1);
 
 
     hlyout = new QHBoxLayout;
     hlyout->addWidget(isOKPB);
     hlyout->addWidget(CancelPB);
-    glyout->addLayout(hlyout,8,0,1,2);
+    glyout->addLayout(hlyout,10,0,1,2);
 
     lyout->addLayout(glyout);
     lyout->addSpacing(500);
@@ -192,6 +208,16 @@ void sys_settingsdialog::ErWidgetEnabled(bool enabled)
     pc.ErWidgetShowing = enabled;
 }
 
+void sys_settingsdialog::SupikServerChoosed(QString ip)
+{
+    pc.SupikServer = ip;
+}
+
+void sys_settingsdialog::SupikPortChoosed(QString port)
+{
+    pc.SupikPort = port;
+}
+
 void sys_settingsdialog::CancelPBClicked()
 {
     this->close();
@@ -218,6 +244,8 @@ void sys_settingsdialog::OKPBClicked()
         pc.LandP->setValue("settings/FtpServer",pc.FtpServer);
         pc.LandP->setValue("settings/ErPeriod",pc.ErWidgetPeriod);
         pc.LandP->setValue("settings/ErShow",pc.ErWidgetShowing);
+        pc.LandP->setValue("settings/Server",pc.SupikServer);
+        pc.LandP->setValue("settings/Port",pc.SupikPort);
         if (!pl.InitLang())
             pl.SetDefaultLang();
 
@@ -225,4 +253,3 @@ void sys_settingsdialog::OKPBClicked()
         this->close();
     }
 }
-

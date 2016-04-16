@@ -153,7 +153,10 @@ public:
         ER_CTHREAD,  // checkthread
         ER_DEVMAIN,  // DevMainDialog
         ER_PROBS,    // SysProblemsDialog
-        ER_FTP      // Ftp
+        ER_FTP,      // Ftp
+        ER_CLI,      // Client
+        ER_LOG,      // Log
+        ER_ETH      // Ethernet
     };
 
     static QMap<int, QString> ermsgs()
@@ -191,6 +194,9 @@ public:
         map.insert(ER_DEVMAIN, QString::fromLocal8Bit("Ред_изделий"));
         map.insert(ER_PROBS, QString::fromLocal8Bit("Д_проблемы"));
         map.insert(ER_FTP, QString::fromLocal8Bit("Ftp"));
+        map.insert(ER_CLI, QString::fromLocal8Bit("Клиент"));
+        map.insert(ER_LOG, QString::fromLocal8Bit("Логи"));
+        map.insert(ER_ETH, QString::fromLocal8Bit("Ethernet"));
         return map;
     }
 
@@ -250,6 +256,19 @@ public:
         return map;
     }
 
+    static QStringList DifferentColors()
+    {
+        QStringList list;
+        list.append("255,255,51,40");
+        list.append("0,51,255,40");
+        list.append("0,204,51,40");
+        list.append("153,153,51,40");
+        list.append("255,204,51,40");
+        list.append("255,0,102,40");
+        list.append("0,153,204,40");
+        return list;
+    }
+
     enum ProblemSubTypes
     {
         PST_FIELDMISSED,    // отсутствует поле ProblemField в таблице ProblemTable
@@ -300,11 +319,14 @@ public:
     int idRecord; // номер (id) текущей редактируемой записи в справочнике
     int idPers;  // текущий идентификатор пользователя, вошедшего в систему
     QString Pers; // фамилия пользователя, вошедшего в систему
+    QString PersLogin, PersPsw; // логин и пароль пользователя
     int idGroup; // ИД группы пользователя, определяет права пользователя в системе (ent.groups.idgroup)
     QString PathToLibs; // текущий путь до библиотек Altium
     QString PathToSup; // текущий путь до рабочей директории СУПиКа
     QString FtpServer; // адрес ftp-сервера, используемого для архивов
     QString CurLang; // обозначение текущего языка системы
+    QString HomeDir; // путь к рабочей папке пользователя с СУПиКом (Win: c:\Users\<user>\.supik, *nix: ~/.supik)
+    QString SupikServer, SupikPort; // IP-адрес и порт сервера СУПиК
     QString SQLPath; // путь к SQL-серверу
     QSettings *LandP; // переменная для работы с настройками системы в реестре
     QByteArray data, symfind, footfind; // data - массив хранения считанных из файлов библиотек бинарных данных,

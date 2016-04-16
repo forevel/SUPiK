@@ -1,5 +1,6 @@
 #include "dev_maindialog.h"
 #include <QAction>
+#include <QScrollArea>
 #include <QMenu>
 #include <QIcon>
 #include <QGridLayout>
@@ -58,11 +59,13 @@ void DevMainDialog::paintEvent(QPaintEvent *event)
 
 void DevMainDialog::SetupUI()
 {
-/*    QVBoxLayout *mlyout = new QVBoxLayout;
-    s_tqStackedWidget *stw = new s_tqStackedWidget;
-    stw->setObjectName("stw");
-    s_tqWidget *w = new s_tqWidget; */
     QVBoxLayout *lyout = new QVBoxLayout;
+    QScrollArea *SArea = new QScrollArea;
+    s_tqWidget *w = new s_tqWidget;
+    SArea->setStyleSheet("QScrollArea {background-color: rgba(0,0,0,0);}");
+    SArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    SArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    QVBoxLayout *slyout = new QVBoxLayout;
     QHBoxLayout *hlyout = new QHBoxLayout;
 
     s_tqPushButton *pb = new s_tqPushButton;
@@ -72,7 +75,7 @@ void DevMainDialog::SetupUI()
     pb->setToolTip("Закрыть вкладку");
     hlyout->addWidget(pb,0);
     hlyout->addStretch(100);
-    lyout->addLayout(hlyout);
+    slyout->addLayout(hlyout);
 
 //    s_tqGroupBox *gb = new s_tqGroupBox;
     hlyout = new QHBoxLayout;
@@ -96,7 +99,7 @@ void DevMainDialog::SetupUI()
     le->setObjectName("persle");
     le->setEnabled(false);
     hlyout->addWidget(le, 10);
-    lyout->addLayout(hlyout);
+    slyout->addLayout(hlyout);
 
     hlyout = new QHBoxLayout;
     lbl = new s_tqLabel("Фирма-изготовитель:");
@@ -119,7 +122,7 @@ void DevMainDialog::SetupUI()
     le->setObjectName("decimalle");
     le->setEnabled(false);
     hlyout->addWidget(le, 10);
-    lyout->addLayout(hlyout);
+    slyout->addLayout(hlyout);
 
     hlyout = new QHBoxLayout;
     lbl = new s_tqLabel("Наименование:");
@@ -132,47 +135,48 @@ void DevMainDialog::SetupUI()
     s_tqComboBox *cb = new s_tqComboBox;
     cb->setObjectName("revisioncb");
     hlyout->addWidget(cb, 2);
-    lyout->addLayout(hlyout);
+    slyout->addLayout(hlyout);
 
     s_tqFrame *line = new s_tqFrame;
     line->setFrameShape(QFrame::HLine);
     line->setFrameShadow(QFrame::Sunken);
-    lyout->addWidget(line);
+    slyout->addWidget(line);
 
     QGridLayout *glyout = new QGridLayout;
-    s_tqGroupBox *gb = new s_tqGroupBox(255,255,51,40);
+//    s_tqGroupBox *gb = new s_tqGroupBox(255,255,51,40);
+    s_tqGroupBox *gb = new s_tqGroupBox(pc.DifferentColors().at(0));
     gb->setTitle("Схемы");
     gb->setObjectName("sch");
     gb->setMinimumHeight(70);
     glyout->addWidget(gb, 0, 0, 1, 1);
-    gb = new s_tqGroupBox(0,51,255,40);
+    gb = new s_tqGroupBox(pc.DifferentColors().at(1));
     gb->setTitle("Чертежи");
     gb->setObjectName("chert");
     gb->setMinimumHeight(70);
     glyout->addWidget(gb, 0, 1, 1, 1);
-    gb = new s_tqGroupBox(0, 204, 51, 40);
+    gb = new s_tqGroupBox(pc.DifferentColors().at(2));
     gb->setTitle("Изготовление");
     gb->setObjectName("izg");
     gb->setMinimumHeight(70);
     glyout->addWidget(gb, 0, 2, 1, 1);
 
-    gb = new s_tqGroupBox(153,153,51,40);
+    gb = new s_tqGroupBox(pc.DifferentColors().at(3));
     gb->setTitle("Проектные");
     gb->setObjectName("pr");
     gb->setMinimumHeight(70);
     glyout->addWidget(gb, 1, 0, 1, 1);
-    gb = new s_tqGroupBox(255,204,51,40);
+    gb = new s_tqGroupBox(pc.DifferentColors().at(4));
     gb->setTitle("Эксплуатационные");
     gb->setObjectName("eksp");
     gb->setMinimumHeight(70);
     glyout->addWidget(gb, 1, 1, 1, 1);
-    gb = new s_tqGroupBox(255,0,102,40);
+    gb = new s_tqGroupBox(pc.DifferentColors().at(5));
     gb->setTitle("Прогр. обесп.");
     gb->setObjectName("po");
     gb->setMinimumHeight(70);
     glyout->addWidget(gb, 1, 2, 1, 1);
 
-    gb = new s_tqGroupBox(0,153,204,40);
+    gb = new s_tqGroupBox(pc.DifferentColors().at(6));
     gb->setTitle("Модели");
     gb->setObjectName("mod");
     gb->setMinimumHeight(70);
@@ -187,19 +191,23 @@ void DevMainDialog::SetupUI()
     gb->setEnabled(false);
     gb->setMinimumHeight(70);
     glyout->addWidget(gb, 2, 2, 1, 1); */
-    lyout->addLayout(glyout);
+    slyout->addLayout(glyout);
 
     pb = new s_tqPushButton("История",153,255,204,40);
     connect(pb,SIGNAL(clicked()),this,SLOT(History()));
-    lyout->addWidget(pb);
+    slyout->addWidget(pb);
 
     pb = new s_tqPushButton("Объекты",255,102,0,40);
     connect(pb,SIGNAL(clicked()),this,SLOT(Objects()));
-    lyout->addWidget(pb);
+    slyout->addWidget(pb);
 
     pb = new s_tqPushButton("Командировки",255,102,102,40);
     connect(pb,SIGNAL(clicked()),this,SLOT(Trips()));
-    lyout->addWidget(pb);
+    slyout->addWidget(pb);
+    w->setLayout(slyout);
+    w->setSizePolicy(QSizePolicy::Maximum,QSizePolicy::Ignored);
+    SArea->setWidget(w);
+    lyout->addWidget(SArea);
     setLayout(lyout);
     Refresh();
 }

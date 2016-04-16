@@ -6,6 +6,7 @@
 #include <QSettings>
 #include <QDate>
 #include <QDateTime>
+#include <QDir>
 #include "s_sql.h"
 
 PublicClass pc;
@@ -57,6 +58,8 @@ void PublicClass::InitiatePublicClass()
     FtpServer = LandP->value("settings/FtpServer","ftp.asu-vei.ru").toString();
     ErWidgetPeriod = LandP->value("settings/ErPeriod","2000").toInt();
     ErWidgetShowing = LandP->value("settings/ErShow","true").toBool();
+    SupikServer = LandP->value("settings/Server","asu-vei.ru").toString();
+    SupikPort = LandP->value("settings/Port","9687").toString();
     openBD(alt, "ALT", "altium", "supik", "sysupik");
     openBD(con, "CON", "constructives", "supik", "sysupik");
     openBD(dev, "DEV", "devices", "supik", "sysupik");
@@ -74,6 +77,7 @@ void PublicClass::InitiatePublicClass()
     symfind = "LIBREFERENCE=";
     footfind = "PATTERN=";
     idRecord = -1;
+    HomeDir = QDir::homePath()+"/.supik/";
 }
 
 // открытие БД

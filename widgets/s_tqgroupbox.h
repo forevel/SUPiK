@@ -8,7 +8,7 @@ class s_tqGroupBox : public QGroupBox
 {
     Q_OBJECT
 public:
-    explicit s_tqGroupBox(int r=0, int g=0, int b=0, int a=0, QWidget *parent = 0);
+    explicit s_tqGroupBox(QString Color="", QWidget *parent = 0);
     QVariant getAData();
     void setAData(QVariant dat);
 

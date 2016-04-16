@@ -7,7 +7,7 @@
 #include "gen/s_sql.h"
 #include "widgets/s_tqcheckbox.h"
 #include "dialogs/messagebox.h"
-#include "gen/ftp.h"
+#include "gen/client.h"
 
 StartWindow::StartWindow(QWidget *parent) : QMainWindow(parent)
 {
@@ -204,6 +204,9 @@ void StartWindow::OkPBClicked()
             return;
         }
 
+        pc.PersLogin = UNameLE->text();
+        pc.PersPsw = PasswdLE->text();
+
         this->hide();
 
         QPixmap StartWindowSplashPixmap(":/res/1.x.png");
@@ -211,14 +214,12 @@ void StartWindow::OkPBClicked()
         StartWindowSplashScreen->show();
 
         StartWindowSplashScreen->showMessage("Проверка наличия подключения к каталогу СУПиК...", Qt::AlignRight, Qt::white);
-        Ftps = new Ftp;
-        if (!Ftps->Connect(pc.FtpServer))
-            STARTER("Сервер ftp недоступен");
-        else if (!Ftps->Login("supik","wdbpy(WcTtTZzA_TEc-<"))
-            STARTER("Имя или пароль доступа к ftp-серверу неверны");
+        Cli = new Client;
+        if (!Cli->Connect(pc.SupikServer, pc.SupikPort))
+            STARTER("Сервер СУПиК недоступен");
         else
         {
-            QByteArray *ba = new QByteArray;
+/*            QByteArray *ba = new QByteArray;
             if (!Ftps->GetFile("xmHXP_FW~h", ba, 10000))
                 STARTER("Каталог СУПиК недоступен");
             else
@@ -228,13 +229,13 @@ void StartWindow::OkPBClicked()
                     STARTER("Неправильный каталог СУПиК");
                 else
                     STARTINFO("Подключение к FTP-серверу выполнено успешно");
-            }
+            } */
         }
 
         StartWindowSplashScreen->finish(this);
 
         supik *supik_main_window = new supik;
-        connect(supik_main_window,SIGNAL(stopall()),Ftps,SLOT(StopThreads()));
+        connect(supik_main_window,SIGNAL(stopall()),Cli,SLOT(StopThreads()));
         supik_main_window->setVisible(true);
         supik_main_window->setEnabled(true);
     }

@@ -36,6 +36,8 @@ private slots:
     void SupikDirChoosed(QVariant);
     void FtpNameChoosed(QString);
     void SqlPathChoosed(QString);
+    void SupikServerChoosed(QString ip);
+    void SupikPortChoosed(QString);
 
 private:
     void paintEvent(QPaintEvent *event);

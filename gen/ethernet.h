@@ -5,6 +5,11 @@
 #include <QTcpSocket>
 #include <QMutex>
 #include <QByteArray>
+#include <QSslSocket>
+
+#define ETHER(a)   ERMSG(PublicClass::ER_ETH,__LINE__,a)
+#define ETHWARN    WARNMSG(PublicClass::ER_ETH,__LINE__)
+#define ETHINFO(a) INFOMSG(PublicClass::ER_ETH,__LINE__,a)
 
 // ошибки IP-сокета
 #define SKT_UNKNOWNER       1 // неизвестная ошибка
@@ -38,7 +43,15 @@ class Ethernet : public QObject
     Q_OBJECT
 
 public:
-    Ethernet(QObject *parent = 0);
+    enum EthernetTypes
+    {
+        ETH_PLAIN,
+        ETH_SSL
+    };
+
+    QTcpSocket *sock;
+    QSslSocket *sslsock;
+    Ethernet(QString Host, int Port, int Type=ETH_PLAIN, QObject *parent = 0);
     bool ClosePortAndFinishThread, Busy;
     static QMap<int,QString> EthernetErrors()
     {
@@ -71,7 +84,7 @@ public:
         return map;
     }
 
-    void SetIpAndPort(QString Host, quint16 Port);
+//    bool SetIpAndPort(QString Host, quint16 Port);
 
 public slots:
     void Run();
@@ -88,16 +101,20 @@ signals:
 
 private slots:
     void CheckForData();
-    void seterr(QAbstractSocket::SocketError);
+    void SockError(QAbstractSocket::SocketError);
+    void SslError(QAbstractSocket::SocketError);
+    void SslErrors(QList<QSslError> errlist);
+    void SocketStateChanged(QAbstractSocket::SocketState state);
+    void SslSocketEncrypted();
 
 private:
-    QTcpSocket *sock;
     QMutex OutDataBufMtx;
     QByteArray *DataToSend;
     QByteArray OutDataBuf;
     QString Host;
     quint16 Port;
     void SendData();
+    int EthType;
 
 protected:
 };

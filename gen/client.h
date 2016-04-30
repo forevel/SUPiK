@@ -21,7 +21,19 @@ public:
     explicit Client(QObject *parent=0);
     ~Client();
 
-    bool Connect(QString Host, QString Port);
+    enum ClientErrors
+    {
+        CLIER_NOERROR,
+        CLIER_GENERAL,
+        CLIER_CLOSED,
+        CLIER_TIMEOUT,
+        CLIER_SERVER,
+        CLIER_LOGIN,     // некорректный логин (нет такого пользователя)
+        CLIER_PSW,       // пароли введённый и в БД не совпадают
+        CLIER_GROUP     // не найдена группа доступа
+    };
+
+    int Connect(QString Host, QString Port);
     bool ChDir(QString Dir);
     bool MkDir(QString Dir);
     bool List();
@@ -45,6 +57,7 @@ private:
       // ServerToClient
       CMD_LOGINREQ, // запрос имени пользователя
       CMD_PSWREQ,	// запрос пароля (зарез.)
+      ANS_GROUP,    // группа доступа
       ANS_SQLRESULT, // результат обработки sql-запроса
       ANS_MESSAGES, // текущие сообщения для пользователя
       ANS_CHATMSGS, // сообщения из чата для пользователя
@@ -69,15 +82,6 @@ private:
       CMD_IDLE // состояние ожидания команды
     };
 
-    enum ClientErrors
-    {
-        CLIER_NOERROR,
-        CLIER_GENERAL,
-        CLIER_CLOSED,
-        CLIER_TIMEOUT,
-        CLIER_SERVER
-    };
-
     QByteArray *BufData, *RcvData, *XmitData;
     Ethernet *MainEthernet, *FileEthernet;
     QTimer *TimeoutTimer, *GetComReplyTimer, *GetFileTimer;
@@ -89,7 +93,7 @@ private:
     qint64 WrittenBytes, ReadBytes;
     int CurrentCommand, RcvDataSize, XmitDataSize, DetectedError;
 
-    bool SendCmd(int Command, QStringList Args=QStringList());
+    void SendCmd(int Command, QStringList Args=QStringList());
     QString RemoveSpaces(QString str);
 
 private slots:

@@ -311,6 +311,7 @@ public:
 
     double timerperiod, ErWidgetPeriod;
     bool ErWidgetShowing;
+    bool AutonomousMode; // если сервер СУПиК (становится) недоступен, признак автономного режима становится равен true
     QString SQLUser, SQLPsw;
     QSqlDatabase ent, alt, sup, con, sol, sch, dev;
     QMap<QString, QSqlDatabase> db;

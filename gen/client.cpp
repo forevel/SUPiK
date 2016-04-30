@@ -7,7 +7,7 @@
 #include "client.h"
 #include "log.h"
 
-Client *Cli;
+Client *Cli = 0;
 Log *CliLog;
 
 Client::Client(QObject *parent) : QObject(parent)
@@ -19,7 +19,7 @@ Client::~Client()
 {
 }
 
-bool Client::Connect(QString Host, QString Port)
+int Client::Connect(QString Host, QString Port)
 {
     CliLog = new Log;
     CliLog->Init(pc.HomeDir+"/cli.log");
@@ -57,9 +57,17 @@ bool Client::Connect(QString Host, QString Port)
         QThread::msleep(50);
         qApp->processEvents(QEventLoop::AllEvents);
     }
-    if ((!Connected) || (!LoginOk))
-        return false;
-    return true;
+    if (!Connected)
+    {
+        CliLog->warning("Entering autonomous mode...");
+        return CLIER_TIMEOUT;
+    }
+    if (!LoginOk)
+    {
+        CliLog->warning("Wrong login or password");
+        return DetectedError;
+    }
+    return CLIER_NOERROR;
 }
 
 void Client::StopThreads()
@@ -74,7 +82,7 @@ void Client::Disconnect()
     MainEthernet->Stop();
 }
 
-bool Client::SendCmd(int Command, QStringList Args)
+void Client::SendCmd(int Command, QStringList Args)
 {
     CurrentCommand = Command;
     Busy = true;
@@ -140,19 +148,168 @@ bool Client::SendCmd(int Command, QStringList Args)
         break;
     }
     }
-    CliLog->info(">"+CommandString.toLocal8Bit());
-    QByteArray ba;
-    ba.append(CommandString.toUtf8());
-    emit ClientSend(&ba);
-    while (Busy)
+    if (Command == ANS_PSW)
+        CliLog->info(">********");
+    else
+        CliLog->info(">"+CommandString.toLocal8Bit());
+    QByteArray *ba = new QByteArray(CommandString.toUtf8());
+    emit ClientSend(ba);
+}
+
+void Client::ParseReply()
+{
+    TimeoutTimer->start(); // рестарт таймера таймаута, т.к. что-то приняли
+    CmdOk = false;
+    GetComReplyTimer->stop();
+    QString IncomingString = QString::fromLocal8Bit(*BufData);
+    BufData->clear();
+    QStringList ArgList = IncomingString.split(" ");
+    if (ArgList.isEmpty()) // ничего толкового не получено
+        return;
+    QString ServerResponse = ArgList.takeFirst(); // в ArgList останутся только аргументы
+    if (ServerResponse == SERVERRSTR)
     {
-        qApp->processEvents(QEventLoop::AllEvents);
-        QThread::msleep(50);
+        CliLog->error("Server error response");
+        DetectedError = CLIER_SERVER;
+        Busy = false;
+        TimeoutTimer->stop();
+        return;
     }
-    TimeoutTimer->stop();
-    if (!CmdOk)
-        return false;
-    return true;
+    switch (CurrentCommand)
+    {
+    case CMD_LOGINREQ: // по сути установление соединения, должны получить запрос LOGIN
+    {
+        if (ServerResponse == "LOGIN\n")
+        {
+            CliLog->info("<"+ServerResponse);
+            CmdOk = true;
+            SendCmd(ANS_LOGIN);
+            return;
+        }
+        break;
+    }
+    case ANS_LOGIN:
+    {
+        if (ServerResponse == "PSW\n")
+        {
+            CliLog->info("<"+ServerResponse);
+            CmdOk = true;
+            SendCmd(ANS_PSW);
+            return;
+        }
+        else
+            DetectedError = CLIER_LOGIN;
+        break;
+    }
+    case ANS_PSW:
+    {
+        // если получили в ответ "GROUP <access>", значит, всё в порядке, иначе ошибка пароля
+        if (ServerResponse == "GROUP")
+        {
+            LoginOk = true;
+            bool ok;
+            pc.access = ArgList.at(0).toLong(&ok,16);
+            if (!ok)
+            {
+                CliLog->warning("Group access undefined: "+ArgList.at(0));
+                pc.access = 0x0; // нет доступа никуда
+                DetectedError = CLIER_GROUP;
+                return;
+            }
+            CliLog->info("Group access: "+ArgList.at(0));
+            CmdOk = true;
+        }
+        else
+            DetectedError = CLIER_PSW;
+        break;
+    }
+    case CMD_QUIT:
+    {
+        if (ServerResponse == "BYE\n")
+            CmdOk = true;
+        break;
+    }
+        /*    case CMD_PASV:
+    {
+        if (ClientResult == Client_PASV_ENAB)
+        {
+            CmdOk = true;
+            int tmpi1 = ClientResultString.indexOf("(");
+            if (tmpi1 == -1)
+                CmdOk = false;
+            else
+            {
+                int tmpi2 = ClientResultString.indexOf(")");
+                if ((tmpi2 == -1) || (tmpi2 <= tmpi1))
+                    CmdOk = false;
+                else
+                {
+                    QStringList tmpsl = ClientResultString.mid(tmpi1+1, (tmpi2-tmpi1-1)).split(","); // вытаскиваем host и port
+                    if (tmpsl.size() < 6)
+                        CmdOk = false;
+                    else
+                    {
+                        FileHost = tmpsl.at(0)+"."+tmpsl.at(1)+"."+tmpsl.at(2)+"."+tmpsl.at(3);
+                        QString tmps = tmpsl.at(4);
+                        quint16 tmpqi = tmps.toInt(&ok);
+                        if (!ok)
+                            CmdOk = false;
+                        else
+                        {
+                            FilePort = tmpqi * 256;
+                            tmps = tmpsl.at(5);
+                            tmpqi = tmps.toInt(&ok);
+                            if (!ok)
+                                CmdOk = false;
+                            else
+                                FilePort += tmpqi;
+                        }
+                    }
+                }
+            }
+        }
+        break;
+    }
+    case CMD_RETR:
+    case CMD_STOR:
+    {
+        if (ClientResult == Client_FILESTATOK)
+            return;
+        if (ClientResult == Client_CHANCLOSED)
+            CmdOk = true;
+        FileBusy = false;
+        break;
+    }
+    case CMD_CWD:
+    {
+        if (ClientResult == Client_QUERYOK)
+            CmdOk = true;
+        break;
+    }
+    case CMD_MKD:
+    {
+        if (ClientResult == Client_PATH_CREAT)
+            CmdOk = true;
+        break;
+    }
+
+    case CMD_LIST:
+    {
+        if (ClientResult == Client_CHANCLOSED)
+            CmdOk = true;
+        else
+            CmdOk = false;
+        break;
+    } */
+    default:
+        break;
+    }
+    if (CmdOk)
+    {
+        TimeoutTimer->stop();
+        CliLog->info("<"+ServerResponse);
+    }
+    Busy = false;
 }
 
 bool Client::ChDir(QString Dir)
@@ -281,146 +438,6 @@ void Client::FileGet(QByteArray *ba)
 void Client::GetFileTimerTimeout()
 {
     FileBusy = false;
-}
-
-void Client::ParseReply()
-{
-    TimeoutTimer->start(); // рестарт таймера таймаута, т.к. что-то приняли
-    CmdOk = false;
-    GetComReplyTimer->stop();
-    QString IncomingString = QString::fromLocal8Bit(*BufData);
-    BufData->clear();
-    QStringList ArgList = IncomingString.split(" ");
-    if (ArgList.isEmpty()) // ничего толкового не получено
-        return;
-    QString ServerResponse = ArgList.takeFirst(); // в ArgList останутся только аргументы
-    if (ServerResponse == SERVERRSTR)
-    {
-        CliLog->error("Server error response");
-        DetectedError = CLIER_SERVER;
-        Busy = false;
-        return;
-    }
-    switch (CurrentCommand)
-    {
-    case CMD_LOGINREQ: // по сути установление соединения, должны получить запрос LOGIN
-    {
-        if (ServerResponse == "LOGIN\n")
-        {
-            CliLog->info("<"+ServerResponse);
-            CmdOk = true;
-            SendCmd(ANS_LOGIN);
-            return;
-        }
-        break;
-    }
-    case ANS_LOGIN:
-    {
-        if (ServerResponse == "PSW\n")
-        {
-            CliLog->info("<"+ServerResponse);
-            CmdOk = true;
-            SendCmd(ANS_PSW);
-            return;
-        }
-        break;
-    }
-    case ANS_PSW:
-    {
-        if (ServerResponse == "IDLE\n")
-        {
-            LoginOk = true;
-            CmdOk = true;
-        }
-        break;
-    }
-    case CMD_QUIT:
-    {
-        if (ServerResponse == "BYE\n")
-            CmdOk = true;
-        break;
-    }
-        /*    case CMD_PASV:
-    {
-        if (ClientResult == Client_PASV_ENAB)
-        {
-            CmdOk = true;
-            int tmpi1 = ClientResultString.indexOf("(");
-            if (tmpi1 == -1)
-                CmdOk = false;
-            else
-            {
-                int tmpi2 = ClientResultString.indexOf(")");
-                if ((tmpi2 == -1) || (tmpi2 <= tmpi1))
-                    CmdOk = false;
-                else
-                {
-                    QStringList tmpsl = ClientResultString.mid(tmpi1+1, (tmpi2-tmpi1-1)).split(","); // вытаскиваем host и port
-                    if (tmpsl.size() < 6)
-                        CmdOk = false;
-                    else
-                    {
-                        FileHost = tmpsl.at(0)+"."+tmpsl.at(1)+"."+tmpsl.at(2)+"."+tmpsl.at(3);
-                        QString tmps = tmpsl.at(4);
-                        quint16 tmpqi = tmps.toInt(&ok);
-                        if (!ok)
-                            CmdOk = false;
-                        else
-                        {
-                            FilePort = tmpqi * 256;
-                            tmps = tmpsl.at(5);
-                            tmpqi = tmps.toInt(&ok);
-                            if (!ok)
-                                CmdOk = false;
-                            else
-                                FilePort += tmpqi;
-                        }
-                    }
-                }
-            }
-        }
-        break;
-    }
-    case CMD_RETR:
-    case CMD_STOR:
-    {
-        if (ClientResult == Client_FILESTATOK)
-            return;
-        if (ClientResult == Client_CHANCLOSED)
-            CmdOk = true;
-        FileBusy = false;
-        break;
-    }
-    case CMD_CWD:
-    {
-        if (ClientResult == Client_QUERYOK)
-            CmdOk = true;
-        break;
-    }
-    case CMD_MKD:
-    {
-        if (ClientResult == Client_PATH_CREAT)
-            CmdOk = true;
-        break;
-    }
-
-    case CMD_LIST:
-    {
-        if (ClientResult == Client_CHANCLOSED)
-            CmdOk = true;
-        else
-            CmdOk = false;
-        break;
-    } */
-    default:
-        break;
-    }
-    if (CmdOk)
-    {
-        TimeoutTimer->stop();
-        CliLog->info("<"+ServerResponse);
-    }
-//    Busy = false;
 }
 
 void Client::ClientConnected()

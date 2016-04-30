@@ -57,7 +57,7 @@ void sys_settingsdialog::SetupUI ()
     glyout->setColumnStretch(0,0);
     glyout->setColumnStretch(1,1);
 
-    lbl = new s_tqLabel("Путь к каталогам библиотек Altium:");
+/*    lbl = new s_tqLabel("Путь к каталогам библиотек Altium:");
     glyout->addWidget(lbl,0,0,1,1);
     glyout->setAlignment(lbl,Qt::AlignRight);
     s_tqChooseWidget *cw = new s_tqChooseWidget(true); // transparent=true
@@ -81,12 +81,12 @@ void sys_settingsdialog::SetupUI ()
     s_tqLineEdit *le = new s_tqLineEdit;
     connect(le,SIGNAL(textChanged(QString)),this,SLOT(FtpNameChoosed(QString)));
     le->setText(pc.FtpServer);
-    glyout->addWidget(le,2,1,1,1);
+    glyout->addWidget(le,2,1,1,1); */
 
     lbl = new s_tqLabel("Адрес сервера СУПиК:");
     glyout->addWidget(lbl,3,0,1,1);
     glyout->setAlignment(lbl,Qt::AlignRight);
-    le = new s_tqLineEdit;
+    s_tqLineEdit *le = new s_tqLineEdit;
     connect(le,SIGNAL(textChanged(QString)),this,SLOT(SupikServerChoosed(QString)));
     le->setText(pc.SupikServer);
     glyout->addWidget(le,3,1,1,1);
@@ -225,7 +225,7 @@ void sys_settingsdialog::CancelPBClicked()
 
 void sys_settingsdialog::OKPBClicked()
 {
-    QString tmpString = pc.PathToLibs + "//Symbols//Capasitors.SchLib";
+/*    QString tmpString = pc.PathToLibs + "//Symbols//Capasitors.SchLib";
     QFile file;
 
     file.setFileName(tmpString);
@@ -235,7 +235,7 @@ void sys_settingsdialog::OKPBClicked()
         return;
     }
     else
-    {
+    { */
         pc.LandP->setValue("settings/pathtolibs",pc.PathToLibs);
         pc.LandP->setValue("settings/pathtosup",pc.PathToSup);
         pc.LandP->setValue("settings/lang",pc.CurLang);
@@ -251,5 +251,5 @@ void sys_settingsdialog::OKPBClicked()
 
         MessageBox2::information(this,"Внимание","Некоторые настройки вступят в силу \nтолько после перезапуска СУПиКа");
         this->close();
-    }
+//    }
 }

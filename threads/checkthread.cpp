@@ -36,10 +36,11 @@ void CheckThread::Start()
 }
 
 // проверка целостности основных баз данных
+// будет перенесено в серверную часть
 
 void CheckThread::MainCheck()
 {
-    QMap<QString, QSqlDatabase> db;
+/*    QMap<QString, QSqlDatabase> db;
     QSqlDatabase tmpdb = OpenDB("TLA", "altium");
     if (!tmpdb.open())
     {
@@ -170,6 +171,7 @@ void CheckThread::MainCheck()
     // далее следует проверка на наличие изделий, находящихся в ремонте (БД repair) для alt
     // далее следует проверка на наличие записей в базах altium, solidworks, schemagee, devices и constructives, которые не имеют записи в номенклатуре
     // далее следует проверка на наличие записей с одинаковым <tble>, но с разным id<tble> в одной таблице
+    */
 }
 
 // функция таймера

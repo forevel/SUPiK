@@ -24,6 +24,7 @@ PublicClass::PublicClass()
     TabColors[TW_ADM] = QColor(102, 102, 153); // ADMIN
     TabColors[TW_WH] = QColor(204, 204, 51); // WAREHOUSE
     TabColors[TW_DEV] = QColor(204, 204, 255); // DEVICES
+    AutonomousMode = true; // изначально неизвестно, доступен ли сервер, поэтому на всякий случай ставим признак автономности
 }
 
 PublicClass::~PublicClass()
@@ -60,6 +61,9 @@ void PublicClass::InitiatePublicClass()
     ErWidgetShowing = LandP->value("settings/ErShow","true").toBool();
     SupikServer = LandP->value("settings/Server","asu-vei.ru").toString();
     SupikPort = LandP->value("settings/Port","9687").toString();
+
+    // вставить проверку доступности БД и переключение при необходимости на локальную БД и работу в автономном режиме (если локальная БД имеется)
+
     openBD(alt, "ALT", "altium", "supik", "sysupik");
     openBD(con, "CON", "constructives", "supik", "sysupik");
     openBD(dev, "DEV", "devices", "supik", "sysupik");
@@ -91,7 +95,8 @@ void PublicClass::openBD(QSqlDatabase &db, QString dbid, QString dbname, QString
         db.setDatabaseName(dbname);
         db.setUserName(login);
         db.setPassword(psw);
-        db.setPort(3306);
+//        db.setPort(3306);
+       db.setPort(3333); // временно для отладки с виртуальной машиной
     }
 }
 

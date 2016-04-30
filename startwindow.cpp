@@ -158,21 +158,13 @@ void StartWindow::OkPBClicked()
         MessageBox2::error(this, "Ошибка!", "Отладочная ошибка в строке "+QString::number(__LINE__));
         return;
     }
-    tmpString = sqlc.GetValueFromTableByField(pc.sup, "personel", "psw", "login", UNameLE->text());
+
+    pc.PersLogin = UNameLE->text();
+    pc.PersPsw = PasswdLE->text();
+
+/*    tmpString = sqlc.GetValueFromTableByField(pc.sup, "personel", "psw", "login", UNameLE->text());
     if (tmpString == PasswdLE->text())
     {
-        if (SaveCB->isChecked())
-        {
-            pc.LandP->setValue("login/login", UNameLE->text());
-            pc.LandP->setValue("login/psw", PasswdLE->text());
-            pc.LandP->setValue("login/ischecked", SaveCB->isChecked());
-        }
-        else
-        {
-            pc.LandP->setValue("login/login", "");
-            pc.LandP->setValue("login/psw", "");
-            pc.LandP->setValue("login/ischecked", false);
-        }
 
         QStringList sl, vl;
         sl << "idpersonel" << "personel" << "group";
@@ -203,22 +195,55 @@ void StartWindow::OkPBClicked()
             MessageBox2::error(this, "Ошибка!", "Не найдена группа доступа, обратитесь к администратору!");
             return;
         }
+*/
 
-        pc.PersLogin = UNameLE->text();
-        pc.PersPsw = PasswdLE->text();
-
-        this->hide();
 
         QPixmap StartWindowSplashPixmap(":/res/1.x.png");
         QSplashScreen *StartWindowSplashScreen = new QSplashScreen(StartWindowSplashPixmap);
         StartWindowSplashScreen->show();
 
-        StartWindowSplashScreen->showMessage("Проверка наличия подключения к каталогу СУПиК...", Qt::AlignRight, Qt::white);
+        StartWindowSplashScreen->showMessage("Подключение к серверу СУПиК...", Qt::AlignRight, Qt::white);
         Cli = new Client;
-        if (!Cli->Connect(pc.SupikServer, pc.SupikPort))
-            STARTER("Сервер СУПиК недоступен");
-        else
+        int res = Cli->Connect(pc.SupikServer, pc.SupikPort);
+        switch (res)
         {
+        case Client::CLIER_LOGIN:
+            MessageBox2::error(this, "Ошибка!", "Не найден такой пользователь");
+            return;
+            break;
+        case Client::CLIER_PSW:
+            MessageBox2::error(this, "Ошибка!", "Пароль неверен");
+            return;
+            break;
+        case Client::CLIER_GROUP:
+            MessageBox2::error(this, "Ошибка!", "Не найдена группа доступа");
+            return;
+            break;
+        case Client::CLIER_NOERROR:
+        {
+            if (SaveCB->isChecked())
+            {
+                pc.LandP->setValue("login/login", UNameLE->text());
+                pc.LandP->setValue("login/psw", PasswdLE->text());
+                pc.LandP->setValue("login/ischecked", SaveCB->isChecked());
+            }
+            else
+            {
+                pc.LandP->setValue("login/login", "");
+                pc.LandP->setValue("login/psw", "");
+                pc.LandP->setValue("login/ischecked", false);
+            }
+            pc.AutonomousMode = false;
+            STARTINFO("Выполнено подключение к серверу");
+            break;
+        }
+        default:
+            pc.AutonomousMode = true;
+            STARTER("Сервер СУПиК недоступен");
+            break;
+        }
+        this->hide();
+
 /*            QByteArray *ba = new QByteArray;
             if (!Ftps->GetFile("xmHXP_FW~h", ba, 10000))
                 STARTER("Каталог СУПиК недоступен");
@@ -230,7 +255,6 @@ void StartWindow::OkPBClicked()
                 else
                     STARTINFO("Подключение к FTP-серверу выполнено успешно");
             } */
-        }
 
         StartWindowSplashScreen->finish(this);
 
@@ -238,12 +262,12 @@ void StartWindow::OkPBClicked()
         connect(supik_main_window,SIGNAL(stopall()),Cli,SLOT(StopThreads()));
         supik_main_window->setVisible(true);
         supik_main_window->setEnabled(true);
-    }
-    else
+//    }
+/*    else
     {
         MessageBox2::error(this, "Ошибка!", "Нет такого пользователя или пароль неверен!");
         return;
-    }
+    } */
 }
 
 void StartWindow::PasswdLEReturnPressed()

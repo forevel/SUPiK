@@ -20,7 +20,6 @@ public:
     ~StartWindow();
 
 signals:
-    void DBOpened(int);
 
 public slots:
 
@@ -38,7 +37,7 @@ private:
     void SetupUI();
     void LoadLanguage();
     void Startup();
-    void OpenAndCheckDB(QSqlDatabase db, int signid);
+    bool OpenAndCheckDB(QSqlDatabase db);
 };
 
 #endif // STARTWINDOW_H

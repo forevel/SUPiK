@@ -5,7 +5,7 @@
 #include <QTimer>
 #include <QFile>
 #include <QTextStream>
-#include "ethernet.h"
+#include "../threads/ethernet.h"
 #include "publicclass.h"
 
 #define CLIER(a)   ERMSG(PublicClass::ER_CLI,__LINE__,a)
@@ -50,6 +50,7 @@ signals:
     void BytesOverall(qint64 bytes);
     void BytesRead(qint64 bytes);
     void BytesWritten(qint64 bytes);
+    void DataReady(QStringList &); // очередная порция данных готова
 
 private:
     enum Messages
@@ -71,7 +72,8 @@ private:
       // ClientToServer
       ANS_LOGIN, // имя пользователя
       ANS_PSW, // пароль
-      CMD_SQL, // запрос sql
+      CMD_TF_GVSBFS, // запросы sql для tablefields
+      CMD_GVSBFS, // запросы sql простые
       CMD_MESSAGES, // запрос текущих сообщений для пользователя
       CMD_CHATMSGS, // запрос сообщений из чата
       CMD_CHATREQ, // запрос состояния чата (пользователи)
@@ -82,19 +84,20 @@ private:
       CMD_IDLE // состояние ожидания команды
     };
 
-    QByteArray *BufData, *RcvData, *XmitData;
+    QByteArray RcvData;
     Ethernet *MainEthernet, *FileEthernet;
     QTimer *TimeoutTimer, *GetComReplyTimer, *GetFileTimer;
-    bool Busy, FileBusy, Connected, FileConnected, CmdOk, LoginOk;
+    bool Busy, FileBusy, Connected, FileConnected, CmdOk, LoginOk, FirstReplyPass, FirstComPass;
     QFile *LogFile;
     QTextStream *LogStream;
     QString FileHost;
     quint16 FilePort;
-    qint64 WrittenBytes, ReadBytes;
+    qint64 WrittenBytes, ReadBytes, MsgNum;
     int CurrentCommand, RcvDataSize, XmitDataSize, DetectedError;
 
     void SendCmd(int Command, QStringList Args=QStringList());
     QString RemoveSpaces(QString str);
+    void WriteErrorAndBreakReceiving(QString ErMsg);
 
 private slots:
     void ClientGet(QByteArray *);
@@ -105,7 +108,7 @@ private slots:
     void Timeout();
     void ClientErr(int error);
     void SetBytesWritten(qint64 bytes);
-    void ParseReply();
+    void ParseReply(QByteArray *ba);
     void GetFileTimerTimeout();
 };
 

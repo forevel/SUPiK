@@ -2,15 +2,23 @@
 #include <QSettings>
 #include <QInputDialog>
 #include <QGridLayout>
+#include <QDir>
 
 #include "startwindow.h"
 #include "gen/s_sql.h"
 #include "widgets/s_tqcheckbox.h"
 #include "dialogs/messagebox.h"
 #include "gen/client.h"
+#include "gen/log.h"
+
+Log *SupLog;
 
 StartWindow::StartWindow(QWidget *parent) : QMainWindow(parent)
 {
+    pc.HomeDir = QDir::homePath()+"/.supik/";
+    SupLog = new Log;
+    SupLog->Init(pc.HomeDir+"/sup.log");
+    SupLog->info("=== Log started ===");
     QPixmap StartWindowSplashPixmap(":/res/1.x.png");
     QSplashScreen *StartWindowSplashScreen = new QSplashScreen(StartWindowSplashPixmap);
     StartWindowSplashScreen->show();
@@ -21,7 +29,7 @@ StartWindow::StartWindow(QWidget *parent) : QMainWindow(parent)
     StartWindowSplashScreen->showMessage("Настройка пользовательского окружения...", Qt::AlignRight, Qt::white);
     SetupUI();
 
-    StartWindowSplashScreen->showMessage("Подключение к базе данных...", Qt::AlignRight, Qt::white);
+    StartWindowSplashScreen->showMessage("Загрузка переменных окружения...", Qt::AlignRight, Qt::white);
     Startup();
 
     StartWindowSplashScreen->finish(this);
@@ -78,6 +86,7 @@ void StartWindow::SetupUI()
     StartWindowLayout->addWidget(SaveCB, 2, 1, 1, 2);
     s_tqPushButton *pb = new s_tqPushButton("Сменить пароль");
     connect(pb,SIGNAL(clicked()),this,SLOT(ChangePassword()));
+    pb->setEnabled(false);
     StartWindowLayout->addWidget(pb, 3, 0, 1, 3);
     StartWindowLayout->addWidget(OkPB, 4, 0, 1, 2);
     StartWindowLayout->addWidget(SystemPB, 4, 2);
@@ -100,7 +109,8 @@ void StartWindow::SetupUI()
 
 void StartWindow::ChangePassword()
 {
-    s_tqLineEdit *UNameLE = this->findChild<s_tqLineEdit *>("UNameLE");
+    // поменять на работу с сервером!
+/*    s_tqLineEdit *UNameLE = this->findChild<s_tqLineEdit *>("UNameLE");
     s_tqLineEdit *PasswdLE = this->findChild<s_tqLineEdit *>("PasswdLE");
     if ((UNameLE == 0) || (PasswdLE == 0))
     {
@@ -133,7 +143,7 @@ void StartWindow::ChangePassword()
             MessageBox2::error(this,"Ошибка!","Ошибка при смене пароля");
         else
             PasswdLE->setText(newpsw);
-    }
+    } */
 }
 
 void StartWindow::OkPBClicked()
@@ -143,131 +153,139 @@ void StartWindow::OkPBClicked()
     s_tqLineEdit *UNameLE = this->findChild<s_tqLineEdit *>("UNameLE");
     if (UNameLE == 0)
     {
-        MessageBox2::error(this, "Ошибка!", "Отладочная ошибка в строке "+QString::number(__LINE__));
+        SupLog->error("Отладочная ошибка в строке "+QString::number(__LINE__));
         return;
     }
     s_tqLineEdit *PasswdLE = this->findChild<s_tqLineEdit *>("PasswdLE");
     if (PasswdLE == 0)
     {
-        MessageBox2::error(this, "Ошибка!", "Отладочная ошибка в строке "+QString::number(__LINE__));
+        SupLog->error("Отладочная ошибка в строке "+QString::number(__LINE__));
         return;
     }
     s_tqCheckBox *SaveCB = this->findChild<s_tqCheckBox *>("SaveCB");
     if (SaveCB == 0)
     {
-        MessageBox2::error(this, "Ошибка!", "Отладочная ошибка в строке "+QString::number(__LINE__));
+        SupLog->error("Отладочная ошибка в строке "+QString::number(__LINE__));
         return;
     }
 
     pc.PersLogin = UNameLE->text();
     pc.PersPsw = PasswdLE->text();
 
-/*    tmpString = sqlc.GetValueFromTableByField(pc.sup, "personel", "psw", "login", UNameLE->text());
-    if (tmpString == PasswdLE->text())
-    {
+    QPixmap StartWindowSplashPixmap(":/res/1.x.png");
+    QSplashScreen *StartWindowSplashScreen = new QSplashScreen(StartWindowSplashPixmap);
+    StartWindowSplashScreen->show();
 
-        QStringList sl, vl;
-        sl << "idpersonel" << "personel" << "group";
-        vl = sqlc.GetValuesFromTableByField(pc.sup, "personel", sl, "login", UNameLE->text());
-        if (sqlc.result)
+    StartWindowSplashScreen->showMessage("Подключение к серверу СУПиК...", Qt::AlignRight, Qt::white);
+    Cli = new Client;
+    int res = Cli->Connect(pc.SupikServer, pc.SupikPort);
+    switch (res)
+    {
+    case Client::CLIER_LOGIN:
+        MessageBox2::error(this, "Ошибка!", "Не найден такой пользователь");
+        return;
+        break;
+    case Client::CLIER_PSW:
+        MessageBox2::error(this, "Ошибка!", "Пароль неверен");
+        return;
+        break;
+    case Client::CLIER_GROUP:
+        MessageBox2::error(this, "Ошибка!", "Не найдена группа доступа");
+        return;
+        break;
+    case Client::CLIER_NOERROR:
+    {
+        if (SaveCB->isChecked())
         {
-            MessageBox2::error(this, "Ошибка!", sqlc.LastError);
-            return;
-        }
-        if (!vl.isEmpty())
-        {
-            pc.idPers=vl.at(0).toInt();
-            pc.Pers=vl.at(1);
-            pc.idGroup=vl.at(2).toInt(0);
+            pc.LandP->setValue("login/login", UNameLE->text());
+            pc.LandP->setValue("login/psw", PasswdLE->text());
+            pc.LandP->setValue("login/ischecked", SaveCB->isChecked());
         }
         else
         {
-            MessageBox2::error(this, "Ошибка!", "Пользователь не найден!");
-            return;
+            pc.LandP->setValue("login/login", "");
+            pc.LandP->setValue("login/psw", "");
+            pc.LandP->setValue("login/ischecked", false);
         }
+        pc.AutonomousMode = false;
+        STARTINFO("Выполнено подключение к серверу");
+        SupLog->info("Server found!");
+        break;
+    }
+    default:
+        pc.AutonomousMode = true;
+        STARTER("Сервер СУПиК недоступен");
+        break;
+    }
+    this->hide();
 
-        // считывание прав доступа к СУПиКу
-        tmpString = sqlc.GetValueFromTableByID(pc.sup, "groups", "access", QString::number(pc.idGroup));
-        if (!tmpString.isEmpty())
-            pc.access = tmpString.toLong(0, 16); // права доступа - в hex формате
-        else // не нашли запись
-        {
-            MessageBox2::error(this, "Ошибка!", "Не найдена группа доступа, обратитесь к администратору!");
-            return;
-        }
-*/
-
-
-        QPixmap StartWindowSplashPixmap(":/res/1.x.png");
-        QSplashScreen *StartWindowSplashScreen = new QSplashScreen(StartWindowSplashPixmap);
-        StartWindowSplashScreen->show();
-
-        StartWindowSplashScreen->showMessage("Подключение к серверу СУПиК...", Qt::AlignRight, Qt::white);
-        Cli = new Client;
-        int res = Cli->Connect(pc.SupikServer, pc.SupikPort);
-        switch (res)
-        {
-        case Client::CLIER_LOGIN:
-            MessageBox2::error(this, "Ошибка!", "Не найден такой пользователь");
-            return;
-            break;
-        case Client::CLIER_PSW:
-            MessageBox2::error(this, "Ошибка!", "Пароль неверен");
-            return;
-            break;
-        case Client::CLIER_GROUP:
-            MessageBox2::error(this, "Ошибка!", "Не найдена группа доступа");
-            return;
-            break;
-        case Client::CLIER_NOERROR:
-        {
-            if (SaveCB->isChecked())
-            {
-                pc.LandP->setValue("login/login", UNameLE->text());
-                pc.LandP->setValue("login/psw", PasswdLE->text());
-                pc.LandP->setValue("login/ischecked", SaveCB->isChecked());
-            }
-            else
-            {
-                pc.LandP->setValue("login/login", "");
-                pc.LandP->setValue("login/psw", "");
-                pc.LandP->setValue("login/ischecked", false);
-            }
-            pc.AutonomousMode = false;
-            STARTINFO("Выполнено подключение к серверу");
-            break;
-        }
-        default:
-            pc.AutonomousMode = true;
-            STARTER("Сервер СУПиК недоступен");
-            break;
-        }
-        this->hide();
-
-/*            QByteArray *ba = new QByteArray;
-            if (!Ftps->GetFile("xmHXP_FW~h", ba, 10000))
-                STARTER("Каталог СУПиК недоступен");
-            else
-            {
-                QString tmps = QString::fromLocal8Bit(ba->data());
-                if (tmps != "supik\r\n")
-                    STARTER("Неправильный каталог СУПиК");
-                else
-                    STARTINFO("Подключение к FTP-серверу выполнено успешно");
-            } */
-
-        StartWindowSplashScreen->finish(this);
-
-        supik *supik_main_window = new supik;
-        connect(supik_main_window,SIGNAL(stopall()),Cli,SLOT(StopThreads()));
-        supik_main_window->setVisible(true);
-        supik_main_window->setEnabled(true);
-//    }
-/*    else
+    if (pc.AutonomousMode)
     {
-        MessageBox2::error(this, "Ошибка!", "Нет такого пользователя или пароль неверен!");
-        return;
-    } */
+        SupLog->warning("Server not found, entering autonomous mode...");
+        StartWindowSplashScreen->showMessage("Сервер недоступен. Попытка подключения к локальной БД...", Qt::AlignRight, Qt::white);
+        if ((!OpenAndCheckDB(pc.ent)) || (!OpenAndCheckDB(pc.sup)))
+        {
+            MessageBox2::error(this,"error","Нет соединения с системной БД!");
+            SupLog->error("Local database not found, exiting...");
+            return;
+        }
+
+        tmpString = sqlc.GetValueFromTableByField(pc.sup, "personel", "psw", "login", pc.PersLogin);
+        if (tmpString == pc.PersPsw)
+        {
+            QStringList sl, vl;
+            sl << "idpersonel" << "personel" << "group";
+            vl = sqlc.GetValuesFromTableByField(pc.sup, "personel", sl, "login", pc.PersLogin);
+            if (sqlc.result)
+            {
+                MessageBox2::error(this, "Ошибка!", sqlc.LastError);
+                SupLog->error(sqlc.LastError);
+                return;
+            }
+            if (!vl.isEmpty())
+            {
+                pc.idPers=vl.at(0).toInt();
+                pc.Pers=vl.at(1);
+                pc.idGroup=vl.at(2).toInt(0);
+            }
+            else
+            {
+                MessageBox2::error(this, "Ошибка!", "Пользователь не найден!");
+                SupLog->error("User not found");
+                return;
+            }
+
+            // считывание прав доступа к СУПиКу
+            tmpString = sqlc.GetValueFromTableByID(pc.sup, "groups", "access", QString::number(pc.idGroup));
+            if (!tmpString.isEmpty())
+                pc.access = tmpString.toLong(0, 16); // права доступа - в hex формате
+            else // не нашли запись
+            {
+                MessageBox2::error(this, "Ошибка!", "Не найдена группа доступа, обратитесь к администратору!");
+                SupLog->error("User group not found");
+                return;
+            }
+
+            // далее надо открыть только те БД, права на которые есть у товарища
+/*            OpenAndCheckDB(pc.alt);
+            OpenAndCheckDB(pc.con);
+            OpenAndCheckDB(pc.dev);
+            OpenAndCheckDB(pc.sch);
+            OpenAndCheckDB(pc.sol); */
+        }
+        else
+        {
+            MessageBox2::error(this, "Ошибка!", "Нет такого пользователя или пароль неверен!");
+            return;
+        }
+    }
+
+    StartWindowSplashScreen->finish(this);
+
+    supik *supik_main_window = new supik;
+    connect(supik_main_window,SIGNAL(stopall()),Cli,SLOT(StopThreads()));
+    supik_main_window->setVisible(true);
+    supik_main_window->setEnabled(true);
 }
 
 void StartWindow::PasswdLEReturnPressed()
@@ -313,13 +331,6 @@ void StartWindow::Startup()
     if (tmpString.isEmpty())
         OpenSettingsDialog();
     pc.InitiatePublicClass();
-    OpenAndCheckDB(pc.alt, DB_ALT);
-    OpenAndCheckDB(pc.con, DB_CON);
-    OpenAndCheckDB(pc.dev, DB_DEV);
-    OpenAndCheckDB(pc.ent, DB_ENT);
-    OpenAndCheckDB(pc.sch, DB_SCH);
-    OpenAndCheckDB(pc.sol, DB_SOL);
-    OpenAndCheckDB(pc.sup, DB_SUP);
 }
 
 void StartWindow::OpenSettingsDialog()
@@ -329,10 +340,10 @@ void StartWindow::OpenSettingsDialog()
     qssd->exec();
 }
 
-void StartWindow::OpenAndCheckDB(QSqlDatabase db, int signid)
+bool StartWindow::OpenAndCheckDB(QSqlDatabase db)
 {
+    db.setConnectOptions("MYSQL_OPT_CONNECT_TIMEOUT=4");
     if (!db.open())
-        ERMSG(PublicClass::ER_START,__LINE__,db.lastError().text());
-    else
-        emit DBOpened(signid);
+        return false;
+    return true;
 }

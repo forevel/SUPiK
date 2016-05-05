@@ -2,8 +2,8 @@
 #include <QCoreApplication>
 
 #include "Ethernet.h"
-#include "publicclass.h"
-#include "log.h"
+#include "../gen/publicclass.h"
+#include "../gen/log.h"
 
 Log *EthLog;
 

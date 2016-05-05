@@ -8,13 +8,16 @@
 #include <QDateTime>
 #include <QDir>
 #include "s_sql.h"
+#include "log.h"
 
 PublicClass pc;
+Log *PCLog;
 
 static const QMap<QChar, QString> RUSLAT = PublicClass::ruslat();
 
 PublicClass::PublicClass()
 {
+    HomeDir = QDir::homePath()+"/.supik/";
     LandP = new QSettings ("EvelSoft","Supik");
     TabColors[TW_PROB] = QColor(153, 153, 153); // GENERAL
     TabColors[TW_SYSBU] = TabColors[TW_SYSRS] = TabColors[TW_SYSST] = TabColors[TW_SYSDIR] = TabColors[TW_SYSIC] = QColor(194, 194, 194); // SYSTEM
@@ -25,6 +28,8 @@ PublicClass::PublicClass()
     TabColors[TW_WH] = QColor(204, 204, 51); // WAREHOUSE
     TabColors[TW_DEV] = QColor(204, 204, 255); // DEVICES
     AutonomousMode = true; // изначально неизвестно, доступен ли сервер, поэтому на всякий случай ставим признак автономности
+    PCLog = new Log;
+    PCLog->Init(HomeDir+"/.supik/sup.log");
 }
 
 PublicClass::~PublicClass()
@@ -81,7 +86,6 @@ void PublicClass::InitiatePublicClass()
     symfind = "LIBREFERENCE=";
     footfind = "PATTERN=";
     idRecord = -1;
-    HomeDir = QDir::homePath()+"/.supik/";
 }
 
 // открытие БД
@@ -174,6 +178,24 @@ void PublicClass::AddErrMsg(ermsgtype msgtype, quint64 ernum, quint64 ersubnum, 
         tmpm.module = "Неизвестно";
     tmpm.line = ersubnum;
     tmpm.msg = msg;
+
+    // запись в log-файл
+    switch (tmpm.type)
+    {
+    case ER_MSG:
+    case DBG_MSG:
+        PCLog->error(QString::number(ernum)+"."+QString::number(ersubnum)+": "+msg);
+        break;
+    case WARN_MSG:
+        PCLog->warning(QString::number(ernum)+"."+QString::number(ersubnum)+": "+msg);
+        break;
+    case INFO_MSG:
+        PCLog->info(QString::number(ernum)+"."+QString::number(ersubnum)+": "+msg);
+        break;
+    default:
+        break;
+    }
+
     ermsgpool.append(tmpm);
 }
 

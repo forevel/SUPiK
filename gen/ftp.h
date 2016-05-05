@@ -5,7 +5,7 @@
 #include <QTimer>
 #include <QFile>
 #include <QTextStream>
-#include "ethernet.h"
+#include "../threads/ethernet.h"
 #include "publicclass.h"
 
 #define PORTFTP     21 // порт связи по протоколу FTP

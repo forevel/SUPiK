@@ -45,8 +45,9 @@ SOURCES += main.cpp\
     dialogs/sys/sysmenueditor.cpp \
     dialogs/wh/wh_dialog.cpp \
     dialogs/wh/wh_editor.cpp \
-    gen/ethernet.cpp \
+    gen/client.cpp \
     gen/ftp.cpp \
+    gen/log.cpp \
     gen/publicclass.cpp \
     gen/publiclang.cpp \
     gen/s_sql.cpp \
@@ -66,6 +67,7 @@ SOURCES += main.cpp\
     models/treemodel.cpp \
     models/whplacestreemodel.cpp \
     threads/checkthread.cpp \
+    threads/ethernet.cpp \
     threads/sys_importclass_t.cpp \
     threads/waitthread.cpp \
     widgets/errorprotocolwidget.cpp \
@@ -90,9 +92,7 @@ SOURCES += main.cpp\
     widgets/s_tqtreewidget.cpp \
     widgets/s_tqwidget.cpp \
     widgets/treeview.cpp \
-    widgets/waitwidget.cpp \
-    gen/client.cpp \
-    gen/log.cpp
+    widgets/waitwidget.cpp
 
 HEADERS  += startwindow.h \
     supik.h \
@@ -119,8 +119,9 @@ HEADERS  += startwindow.h \
     dialogs/sys/sysmenueditor.h \
     dialogs/wh/wh_dialog.h \
     dialogs/wh/wh_editor.h \
-    gen/ethernet.h \
+    gen/client.h \
     gen/ftp.h \
+    gen/log.h \
     gen/publicclass.h \
     gen/publiclang.h \
     gen/s_sql.h \
@@ -140,6 +141,7 @@ HEADERS  += startwindow.h \
     models/treemodel.h \
     models/whplacestreemodel.h \
     threads/checkthread.h \
+    threads/ethernet.h \
     threads/sys_importclass_t.h \
     threads/waitthread.h \
     widgets/errorprotocolwidget.h \
@@ -164,9 +166,7 @@ HEADERS  += startwindow.h \
     widgets/s_tqtreewidget.h \
     widgets/s_tqwidget.h \
     widgets/treeview.h \
-    widgets/waitwidget.h \
-    gen/client.h \
-    gen/log.h
+    widgets/waitwidget.h
 
 RESOURCES += \
     pic.qrc

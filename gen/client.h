@@ -30,29 +30,12 @@ public:
         CLIER_SERVER,
         CLIER_LOGIN,     // некорректный логин (нет такого пользователя)
         CLIER_PSW,       // пароли введённый и в БД не совпадают
-        CLIER_GROUP     // не найдена группа доступа
+        CLIER_GROUP,     // не найдена группа доступа
+        CLIER_WRARGS,    // неправильные аргументы
+        CLIER_GETFTOUT,  // таймаут во время приёма файла
+        CLIER_GETFER    // ошибка во время приёма файла
     };
 
-    int Connect(QString Host, QString Port);
-    bool ChDir(QString Dir);
-    bool MkDir(QString Dir);
-    bool List();
-    bool SendFile(QString Dir, QString Filename, QByteArray *ba, int size = 0);
-    bool GetFile(QString Dir, QString Filename, QByteArray *ba, int size = 0);
-    void Disconnect();
-
-public slots:
-    void StopThreads();
-
-signals:
-    void ClientSend(QByteArray *);
-    void FileSend(QByteArray *);
-    void BytesOverall(qint64 bytes);
-    void BytesRead(qint64 bytes);
-    void BytesWritten(qint64 bytes);
-    void DataReady(QStringList &); // очередная порция данных готова
-
-private:
     enum Messages
     {
       // ServerToClient
@@ -64,9 +47,9 @@ private:
       ANS_CHATMSGS, // сообщения из чата для пользователя
       ANS_CHATSTATUS, // состояние чата в ответ на CMD_CHATREQ
       ANS_OKTORCV, // подтверждение готовности к приёму файла
-      ANS_GETFILE, // подтверждение окончания приёма файла
+      ANS_GETFILE, // подтверждение приёма файла
       ANS_OKTOXMT, // подтверждение готовности к отправке файла
-      ANS_PUTFILE, // подтверждение окончания отправки файла
+      ANS_PUTFILE, // подтверждение отправки файла
       ANS_DIRLIST, // выдача содержимого каталога
       ANS_QUIT, // подтверждение завершения сеанса связи
       // ClientToServer
@@ -84,27 +67,40 @@ private:
       CMD_IDLE // состояние ожидания команды
     };
 
+    int Connect(QString Host, QString Port);
+    void Disconnect();
+    void SendCmd(int Command, QStringList &Args=QStringList());
+
+public slots:
+    void StopThreads();
+
+signals:
+    void ClientSend(QByteArray *);
+    void FileSend(QByteArray *);
+    void BytesOverall(qint64 bytes);
+    void BytesRead(qint64 bytes);
+    void BytesWritten(qint64 bytes);
+    void DataReady(QStringList &); // очередная порция данных готова
+    void TransferComplete(); // окончание приёма/передачи файла
+
+private:
+
     QByteArray RcvData;
     Ethernet *MainEthernet, *FileEthernet;
     QTimer *TimeoutTimer, *GetComReplyTimer, *GetFileTimer;
     bool Busy, FileBusy, Connected, FileConnected, CmdOk, LoginOk, FirstReplyPass, FirstComPass;
-    QFile *LogFile;
     QTextStream *LogStream;
     QString FileHost;
     quint16 FilePort;
     qint64 WrittenBytes, ReadBytes, MsgNum;
     int CurrentCommand, RcvDataSize, XmitDataSize, DetectedError;
 
-    void SendCmd(int Command, QStringList Args=QStringList());
     QString RemoveSpaces(QString str);
     void WriteErrorAndBreakReceiving(QString ErMsg);
 
 private slots:
-    void ClientGet(QByteArray *);
-    void FileGet(QByteArray *);
     void ClientConnected();
     void ClientDisconnected();
-    void ClientFileConnected();
     void Timeout();
     void ClientErr(int error);
     void SetBytesWritten(qint64 bytes);

@@ -165,7 +165,7 @@ void Ethernet::SslError(QAbstractSocket::SocketError err)
 {
     if (err == QAbstractSocket::RemoteHostClosedError)
         ClosePortAndFinishThread = true;
-    EthLog->error("SSL Error: "+sslsock->errorString());
+    EthLog->warning("SSL Error: "+sslsock->errorString());
     ClosePortAndFinishThread = true;
 //    emit error(err+2); // до 1 другие ошибки, err от -1
 }
@@ -173,7 +173,7 @@ void Ethernet::SslError(QAbstractSocket::SocketError err)
 void Ethernet::SslErrors(QList<QSslError> errlist)
 {
     for (int i=0; i<errlist.size(); i++)
-        EthLog->error("SSL Errors: "+errlist.at(i).errorString());
+        EthLog->warning("SSL Errors: "+errlist.at(i).errorString());
     sslsock->ignoreSslErrors();
 }
 

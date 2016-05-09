@@ -210,6 +210,8 @@ void StartWindow::OkPBClicked()
         pc.AutonomousMode = false;
         STARTINFO("Выполнено подключение к серверу");
         SupLog->info("Server found!");
+        QStringList fl = QStringList() << "" << "12345.txt";
+        Cli->SendCmd(Client::CMD_GETFILE, fl);
         break;
     }
     default:

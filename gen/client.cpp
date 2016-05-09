@@ -9,11 +9,15 @@
 
 Client *Cli = 0;
 Log *CliLog;
+FILE *fp;
+long filesize;
+long filepos;
 
 Client::Client(QObject *parent) : QObject(parent)
 {
     Connected = false;
     FirstReplyPass = FirstComPass = true;
+    fp = 0;
 }
 
 Client::~Client()
@@ -82,7 +86,7 @@ void Client::Disconnect()
     MainEthernet->Stop();
 }
 
-void Client::SendCmd(int Command, QStringList Args)
+void Client::SendCmd(int Command, QStringList &Args)
 {
     CurrentCommand = Command;
     Busy = true;
@@ -97,8 +101,39 @@ void Client::SendCmd(int Command, QStringList Args)
     //      TF <numbytes_starting_from_GVBFS> GVSBFS n m table headers_0 headers_1 ... headers_n cond_header_0 value_0 cond_header_1 value_1 ... cond_header_m value_m [order_header] [ASC|DESC]
     case CMD_TF_GVSBFS:
     {
+        if (Args.size() < 2)
+        {
+            CliLog->error("CMD_TF_GVSBFS: Number of arguments is less than 2");
+            DetectedError = CLIER_WRARGS;
+            Busy = false;
+            return;
+        }
+        bool ok;
         QString fieldsnum = Args.takeAt(0);
+        int fnum = fieldsnum.toInt(&ok);
+        if (!ok)
+        {
+            CliLog->error("CMD_TF_GVSBFS: argument is not a number");
+            DetectedError = CLIER_WRARGS;
+            Busy = false;
+            return;
+        }
         QString pairsnum = Args.takeAt(0);
+        int pnum = fieldsnum.toInt(&ok);
+        if (!ok)
+        {
+            CliLog->error("CMD_TF_GVSBFS: argument is not a number");
+            DetectedError = CLIER_WRARGS;
+            Busy = false;
+            return;
+        }
+        if (Args.size() < fnum+2*pnum+1) // +1 - table
+        {
+            CliLog->error("CMD_TF_GVSBFS: Number of fields is less than mentioned in header");
+            DetectedError = CLIER_WRARGS;
+            Busy = false;
+            return;
+        }
         QString tmps = Args.join(" ");
         CommandString = "TF " + QString::number(tmps.size()+fieldsnum.size()+pairsnum.size()+9) + " GVSBFS " + fieldsnum + " " + pairsnum + " " + tmps + "\n";
         // 9 = три пробела + sizeof("GVSBFS")
@@ -116,8 +151,39 @@ void Client::SendCmd(int Command, QStringList Args)
     // Формат: GVSBFS <numbytes_starting_from_n> n m db table headers_0 headers_1 ... headers_n cond_header_0 value_0 cond_header_1 value_1 ... cond_header_m value_m [order_header] [ASC|DESC]
     case CMD_GVSBFS:
     {
+        if (Args.size() < 2)
+        {
+            CliLog->error("CMD_GVSBFS: Number of arguments is less than 2");
+            DetectedError = CLIER_WRARGS;
+            Busy = false;
+            return;
+        }
         QString fieldsnum = Args.takeAt(0);
+        bool ok;
+        int fnum = fieldsnum.toInt(&ok);
+        if (!ok)
+        {
+            CliLog->error("CMD_TF_GVSBFS: argument is not a number");
+            DetectedError = CLIER_WRARGS;
+            Busy = false;
+            return;
+        }
         QString pairsnum = Args.takeAt(0);
+        int pnum = fieldsnum.toInt(&ok);
+        if (!ok)
+        {
+            CliLog->error("CMD_TF_GVSBFS: argument is not a number");
+            DetectedError = CLIER_WRARGS;
+            Busy = false;
+            return;
+        }
+        if (Args.size() < fnum+2*pnum+1) // +1 - table
+        {
+            CliLog->error("CMD_GVSBFS: Number of fields is less than mentioned in header");
+            DetectedError = CLIER_WRARGS;
+            Busy = false;
+            return;
+        }
         QString tmps = Args.join(" ");
         CommandString = "GVSBFS " + QString::number(tmps.size()+fieldsnum.size()+pairsnum.size()+2) + " " + fieldsnum + " " + pairsnum + " " + tmps + "\n";
         // 2 = два пробела
@@ -125,19 +191,47 @@ void Client::SendCmd(int Command, QStringList Args)
     }
     case CMD_MESSAGES:
     {
-//        CommandString = "PASS " + Args + "\n";
         break;
     }
     case CMD_CHATMSGS:
     {
-        CommandString = "PASV \n";
         break;
     }
+        // GETF получить файл с сервера
+        // 0 - относительный корневой папки .supik путь на сервере
+        // 1 - имя файла
+        // Формат: GETF <путь> <имя_файла>\n
+        // далее ожидание прихода "RDY <длина_в_байтах>\n", затем приём содержимого файла блоками по 16384 байт, после каждого отсылка RDY\n
+        // по окончании контроль прихода IDLE\n
     case CMD_GETFILE:
     {
-//        CommandString = "RETR " + Args + "\n";
+        if (Args.size() < 2)
+        {
+            CliLog->error("CMD_GETF: Number of arguments is less than 3");
+            DetectedError = CLIER_WRARGS;
+            Busy = false;
+            return;
+        }
+        QString path = Args.takeAt(0);
+        QString filename = Args.takeAt(0);
+        CommandString = "GETF \"" + path + "\" \"" +filename + "\"\n";
+        QString fullfilename = pc.HomeDir+"Incoming/"+filename;
+        fp = fopen(fullfilename.toStdString().c_str(), "w");
         break;
     }
+        // ANS_GETFILE - второй и последующие ответы на принятую информацию (с записью блока в файл)
+    case ANS_GETFILE:
+    {
+        CommandString = "RDY\n";
+        break;
+    }
+        // PUTF отправить файл на сервер
+        // 0 - относительный корневой папки .supik путь на сервере
+        // 1 - имя файла
+        // 2 - длина файла
+        // Формат: PUTF <путь> <имя_файла> <длина_в_байтах>\n
+        // далее ожидание прихода RDY\n, затем отсылка содержимого файла блоками по 16384 байт, после каждого контроль приёма RDY\n
+        // по окончании контроль прихода IDLE\n
     case CMD_PUTFILE:
     {
 //        CommandString = "STOR " + Args + "\n";
@@ -145,24 +239,9 @@ void Client::SendCmd(int Command, QStringList Args)
     }
     case CMD_QUIT:
     {
-        CommandString = "QUIT \n";
+        CommandString = "QUIT\n";
         TimeoutTimer->setInterval(1000);
         TimeoutTimer->start();
-        break;
-    }
-    case CMD_CHATREQ:
-    {
-//        CommandString = "CWD " + Args + "\n";
-        break;
-    }
-    case CMD_IDLE:
-    {
-//        CommandString = "MKD " + Args + "\n";
-        break;
-    }
-    case CMD_DIRLIST:
-    {
-        CommandString = "LIST \n";
         break;
     }
     case ANS_LOGIN:
@@ -188,23 +267,26 @@ void Client::ParseReply(QByteArray *ba)
 {
 //    TimeoutTimer->start(); // рестарт таймера таймаута, т.к. что-то приняли
     CmdOk = false;
-    switch (FirstReplyPass)
+    if (CurrentCommand != ANS_GETFILE) // приём файла обрабатывается по-другому
     {
-    case true:
-    {
-        RcvData.clear();
-        RcvData.append(*ba);
-        if (RcvData.right(1) == "\n") // очередная посылка закончена, надо передать её на обработку
-            break;
-        FirstReplyPass = false;
-        return;
-    }
-    case false:
-    {
-        RcvData.append(*ba);
-        if (RcvData.right(1) == "\n") // очередная посылка закончена, надо передать её на обработку
-            break;
-        return;
+        switch (FirstReplyPass)
+        {
+        case true:
+        {
+            RcvData.clear();
+            RcvData.append(*ba);
+            if (RcvData.right(1) == "\n") // очередная посылка закончена, надо передать её на обработку
+                break;
+            FirstReplyPass = false;
+            return;
+        }
+        case false:
+        {
+            RcvData.append(*ba);
+            if (RcvData.right(1) == "\n") // очередная посылка закончена, надо передать её на обработку
+                break;
+            return;
+        }
     }
     }
     FirstReplyPass = true;
@@ -349,78 +431,46 @@ void Client::ParseReply(QByteArray *ba)
         }
         break;
     }
-        /*    case CMD_PASV:
+        // первый приём после команды
+    case CMD_GETFILE:
     {
-        if (ClientResult == Client_PASV_ENAB)
+        if (ServerResponse == "RDY")
         {
+            CliLog->info("<"+ServerResponse);
             CmdOk = true;
-            int tmpi1 = ClientResultString.indexOf("(");
-            if (tmpi1 == -1)
-                CmdOk = false;
-            else
+            bool ok;
+            filesize = ArgList.at(0).toLong(&ok,16);
+            filepos = 0;
+            if (!ok)
             {
-                int tmpi2 = ClientResultString.indexOf(")");
-                if ((tmpi2 == -1) || (tmpi2 <= tmpi1))
-                    CmdOk = false;
-                else
-                {
-                    QStringList tmpsl = ClientResultString.mid(tmpi1+1, (tmpi2-tmpi1-1)).split(","); // вытаскиваем host и port
-                    if (tmpsl.size() < 6)
-                        CmdOk = false;
-                    else
-                    {
-                        FileHost = tmpsl.at(0)+"."+tmpsl.at(1)+"."+tmpsl.at(2)+"."+tmpsl.at(3);
-                        QString tmps = tmpsl.at(4);
-                        quint16 tmpqi = tmps.toInt(&ok);
-                        if (!ok)
-                            CmdOk = false;
-                        else
-                        {
-                            FilePort = tmpqi * 256;
-                            tmps = tmpsl.at(5);
-                            tmpqi = tmps.toInt(&ok);
-                            if (!ok)
-                                CmdOk = false;
-                            else
-                                FilePort += tmpqi;
-                        }
-                    }
-                }
+                CliLog->warning("Not a decimal value detected");
+                DetectedError = CLIER_GETFER;
+                return;
             }
-        }
-        break;
-    }
-    case CMD_RETR:
-    case CMD_STOR:
-    {
-        if (ClientResult == Client_FILESTATOK)
+            SendCmd(ANS_GETFILE);
             return;
-        if (ClientResult == Client_CHANCLOSED)
-            CmdOk = true;
-        FileBusy = false;
-        break;
-    }
-    case CMD_CWD:
-    {
-        if (ClientResult == Client_QUERYOK)
-            CmdOk = true;
-        break;
-    }
-    case CMD_MKD:
-    {
-        if (ClientResult == Client_PATH_CREAT)
-            CmdOk = true;
-        break;
-    }
-
-    case CMD_LIST:
-    {
-        if (ClientResult == Client_CHANCLOSED)
-            CmdOk = true;
+        }
         else
-            CmdOk = false;
+            DetectedError = CLIER_LOGIN;
         break;
-    } */
+    }
+        // последующие приёмы файла
+    case ANS_GETFILE:
+    {
+        if (ServerResponse == "IDLE\n") // закончили передачу
+        {
+            fclose(fp);
+            emit TransferComplete();
+            CmdOk = true;
+        }
+        if (fp != 0)
+        {
+            size_t WrittenBytes = fwrite(ba->data(),ba->size(),1,fp);
+            emit BytesRead(WrittenBytes);
+        }
+        SendCmd(ANS_GETFILE);
+        break;
+    }
     default:
         break;
     }
@@ -437,128 +487,12 @@ void Client::WriteErrorAndBreakReceiving(QString ErMsg)
     CurrentCommand = CMD_IDLE;
 }
 
-bool Client::ChDir(QString Dir)
-{
-/*    if (!Connected)
-        return false;
-    if (!SendCmd(CMD_CWD, Dir))
-    {
-        ClientER("Что-то не так с именем каталога");
-        return false;
-    }*/
-    return true;
-}
-
-bool Client::List()
-{
-/*    if (!Connected)
-        return false;
-    if (!StartPASV(CMD_LIST))
-    {
-        ClientER("Команда LIST не прошла");
-        return false;
-    }*/
-    return true;
-}
-
-bool Client::MkDir(QString Dir)
-{
-/*    if (!Connected)
-        return false;
-    if (!SendCmd(CMD_MKD, Dir))
-    {
-        ClientER("Невозможно создать каталог "+Dir);
-        return false;
-    }*/
-    return true;
-}
-
-bool Client::GetFile(QString Dir, QString Filename, QByteArray *ba, int size)
-{
-/*    if (!Connected)
-        return false;
-    QByteArray *tmpba = new QByteArray;
-    if (!StartPASV(CMD_LIST, Filename, tmpba, size))
-    {
-        ClientER("Не прошла команда LIST");
-        return false;
-    }
-
-    // в tmpba содержится вывод команды LIST в виде:
-    // -rwxrwxr-x    1 1004       supik         6811190 Feb 22 22:00 [Cold_Cut]-Autumn_Leaves_(Irresistable_Force_Mix_Trip_2).mp3\n
-    // drwxr-xr-x    2 1004       supik             512 Dec 18 22:45 incoming\n
-
-    QStringList tmpsl = (QString::fromUtf8(tmpba->data())).split("\n");
-    qint64 fsize;
-    while (!tmpsl.isEmpty())
-    {
-        QString tmps = tmpsl.takeFirst();
-        QStringList tmpsl = tmps.split(QRegularExpression("\\s+")); // используем любые разделители
-        if (tmpsl.size() > 8) // подразумеваем вывод в Unix-стиле
-        {
-            tmps.clear();
-            for (int i=8; i<tmpsl.size(); i++)
-                tmps += tmpsl.at(i) + " ";
-            tmps.remove(QRegularExpression("\\s+"));
-            if (tmps == Filename)
-            {
-                fsize = tmpsl.at(4).toInt();
-                break;
-            }
-        }
-    }
-    emit BytesOverall(fsize);
-    return StartPASV(CMD_RETR, Filename, ba, size); */
-    return true;
-}
-
-void Client::ClientFileConnected()
-{
-    FileBusy = false;
-    FileConnected = true;
-    TimeoutTimer->stop();
-}
-
-bool Client::SendFile(QString Dir, QString Filename, QByteArray *ba, int size)
-{
-/*    if (!Connected)
-        return false;
-    return StartPASV(CMD_STOR, Filename, ba, size); */
-    return true;
-}
-
 void Client::SetBytesWritten(qint64 bytes)
 {
     WrittenBytes += bytes;
     emit BytesWritten(WrittenBytes);
 }
 
-void Client::ClientGet(QByteArray *ba)
-{
-//    BufData->append(*ba);
-//    GetComReplyTimer->start();
-}
-
-void Client::FileGet(QByteArray *ba)
-{
-/*    int basize = ba->size();
-    ReadBytes += basize;
-    QString tmps = *ba;
-    if (CanLog)
-    {
-        LogFile->write(QString("---FILE---\n").toLocal8Bit());
-        LogFile->write(QString(tmps).toLocal8Bit());
-    }
-    emit BytesRead(ReadBytes);
-    GetFileTimer->start();
-    TimeoutTimer->stop();
-    if (RcvData != 0)
-    {
-        int rcvsize = RcvData->size() + basize;
-        if (rcvsize < RcvDataSize)
-            RcvData->append(*ba);
-    } */
-}
 
 void Client::GetFileTimerTimeout()
 {

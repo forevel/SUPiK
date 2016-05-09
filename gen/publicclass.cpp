@@ -29,7 +29,7 @@ PublicClass::PublicClass()
     TabColors[TW_DEV] = QColor(204, 204, 255); // DEVICES
     AutonomousMode = true; // изначально неизвестно, доступен ли сервер, поэтому на всякий случай ставим признак автономности
     PCLog = new Log;
-    PCLog->Init(HomeDir+"/.supik/sup.log");
+    PCLog->Init(HomeDir+"sup.log");
 }
 
 PublicClass::~PublicClass()

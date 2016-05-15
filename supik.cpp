@@ -18,6 +18,7 @@
 #include "widgets/s_colortabwidget.h"
 #include "widgets/s_tqtableview.h"
 #include "widgets/errorprotocolwidget.h"
+#include "widgets/portactivity.h"
 #include "threads/checkthread.h"
 #include "gen/publiclang.h"
 #include "gen/s_sql.h"
@@ -191,7 +192,8 @@ void supik::SetSupikMenuBar()
                                 ";} QMenuBar::item::selected {background: " + QString (SUPIKMENUBAR_ITEM_SELECTED) + ";}");
 
     setMenuBar(SupikMenuBar);
-    QApplication::restoreOverrideCursor();}
+    QApplication::restoreOverrideCursor();
+}
 
 QMenu *supik::AddChildToMenu(int id)
 {
@@ -274,6 +276,8 @@ void supik::SetSupikStatusBar()
                                   " background-color: rgb(234, 234, 214);"
                                   " font: bold");
     SupikStatusBar->showMessage("Готов");
+    PortActivity *PA = new PortActivity;
+    SupikStatusBar->addWidget(PA);
     setStatusBar(SupikStatusBar);
 }
 

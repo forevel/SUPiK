@@ -210,7 +210,7 @@ void Ethernet::CheckForData()
         ba = new QByteArray(sock->readAll());
     else if (EthType == ETH_SSL)
         ba = new QByteArray(sslsock->readAll());
-    EthLog->info("Bytes received: ");
-    EthLog->info(ba->data());
+//    EthLog->info("Bytes received: ");
+//    EthLog->info(ba->data());
     emit newdataarrived(ba);
 }

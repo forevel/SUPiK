@@ -9,14 +9,12 @@
 
 Client *Cli = 0;
 Log *CliLog;
-FILE *fp;
-long filesize;
-long filepos;
 
 Client::Client(QObject *parent) : QObject(parent)
 {
     Connected = false;
     FirstReplyPass = FirstComPass = true;
+    ComReplyTimeoutIsSet = false;
     fp = 0;
 }
 
@@ -35,7 +33,7 @@ int Client::Connect(QString Host, QString Port)
     connect(TimeoutTimer,SIGNAL(timeout()),this,SLOT(Timeout()));
     GetComReplyTimer = new QTimer;
     GetComReplyTimer->setInterval(1000); // таймер на получение данных, если за 1 сек ничего не принято, считаем, что посылка закончена, и можно её обрабатывать
-//    connect(GetComReplyTimer,SIGNAL(timeout()),this,SLOT(ParseReply()));
+    connect(GetComReplyTimer,SIGNAL(timeout()),this,SLOT(ComReplyTimeout()));
     GetFileTimer = new QTimer;
     GetFileTimer->setInterval(500); // таймер на получение файлов, если за 500 мс ничего не принято, считаем, что файл окончен
     connect(GetFileTimer,SIGNAL(timeout()),this,SLOT(GetFileTimerTimeout()));
@@ -216,7 +214,7 @@ void Client::SendCmd(int Command, QStringList &Args)
         QString filename = Args.takeAt(0);
         CommandString = "GETF \"" + path + "\" \"" +filename + "\"\n";
         QString fullfilename = pc.HomeDir+"Incoming/"+filename;
-        fp = fopen(fullfilename.toStdString().c_str(), "w");
+        fp = fopen(fullfilename.toStdString().c_str(), "wb");
         break;
     }
         // ANS_GETFILE - второй и последующие ответы на принятую информацию (с записью блока в файл)
@@ -265,7 +263,10 @@ void Client::SendCmd(int Command, QStringList &Args)
 
 void Client::ParseReply(QByteArray *ba)
 {
-//    TimeoutTimer->start(); // рестарт таймера таймаута, т.к. что-то приняли
+    if (!ComReplyTimeoutIsSet)
+        GetComReplyTimer->start(); // если не было таймаута, рестартуем таймер
+    QString ServerResponse, IncomingString;
+    QStringList ArgList;
     CmdOk = false;
     if (CurrentCommand != ANS_GETFILE) // приём файла обрабатывается по-другому
     {
@@ -287,22 +288,22 @@ void Client::ParseReply(QByteArray *ba)
                 break;
             return;
         }
-    }
-    }
-    FirstReplyPass = true;
-    QString IncomingString = QString::fromLocal8Bit(RcvData);
-    CliLog->info("<"+IncomingString);
-    QStringList ArgList = IncomingString.split(" ");
-    if (ArgList.isEmpty()) // ничего толкового не получено
-        return;
-    QString ServerResponse = ArgList.takeFirst(); // в ArgList останутся только аргументы
-    if (ServerResponse == SERVERRSTR)
-    {
-        CliLog->error("Server error response");
-        DetectedError = CLIER_SERVER;
-        Busy = false;
-        TimeoutTimer->stop();
-        return;
+        }
+        FirstReplyPass = true;
+        IncomingString = QString::fromLocal8Bit(RcvData);
+        CliLog->info("<"+IncomingString);
+        ArgList = IncomingString.split(" ");
+        if (ArgList.isEmpty()) // ничего толкового не получено
+            return;
+        ServerResponse = ArgList.takeFirst(); // в ArgList останутся только аргументы
+        if (ServerResponse == SERVERRSTR)
+        {
+            CliLog->error("Server error response");
+            DetectedError = CLIER_SERVER;
+            Busy = false;
+            TimeoutTimer->stop();
+            return;
+        }
     }
     switch (CurrentCommand)
     {
@@ -431,24 +432,33 @@ void Client::ParseReply(QByteArray *ba)
         }
         break;
     }
-        // первый приём после команды
+    // первый приём после команды
     case CMD_GETFILE:
     {
         if (ServerResponse == "RDY")
         {
-            CliLog->info("<"+ServerResponse);
-            CmdOk = true;
-            bool ok;
-            filesize = ArgList.at(0).toLong(&ok,16);
-            filepos = 0;
-            if (!ok)
+            if (ArgList.size()>0)
             {
-                CliLog->warning("Not a decimal value detected");
+                CmdOk = true;
+                bool ok;
+                filesize = ArgList.at(0).toLong(&ok,10);
+                filepos = 0;
+                if (!ok)
+                {
+                    CliLog->warning("Not a decimal value detected");
+                    DetectedError = CLIER_GETFER;
+                    return;
+                }
+                emit BytesOverall(filesize);
+                SendCmd(ANS_GETFILE);
+                return;
+            }
+            else
+            {
+                CliLog->warning("File size not detected");
                 DetectedError = CLIER_GETFER;
                 return;
             }
-            SendCmd(ANS_GETFILE);
-            return;
         }
         else
             DetectedError = CLIER_LOGIN;
@@ -457,16 +467,52 @@ void Client::ParseReply(QByteArray *ba)
         // последующие приёмы файла
     case ANS_GETFILE:
     {
-        if (ServerResponse == "IDLE\n") // закончили передачу
+        if (fp == 0)
         {
-            fclose(fp);
+            CliLog->error("File error");
+            CurrentCommand = CMD_IDLE;
+            DetectedError = CLIER_GETFER;
+            break;
+        }
+/*        if (ComReplyTimeoutIsSet)
+        {
+            if (fp)
+                fclose(fp);
+            fp = 0;
             emit TransferComplete();
             CmdOk = true;
-        }
-        if (fp != 0)
+            break;
+        }*/
+//        QString IncomeData = QString::fromLocal8Bit(*ba);
+        CliLog->info("< ...binary data "+QString::number(ba->size())+" size...");
+/*        if (IncomeData == SERVERRSTR)
         {
-            size_t WrittenBytes = fwrite(ba->data(),ba->size(),1,fp);
-            emit BytesRead(WrittenBytes);
+            CliLog->error("Server error response");
+            DetectedError = CLIER_SERVER;
+            Busy = false;
+            TimeoutTimer->stop();
+            return;
+        }
+        if (IncomeData == "IDLE\n") // закончили передачу
+        {
+            fclose(fp);
+            fp = 0;
+            emit TransferComplete();
+            CmdOk = true;
+            break;
+        }  */
+        size_t WrittenBytes = fwrite(ba->data(),1,ba->size(),fp);
+        emit BytesRead(WrittenBytes);
+        CliLog->info(QString::number(WrittenBytes)+" bytes written to file");
+        filepos += WrittenBytes;
+        if (filepos >= filesize)
+        {
+            if (fp)
+                fclose(fp);
+            fp = 0;
+            emit TransferComplete();
+            CmdOk = true;
+            break;
         }
         SendCmd(ANS_GETFILE);
         break;
@@ -527,4 +573,12 @@ void Client::Timeout()
     FileBusy = false;
     DetectedError = CLIER_TIMEOUT;
     TimeoutTimer->stop();
+}
+
+void Client::ComReplyTimeout()
+{
+    ComReplyTimeoutIsSet = true;
+    QByteArray *ba = new QByteArray;
+    ParseReply(ba); // принудительная обработка принятой посылки
+    delete ba;
 }

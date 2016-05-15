@@ -38,33 +38,34 @@ public:
 
     enum Messages
     {
-      // ServerToClient
-      CMD_LOGINREQ, // запрос имени пользователя
-      CMD_PSWREQ,	// запрос пароля (зарез.)
-      ANS_GROUP,    // группа доступа
-      ANS_SQLRESULT, // результат обработки sql-запроса
-      ANS_MESSAGES, // текущие сообщения для пользователя
-      ANS_CHATMSGS, // сообщения из чата для пользователя
-      ANS_CHATSTATUS, // состояние чата в ответ на CMD_CHATREQ
-      ANS_OKTORCV, // подтверждение готовности к приёму файла
-      ANS_GETFILE, // подтверждение приёма файла
-      ANS_OKTOXMT, // подтверждение готовности к отправке файла
-      ANS_PUTFILE, // подтверждение отправки файла
-      ANS_DIRLIST, // выдача содержимого каталога
-      ANS_QUIT, // подтверждение завершения сеанса связи
-      // ClientToServer
-      ANS_LOGIN, // имя пользователя
-      ANS_PSW, // пароль
-      CMD_TF_GVSBFS, // запросы sql для tablefields
-      CMD_GVSBFS, // запросы sql простые
-      CMD_MESSAGES, // запрос текущих сообщений для пользователя
-      CMD_CHATMSGS, // запрос сообщений из чата
-      CMD_CHATREQ, // запрос состояния чата (пользователи)
-      CMD_GETFILE, // запрос файла из хранилища
-      CMD_PUTFILE, // запрос на отсылку файла в хранилище
-      CMD_DIRLIST, // запрос списка файлов в каталоге
-      CMD_QUIT, // завершение сеанса связи
-      CMD_IDLE // состояние ожидания команды
+        // ServerToClient
+        CMD_LOGINREQ, // запрос имени пользователя
+        CMD_PSWREQ,	// запрос пароля (зарез.)
+        ANS_GROUP,    // группа доступа
+        ANS_SQLRESULT, // результат обработки sql-запроса
+        ANS_MESSAGES, // текущие сообщения для пользователя
+        ANS_CHATMSGS, // сообщения из чата для пользователя
+        ANS_CHATSTATUS, // состояние чата в ответ на CMD_CHATREQ
+        ANS_OKTORCV, // подтверждение готовности к приёму файла
+        ANS_GETFILE, // подтверждение приёма файла
+        ANS_OKTOXMT, // подтверждение готовности к отправке файла
+        ANS_PUTFILE, // подтверждение отправки файла
+        ANS_DIRLIST, // выдача содержимого каталога
+        ANS_QUIT, // подтверждение завершения сеанса связи
+        // ClientToServer
+        ANS_LOGIN, // имя пользователя
+        ANS_PSW, // пароль
+        CMD_TF_GVSBFS, // запросы sql для tablefields
+        CMD_GVSBFS, // запросы sql простые
+        CMD_MESSAGES, // запрос текущих сообщений для пользователя
+        CMD_CHATMSGS, // запрос сообщений из чата
+        CMD_CHATREQ, // запрос состояния чата (пользователи)
+        CMD_GETFILE, // запрос файла из хранилища
+        CMD_PUTFILE, // запрос на отсылку файла в хранилище
+        CMD_DIRLIST, // запрос списка файлов в каталоге
+        CMD_QUIT, // завершение сеанса связи
+        CMD_IDLE, // состояние ожидания команды
+        CMD_STATUS  // запрос статуса от сервера
     };
 
     int Connect(QString Host, QString Port);
@@ -88,12 +89,15 @@ private:
     QByteArray RcvData;
     Ethernet *MainEthernet, *FileEthernet;
     QTimer *TimeoutTimer, *GetComReplyTimer, *GetFileTimer;
-    bool Busy, FileBusy, Connected, FileConnected, CmdOk, LoginOk, FirstReplyPass, FirstComPass;
+    bool Busy, FileBusy, Connected, FileConnected, CmdOk, LoginOk, FirstReplyPass, FirstComPass, ComReplyTimeoutIsSet;
     QTextStream *LogStream;
     QString FileHost;
     quint16 FilePort;
     qint64 WrittenBytes, ReadBytes, MsgNum;
     int CurrentCommand, RcvDataSize, XmitDataSize, DetectedError;
+    FILE *fp;
+    size_t filesize;
+    size_t filepos;
 
     QString RemoveSpaces(QString str);
     void WriteErrorAndBreakReceiving(QString ErMsg);
@@ -106,6 +110,7 @@ private slots:
     void SetBytesWritten(qint64 bytes);
     void ParseReply(QByteArray *ba);
     void GetFileTimerTimeout();
+    void ComReplyTimeout();
 };
 
 extern Client *Cli;

@@ -135,7 +135,7 @@ void SysmenuEditor::Delete()
     QString tmpdb = sl.at(0).split(".").at(0);
     QString tmptble = sl.at(0).split(".").at(1);
     sl = QStringList() << "id"+tmptble;
-    sl = sqlc.GetValuesFromTableByField(sqlc.GetDB(tmpdb), tmptble, sl, "idalias", tmpString);
+    sl = sqlc.GetValuesFromTableByField(tmpdb, tmptble, sl, "idalias", tmpString);
     if (!sqlc.result) // есть записи с данным idalias
     {
         if (MessageBox2::question(this, "Вы уверены?", "Категория содержит подкатегории.\nВы уверены, что хотите удалить её?"))
@@ -146,7 +146,7 @@ void SysmenuEditor::Delete()
                 SYSMWARN;
                 return;
             }
-            sqlc.DeleteFromDB(sqlc.GetDB(tmpdb), tmptble, "idalias", tmpString);
+            sqlc.DeleteFromDB(tmpdb, tmptble, "idalias", tmpString);
             if (sqlc.result)
             {
                 SYSMWARN;

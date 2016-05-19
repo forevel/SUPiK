@@ -242,7 +242,7 @@ void DevMainDialog::Unfilter()
 
 int DevMainDialog::Fill(QString DevID)
 {
-    QString DevDesc = sqlc.GetValueFromTableByID(sqlc.GetDB("dev"), "devices", "description", DevID);
+    QString DevDesc = sqlc.GetValueFromTableByID("dev", "devices", "description", DevID);
     if (sqlc.result)
     {
         DEVMAINWARN;

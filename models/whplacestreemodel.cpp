@@ -86,7 +86,7 @@ int WhPlacesTreeModel::Load(int Index)
     ClearModel();
     RootIndexID = Index;
     QStringList fl = QStringList() << "table" << "tablefields";
-    vl = sqlc.GetMoreValuesFromTableByField(sqlc.GetDB("sup"), "tablefields", fl, "tablename", WHPLACES, "fieldsorder", true);
+    vl = sqlc.GetMoreValuesFromTableByField("sup", "tablefields", fl, "tablename", WHPLACES, "fieldsorder", true);
     if (sqlc.result)
         return 1;
     if (vl.at(2).at(1) != "idalias")

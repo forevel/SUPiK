@@ -26,7 +26,7 @@ QStringList s_tablefields::htovl(QString tble, QString header)
         return QStringList();
     QString db = sl.at(0).split(".").at(0); // table = <db>.<tble>
     tble = sl.at(0).split(".").at(1);
-    QStringList tmpsl = sqlc.GetValuesFromTableByColumn(sqlc.GetDB(db), tble, sl.at(1),"id"+tble,true);
+    QStringList tmpsl = sqlc.GetValuesFromTableByColumn(db, tble, sl.at(1),"id"+tble,true);
     if (sqlc.result == 2) // ошибка
     {
         result = 1;
@@ -56,7 +56,7 @@ QStringList s_tablefields::htovlc(QString tble, QString header, QString cheader,
     }
     QString db = sl.at(0).split(".").at(0);
     tble = sl.at(0).split(".").at(1);
-    QStringList tmpsl = sqlc.GetValuesFromTableByColumnAndField(sqlc.GetDB(db), tble, sl.at(1), cl.at(1), value);
+    QStringList tmpsl = sqlc.GetValuesFromTableByColumnAndField(db, tble, sl.at(1), cl.at(1), value);
     if (sqlc.result) // || tmpsl.isEmpty())
     {
         result = 1;
@@ -111,7 +111,7 @@ QString s_tablefields::tov(QString tble, QString header, QString tbleid)
     }
     QString db = sl.at(0).split(".").at(0);
     tble = sl.at(0).split(".").at(1);
-    tmpString = sqlc.GetValueFromTableByID(sqlc.GetDB(db), tble, sl.at(1), tbleid);
+    tmpString = sqlc.GetValueFromTableByID(db, tble, sl.at(1), tbleid);
     if (sqlc.result == 2) // если ошибка в запросе SQL
     {
         result = 1;
@@ -432,7 +432,7 @@ QString s_tablefields::toid(QString tble, QString header, QString value)
     }
     QString db = sl.at(0).split(".").at(0);
     tble = sl.at(0).split(".").at(1);
-    tmpString = sqlc.GetLastValueFromTableByField(sqlc.GetDB(db), tble, "id"+tble, sl.at(1), value);
+    tmpString = sqlc.GetLastValueFromTableByField(db, tble, "id"+tble, sl.at(1), value);
     if (sqlc.result)
     {
         result = 1;
@@ -458,7 +458,7 @@ void s_tablefields::idtois(QString tble, QStringList headers, QStringList values
     QStringList fl = QStringList() << "table" << "tablefields" << "header";
     QStringList cmpfl = QStringList() << "tablename" << "keyfield";
     QStringList cmpvl = QStringList() << tble << "v";
-    QStringList keydbtble = sqlc.GetValuesFromTableByFields(sqlc.GetDB("sup"), "tablefields", fl, cmpfl, cmpvl);
+    QStringList keydbtble = sqlc.GetValuesFromTableByFields("sup", "tablefields", fl, cmpfl, cmpvl);
     if (sqlc.result)
     {
         result = 1;
@@ -521,7 +521,7 @@ void s_tablefields::idtois(QString tble, QStringList headers, QStringList values
             tmptble = tmpdbtble.split(".").at(1);
             tmptablefields << "date" << "idpers";
             tmpvalues << pc.DateTime << QString::number(pc.idPers);
-            result = sqlc.UpdateValuesInTable(sqlc.GetDB(tmpdb), tmptble, tmptablefields, tmpvalues, keydbtble.at(2), keyid);
+            result = sqlc.UpdateValuesInTable(tmpdb, tmptble, tmptablefields, tmpvalues, keydbtble.at(2), keyid);
             if (result)
                 TFWARN(sqlc.LastError);
         }
@@ -536,14 +536,14 @@ QString s_tablefields::insert(QString tble)
 {
     QStringList cmpfl = QStringList() << "tablename" << "keyfield";
     QStringList cmpvl = QStringList() << tble << "v";
-    QString keydbtble = sqlc.GetValueFromTableByFields(sqlc.GetDB("sup"), "tablefields", "table", cmpfl, cmpvl);
+    QString keydbtble = sqlc.GetValueFromTableByFields("sup", "tablefields", "table", cmpfl, cmpvl);
     if (sqlc.result)
     {
         result = 1;
         TFWARN(sqlc.LastError);
         return QString();
     }
-    QString newid = sqlc.InsertValuesToTable(sqlc.GetDB(keydbtble.split(".").at(0)), keydbtble.split(".").at(1), QStringList(), QStringList()); // вставка новой пустой строки
+    QString newid = sqlc.InsertValuesToTable(keydbtble.split(".").at(0), keydbtble.split(".").at(1), QStringList(), QStringList()); // вставка новой пустой строки
     if (sqlc.result)
     {
         result = 1;
@@ -561,14 +561,14 @@ QString s_tablefields::NewID(QString tble)
 {
     QStringList cmpfl = QStringList() << "tablename" << "keyfield";
     QStringList cmpvl = QStringList() << tble << "v";
-    QString keydbtble = sqlc.GetValueFromTableByFields(sqlc.GetDB("sup"), "tablefields", "table", cmpfl, cmpvl);
+    QString keydbtble = sqlc.GetValueFromTableByFields("sup", "tablefields", "table", cmpfl, cmpvl);
     if (sqlc.result)
     {
         result = 1;
         TFWARN(sqlc.LastError);
         return QString();
     }
-    int newid = sqlc.GetNextFreeIndex(sqlc.GetDB(keydbtble.split(".").at(0)), keydbtble.split(".").at(1));
+    int newid = sqlc.GetNextFreeIndex(keydbtble.split(".").at(0), keydbtble.split(".").at(1));
     if (sqlc.result)
     {
         result = 1;
@@ -588,14 +588,14 @@ void s_tablefields::remove(QString tble, QString id)
     QStringList fl = QStringList() << "table" << "tablefields";
     QStringList cmpfl = QStringList() << "tablename" << "keyfield";
     QStringList cmpvl = QStringList() << tble << "v";
-    QStringList keydbtble = sqlc.GetValuesFromTableByFields(sqlc.GetDB("sup"), "tablefields", fl, cmpfl, cmpvl);
+    QStringList keydbtble = sqlc.GetValuesFromTableByFields("sup", "tablefields", fl, cmpfl, cmpvl);
     if (sqlc.result)
     {
         TFWARN(sqlc.LastError);
         result = 1;
         return;
     }
-    result = sqlc.DeleteFromDB(sqlc.GetDB(keydbtble.at(0).split(".").at(0)), keydbtble.at(0).split(".").at(1), keydbtble.at(1), id);
+    result = sqlc.DeleteFromDB(keydbtble.at(0).split(".").at(0), keydbtble.at(0).split(".").at(1), keydbtble.at(1), id);
     if (result)
         TFWARN(sqlc.LastError);
 }
@@ -609,14 +609,14 @@ void s_tablefields::Delete(QString tble, QString id)
     QStringList fl = QStringList() << "table" << "tablefields";
     QStringList cmpfl = QStringList() << "tablename" << "keyfield";
     QStringList cmpvl = QStringList() << tble << "v";
-    QStringList keydbtble = sqlc.GetValuesFromTableByFields(sqlc.GetDB("sup"), "tablefields", fl, cmpfl, cmpvl);
+    QStringList keydbtble = sqlc.GetValuesFromTableByFields("sup", "tablefields", fl, cmpfl, cmpvl);
     if (sqlc.result)
     {
         TFWARN(sqlc.LastError);
         result = 1;
         return;
     }
-    result = sqlc.RealDeleteFromDB(sqlc.GetDB(keydbtble.at(0).split(".").at(0)), keydbtble.at(0).split(".").at(1), QStringList(keydbtble.at(1)), QStringList(id));
+    result = sqlc.RealDeleteFromDB(keydbtble.at(0).split(".").at(0), keydbtble.at(0).split(".").at(1), QStringList(keydbtble.at(1)), QStringList(id));
     if (result)
         TFWARN(sqlc.LastError);
 }
@@ -632,8 +632,8 @@ bool s_tablefields::Check(QString tble, QString cmpfield, QString cmpvalue)
     QString cmpdb = sl.at(0).split(".").at(0); // реальное имя БД
     QString cmptble = sl.at(0).split(".").at(1); // реальное название таблицы
     cmpfield = sl.at(1); // реальное название поля сравнения
-    sl = sqlc.GetColumnsFromTable(sqlc.GetDB(cmpdb),cmptble);
-    sl = sqlc.GetValuesFromTableByField(sqlc.GetDB(cmpdb),cmptble,sl,cmpfield,cmpvalue);
+    sl = sqlc.GetColumnsFromTable(cmpdb,cmptble);
+    sl = sqlc.GetValuesFromTableByField(cmpdb,cmptble,sl,cmpfield,cmpvalue);
     if (sqlc.result)
     {
         result = 1;
@@ -664,7 +664,7 @@ QStringList s_tablefields::valuesbyfield(QString tble, QStringList fl, QString c
         }
         fl.replace(i, sl.at(1)); // заменяем русское наименование поля на его реальное название
     }
-    sl = sqlc.GetValuesFromTableByField(sqlc.GetDB(cmpdb),cmptble,fl,cmpfield,cmpvalue);
+    sl = sqlc.GetValuesFromTableByField(cmpdb,cmptble,fl,cmpfield,cmpvalue);
     if ((sqlc.result) && (Warn))
     {
         TFWARN(sqlc.LastError);
@@ -707,7 +707,7 @@ QStringList s_tablefields::valuesbyfields(QString tble, QStringList fl, QStringL
     }
     QString cmpdb = tmpsl.at(0).split(".").at(0); // реальное имя БД
     QString cmptble = tmpsl.at(0).split(".").at(1); // реальное название таблицы
-    QStringList tmps = sqlc.GetValuesFromTableByFields(sqlc.GetDB(cmpdb),cmptble,fl,cmpfl,cmpvalues);
+    QStringList tmps = sqlc.GetValuesFromTableByFields(cmpdb,cmptble,fl,cmpfl,cmpvalues);
     if ((sqlc.result) && (Warn))
     {
         TFWARN(sqlc.LastError);
@@ -720,7 +720,7 @@ QStringList s_tablefields::valuesbyfields(QString tble, QStringList fl, QStringL
 
 QStringList s_tablefields::TableColumn(QString tble, QString field)
 {
-    QStringList sl = sqlc.GetValuesFromTableByColumnAndField(sqlc.GetDB("sup"), "tablefields", field, "tablename", tble, "fieldsorder");
+    QStringList sl = sqlc.GetValuesFromTableByColumnAndField("sup", "tablefields", field, "tablename", tble, "fieldsorder");
     if (sqlc.result)
     {
         TFWARN(sqlc.LastError);
@@ -736,7 +736,7 @@ QStringList s_tablefields::tablefields(QString tble, QString header)
     QStringList fl = QStringList() << "table" << "tablefields" << "links";
     QStringList cmpfl = QStringList() << "tablename" << "header";
     QStringList cmpvl = QStringList() << tble << header;
-    QStringList sl = sqlc.GetValuesFromTableByFields(sqlc.GetDB("sup"), "tablefields", fl, cmpfl, cmpvl);
+    QStringList sl = sqlc.GetValuesFromTableByFields("sup", "tablefields", fl, cmpfl, cmpvl);
     if ((sqlc.result) || (sl.isEmpty()))
     {
         TFWARN(sqlc.LastError);
@@ -749,7 +749,7 @@ QStringList s_tablefields::tablefields(QString tble, QString header)
 
 QStringList s_tablefields::tableheaders(QString tble)
 {
-    QStringList sl = sqlc.GetValuesFromTableByColumnAndField(sqlc.GetDB("sup"), "tablefields", "header", "tablename", tble, "fieldsorder", true);
+    QStringList sl = sqlc.GetValuesFromTableByColumnAndField("sup", "tablefields", "header", "tablename", tble, "fieldsorder", true);
     if ((sqlc.result) || (sl.isEmpty()))
     {
         TFWARN(sqlc.LastError);
@@ -762,7 +762,7 @@ QStringList s_tablefields::tableheaders(QString tble)
 
 QStringList s_tablefields::tablelinks(QString tble)
 {
-    QStringList sl = sqlc.GetValuesFromTableByColumnAndField(sqlc.GetDB("sup"), "tablefields", "links", "tablename", tble, "fieldsorder", true);
+    QStringList sl = sqlc.GetValuesFromTableByColumnAndField("sup", "tablefields", "links", "tablename", tble, "fieldsorder", true);
     if ((sqlc.result) || (sl.isEmpty()))
     {
         TFWARN(sqlc.LastError);
@@ -777,7 +777,7 @@ bool s_tablefields::tableistree(QString tble)
 {
     QStringList tmpfl = QStringList() << "tablefields" << "tablename";
     QStringList tmpvl = QStringList() << "alias" << tble;
-    sqlc.GetValueFromTableByFields(sqlc.GetDB("sup"),"tablefields","tablefields",tmpfl,tmpvl);
+    sqlc.GetValueFromTableByFields("sup","tablefields","tablefields",tmpfl,tmpvl);
     if (sqlc.result)
         return false;
     else

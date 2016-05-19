@@ -253,7 +253,7 @@ int EditModel::Setup(QString Table, QString Id)
         return 1;
     }
     QStringList fl = QStringList() << "table" << "tablefields" << "header" << "links";
-    QList<QStringList> vl = sqlc.GetMoreValuesFromTableByField(sqlc.GetDB("sup"), "tablefields", fl, "tablename", Table, "fieldsorder", true);
+    QList<QStringList> vl = sqlc.GetMoreValuesFromTableByField("sup", "tablefields", fl, "tablename", Table, "fieldsorder", true);
     if (sqlc.result)
     {
         EMODELWARN;
@@ -306,7 +306,7 @@ int EditModel::Setup(QString Table, QString Id)
     AddColumn("Значение поля");
 
     // заполняем модель
-    QStringList ValuesSl = sqlc.GetValuesFromTableByID(sqlc.GetDB(PlainDb), PlainTable, TableHeadersSl, Id);
+    QStringList ValuesSl = sqlc.GetValuesFromTableByID(PlainDb, PlainTable, TableHeadersSl, Id);
     if (sqlc.result)
     {
         EMODELWARN;

@@ -161,7 +161,7 @@ void Client::SendCmd(int Command, QStringList &Args)
         int fnum = fieldsnum.toInt(&ok);
         if (!ok)
         {
-            CliLog->error("CMD_TF_GVSBFS: argument is not a number");
+            CliLog->error("CMD_GVSBFS: argument is not a number");
             DetectedError = CLIER_WRARGS;
             Busy = false;
             return;
@@ -170,7 +170,7 @@ void Client::SendCmd(int Command, QStringList &Args)
         int pnum = fieldsnum.toInt(&ok);
         if (!ok)
         {
-            CliLog->error("CMD_TF_GVSBFS: argument is not a number");
+            CliLog->error("CMD_GVSBFS: argument is not a number");
             DetectedError = CLIER_WRARGS;
             Busy = false;
             return;
@@ -364,7 +364,7 @@ void Client::ParseReply(QByteArray *ba)
     {
         // Формат ответа на запрос из таблицы tablefields:
         // 1. Ответ на GVSBFS:
-        //      TF <number_of_bytes_starting_from_number_of_records> <number_of_records>\n
+        //      TF <number_of_records>\n
         //      value[0][0] value[1][0] ... value[n][0]\n
         //      value[0][1] value[1][1] ... value[n][1]\n
         //      ...
@@ -375,27 +375,25 @@ void Client::ParseReply(QByteArray *ba)
     case CMD_GVSBFS:
     {
         // Формат ответа на запрос GVSBFS:
-        //      GVSBFS <number_of_bytes_starting_from_number_of_records> <number_of_records>\n
+        //      GVSBFS <number_of_records>\n
         //      value[0][0] value[1][0] ... value[n][0]\n
         //      value[0][1] value[1][1] ... value[n][1]\n
         //      ...
         //      value[0][k] value[1][k] ... value[n][k]\n
 
-        if (ServerResponse == "GVSBFS")
+        if (FirstComPass) // первая порция данных
         {
-            if (FirstComPass) // первая порция данных
+            if (ServerResponse == "GVSBFS")
             {
                 CliLog->info("<"+ServerResponse);
-                if (ArgList.size()<2) // нет то ли длины, то ли количества записей
+                if (ArgList.size()<1) // нет количества записей
                 {
                     WriteErrorAndBreakReceiving("Некорректное количество аргументов");
                     return;
                 }
-                bool ok, ok2;
-                ReadBytes = ArgList.at(0).toInt(&ok);
-                MsgNum = ArgList.at(1).toInt(&ok2);
-                ReadBytes -= ArgList.at(0).size() + ArgList.at(1).size() + 2; // 2 - один пробел и один символ перевода строки
-                if ((!ok) || (!ok2) || (MsgNum <= 0) || (ReadBytes <= 0))
+                bool ok;
+                MsgNum = ArgList.at(0).toInt(&ok2);
+                if ((!ok) || (MsgNum <= 0))
                 {
                     WriteErrorAndBreakReceiving("Некорректные длина или количество посылок");
                     return;
@@ -406,28 +404,20 @@ void Client::ParseReply(QByteArray *ba)
             }
             else
             {
-                emit DataReady(ArgList);
-                for (int i=0; i<ArgList.size(); i++)
-                    ReadBytes -= ArgList.at(i).size()+1; // один пробел между аргументами
-                ReadBytes -= 1; // \n
-                MsgNum--;
-                if (MsgNum == 0)
-                {
-                    FirstComPass = true;
-                    if (ReadBytes != 0)
-                    {
-                        WriteErrorAndBreakReceiving("Неверно подсчитана длина посылки");
-                        return;
-                    }
-                    CmdOk = true;
-                }
-                TimeoutTimer->start();
+                WriteErrorAndBreakReceiving("Некорректный ответ сервера");
                 return;
             }
         }
         else
         {
-            WriteErrorAndBreakReceiving("Некорректный ответ сервера");
+            emit DataReady(ArgList);
+            MsgNum--;
+            if (MsgNum == 0)
+            {
+                FirstComPass = true;
+                CmdOk = true;
+            }
+            TimeoutTimer->start();
             return;
         }
         break;

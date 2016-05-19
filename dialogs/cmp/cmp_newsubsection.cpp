@@ -141,7 +141,7 @@ void cmp_newsubsection::Ok()
     QStringList sl = QStringList() << "" << "А" << "З" << "Э" << "К" << "У";
     QStringList dbsl = QStringList() << "" << "alt" << "sch" << "sol" << "con" << "dev";
     QStringList Fields, Values;
-    if (!(sqlc.CheckForTable(sqlc.GetDB(dbsl.at(CompType)), desc))) // нет такой таблицы
+    if (!(sqlc.CheckForTable(dbsl.at(CompType), desc))) // нет такой таблицы
     {
         switch(CompType)
         {
@@ -156,7 +156,7 @@ void cmp_newsubsection::Ok()
             break;
         }
         }
-        sqlc.CreateTable(sqlc.GetDB(dbsl.at(CompType)), desc, Fields, true); // Simple=true, т.е. id без имени таблицы
+        sqlc.CreateTable(dbsl.at(CompType), desc, Fields, true); // Simple=true, т.е. id без имени таблицы
         if (sqlc.result)
         {
             CMPNSWARN;
@@ -171,7 +171,7 @@ void cmp_newsubsection::Ok()
     Fields = QStringList() << "description" << "descriptionfull";
     Values = QStringList() << desc << descfull;
     QString TableName = sl.at(CompType)+"Компоненты_описание_полн";
-    QString newID = sqlc.GetValueFromTableByFields(sqlc.GetDB(dbsl.at(CompType)), "description", "iddescription", Fields, Values);
+    QString newID = sqlc.GetValueFromTableByFields(dbsl.at(CompType), "description", "iddescription", Fields, Values);
     if (sqlc.result) // нет такой записи
     {
         // создаём запись

@@ -117,7 +117,7 @@ void SysDirEditor::DeleteDir()
         return;
     QStringList fl = QStringList() << "dirlist";
     QStringList vl = QStringList() << dirname;
-    sqlc.RealDeleteFromDB(sqlc.GetDB("sup"),"dirlist",fl,vl);
+    sqlc.RealDeleteFromDB("sup","dirlist",fl,vl);
     if (sqlc.result)
     {
         SYSDWARN;

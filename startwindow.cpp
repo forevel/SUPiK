@@ -232,12 +232,12 @@ void StartWindow::OkPBClicked()
             return;
         }
 
-        tmpString = sqlc.GetValueFromTableByField(pc.sup, "personel", "psw", "login", pc.PersLogin);
+        tmpString = sqlc.GetValueFromTableByField("sup", "personel", "psw", "login", pc.PersLogin);
         if (tmpString == pc.PersPsw)
         {
             QStringList sl, vl;
             sl << "idpersonel" << "personel" << "group";
-            vl = sqlc.GetValuesFromTableByField(pc.sup, "personel", sl, "login", pc.PersLogin);
+            vl = sqlc.GetValuesFromTableByField("sup", "personel", sl, "login", pc.PersLogin);
             if (sqlc.result)
             {
                 MessageBox2::error(this, "Ошибка!", sqlc.LastError);
@@ -258,7 +258,7 @@ void StartWindow::OkPBClicked()
             }
 
             // считывание прав доступа к СУПиКу
-            tmpString = sqlc.GetValueFromTableByID(pc.sup, "groups", "access", QString::number(pc.idGroup));
+            tmpString = sqlc.GetValueFromTableByID("sup", "groups", "access", QString::number(pc.idGroup));
             if (!tmpString.isEmpty())
                 pc.access = tmpString.toLong(0, 16); // права доступа - в hex формате
             else // не нашли запись

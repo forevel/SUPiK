@@ -32,7 +32,7 @@ void sys_ImportClass_T::run()
         else
         {
             QString ParentClass = ClassNum.left(position-1);
-            ParentID = sqlc.GetValueFromTableByField(sqlc.GetDB(TableDB),TableName,"id"+TableName,TableName,ParentClass);
+            ParentID = sqlc.GetValueFromTableByField(TableDB,TableName,"id"+TableName,TableName,ParentClass);
             if (sqlc.result)
             {
                 SYSICTER("Не найден родитель для класса "+ClassNum);
@@ -40,12 +40,12 @@ void sys_ImportClass_T::run()
                 return;
             }
         }
-        QString tmps = sqlc.GetValueFromTableByField(sqlc.GetDB(TableDB),TableName,"id"+TableName,TableName,ClassNum);
+        QString tmps = sqlc.GetValueFromTableByField(TableDB,TableName,"id"+TableName,TableName,ClassNum);
         QStringList fl = QStringList() << TableName << "description" << "idalias";
         QStringList vl = QStringList() << ClassNum << ClassDescription << ParentID;
         if (sqlc.result == 1) // нет такой записи
         {
-            sqlc.InsertValuesToTable(sqlc.GetDB(TableDB),TableName, fl, vl);
+            sqlc.InsertValuesToTable(TableDB,TableName, fl, vl);
             if (sqlc.result)
             {
                 SYSICTER("Проблема при записи очередного поля № "+QString::number(RowNum));
@@ -55,7 +55,7 @@ void sys_ImportClass_T::run()
         }
         else if (sqlc.result == 0)
         {
-            sqlc.UpdateValuesInTable(sqlc.GetDB(TableDB),TableName,fl,vl,"id"+TableName,tmps);
+            sqlc.UpdateValuesInTable(TableDB,TableName,fl,vl,"id"+TableName,tmps);
             if (sqlc.result)
             {
                 SYSICTER("Проблема при обновлении очередного поля № "+QString::number(RowNum));

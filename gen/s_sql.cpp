@@ -1,11 +1,14 @@
 #include "s_sql.h"
 #include "publicclass.h"
 #include <QVariant>
+#include <QThread>
+#include <QCoreApplication>
 #include <QDebug>
+#include "client.h"
 
 s_sql sqlc;
 
-s_sql::s_sql()
+s_sql::s_sql(QObject *parent) : QObject(parent)
 {
 }
 
@@ -39,15 +42,13 @@ QString s_sql::FromDB(QSqlDatabase db)
 }
 
 // процедура возвращает базу данных по имени таблицы, которая в БД должна содержаться
-
+/*
 QSqlDatabase s_sql::GetDBByTableName(QString tble)
 {
-    QSqlDatabase tmpdb;
     QStringList dbs = GetDBFromSQL();
     for (int i = 0; i < dbs.size(); i++)
     {
-        tmpdb = GetDB(dbs.at(i).left(3));
-        QStringList tbles = GetTablesFromDB(tmpdb);
+        QStringList tbles = GetTablesFromDB(dbs.at(i).left(3));
         while (!tbles.isEmpty())
         {
             QString tmpString = tbles.takeFirst();
@@ -57,7 +58,7 @@ QSqlDatabase s_sql::GetDBByTableName(QString tble)
     }
     return QSqlDatabase();
 }
-
+*/
 // процедура возвращает все имеющиеся БД (кроме системных)
 
 QStringList s_sql::GetDBFromSQL()
@@ -89,10 +90,10 @@ QStringList s_sql::GetDBFromSQL()
 
 // процедура возвращает список таблиц из БД db
 
-QStringList s_sql::GetTablesFromDB(QSqlDatabase db)
+QStringList s_sql::GetTablesFromDB(QString db)
 {
     QStringList sl;
-    QSqlQuery exec_db (db);
+    QSqlQuery exec_db (GetDB(db));
 
     sl.clear();
     exec_db.exec("SHOW TABLES;");
@@ -103,10 +104,10 @@ QStringList s_sql::GetTablesFromDB(QSqlDatabase db)
 
 // процедура возвращает список полей из db:tble
 
-QStringList s_sql::GetColumnsFromTable(QSqlDatabase db, QString tble)
+QStringList s_sql::GetColumnsFromTable(QString db, QString tble)
 {
     QStringList sl;
-    QSqlQuery exec_db (db);
+    QSqlQuery exec_db (GetDB(db));
 
     sl.clear();
     exec_db.exec("SHOW COLUMNS FROM `" + tble + "`;");
@@ -124,9 +125,9 @@ QStringList s_sql::GetColumnsFromTable(QSqlDatabase db, QString tble)
 
 // процедура возвращает true в случае наличия таблицы в БД, иначе false
 
-bool s_sql::CheckForTable(QSqlDatabase db, QString tble)
+bool s_sql::CheckForTable(QString db, QString tble)
 {
-    QSqlQuery exec_db (db);
+    QSqlQuery exec_db (GetDB(db));
     exec_db.exec("SELECT * FROM `" + tble + "`;");
     if (!exec_db.isActive())
     {
@@ -139,9 +140,9 @@ bool s_sql::CheckForTable(QSqlDatabase db, QString tble)
 
 // процедура создаёт новую таблицу, в fl имена столбцов
 
-void s_sql::CreateTable(QSqlDatabase db, QString tble, QStringList fl, bool Simple)
+void s_sql::CreateTable(QString db, QString tble, QStringList fl, bool Simple)
 {
-    QSqlQuery exec_db(db);
+    QSqlQuery exec_db(GetDB(db));
     QString tmpString;
     if (Simple)
         tmpString = "CREATE TABLE `"+tble+"` (`id` int(11) NOT NULL,";
@@ -168,9 +169,9 @@ void s_sql::CreateTable(QSqlDatabase db, QString tble, QStringList fl, bool Simp
 
 // удалить поля по списку DeleteList и добавить поля по списку AddList. Добавить id<tble>, если требуется
 
-void s_sql::AlterTable(QSqlDatabase db, QString tble, QStringList DeleteList, QStringList AddList)
+void s_sql::AlterTable(QString db, QString tble, QStringList DeleteList, QStringList AddList)
 {
-    QSqlQuery exec_db(db);
+    QSqlQuery exec_db(GetDB(db));
     // сначала проверим наличие полей id<tble>,idpers,date,deleted
     QStringList sl = GetColumnsFromTable(db, tble);
     bool IdExist = (sl.indexOf("id"+tble) != -1);
@@ -227,9 +228,9 @@ void s_sql::AlterTable(QSqlDatabase db, QString tble, QStringList DeleteList, QS
 
 // процедура удаляет таблицу из БД
 
-void s_sql::DropTable(QSqlDatabase db, QString tble)
+void s_sql::DropTable(QString db, QString tble)
 {
-    QSqlQuery exec_db (db);
+    QSqlQuery exec_db (GetDB(db));
     exec_db.exec("DROP TABLE IF EXISTS `"+tble+"`;");
     if (exec_db.isActive())
     {
@@ -243,10 +244,10 @@ void s_sql::DropTable(QSqlDatabase db, QString tble)
 
 // процедура добавляет столбец к таблице
 
-void s_sql::AddColumn(QSqlDatabase db, QString tble, QString col, QString def)
+void s_sql::AddColumn(QString db, QString tble, QString col, QString def)
 {
     QStringList lastcol = sqlc.GetColumnsFromTable(db, tble);
-    QSqlQuery exec_db(db);
+    QSqlQuery exec_db(GetDB(db));
     QString tmpString = (def == "NULL")?"":"DEFAULT '"+def+"'";
     tmpString = "ALTER TABLE `"+tble+"` ADD COLUMN `"+col+"` VARCHAR(128) NULL "+tmpString+" AFTER `"+lastcol.last()+"`;";
     exec_db.exec(tmpString);
@@ -262,10 +263,10 @@ void s_sql::AddColumn(QSqlDatabase db, QString tble, QString col, QString def)
 
 // взять следующий свободный индекс из БД db, таблицы tble и вернуть его int-ом
 
-int s_sql::GetNextFreeIndex(QSqlDatabase db, QString tble)
+int s_sql::GetNextFreeIndex(QString db, QString tble)
 {
     long i = 1;
-    QSqlQuery exec_db (db);
+    QSqlQuery exec_db (GetDB(db));
     QString tmpString = "SELECT `id" + tble + "` FROM `" + tble + "` ORDER BY `id" + tble + "` ASC;";
     exec_db.exec(tmpString); // индексы сортируем по возрастанию
     if (exec_db.isActive())
@@ -285,10 +286,10 @@ int s_sql::GetNextFreeIndex(QSqlDatabase db, QString tble)
 
 // взять следующий свободный индекс из БД db, таблицы tble и вернуть его int-ом. id - без имени таблицы
 
-int s_sql::GetNextFreeIndexSimple(QSqlDatabase db, QString tble)
+int s_sql::GetNextFreeIndexSimple(QString db, QString tble)
 {
     long i = 1;
-    QSqlQuery exec_db (db);
+    QSqlQuery exec_db (GetDB(db));
     QString tmpString = "SELECT `id` FROM `" + tble + "` ORDER BY `id` ASC;";
     exec_db.exec(tmpString); // индексы сортируем по возрастанию
     if (exec_db.isActive())
@@ -308,7 +309,7 @@ int s_sql::GetNextFreeIndexSimple(QSqlDatabase db, QString tble)
 
 // процедура берёт из таблицы запись № id<tble> по полям fields и возвращает значения полей
 
-QStringList s_sql::GetValuesFromTableByID(QSqlDatabase db, QString tble, QStringList fields, QString id)
+QStringList s_sql::GetValuesFromTableByID(QString db, QString tble, QStringList fields, QString id)
 {
     QStringList vl;
 
@@ -318,7 +319,7 @@ QStringList s_sql::GetValuesFromTableByID(QSqlDatabase db, QString tble, QString
 
 // процедура берёт из таблицы запись № id по полям fields и возвращает значения полей
 
-QStringList s_sql::GetValuesFromTableByIDSimple(QSqlDatabase db, QString tble, QStringList fields, QString id)
+QStringList s_sql::GetValuesFromTableByIDSimple(QString db, QString tble, QStringList fields, QString id)
 {
     QStringList vl;
 
@@ -328,7 +329,7 @@ QStringList s_sql::GetValuesFromTableByIDSimple(QSqlDatabase db, QString tble, Q
 
 // процедура берёт из таблицы запись № id<tble> по полю field и возвращает значение поля
 
-QString s_sql::GetValueFromTableByID(QSqlDatabase db, QString tble, QString field, QString id)
+QString s_sql::GetValueFromTableByID(QString db, QString tble, QString field, QString id)
 {
     QString vl;
 
@@ -338,12 +339,12 @@ QString s_sql::GetValueFromTableByID(QSqlDatabase db, QString tble, QString fiel
 
 // процедура берёт из таблицы первую запись, в которой cmpfield=cmpvalue, по полям fields и возвращает значения полей
 
-QStringList s_sql::GetValuesFromTableByField(QSqlDatabase db, QString tble, QStringList fields, QString cmpfield, QString cmpvalue)
+QStringList s_sql::GetValuesFromTableByField(QString db, QString tble, QStringList fields, QString cmpfield, QString cmpvalue)
 {
     QString tmpString;
     QStringList vl;
     int i;
-    QSqlQuery exec_db (db);
+    QSqlQuery exec_db (GetDB(db));
 
     tmpString = "SELECT ";
     for (i = 0; i < fields.size(); i++)
@@ -370,11 +371,11 @@ QStringList s_sql::GetValuesFromTableByField(QSqlDatabase db, QString tble, QStr
 
 // процедура берёт из таблицы все значения по столбцу column для всех строк
 
-QStringList s_sql::GetValuesFromTableByColumn(QSqlDatabase db, QString tble, QString column, QString orderby, bool asc)
+QStringList s_sql::GetValuesFromTableByColumn(QString db, QString tble, QString column, QString orderby, bool asc)
 {
     QString tmpString;
     QStringList vl;
-    QSqlQuery exec_db (db);
+    QSqlQuery exec_db (GetDB(db));
 
     tmpString = "SELECT `" + column + "` FROM `" + tble + "` WHERE `deleted`=0";
     if (!orderby.isEmpty())
@@ -407,12 +408,12 @@ QStringList s_sql::GetValuesFromTableByColumn(QSqlDatabase db, QString tble, QSt
 
 // процедура берёт из таблицы все значения по столбцам columns
 
-QList<QStringList> s_sql::GetValuesFromTableByColumns(QSqlDatabase db, QString tble, QStringList columns)
+QList<QStringList> s_sql::GetValuesFromTableByColumns(QString db, QString tble, QStringList columns)
 {
     QString tmpString;
     QList<QStringList> vl;
     QStringList tmpStringList;
-    QSqlQuery exec_db (db);
+    QSqlQuery exec_db (GetDB(db));
     int i;
 
     for (i = 0; i < columns.size(); i++)
@@ -439,12 +440,12 @@ QList<QStringList> s_sql::GetValuesFromTableByColumns(QSqlDatabase db, QString t
 
 // процедура берёт из таблицы только те значения по столбцу column, для которых поле str1 равно значению str2
 
-QStringList s_sql::GetValuesFromTableByColumnAndField(QSqlDatabase db, QString tble, QString column, QString cmpfield, QString cmpvalue,\
+QStringList s_sql::GetValuesFromTableByColumnAndField(QString db, QString tble, QString column, QString cmpfield, QString cmpvalue,\
                                                       QString orderby, bool asc)
 {
     QString tmpString;
     QStringList vl;
-    QSqlQuery exec_db (db);
+    QSqlQuery exec_db (GetDB(db));
 
     tmpString = "SELECT `" + column + "` FROM `" + tble + "` WHERE `deleted`=0 AND `" + cmpfield + "`=\"" + cmpvalue + "\"";
     if (!orderby.isEmpty())
@@ -472,38 +473,77 @@ QStringList s_sql::GetValuesFromTableByColumnAndField(QSqlDatabase db, QString t
 
 // процедура берёт из таблицы первую запись, в которой cmpfield=cmpvalue, по полю field и возвращает значение поля
 
-QString s_sql::GetValueFromTableByField (QSqlDatabase db, QString tble, QString field, QString cmpfield, QString cmpvalue)
+QString s_sql::GetValueFromTableByField (QString db, QString tble, QString field, QString cmpfield, QString cmpvalue)
 {
     QString tmpString;
     QString vl;
-    QSqlQuery exec_db (db);
-
-    tmpString = "SELECT `" + field + "` FROM `" + tble + "` WHERE `" + cmpfield + "`=\"" + cmpvalue + "\" AND `deleted`=0;";
-    exec_db.exec(tmpString);
-    if (!exec_db.isActive())
+    if (pc.AutonomousMode)
     {
-        result = SQLC_FAILED;
-        LastError = exec_db.lastError().text();
+        QSqlDatabase sqldb = GetDB(db);
+        if (sqldb.isValid())
+        {
+            QSqlQuery exec_db (db);
+            tmpString = "SELECT `" + field + "` FROM `" + tble + "` WHERE `" + cmpfield + "`=\"" + cmpvalue + "\" AND `deleted`=0;";
+            exec_db.exec(tmpString);
+            if (!exec_db.isActive())
+            {
+                result = SQLC_FAILED;
+                LastError = exec_db.lastError().text();
+                return QString();
+            }
+            exec_db.next();
+            if (exec_db.isValid())
+            {
+                vl = exec_db.value(0).toString();
+                result = SQLC_OK;
+                return vl;
+            }
+            result = SQLC_EMPTY;
+            return QString();
+        }
+        else
+        {
+            result = SQLC_FAILED;
+            LastError = "Невозможно открыть БД "+db;
+            return QString();
+        }
+    }
+    else // server mode
+    {
+        QStringList sl = QStringList() << "1" << "1" << db << tble << field << cmpfield << cmpvalue;
+        QueryResult.clear();
+        connect(Cli,SIGNAL(DataReady(QStringList&)),this,SLOT(AppendToQueryResult(QStringList&)));
+        Cli->SendCmd(Client::CMD_GVSBFS, sl);
+        while (Cli->Busy)
+        {
+            QThread::msleep(10);
+            qApp->processEvents(QEventLoop::AllEvents);
+        }
+        disconnect(Cli,SIGNAL(DataReady(QStringList&)),this,0);
+        if (QueryResult.size() > 0)
+        {
+            sl = QueryResult.at(0);
+            if (sl.size() > 0)
+                return QueryResult.at(0).at(0);
+        }
         return QString();
     }
-    exec_db.next();
-    if (exec_db.isValid())
-    {
-        vl = exec_db.value(0).toString();
-        result = SQLC_OK;
-        return vl;
-    }
-    result = SQLC_EMPTY;
-    return QString();
+}
+
+// слот, добавляющий к списку списков строк QueryResult значения из канала связи с сервером
+
+void s_sql::AppendToQueryResult(QStringList &sl)
+{
+    QueryResult.append(sl);
 }
 
 // процедура берёт из таблицы первую запись, в которой соответствующие поля из cmpfields=cmpvalues, по полю field и возвращает значение поля
 
-QString s_sql::GetValueFromTableByFields (QSqlDatabase db, QString tble, QString field, QStringList cmpfields, QStringList cmpvalues)
+QString s_sql::GetValueFromTableByFields (QString db, QString tble, QString field, QStringList cmpfields, QStringList cmpvalues)
 {
     QString tmpString;
     QString vl;
-    QSqlQuery exec_db (db);
+    QSqlQuery exec_db (GetDB(db));
     int i;
 
     if (cmpfields.isEmpty())
@@ -544,11 +584,11 @@ QString s_sql::GetValueFromTableByFields (QSqlDatabase db, QString tble, QString
 
 // процедура берёт из таблицы поля fields для строки, в которой поля cmpfield равны cmpvalues
 
-QStringList s_sql::GetValuesFromTableByFields (QSqlDatabase db, QString tble, QStringList fields, QStringList cmpfields, QStringList cmpvalues)
+QStringList s_sql::GetValuesFromTableByFields (QString db, QString tble, QStringList fields, QStringList cmpfields, QStringList cmpvalues)
 {
     QString tmpString;
     QStringList vl;
-    QSqlQuery exec_db (db);
+    QSqlQuery exec_db (GetDB(db));
     int i;
 
     if (cmpfields.isEmpty())
@@ -590,11 +630,11 @@ QStringList s_sql::GetValuesFromTableByFields (QSqlDatabase db, QString tble, QS
 
 // процедура берёт из таблицы последнюю запись, в которой cmpfield=cmpvalue, по полю field и возвращает значение поля
 
-QString s_sql::GetLastValueFromTableByField (QSqlDatabase db, QString tble, QString field, QString cmpfield, QString cmpvalue)
+QString s_sql::GetLastValueFromTableByField (QString db, QString tble, QString field, QString cmpfield, QString cmpvalue)
 {
     QString tmpString;
     QString vl;
-    QSqlQuery exec_db (db);
+    QSqlQuery exec_db (GetDB(db));
 
     tmpString = "SELECT `" + field + "` FROM `" + tble + "` WHERE `" + cmpfield + "`=\"" + cmpvalue + "\" AND `deleted`=0 ORDER BY `id"+tble+"` DESC;";
     exec_db.exec(tmpString);
@@ -612,10 +652,10 @@ QString s_sql::GetLastValueFromTableByField (QSqlDatabase db, QString tble, QStr
 
 // добавление новой пустой записи и возврат нового ИД для БД Altium
 
-QString s_sql::InsertValuesSimple(QSqlDatabase db, QString tble, QStringList fl, QStringList vl)
+QString s_sql::InsertValuesSimple(QString db, QString tble, QStringList fl, QStringList vl)
 {
     int i;
-    QSqlQuery exec_db (db);
+    QSqlQuery exec_db (GetDB(db));
     QString newID = QString::number(GetNextFreeIndexSimple(db, tble));
     QString tmpString = "INSERT INTO `" + tble + "` (`id`";
     for (i = 0; i < fl.size(); i++)
@@ -637,7 +677,7 @@ QString s_sql::InsertValuesSimple(QSqlDatabase db, QString tble, QStringList fl,
 
 // процедура вставляет новую запись с первым свободным индексом в db:tble, используя имена полей из fl и значения из vl
 
-QString s_sql::InsertValuesToTable(QSqlDatabase db, QString tble, QStringList fl, QStringList vl)
+QString s_sql::InsertValuesToTable(QString db, QString tble, QStringList fl, QStringList vl)
 {
     int i;
 
@@ -647,7 +687,7 @@ QString s_sql::InsertValuesToTable(QSqlDatabase db, QString tble, QStringList fl
         WARNMSG(PublicClass::ER_SQL, __LINE__, "Длина списка полей сравнения не совпадает с длиной списка значений");
         return QString(); // проблемы с записью
     }
-    QSqlQuery exec_db (db);
+    QSqlQuery exec_db (GetDB(db));
     QString newID;
     newID = QString::number(GetNextFreeIndex(db, tble));
     QString tmpString = "INSERT INTO `" + tble + "` (`id" + tble + "`";
@@ -670,13 +710,13 @@ QString s_sql::InsertValuesToTable(QSqlDatabase db, QString tble, QStringList fl
 
 // процедура обновления данных в таблице db:tble в полях fl значениями vl, в строке, где field = value
 
-int s_sql::UpdateValuesInTable(QSqlDatabase db, QString tble, QStringList fl, QStringList vl, QString field, QString value)
+int s_sql::UpdateValuesInTable(QString db, QString tble, QStringList fl, QStringList vl, QString field, QString value)
 {
     int i;
 
     if (fl.size() != vl.size())
         return 1; // кол-во полей и кол-во значений не равны друг другу, ошибка
-    QSqlQuery exec_db (db);
+    QSqlQuery exec_db (GetDB(db));
     QString tmpString = "UPDATE `" + tble + "` SET ";
     for (i = 0; i < fl.size(); i++)
         tmpString += "`" + fl.at(i) + "`=\"" + vl.at(i) + "\",";
@@ -692,7 +732,7 @@ int s_sql::UpdateValuesInTable(QSqlDatabase db, QString tble, QStringList fl, QS
 
 // процедура восстанавливает в path полный путь до потомка, ИД которого ссылается на db:tble:idalias
 
-QString s_sql::GetFullPathToChild(QSqlDatabase db, QString tble, QString idalias)
+QString s_sql::GetFullPathToChild(QString db, QString tble, QString idalias)
 {
     QString path;
     if (idalias == "0")
@@ -742,9 +782,9 @@ QString s_sql::GetFullPathToChild(QSqlDatabase db, QString tble, QString idalias
 
 // процедура ставит признак deleted равным 1 для записей, у которых field равен value
 
-int s_sql::DeleteFromDB(QSqlDatabase db, QString tble, QString field, QString value)
+int s_sql::DeleteFromDB(QString db, QString tble, QString field, QString value)
 {
-    QSqlQuery exec_db(db);
+    QSqlQuery exec_db(GetDB(db));
     exec_db.exec("UPDATE `"+tble+"` SET `deleted`=1 WHERE `"+field+"`=\""+value+"\";");
     if (exec_db.isActive())
     {
@@ -761,9 +801,9 @@ int s_sql::DeleteFromDB(QSqlDatabase db, QString tble, QString field, QString va
 
 // процедура реально удаляет строку, для которой field равно value
 
-int s_sql::RealDeleteFromDB(QSqlDatabase db, QString tble, QStringList fields, QStringList values)
+int s_sql::RealDeleteFromDB(QString db, QString tble, QStringList fields, QStringList values)
 {
-    QSqlQuery exec_db(db);
+    QSqlQuery exec_db(GetDB(db));
     if (fields.size() != values.size())
     {
         LastError = exec_db.lastError().text();
@@ -791,11 +831,11 @@ int s_sql::RealDeleteFromDB(QSqlDatabase db, QString tble, QStringList fields, Q
 
 // процедура ищет записи с пустыми полями fields и записывает их ИД в список probid, при этом возвращая ненулевой результат
 
-int s_sql::CheckDBForEmptyFields(QSqlDatabase db, QString tble, QString field, QStringList &probid)
+int s_sql::CheckDBForEmptyFields(QString db, QString tble, QString field, QStringList &probid)
 {
     probid.clear();
 
-    QSqlQuery exec_db (db);
+    QSqlQuery exec_db (GetDB(db));
     QString tmpString = "SELECT `id" + tble + "` FROM `" + tble + "` WHERE `" + field + "` IS NULL AND `deleted`=0;";
     exec_db.exec(tmpString);
     if (!exec_db.isActive())
@@ -809,11 +849,11 @@ int s_sql::CheckDBForEmptyFields(QSqlDatabase db, QString tble, QString field, Q
 
 // вернуть список из записей, для которых field похож на regexpstr
 
-QList<QStringList> s_sql::SearchInTableLike(QSqlDatabase db, QString tble, QString field, QString regexpstr)
+QList<QStringList> s_sql::SearchInTableLike(QString db, QString tble, QString field, QString regexpstr)
 {
     QList<QStringList> sl;
     QStringList tmpsl;
-    QSqlQuery exec_db(db);
+    QSqlQuery exec_db(GetDB(db));
     int i;
     sl.clear();
     QStringList col = GetColumnsFromTable(db, tble);
@@ -850,14 +890,14 @@ QList<QStringList> s_sql::SearchInTableLike(QSqlDatabase db, QString tble, QStri
 
 // процедура возвращает набор строк из таблицы db.tble, значения cmpfield которых равны значению cmpvalue
 
-QList<QStringList> s_sql::GetMoreValuesFromTableByField(QSqlDatabase db, QString tble, QStringList fields, QString cmpfield, QString cmpvalue, \
+QList<QStringList> s_sql::GetMoreValuesFromTableByField(QString db, QString tble, QStringList fields, QString cmpfield, QString cmpvalue, \
                                                         QString orderby, bool asc)
 {
     QList<QStringList> sl;
     QStringList tmpsl;
     QString tmpString;
     int i;
-    QSqlQuery exec_db (db);
+    QSqlQuery exec_db (GetDB(db));
 
     tmpString = "SELECT ";
     for (i = 0; i < fields.size(); i++)

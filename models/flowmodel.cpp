@@ -707,7 +707,7 @@ int FlowModel::setupraw(QString db, QString tble, QStringList fl, QString orderf
     QList<int> il;
     if (fl.isEmpty())
     {
-        fl = sqlc.GetColumnsFromTable(sqlc.GetDB(db), tble);
+        fl = sqlc.GetColumnsFromTable(db, tble);
         if (sqlc.result)
         {
             NCMWARN;
@@ -716,7 +716,7 @@ int FlowModel::setupraw(QString db, QString tble, QStringList fl, QString orderf
     }
     for (int i = 0; i < fl.size(); i++)
     {
-        QStringList tmpsl = sqlc.GetValuesFromTableByColumn(sqlc.GetDB(db), tble, fl.at(i),orderfield,true);
+        QStringList tmpsl = sqlc.GetValuesFromTableByColumn(db, tble, fl.at(i),orderfield,true);
         if (sqlc.result == 2) // ошибка при запросе
         {
             NCMWARN;

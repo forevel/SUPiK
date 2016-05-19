@@ -203,7 +203,7 @@ void s_2tdialog::MainItemChoosed()
     }
     QApplication::setOverrideCursor(Qt::WaitCursor);
     QString MainID = TvData(MainTV, MainTV->currentIndex().row(), 0);
-    QString sltble = sqlc.GetValueFromTableByField(sqlc.GetDB(MainDb),MainTble,MainTableField,"id"+MainTble,MainID); // берём из главной таблицы значение по полю "Наименование", для которого сохранённое tablefield равен текущему элементу таблицы
+    QString sltble = sqlc.GetValueFromTableByField(MainDb,MainTble,MainTableField,"id"+MainTble,MainID); // берём из главной таблицы значение по полю "Наименование", для которого сохранённое tablefield равен текущему элементу таблицы
     if (sqlc.result)
     {
         QApplication::restoreOverrideCursor();

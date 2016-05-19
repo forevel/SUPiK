@@ -68,6 +68,8 @@ public:
         CMD_STATUS  // запрос статуса от сервера
     };
 
+    bool Busy;
+
     int Connect(QString Host, QString Port);
     void Disconnect();
     void SendCmd(int Command, QStringList &Args=QStringList());
@@ -89,7 +91,7 @@ private:
     QByteArray RcvData;
     Ethernet *MainEthernet, *FileEthernet;
     QTimer *TimeoutTimer, *GetComReplyTimer, *GetFileTimer;
-    bool Busy, FileBusy, Connected, FileConnected, CmdOk, LoginOk, FirstReplyPass, FirstComPass, ComReplyTimeoutIsSet;
+    bool FileBusy, Connected, FileConnected, CmdOk, LoginOk, FirstReplyPass, FirstComPass, ComReplyTimeoutIsSet;
     QTextStream *LogStream;
     QString FileHost;
     quint16 FilePort;

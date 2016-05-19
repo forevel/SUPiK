@@ -154,7 +154,7 @@ void sys_systemdialog::SetSlave(QModelIndex idx)
             return;
         }
         tmpString = tmpsl.at(0);
-        tmpString = sqlc.GetValueFromTableByField(sqlc.GetDB("sup"),"sysmenumethods","sysmenumethods","idsysmenumethods",tmpString);
+        tmpString = sqlc.GetValueFromTableByField("sup","sysmenumethods","sysmenumethods","idsysmenumethods",tmpString);
         if (sqlc.result)
         {
             SYSSWARN;
@@ -471,7 +471,7 @@ void sys_systemdialog::DeleteTable()
     {
         QStringList fl = QStringList() << "tablename" << "header";
         QStringList vl = QStringList() << tblename << TableHeaders.at(i);
-        sqlc.RealDeleteFromDB(sqlc.GetDB("sup"),"tablefields",fl,vl);
+        sqlc.RealDeleteFromDB("sup","tablefields",fl,vl);
         if (sqlc.result)
         {
             SYSSWARN;

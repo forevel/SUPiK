@@ -210,7 +210,7 @@ int wh_dialog::SetupUI(QString id)
     // формирование модели и заполнение таблицы
     QStringList fl = QStringList() << "header" << "links";
     QList<QStringList> lsl;
-    lsl = sqlc.GetMoreValuesFromTableByField(sqlc.GetDB("sup"), "tablefields", fl, "tablename", ReasonTable.at(Reason), "fieldsorder", true);
+    lsl = sqlc.GetMoreValuesFromTableByField("sup", "tablefields", fl, "tablename", ReasonTable.at(Reason), "fieldsorder", true);
     if (sqlc.result)
         return 0x01;
     int delegates[DELEGNUM];
@@ -263,7 +263,7 @@ int wh_dialog::SetupUI(QString id)
     }
     else
     {
-        id = QString::number(sqlc.GetNextFreeIndex(pc.ent, "documents"), 10);
+        id = QString::number(sqlc.GetNextFreeIndex("ent", "documents"), 10);
         if (res = fillNullFlow())
             return res;
     }
@@ -418,11 +418,11 @@ void wh_dialog::acceptandclose()
         if (le == 0)
             throw 0x21;
         vl << le->text();
-        tmpString = sqlc.GetValueFromTableByField(pc.ent, "contractors", "idcontractors", "contractors", Supplier);
+        tmpString = sqlc.GetValueFromTableByField("ent", "contractors", "idcontractors", "contractors", Supplier);
         if (sqlc.result)
             throw 0x22;
         vl << tmpString;
-        tmpString = sqlc.GetValueFromTableByField(pc.ent, "contractors", "idcontractors", "contractors", Consumer);
+        tmpString = sqlc.GetValueFromTableByField("ent", "contractors", "idcontractors", "contractors", Consumer);
         if (sqlc.result)
             throw 0x23;
         vl << tmpString;
@@ -438,7 +438,7 @@ void wh_dialog::acceptandclose()
         if (ll == 0)
             throw 0x25;
         vl << ll->text() << QString::number(pc.idPers);
-        newID = sqlc.GetValueFromTableByField(pc.ent, "documents", "iddocuments", "documents", DocNum);
+        newID = sqlc.GetValueFromTableByField("ent", "documents", "iddocuments", "documents", DocNum);
         if (!sqlc.result) // есть такая запись, значит, её надо удалить
         {
             QMessageBox tmpMB;
@@ -451,14 +451,14 @@ void wh_dialog::acceptandclose()
             {
                 tmpsl1 << "deleted";
                 tmpsl2 << "1";
-                sqlc.UpdateValuesInTable(pc.ent, "documents", tmpsl1, tmpsl2, "documents", newID);
+                sqlc.UpdateValuesInTable("ent", "documents", tmpsl1, tmpsl2, "documents", newID);
                 if (sqlc.result)
                     throw 0x26;
             }
             else if (tmpMB.clickedButton() == tmpNoPB)
                 return;
         }
-        newID = sqlc.InsertValuesToTable(pc.ent, "documents", fl, vl); // номер нового ордера - в newID
+        newID = sqlc.InsertValuesToTable("ent", "documents", fl, vl); // номер нового ордера - в newID
         if (sqlc.result)
             throw 0x27;
 
@@ -480,14 +480,14 @@ void wh_dialog::acceptandclose()
                 values << mainmodel->data(mainmodel->index(j, i), Qt::DisplayRole).toString(); // выцарапываем само значение
             tmpString = values.at(whidx);
             QString tmpString2 = values.at(nkidx);
-            tmpString2 = sqlc.GetValueFromTableByField(pc.ent, "nk", "idnk", "nk", tmpString2); // берём idnk
-            tmpString = sqlc.GetValueFromTableByField(pc.ent, "wh", "idwh", "wh", tmpString); // берём idwh
+            tmpString2 = sqlc.GetValueFromTableByField("ent", "nk", "idnk", "nk", tmpString2); // берём idnk
+            tmpString = sqlc.GetValueFromTableByField("ent", "wh", "idwh", "wh", tmpString); // берём idwh
             tmpsl1 = QStringList() << "idnk" << "idwh"; // поля, по которым ищем запись idnkwh
             tmpsl2 = QStringList() << tmpString2 << tmpString;
-            tmpString = sqlc.GetValueFromTableByFields(pc.ent, "nkwh", "idnkwh", tmpsl1, tmpsl2);
+            tmpString = sqlc.GetValueFromTableByFields("ent", "nkwh", "idnkwh", tmpsl1, tmpsl2);
             if (sqlc.result == 1) // нет такой записи
             {
-                tmpString = sqlc.InsertValuesToTable(pc.ent, "nkwh", tmpsl1, tmpsl2);
+                tmpString = sqlc.InsertValuesToTable("ent", "nkwh", tmpsl1, tmpsl2);
                 if (sqlc.result)
                     throw 0x2b;
                 s_2cdialog *dlg = new s_2cdialog("");
@@ -516,26 +516,26 @@ int wh_dialog::fillFlow(QString id)
     QStringList fl, vl, tmpsl;
     int i, j;
     fl << "date" << "idsupplier" << "idcustomer" << "reason" << "documents" << "scanpath" << "direction" << "idpers";
-    vl = sqlc.GetValuesFromTableByField(pc.ent, "documents", fl, "iddocuments", id);
+    vl = sqlc.GetValuesFromTableByField("ent", "documents", fl, "iddocuments", id);
     if (sqlc.result)
         return 11;
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("Date");
     le->setText(vl.at(0));
-    tmpString = sqlc.GetValueFromTableByField(pc.ent, "contractors", "contractors", "idcontractors", vl.at(1));
+    tmpString = sqlc.GetValueFromTableByField("ent", "contractors", "contractors", "idcontractors", vl.at(1));
     if (sqlc.result)
         return 12;
     Supplier = tmpString;
-    tmpString = sqlc.GetValueFromTableByField(pc.ent, "contractors", "contractors", "idcontractors", vl.at(2));
+    tmpString = sqlc.GetValueFromTableByField("ent", "contractors", "contractors", "idcontractors", vl.at(2));
     if (sqlc.result)
         return 13;
     Consumer = tmpString;
-    tmpString = sqlc.GetValueFromTableByField(pc.ent, "reasons", "reasons", "idreasons", vl.at(3));
+    tmpString = sqlc.GetValueFromTableByField("ent", "reasons", "reasons", "idreasons", vl.at(3));
     if (sqlc.result)
         return 14;
     DocNum = vl.at(4);
     ScanPath = vl.at(5);
     s_tqLabel *ll = this->findChild<s_tqLabel *>("Author");
-    tmpString = sqlc.GetValueFromTableByID(pc.sup, "personel", "personel", vl.at(7));
+    tmpString = sqlc.GetValueFromTableByID("sup", "personel", "personel", vl.at(7));
     if (sqlc.result)
         return 15;
     ll->setText("Автор: " + tmpString);
@@ -573,7 +573,7 @@ int wh_dialog::fillFlow(QString id)
             }
         }
     }
-    QList<QStringList> tmpslsl = sqlc.GetMoreValuesFromTableByField(pc.ent, "flow", fl, "flow", id);
+    QList<QStringList> tmpslsl = sqlc.GetMoreValuesFromTableByField("ent", "flow", fl, "flow", id);
     if (sqlc.result)
         return 16;
     for (j = 0; j < mainmodel->rowCount(QModelIndex())-1; j++)
@@ -591,7 +591,7 @@ int wh_dialog::fillFlow(QString id)
                 case FW_LINK:
                 case FW_MAXLINK:
                 {
-                    tmpString = sqlc.GetValueFromTableByField(sqlc.GetDB(tmpsl.at(1)), tmpsl.at(2), tmpsl.at(3), "id"+tmpsl.at(2), tmpValue);
+                    tmpString = sqlc.GetValueFromTableByField(tmpsl.at(1), tmpsl.at(2), tmpsl.at(3), "id"+tmpsl.at(2), tmpValue);
                     if (sqlc.result)
                         return 17;
                     mainmodel->setData(mainmodel->index(j, i, QModelIndex()), QVariant(tmpString), Qt::EditRole);
@@ -611,10 +611,10 @@ int wh_dialog::fillFlow(QString id)
                 }
                 case FW_DLINK:
                 {
-                    tmpString = sqlc.GetValueFromTableByField(sqlc.GetDB(tmpsl.at(3)), tmpsl.at(4), tmpsl.at(4), "id"+tmpsl.at(4), tmpValue);
+                    tmpString = sqlc.GetValueFromTableByField(tmpsl.at(3), tmpsl.at(4), tmpsl.at(4), "id"+tmpsl.at(4), tmpValue);
                     if (tmpString.isEmpty()) // нет во второй таблице такого элемента, поищем в первой
                     {
-                        tmpString = sqlc.GetValueFromTableByField(sqlc.GetDB(tmpsl.at(1)), tmpsl.at(2), tmpsl.at(2), "id"+tmpsl.at(2), tmpValue);
+                        tmpString = sqlc.GetValueFromTableByField(tmpsl.at(1), tmpsl.at(2), tmpsl.at(2), "id"+tmpsl.at(2), tmpValue);
                         if (tmpString.isEmpty()) // нет такого значения ни в одной из таблиц
                             return 18;
                     }
@@ -628,10 +628,10 @@ int wh_dialog::fillFlow(QString id)
         if (whidx != -1)
         {
             tmpValue = tmpslsl.at(whidx).at(j); // выгрызаем ИД записи в nkwh
-            tmpValue = sqlc.GetValueFromTableByField(pc.ent, "nkwh", "idwh", "idnkwh", tmpValue);
+            tmpValue = sqlc.GetValueFromTableByField("ent", "nkwh", "idwh", "idnkwh", tmpValue);
             if (sqlc.result)
                 return 19;
-            tmpValue = sqlc.GetValueFromTableByField(pc.ent, "wh", "wh", "idwh", tmpValue);
+            tmpValue = sqlc.GetValueFromTableByField("ent", "wh", "wh", "idwh", tmpValue);
             if (sqlc.result)
                 return 20;
             mainmodel->setData(mainmodel->index(j, whidx, QModelIndex()), QVariant(tmpValue), Qt::EditRole);
@@ -679,7 +679,7 @@ void wh_dialog::CBChanged(QWidget *wdgt)
     if (mainmodel->headerData(mainTV->currentIndex().column(), Qt::Horizontal, Qt::DisplayRole) == "Валюта")
     {
         int tmpInt = mainmodel->getHeaderPosition("Курс", Qt::Horizontal, Qt::DisplayRole);
-        QString tmpString = sqlc.GetLastValueFromTableByField(pc.ent, "periodic", "value", "periodic", \
+        QString tmpString = sqlc.GetLastValueFromTableByField("ent", "periodic", "value", "periodic", \
                                                               cb->currentText());
         mainmodel->setData(mainmodel->index(mainTV->currentIndex().row(), tmpInt, QModelIndex()), QVariant(tmpString), Qt::EditRole);
     }
@@ -692,6 +692,6 @@ QStringList wh_dialog::getTableNFields(QString tablename, QString headers)
     QStringList tmpfl = QStringList() << "table" << "tablefields";
     QStringList cmpfl = QStringList() << "tablename" << "headers";
     QStringList cmpvl = QStringList() << tablename << headers;
-    tmpfl = sqlc.GetValuesFromTableByFields(pc.sup, "tablefields", tmpfl, cmpfl, cmpvl); // получили tmpfl.at(0) = <db>.<tble> и  tmpfl.at(1) = <column>, с которыми надо сравнивать tmpValue
+    tmpfl = sqlc.GetValuesFromTableByFields("sup", "tablefields", tmpfl, cmpfl, cmpvl); // получили tmpfl.at(0) = <db>.<tble> и  tmpfl.at(1) = <column>, с которыми надо сравнивать tmpValue
     return tmpfl;
 }

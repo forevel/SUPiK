@@ -169,7 +169,7 @@ void supik::SetSupikMenuBar()
                 tmpAction = new QAction(this);
                 tmpAction->setText(get_mainmenu.value(1).toString());
                 connect (tmpAction, SIGNAL(triggered()), this, SLOT(ExecuteSub()));
-                tmpString = sqlc.GetValueFromTableByField(sqlc.GetDB("sup"),"mainmenumethods","mainmenumethods","idmainmenumethods",get_mainmenu.value(4).toString());
+                tmpString = sqlc.GetValueFromTableByField("sup","mainmenumethods","mainmenumethods","idmainmenumethods",get_mainmenu.value(4).toString());
                 if (!sqlc.result)
                     tmpAction->setData(tmpString);
                 tmpAction->setStatusTip(get_mainmenu.value(3).toString());
@@ -228,7 +228,7 @@ QMenu *supik::AddChildToMenu(int id)
                 tmpString = get_child_mainmenu.value(3).toString();
                 if (tmpString != "")
                     action->setStatusTip(tmpString);
-                tmpString = sqlc.GetValueFromTableByField(sqlc.GetDB("sup"),"mainmenumethods","mainmenumethods","idmainmenumethods",get_child_mainmenu.value(4).toString());
+                tmpString = sqlc.GetValueFromTableByField("sup","mainmenumethods","mainmenumethods","idmainmenumethods",get_child_mainmenu.value(4).toString());
                 if (!sqlc.result)
                 {
                     if (tmpString != "")

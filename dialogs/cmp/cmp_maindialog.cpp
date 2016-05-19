@@ -160,7 +160,7 @@ void cmp_maindialog::SetupUI(int CompType, int CompTable, int CompID)
               "NominalVoltage" << "Tolerance" << "OpTemperaturen" << "OpTemperaturem" << "Pmax" << "TC" << "Comment" << "HelpURL" << \
               "RevNotes" << "Discontinued" << "Description" << "Notes" << "Modify Date" << "Creator" << "prefix" << "isSMD" << \
               "Nominal" << "Unit" << "par4" << "par5";
-        QStringList vl = sqlc.GetValuesFromTableByField(sqlc.GetDB(CompDb),CompTble,fl,"id",CompId);
+        QStringList vl = sqlc.GetValuesFromTableByField(CompDb,CompTble,fl,"id",CompId);
         if ((sqlc.result) || (vl.size() == 0)); // новый элемент, ещё нет в БД
         else
             FillAltDialog(vl);
@@ -581,7 +581,7 @@ void cmp_maindialog::SetUnitsAndPars()
     QStringList fl;
     for (int i=1; i<6; i++)
         fl << "par"+QString::number(i)+"name" << "par"+QString::number(i)+"unitset";
-    QStringList vl = sqlc.GetValuesFromTableByField(sqlc.GetDB("ent"),"parameters",fl,"parameters",SubSection);
+    QStringList vl = sqlc.GetValuesFromTableByField("ent","parameters",fl,"parameters",SubSection);
     if (sqlc.result)
         return;
     // распихиваем взятые данные по соответствующим виджетам
@@ -625,7 +625,7 @@ void cmp_maindialog::SetUnitsAndPars()
 
 void cmp_maindialog::SetID()
 {
-    CompId = QString::number(sqlc.GetNextFreeIndexSimple(sqlc.GetDB(CompDb), CompTble)); // ищем первый свободный ИД
+    CompId = QString::number(sqlc.GetNextFreeIndexSimple(CompDb, CompTble)); // ищем первый свободный ИД
     if (sqlc.result)
     {
         CMPWARN;
@@ -672,7 +672,7 @@ void cmp_maindialog::FillAltDialog(QStringList vl)
     QDateTime MDate = QDateTime::fromString(ModifyDate, "yyyy-MM-ddThh:mm:ss");
     ModifyDate = MDate.toString("dd-MM-yyyy hh:mm:ss");
     SetLEData("modifydatele",ModifyDate);
-    QString Pers = sqlc.GetValueFromTableByField(sqlc.GetDB("sup"),"personel","personel","idpersonel",vl.at(24));
+    QString Pers = sqlc.GetValueFromTableByField("sup","personel","personel","idpersonel",vl.at(24));
     SetLEData("creatorle",Pers);
     // Prefix = 25
     SetChBData("issmdchb",vl.at(26));
@@ -882,9 +882,9 @@ void cmp_maindialog::WriteAndClose()
         break;
     }
     if (CompMode == CMPMODE_ED)
-        sqlc.UpdateValuesInTable(sqlc.GetDB("alt"),CompTble,fl,vl,"id",CompId);
+        sqlc.UpdateValuesInTable("alt",CompTble,fl,vl,"id",CompId);
     else
-        sqlc.InsertValuesSimple(sqlc.GetDB("alt"),CompTble,fl,vl);
+        sqlc.InsertValuesSimple("alt",CompTble,fl,vl);
     if (sqlc.result)
     {
         CMPWARN;

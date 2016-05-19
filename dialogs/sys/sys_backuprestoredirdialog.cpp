@@ -120,7 +120,7 @@ void sys_backuprestoredirdialog::ImpExpPBPressed()
 {
     int i, j;
     QStringList fl, vl;
-    QSqlDatabase db;
+    QString db;
     QString tble, tmpString;
     QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
     s_tqComboBox *cb = this->findChild<s_tqComboBox *>("dirCB");
@@ -136,9 +136,9 @@ void sys_backuprestoredirdialog::ImpExpPBPressed()
         QApplication::restoreOverrideCursor();
         return;
     }
-    QString dirpc = sqlc.GetValueFromTableByField(pc.sup, "dirlist", "pc", "dirlist", cb->currentText());
+    QString dirpc = sqlc.GetValueFromTableByField("sup", "dirlist", "pc", "dirlist", cb->currentText());
     vl = dirpc.split(".");
-    db = sqlc.GetDB(vl.at(0));
+    db = vl.at(0);
     tble = vl.at(1);
     QStringList dirColumns = sqlc.GetColumnsFromTable(db, tble);
     dirColumns.removeAll("id"+tble);
@@ -195,7 +195,7 @@ void sys_backuprestoredirdialog::ImpExpPBPressed()
             xlsx.write(tmpString, vl.at(i));
             j++;
         }
-        QSqlQuery get_db_contents(db);
+        QSqlQuery get_db_contents(sqlc.GetDB(db));
         tmpString = "SELECT ";
         for (i = 0; i < dirColumns.size(); i++)
             tmpString += "`" + dirColumns.at(i) + "`,";
@@ -302,9 +302,9 @@ void sys_backuprestoredirdialog::DirChoosed(QString str)
     if (isImport)
     {
         int i;
-        QString dirpc = sqlc.GetValueFromTableByField(pc.sup, "dirlist", "pc", "dirlist", str);
+        QString dirpc = sqlc.GetValueFromTableByField("sup", "dirlist", "pc", "dirlist", str);
         QStringList vl = dirpc.split(".");
-        QSqlDatabase db = sqlc.GetDB(vl.at(0));
+        QString db = vl.at(0);
         QString tble = vl.at(1);
         QStringList dirColumns = sqlc.GetColumnsFromTable(db, tble);
         dirColumns.removeAll("id"+tble);

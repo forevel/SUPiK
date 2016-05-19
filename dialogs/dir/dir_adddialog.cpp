@@ -288,7 +288,7 @@ void dir_adddialog::WriteAndClose()
     QString dirdb = dirBelongAliases.value(dirB->currentText());
     QString tble = dirNameLE->text();
     // проверяем, существует ли таблица, на которую пытаются сослаться поля справочника
-    sqlc.GetColumnsFromTable(sqlc.GetDB(dirdb), tble);
+    sqlc.GetColumnsFromTable(dirdb, tble);
     if (sqlc.result)
     {
         // нет такой таблицы, продолжаем
@@ -305,7 +305,7 @@ void dir_adddialog::WriteAndClose()
             sl << cbfield->currentText();
         }
         // делаем create table с запомненным списком sl
-        sqlc.CreateTable(sqlc.GetDB(dirdb), tble, sl);
+        sqlc.CreateTable(dirdb, tble, sl);
         if (sqlc.result)
         {
             DADDWARN;
@@ -316,7 +316,7 @@ void dir_adddialog::WriteAndClose()
     else // если таблица есть, надо проверить её на соответствие нашей структуре
     {
         // считываем структуру таблицы
-        QStringList cmpsl = sqlc.GetColumnsFromTable(sqlc.GetDB(dirdb), tble);
+        QStringList cmpsl = sqlc.GetColumnsFromTable(dirdb, tble);
         cmpsl.removeAll("id"+tble); // убираем из сравнения ИД, если он есть
         if (sqlc.result)
         {
@@ -361,7 +361,7 @@ void dir_adddialog::WriteAndClose()
                     return; // выход, ибо опять же, не будет соответствия
             }
             // делаем alter table с запомненным списком sl
-            sqlc.AlterTable(sqlc.GetDB(dirdb), tble, cmpsl, sl);
+            sqlc.AlterTable(dirdb, tble, cmpsl, sl);
             if (sqlc.result)
             {
                 DADDWARN;
@@ -370,7 +370,6 @@ void dir_adddialog::WriteAndClose()
             DADDINFO("Таблица справочника изменена успешно");
         }
     }
-    QSqlDatabase db = sqlc.GetDB("sup");
     QStringList fl, vl;
     QStringList cmpfl, cmpvl;
     // соберём данные по столбцам tablefields для таблиц FullTbleName и ShortTbleName
@@ -403,7 +402,7 @@ void dir_adddialog::WriteAndClose()
         while (!FullTbleDeleteList.isEmpty())
         {
             vl = QStringList() << FullTbleDeleteList.at(0) << FullTblename;
-            sqlc.RealDeleteFromDB(sqlc.GetDB("sup"),"tablefields",fl,vl);
+            sqlc.RealDeleteFromDB("sup","tablefields",fl,vl);
             if (sqlc.result)
             {
                 DADDWARN;
@@ -419,7 +418,7 @@ void dir_adddialog::WriteAndClose()
         while (!ShortTbleDeleteList.isEmpty())
         {
             vl = QStringList() << ShortTbleDeleteList.at(0) << ShortTblename;
-            sqlc.RealDeleteFromDB(sqlc.GetDB("sup"),"tablefields",fl,vl);
+            sqlc.RealDeleteFromDB("sup","tablefields",fl,vl);
             if (sqlc.result)
             {
                 DADDWARN;
@@ -455,14 +454,14 @@ void dir_adddialog::WriteAndClose()
             WriteToTfl(fl, vl, cmpfl, cmpvl);
         else
         {
-            sqlc.GetValueFromTableByFields(sqlc.GetDB("sup"), "tablefields", "idtablefields", cmpfl, cmpvl);
+            sqlc.GetValueFromTableByFields("sup", "tablefields", "idtablefields", cmpfl, cmpvl);
             if (sqlc.result == 1); // нет такой записи, и хорошо
             else if (!sqlc.result) // иначе надо её удалить
             {
                 int delidx = fl.indexOf("deleted");
                 vl.replace(delidx, "1");
-                QString id = sqlc.GetValueFromTableByFields(sqlc.GetDB("sup"), "tablefields", "idtablefields", cmpfl, cmpvl);
-                sqlc.UpdateValuesInTable(sqlc.GetDB("sup"), "tablefields", fl, vl, "idtablefields", id);
+                QString id = sqlc.GetValueFromTableByFields("sup", "tablefields", "idtablefields", cmpfl, cmpvl);
+                sqlc.UpdateValuesInTable("sup", "tablefields", fl, vl, "idtablefields", id);
                 if (sqlc.result)
                 {
                     DADDWARN;
@@ -497,10 +496,10 @@ void dir_adddialog::WriteAndClose()
         vl.clear();
         fl << "dirlist" << "access" << "deleted" << "date" << "idpers";
         vl << tmpdir << dirAccessCW->Value() << "0" << pc.DateTime << QString::number(pc.idPers);
-        tmpString = sqlc.GetValueFromTableByField(db, tble, "dirlist", "dirlist", tmpdir);
+        tmpString = sqlc.GetValueFromTableByField("sup", tble, "dirlist", "dirlist", tmpdir);
         if (tmpString.isEmpty())
         {
-            tmpString = sqlc.InsertValuesToTable(db, tble, fl, vl);
+            tmpString = sqlc.InsertValuesToTable("sup", tble, fl, vl);
             if (sqlc.result)
             {
                 DADDWARN;
@@ -509,7 +508,7 @@ void dir_adddialog::WriteAndClose()
         }
         else
         {
-            tmpString = sqlc.UpdateValuesInTable(db, tble, fl, vl, "dirlist", tmpdir);
+            tmpString = sqlc.UpdateValuesInTable("sup", tble, fl, vl, "dirlist", tmpdir);
             if (sqlc.result)
             {
                 DADDWARN;
@@ -523,11 +522,11 @@ void dir_adddialog::WriteAndClose()
 
 void dir_adddialog::WriteToTfl(QStringList fl, QStringList vl, QStringList cmpfl, QStringList cmpvl)
 {
-    QString id = sqlc.GetValueFromTableByFields(sqlc.GetDB("sup"), "tablefields", "idtablefields", cmpfl, cmpvl);
+    QString id = sqlc.GetValueFromTableByFields("sup", "tablefields", "idtablefields", cmpfl, cmpvl);
     if (sqlc.result == 1) // нет такой записи
-        sqlc.InsertValuesToTable(sqlc.GetDB("sup"), "tablefields", fl, vl);
+        sqlc.InsertValuesToTable("sup", "tablefields", fl, vl);
     else
-        sqlc.UpdateValuesInTable(sqlc.GetDB("sup"), "tablefields", fl, vl, "idtablefields", id);
+        sqlc.UpdateValuesInTable("sup", "tablefields", fl, vl, "idtablefields", id);
     if (sqlc.result)
     {
         DADDWARN;
@@ -711,7 +710,7 @@ void dir_adddialog::TbleNameChanged(QString tblename)
         DADDDBG;
         return;
     }
-    QStringList dirColumns = sqlc.GetColumnsFromTable(sqlc.GetDB(dirBelongAliases[dirB->currentText()]), tblename);
+    QStringList dirColumns = sqlc.GetColumnsFromTable(dirBelongAliases[dirB->currentText()], tblename);
     dirColumns.removeAt(dirColumns.indexOf("id"+tblename)); // убираем ИД, т.к. с ним разговор особый
     if (sqlc.result)
     {
@@ -838,7 +837,7 @@ void dir_adddialog::fillFields()
     QList<QStringList> lsl, lslshort;
     QStringList fl;
     fl << "table" << "tablefields" << "header" << "links";
-    lsl = sqlc.GetMoreValuesFromTableByField(pc.sup, "tablefields", fl, "tablename", dir, "fieldsorder", true);
+    lsl = sqlc.GetMoreValuesFromTableByField("sup", "tablefields", fl, "tablename", dir, "fieldsorder", true);
     if (sqlc.result)
     {
         DADDWARN;
@@ -848,7 +847,7 @@ void dir_adddialog::fillFields()
     {
         QString tmps = dir;
         tmps.replace("_полн","_сокращ");
-        lslshort = sqlc.GetMoreValuesFromTableByField(pc.sup, "tablefields", fl, "tablename", tmps, "fieldsorder", true);
+        lslshort = sqlc.GetMoreValuesFromTableByField("sup", "tablefields", fl, "tablename", tmps, "fieldsorder", true);
     }
     if (lsl.size() == 0)
     {

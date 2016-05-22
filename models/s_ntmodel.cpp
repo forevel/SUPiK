@@ -301,7 +301,7 @@ int s_ntmodel::Setup(QString table)
     // 1
     int i;
     QStringList fl = QStringList() << "table" << "tablefields" << "header";
-    vl = sqlc.GetMoreValuesFromTableByField("sup", "tablefields", fl, "tablename", table, "fieldsorder", true);
+    vl = sqlc.GetMoreValuesFromTableByFields("sup", "tablefields", fl, QStringList("tablename"), QStringList(table), "fieldsorder", true);
     if (sqlc.result)
     {
         SNTMWARN;

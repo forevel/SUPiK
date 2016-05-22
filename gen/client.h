@@ -12,7 +12,7 @@
 #define CLIWARN    WARNMSG(PublicClass::ER_CLI,__LINE__)
 #define CLIINFO(a) INFOMSG(PublicClass::ER_CLI,__LINE__,a)
 
-#define SERVERRSTR  "ERROR"
+#define SERVERRSTR  "ERROR\n"
 
 class Client : public QObject
 {
@@ -52,6 +52,7 @@ public:
         ANS_PUTFILE, // подтверждение отправки файла
         ANS_DIRLIST, // выдача содержимого каталога
         ANS_QUIT, // подтверждение завершения сеанса связи
+        ANS_GVSBFS, // подтверждение приёма очередной порции sql-ответа
         // ClientToServer
         ANS_LOGIN, // имя пользователя
         ANS_PSW, // пароль
@@ -91,7 +92,7 @@ private:
     QByteArray RcvData;
     Ethernet *MainEthernet, *FileEthernet;
     QTimer *TimeoutTimer, *GetComReplyTimer, *GetFileTimer;
-    bool FileBusy, Connected, FileConnected, CmdOk, LoginOk, FirstReplyPass, FirstComPass, ComReplyTimeoutIsSet;
+    bool FileBusy, Connected, FileConnected, CmdOk, LoginOk, FirstReplyPass, ComReplyTimeoutIsSet;
     QTextStream *LogStream;
     QString FileHost;
     quint16 FilePort;
@@ -103,6 +104,7 @@ private:
 
     QString RemoveSpaces(QString str);
     void WriteErrorAndBreakReceiving(QString ErMsg);
+    QStringList SeparateBuf(QByteArray &buf);
 
 private slots:
     void ClientConnected();

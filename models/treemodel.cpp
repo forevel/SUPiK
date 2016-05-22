@@ -410,7 +410,7 @@ int TreeModel::PrepareTable(QString Table)
         return 1;
     }
     QStringList fl = QStringList() << "table" << "tablefields" << "header" << "links";
-    QList<QStringList> vl = sqlc.GetMoreValuesFromTableByField("sup", "tablefields", fl, "tablename", Table, "fieldsorder", true);
+    QList<QStringList> vl = sqlc.GetMoreValuesFromTableByFields("sup", "tablefields", fl, QStringList("tablename"), QStringList(Table), "fieldsorder", true);
     if (sqlc.result)
     {
         TMODELWARN(sqlc.LastError);
@@ -603,7 +603,7 @@ int TreeModel::SetTree(int Table, QString Id)
     QStringList tmpsl = TableHeaders.at(Table);
     if (!IsRaw)
         tmpsl.insert(0, "id"+Tables.at(Table));
-    QList<QStringList> vl = sqlc.GetMoreValuesFromTableByField(DBs.at(Table), Tables.at(Table), tmpsl, "idalias", Id, Tables.at(Table));
+    QList<QStringList> vl = sqlc.GetMoreValuesFromTableByFields(DBs.at(Table), Tables.at(Table), tmpsl, QStringList("idalias"), QStringList(Id), Tables.at(Table));
     if (sqlc.result == 2) // пустой ответ вполне имеет право быть, т.к. есть ещё проверка на подчинённые таблицы с данным ИД
     {
         TMODELWARN(sqlc.LastError);
@@ -668,7 +668,7 @@ int TreeModel::SetTable(int Table, QString Id)
         QStringList tmpsl = TableHeaders.at(Table);
         if (!IsRaw)
             tmpsl.insert(0, "id"+MainTable);
-        QList<QStringList> vl = sqlc.GetMoreValuesFromTableByField(DBs.at(Table), MainTable, tmpsl, "deleted", "0", tmpsl.at(0));
+        QList<QStringList> vl = sqlc.GetMoreValuesFromTableByFields(DBs.at(Table), MainTable, tmpsl, QStringList("deleted"), QStringList("0"), tmpsl.at(0));
         if (sqlc.result)
         {
             TMODELWARN(sqlc.LastError);
@@ -727,7 +727,7 @@ int TreeModel::SetNextTree(int Table, QString Id)
     QStringList tmpsl = TableHeaders.at(Table);
     if (!IsRaw)
         tmpsl.insert(0, "id"+Tables.at(Table));
-    QList<QStringList> vl = sqlc.GetMoreValuesFromTableByField(DBs.at(Table), Tables.at(Table), tmpsl, "id"+Tables.at(Table-1), Id, tmpsl.at(0));
+    QList<QStringList> vl = sqlc.GetMoreValuesFromTableByFields(DBs.at(Table), Tables.at(Table), tmpsl, QStringList("id"+Tables.at(Table-1)), QStringList(Id), tmpsl.at(0));
     if (sqlc.result)
     {
         TMODELWARN(sqlc.LastError);
@@ -786,7 +786,7 @@ int TreeModel::SetNextTable(int Table, QString Id)
             tmpsl.insert(0, "id"+Tables.at(Table+1));
         if (tmpsl.indexOf("id"+Tables.at(Table)) == -1)
             tmpsl.append("id"+Tables.at(Table));
-        vl = sqlc.GetMoreValuesFromTableByField(DBs.at(Table+1), Tables.at(Table+1), tmpsl, "id"+Tables.at(Table-1), Id, tmpsl.at(0));
+        vl = sqlc.GetMoreValuesFromTableByFields(DBs.at(Table+1), Tables.at(Table+1), tmpsl, QStringList("id"+Tables.at(Table-1)), QStringList(Id), tmpsl.at(0));
         if (sqlc.result)
         {
             TMODELWARN(sqlc.LastError);
@@ -839,7 +839,7 @@ int TreeModel::SetNextTable(int Table, QString Id)
         tmpsl = TableHeaders.at(Table);
         if (!IsRaw)
             tmpsl.insert(0, "id"+Tables.at(Table));
-        vl = sqlc.GetMoreValuesFromTableByField(DBs.at(Table), Tables.at(Table), tmpsl, "id"+Tables.at(Table-1), Id, tmpsl.at(0));
+        vl = sqlc.GetMoreValuesFromTableByFields(DBs.at(Table), Tables.at(Table), tmpsl, QStringList("id"+Tables.at(Table-1)), QStringList(Id), tmpsl.at(0));
         if (sqlc.result == 2)
         {
             TMODELWARN(sqlc.LastError);

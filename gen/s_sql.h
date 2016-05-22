@@ -48,12 +48,13 @@ public:
     QStringList GetValuesFromTableByID (QString db, QString tble, QStringList fields, QString id); // взять значения по полям fields для записи с ИД=id
     QStringList GetValuesFromTableByIDSimple (QString db, QString tble, QStringList fields, QString id); // взять значения по полям fields для записи с ИД=id
     QStringList GetValuesFromTableByField (QString db, QString tble, QStringList fields, QString cmpfield, QString cmpvalue);
-    QStringList GetValuesFromTableByFields (QString db, QString tble, QStringList fields, QStringList cmpfields, QStringList cmpvalues);
+    QStringList GetValuesFromTableByFields(QString db, QString tble, QStringList fields, QStringList cmpfields, QStringList cmpvalues, \
+                                            QString orderby="", bool asc=true);
     QStringList GetValuesFromTableByColumn (QString db, QString tble, QString column, QString orderby="", bool asc=true);
     QList<QStringList> GetValuesFromTableByColumns (QString db, QString tble, QStringList columns);
     QStringList GetValuesFromTableByColumnAndField(QString db, QString tble, QString field, QString cmpfield, QString cmpvalue, \
                                                    QString orderby="", bool asc=true);
-    QList<QStringList> GetMoreValuesFromTableByField (QString db, QString tble, QStringList fields, QString cmpfield, QString cmpvalue, \
+    QList<QStringList> GetMoreValuesFromTableByFields (QString db, QString tble, QStringList fields, QStringList cmpfields, QStringList cmpvalues, \
                                                       QString orderby="", bool asc=true);
 
     // специфические операции
@@ -66,6 +67,8 @@ public:
     int result;
     QString LastError;
     QList<QStringList> QueryResult;
+
+private:
 
 private slots:
     void AppendToQueryResult(QStringList &sl);

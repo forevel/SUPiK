@@ -584,48 +584,13 @@ QString s_sql::GetValueFromTableByFields (QString db, QString tble, QString fiel
 
 // процедура берёт из таблицы поля fields для строки, в которой поля cmpfield равны cmpvalues
 
-QStringList s_sql::GetValuesFromTableByFields (QString db, QString tble, QStringList fields, QStringList cmpfields, QStringList cmpvalues)
+QStringList s_sql::GetValuesFromTableByFields (QString db, QString tble, QStringList fields, QStringList cmpfields, QStringList cmpvalues, QString orderby, bool asc)
 {
-    QString tmpString;
-    QStringList vl;
-    QSqlQuery exec_db (GetDB(db));
-    int i;
-
-    if (cmpfields.isEmpty())
-    {
-        result = 4;
-        WARNMSG(PublicClass::ER_SQL, __LINE__, "Переданный список сравнения пуст");
+    QList<QStringList> lsl = GetMoreValuesFromTableByFields(db,tble,fields,cmpfields,cmpvalues,orderby,asc);
+    if (lsl.size())
+        return lsl.at(0);
+    else
         return QStringList();
-    }
-    if (cmpfields.size() != cmpvalues.size())
-    {
-        result = 5;
-        WARNMSG(PublicClass::ER_SQL, __LINE__, "Длина списка полей сравнения не совпадает с длиной списка значений");
-        return QStringList();
-    }
-    tmpString = "SELECT ";
-    for (i = 0; i < fields.size(); i++)
-        tmpString += "`" + fields.at(i) + "`,";
-    tmpString = tmpString.left(tmpString.size()-1); // удаляем последнюю запятую
-    tmpString += " FROM `" + tble + "` WHERE ";
-    for (i = 0; i < cmpfields.size(); i++)
-        tmpString += "`" + cmpfields.at(i) + "`=\""+cmpvalues.at(i)+"\" AND ";
-    tmpString = tmpString.left(tmpString.size()-5); // удаляем последний AND
-    tmpString +=  " AND `deleted`=0;";
-    exec_db.exec(tmpString);
-    if (!exec_db.isActive())
-    {
-        result = 2;
-        LastError = exec_db.lastError().text();
-        return QStringList();
-    }
-    while (exec_db.next())
-    {
-        for (i = 0; i < fields.size(); i++)
-            vl << exec_db.value(i).toString();
-    }
-    result = 0;
-    return vl;
 }
 
 // процедура берёт из таблицы последнюю запись, в которой cmpfield=cmpvalue, по полю field и возвращает значение поля
@@ -890,52 +855,85 @@ QList<QStringList> s_sql::SearchInTableLike(QString db, QString tble, QString fi
 
 // процедура возвращает набор строк из таблицы db.tble, значения cmpfield которых равны значению cmpvalue
 
-QList<QStringList> s_sql::GetMoreValuesFromTableByField(QString db, QString tble, QStringList fields, QString cmpfield, QString cmpvalue, \
+QList<QStringList> s_sql::GetMoreValuesFromTableByFields(QString db, QString tble, QStringList fields, QStringList cmpfields, QStringList cmpvalues, \
                                                         QString orderby, bool asc)
 {
-    QList<QStringList> sl;
-    QStringList tmpsl;
     QString tmpString;
-    int i;
-    QSqlQuery exec_db (GetDB(db));
+    QList<QStringList> lsl;
+    QStringList vl;
+    if (pc.AutonomousMode)
+    {
+        QSqlQuery exec_db (GetDB(db));
+        int i;
 
-    tmpString = "SELECT ";
-    for (i = 0; i < fields.size(); i++)
-        tmpString += "`" + fields.at(i) + "`,";
-    tmpString = tmpString.left(tmpString.size()-1); // удаляем последнюю запятую
-    tmpString += " FROM `" + tble + "` WHERE `" + cmpfield + "`=\"" + cmpvalue + "\" AND `deleted`=0";
-    if (!orderby.isEmpty())
-    {
-        tmpString += " ORDER BY `"+orderby+"` ";
-        if (asc)
-            tmpString += "ASC";
-        else
-            tmpString += "DESC";
-    }
-    tmpString += ";";
-    exec_db.exec(tmpString);
-    if (!exec_db.isActive())
-    {
-        LastError = exec_db.lastError().text();
-        result = 2;
-        return QList<QStringList>();
-    }
-    while (exec_db.next())
-    {
-        tmpsl.clear();
+        if (cmpfields.isEmpty())
+        {
+            result = 4;
+            WARNMSG(PublicClass::ER_SQL, __LINE__, "Переданный список сравнения пуст");
+            return QList<QStringList>();
+        }
+        if (cmpfields.size() != cmpvalues.size())
+        {
+            result = 5;
+            WARNMSG(PublicClass::ER_SQL, __LINE__, "Длина списка полей сравнения не совпадает с длиной списка значений");
+            return QList<QStringList>();
+        }
+        tmpString = "SELECT ";
         for (i = 0; i < fields.size(); i++)
-            tmpsl << exec_db.value(i).toString();
-        sl.append(tmpsl);
-    }
-    if (sl.isEmpty())
-    {
-        LastError = "Пустой ответ";
-        result=1;
-        return QList<QStringList>();
+            tmpString += "`" + fields.at(i) + "`,";
+        tmpString = tmpString.left(tmpString.size()-1); // удаляем последнюю запятую
+        tmpString += " FROM `" + tble + "` WHERE ";
+        for (i = 0; i < cmpfields.size(); i++)
+            tmpString += "`" + cmpfields.at(i) + "`=\""+cmpvalues.at(i)+"\" AND ";
+        tmpString = tmpString.left(tmpString.size()-5); // удаляем последний AND
+        tmpString +=  " AND `deleted`=0;";
+        exec_db.exec(tmpString);
+        if (!exec_db.isActive())
+        {
+            result = 2;
+            LastError = exec_db.lastError().text();
+            return QList<QStringList>();
+        }
+        while (exec_db.next())
+        {
+            vl.clear();
+            for (i = 0; i < fields.size(); i++)
+                vl << exec_db.value(i).toString();
+            lsl.append(vl);
+        }
+        result = 0;
+        return lsl;
     }
     else
     {
-        result = 0;
-        return sl;
+        int i;
+        int fields_num = fields.size();
+        int pairs_num = cmpfields.size();
+        QStringList sl = QStringList() << QString::number(fields_num) << QString::number(pairs_num) << db << tble;
+        for (i=0; i<fields_num; i++)
+            sl << fields.at(i);
+        for (i=0; i<pairs_num; i++)
+        {
+            sl << cmpfields.at(i);
+            sl << cmpvalues.at(i);
+        }
+        if (!orderby.isEmpty())
+        {
+            sl << orderby;
+            if (asc)
+                sl << "ASC";
+            else
+                sl << "DESC";
+        }
+        QueryResult.clear();
+        connect(Cli,SIGNAL(DataReady(QStringList&)),this,SLOT(AppendToQueryResult(QStringList&)));
+        Cli->SendCmd(Client::CMD_GVSBFS, sl);
+        while (Cli->Busy)
+        {
+            QThread::msleep(10);
+            qApp->processEvents(QEventLoop::AllEvents);
+        }
+        disconnect(Cli,SIGNAL(DataReady(QStringList&)),this,0);
+        return QueryResult;
     }
 }

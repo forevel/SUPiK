@@ -13,7 +13,7 @@ Log *CliLog;
 Client::Client(QObject *parent) : QObject(parent)
 {
     Connected = false;
-    FirstReplyPass = FirstComPass = true;
+    FirstReplyPass = true;
     ComReplyTimeoutIsSet = false;
     fp = 0;
 }
@@ -167,7 +167,7 @@ void Client::SendCmd(int Command, QStringList &Args)
             return;
         }
         QString pairsnum = Args.takeAt(0);
-        int pnum = fieldsnum.toInt(&ok);
+        int pnum = pairsnum.toInt(&ok);
         if (!ok)
         {
             CliLog->error("CMD_GVSBFS: argument is not a number");
@@ -177,13 +177,13 @@ void Client::SendCmd(int Command, QStringList &Args)
         }
         if (Args.size() < fnum+2*pnum+1) // +1 - table
         {
-            CliLog->error("CMD_GVSBFS: Number of fields is less than mentioned in header");
+            CliLog->error("CMD_GVSBFS: Number of fields is less than mentioned in header: "+QString::number(Args.size())+" "+QString::number(fnum+2*pnum+1));
             DetectedError = CLIER_WRARGS;
             Busy = false;
             return;
         }
         QString tmps = Args.join(" ");
-        CommandString = "GVSBFS " + QString::number(tmps.size()+fieldsnum.size()+pairsnum.size()+2) + " " + fieldsnum + " " + pairsnum + " " + tmps + "\n";
+        CommandString = "GVSBFS " + fieldsnum + " " + pairsnum + " " + tmps + "\n";
         // 2 = два пробела
         break;
     }
@@ -219,6 +219,7 @@ void Client::SendCmd(int Command, QStringList &Args)
     }
         // ANS_GETFILE - второй и последующие ответы на принятую информацию (с записью блока в файл)
     case ANS_GETFILE:
+    case ANS_GVSBFS:
     {
         CommandString = "RDY\n";
         break;
@@ -292,7 +293,7 @@ void Client::ParseReply(QByteArray *ba)
         FirstReplyPass = true;
         IncomingString = QString::fromLocal8Bit(RcvData);
         CliLog->info("<"+IncomingString);
-        ArgList = IncomingString.split(" ");
+        ArgList = SeparateBuf(RcvData);
         if (ArgList.isEmpty()) // ничего толкового не получено
             return;
         ServerResponse = ArgList.takeFirst(); // в ArgList останутся только аргументы
@@ -304,6 +305,8 @@ void Client::ParseReply(QByteArray *ba)
             TimeoutTimer->stop();
             return;
         }
+        if (ServerResponse == "IDLE\n")
+            CurrentCommand = CMD_IDLE;
     }
     switch (CurrentCommand)
     {
@@ -381,45 +384,44 @@ void Client::ParseReply(QByteArray *ba)
         //      ...
         //      value[0][k] value[1][k] ... value[n][k]\n
 
-        if (FirstComPass) // первая порция данных
+        if (ServerResponse == "GVSBFS")
         {
-            if (ServerResponse == "GVSBFS")
+            CliLog->info("<"+ServerResponse);
+            if (ArgList.size()<1) // нет количества записей
             {
-                CliLog->info("<"+ServerResponse);
-                if (ArgList.size()<1) // нет количества записей
-                {
-                    WriteErrorAndBreakReceiving("Некорректное количество аргументов");
-                    return;
-                }
-                bool ok;
-                MsgNum = ArgList.at(0).toInt(&ok2);
-                if ((!ok) || (MsgNum <= 0))
-                {
-                    WriteErrorAndBreakReceiving("Некорректные длина или количество посылок");
-                    return;
-                }
-                FirstComPass = false;
-                TimeoutTimer->start();
+                WriteErrorAndBreakReceiving("Некорректное количество аргументов");
                 return;
             }
-            else
+            bool ok;
+            MsgNum = ArgList.at(0).toInt(&ok);
+            if ((!ok) || (MsgNum <= 0))
             {
-                WriteErrorAndBreakReceiving("Некорректный ответ сервера");
+                WriteErrorAndBreakReceiving("Некорректное количество посылок");
                 return;
             }
+            TimeoutTimer->start();
+            SendCmd(ANS_GVSBFS);
+            return;
         }
         else
         {
-            emit DataReady(ArgList);
-            MsgNum--;
-            if (MsgNum == 0)
-            {
-                FirstComPass = true;
-                CmdOk = true;
-            }
-            TimeoutTimer->start();
+            WriteErrorAndBreakReceiving("Некорректный ответ сервера");
             return;
         }
+        break;
+    }
+    case ANS_GVSBFS:
+    {
+        emit DataReady(ArgList);
+        MsgNum--;
+        if (MsgNum == 0)
+        {
+            CmdOk = true;
+            break;
+        }
+        TimeoutTimer->start();
+        SendCmd(ANS_GVSBFS);
+        return;
         break;
     }
     // первый приём после команды
@@ -512,6 +514,7 @@ void Client::ParseReply(QByteArray *ba)
     }
     if (CmdOk)
         TimeoutTimer->stop();
+    CurrentCommand = CMD_IDLE;
     Busy = false;
 }
 
@@ -571,4 +574,40 @@ void Client::ComReplyTimeout()
     QByteArray *ba = new QByteArray;
     ParseReply(ba); // принудительная обработка принятой посылки
     delete ba;
+}
+
+// разделение буфера на подстроки по пробелу. Значения в кавычках берутся целиком
+
+QStringList Client::SeparateBuf(QByteArray &buf)
+{
+    QStringList retvect, tmpsl;
+    QString tmps,tmps2;
+    int i;
+    bool QuotesEnabled = false;
+
+    tmpsl = QString::fromLocal8Bit(buf).split(" ");
+    tmps2.clear();
+    for (i=0; i<tmpsl.size(); i++)
+    {
+        tmps2 = tmpsl.at(i);
+        if (tmps2.left(1) == "\"") // начало блока в кавычках
+        {
+            tmps2.remove(0,1); // убираем первую кавычку
+            QuotesEnabled = true;
+        }
+        if (tmps2.right(1) == "\"") // конец блока в кавычках
+        {
+            tmps2.chop(1); // убираем последнюю кавычку
+            QuotesEnabled = false;
+        }
+        tmps.append(tmps2);
+        if (!QuotesEnabled)
+        {
+            retvect.append(tmps);
+            tmps.clear();
+        }
+        else
+          tmps.append(" ");
+    }
+    return retvect;
 }

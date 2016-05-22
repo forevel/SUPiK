@@ -837,7 +837,7 @@ void dir_adddialog::fillFields()
     QList<QStringList> lsl, lslshort;
     QStringList fl;
     fl << "table" << "tablefields" << "header" << "links";
-    lsl = sqlc.GetMoreValuesFromTableByField("sup", "tablefields", fl, "tablename", dir, "fieldsorder", true);
+    lsl = sqlc.GetMoreValuesFromTableByFields("sup", "tablefields", fl, QStringList("tablename"), QStringList(dir), "fieldsorder", true);
     if (sqlc.result)
     {
         DADDWARN;
@@ -847,7 +847,7 @@ void dir_adddialog::fillFields()
     {
         QString tmps = dir;
         tmps.replace("_полн","_сокращ");
-        lslshort = sqlc.GetMoreValuesFromTableByField("sup", "tablefields", fl, "tablename", tmps, "fieldsorder", true);
+        lslshort = sqlc.GetMoreValuesFromTableByFields("sup", "tablefields", fl, QStringList("tablename"), QStringList(tmps), "fieldsorder", true);
     }
     if (lsl.size() == 0)
     {

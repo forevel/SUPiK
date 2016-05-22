@@ -210,7 +210,7 @@ int wh_dialog::SetupUI(QString id)
     // формирование модели и заполнение таблицы
     QStringList fl = QStringList() << "header" << "links";
     QList<QStringList> lsl;
-    lsl = sqlc.GetMoreValuesFromTableByField("sup", "tablefields", fl, "tablename", ReasonTable.at(Reason), "fieldsorder", true);
+    lsl = sqlc.GetMoreValuesFromTableByFields("sup", "tablefields", fl, QStringList("tablename"), QStringList(ReasonTable.at(Reason)), "fieldsorder", true);
     if (sqlc.result)
         return 0x01;
     int delegates[DELEGNUM];
@@ -573,7 +573,7 @@ int wh_dialog::fillFlow(QString id)
             }
         }
     }
-    QList<QStringList> tmpslsl = sqlc.GetMoreValuesFromTableByField("ent", "flow", fl, "flow", id);
+    QList<QStringList> tmpslsl = sqlc.GetMoreValuesFromTableByFields("ent", "flow", fl, QStringList("flow"), QStringList(id));
     if (sqlc.result)
         return 16;
     for (j = 0; j < mainmodel->rowCount(QModelIndex())-1; j++)

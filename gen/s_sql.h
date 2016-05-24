@@ -4,7 +4,6 @@
 #include <QStringList>
 #include <QSqlDatabase>
 #include <QSqlQuery>
-#include <QObject>
 
 #define SQLWARN WARNMSG(PublicClass::ER_SQL, __LINE__, exec_db.lastError().text())
 
@@ -12,11 +11,10 @@
 #define SQLC_EMPTY  1
 #define SQLC_FAILED 2
 
-class s_sql : public QObject
+class s_sql
 {
-    Q_OBJECT
 public:
-    s_sql(QObject *parent=0);
+    s_sql();
 
     // вспомогательные процедуры
     QSqlDatabase GetDB (QString dbname); // вернуть ссылку на БД по её имени
@@ -70,8 +68,6 @@ public:
 
 private:
 
-private slots:
-    void AppendToQueryResult(QStringList &sl);
 };
 
 extern s_sql sqlc;

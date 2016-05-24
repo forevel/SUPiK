@@ -8,7 +8,7 @@
 
 s_sql sqlc;
 
-s_sql::s_sql(QObject *parent) : QObject(parent)
+s_sql::s_sql()
 {
 }
 
@@ -511,30 +511,20 @@ QString s_sql::GetValueFromTableByField (QString db, QString tble, QString field
     else // server mode
     {
         QStringList sl = QStringList() << "1" << "1" << db << tble << field << cmpfield << cmpvalue;
-        QueryResult.clear();
-        connect(Cli,SIGNAL(DataReady(QStringList&)),this,SLOT(AppendToQueryResult(QStringList&)));
         Cli->SendCmd(Client::CMD_GVSBFS, sl);
         while (Cli->Busy)
         {
             QThread::msleep(10);
             qApp->processEvents(QEventLoop::AllEvents);
         }
-        disconnect(Cli,SIGNAL(DataReady(QStringList&)),this,0);
-        if (QueryResult.size() > 0)
+        if (Cli->Result.size() > 0)
         {
-            sl = QueryResult.at(0);
+            sl = Cli->Result.at(0);
             if (sl.size() > 0)
-                return QueryResult.at(0).at(0);
+                return sl.at(0);
         }
         return QString();
     }
-}
-
-// слот, добавляющий к списку списков строк QueryResult значения из канала связи с сервером
-
-void s_sql::AppendToQueryResult(QStringList &sl)
-{
-    QueryResult.append(sl);
 }
 
 // процедура берёт из таблицы первую запись, в которой соответствующие поля из cmpfields=cmpvalues, по полю field и возвращает значение поля
@@ -925,15 +915,13 @@ QList<QStringList> s_sql::GetMoreValuesFromTableByFields(QString db, QString tbl
             else
                 sl << "DESC";
         }
-        QueryResult.clear();
-        connect(Cli,SIGNAL(DataReady(QStringList&)),this,SLOT(AppendToQueryResult(QStringList&)));
         Cli->SendCmd(Client::CMD_GVSBFS, sl);
         while (Cli->Busy)
         {
             QThread::msleep(10);
             qApp->processEvents(QEventLoop::AllEvents);
         }
-        disconnect(Cli,SIGNAL(DataReady(QStringList&)),this,0);
+        QueryResult = Cli->Result;
         return QueryResult;
     }
 }

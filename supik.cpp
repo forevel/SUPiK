@@ -152,7 +152,7 @@ void supik::SetSupikMenuBar()
     tmpMenu = new QMenu;
     QMenuBar *SupikMenuBar = new QMenuBar;
     SupikMenuBar->setObjectName("MenuBar");
-    QSqlQuery get_mainmenu (pc.sup);
+//    QSqlQuery get_mainmenu (pc.sup);
     QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
     QStringList fl = QStringList() << "idmainmenu" << "mainmenu" << "access" << "tooltip" << "method";
     QStringList cmpfl = QStringList() << "idalias";
@@ -167,20 +167,20 @@ void supik::SetSupikMenuBar()
     { */
         for (int i=0; i<vl.size(); i++)
         {
-            if (get_mainmenu.value(2).toString().toLong(0, 16) & pc.access)
+            if (vl.at(2).toLong(0, 16) & pc.access)
             {
-                tmpInt = get_mainmenu.value(0).toInt(0);
+                tmpInt = vl.at(0).toInt(0);
                 tmpMenu = AddChildToMenu (tmpInt);
-                tmpString = get_mainmenu.value(1).toString();
+                tmpString = vl.at(1);
                 if (tmpMenu == NULL) // нет потомков
                 {
                     tmpAction = new QAction(this);
-                    tmpAction->setText(get_mainmenu.value(1).toString());
+                    tmpAction->setText(vl.at(1));
                     connect (tmpAction, SIGNAL(triggered()), this, SLOT(ExecuteSub()));
-                    tmpString = sqlc.GetValueFromTableByField("sup","mainmenumethods","mainmenumethods","idmainmenumethods",get_mainmenu.value(4).toString());
+                    tmpString = sqlc.GetValueFromTableByField("sup","mainmenumethods","mainmenumethods","idmainmenumethods",vl.at(4));
                     if (!sqlc.result)
                         tmpAction->setData(tmpString);
-                    tmpAction->setStatusTip(get_mainmenu.value(3).toString());
+                    tmpAction->setStatusTip(vl.at(3));
                     if (tmpAction->text() == "Внимание!")
                         tmpAction->setObjectName("warning");
                     SupikMenuBar->addAction(tmpAction);
@@ -188,7 +188,7 @@ void supik::SetSupikMenuBar()
 
                 else
                 {
-                    tmpMenu->setTitle(get_mainmenu.value(1).toString());
+                    tmpMenu->setTitle(vl.at(1));
                     tmpMenu->setStyleSheet("background: " + QString (SUPIKMENU_ITEM) + \
                                            "; QMenu::item::selected {background: " + QString(SUPIKMENU_ITEM_BG_SELECTED) + \
                                            "; color: " + QString(SUPIKMENU_ITEM_COLOR_SELECTED) + ";}");
@@ -211,43 +211,55 @@ QMenu *supik::AddChildToMenu(int id)
     QAction *action;
     bool hasChildren = false; // если нет потомков
     QString tmpString;
-    QSqlQuery get_child_mainmenu (pc.sup);
+
+
+/*    QSqlQuery get_child_mainmenu (pc.sup);
 
     get_child_mainmenu.exec("SELECT `idmainmenu`,`mainmenu`,`access`,`tooltip`,`method` FROM `mainmenu` WHERE "
                             "`idalias`=" + QString::number(id, 10) + " AND `deleted`=0 ORDER BY `idmainmenu` ASC;");
-
-    while (get_child_mainmenu.next())
+*/
+    QStringList fl = QStringList() << "idmainmenu" << "mainmenu" << "access" << "tooltip" << "method";
+    QStringList cmpfl = QStringList() << "idalias";
+    QStringList cmpvl = QStringList() << QString::number(id, 10);
+    QStringList vl = sqlc.GetValuesFromTableByFields("sup","mainmenu",fl,cmpfl,cmpvl,"idmainmenu",true);
+    if (!vl.isEmpty())
     {
-        hasChildren = true;
-        tmpMenu->setStyleSheet("background: " + QString (SUPIKMENU_ITEM) + \
-                               "; QMenu::item::selected {background: " + QString(SUPIKMENU_ITEM_BG_SELECTED) + \
-                               "; color: " + QString(SUPIKMENU_ITEM_COLOR_SELECTED) + ";}");
-        if (get_child_mainmenu.value(2).toString().toLongLong(0, 16) & pc.access)
+        for (int i=0; i<vl.size(); i++)
         {
-            tmptmpMenu = AddChildToMenu (get_child_mainmenu.value(0).toInt(0));
-            if (tmptmpMenu != NULL)
+
+/*    while (get_child_mainmenu.next())
+    {  */
+            hasChildren = true;
+            tmpMenu->setStyleSheet("background: " + QString (SUPIKMENU_ITEM) + \
+                                   "; QMenu::item::selected {background: " + QString(SUPIKMENU_ITEM_BG_SELECTED) + \
+                                   "; color: " + QString(SUPIKMENU_ITEM_COLOR_SELECTED) + ";}");
+            if (vl.at(2).toLongLong(0, 16) & pc.access)
             {
-                tmptmpMenu->setTitle(get_child_mainmenu.value(1).toString());
-                tmpMenu->addMenu(tmptmpMenu);
-            }
-            else
-            {
-                action = new QAction (this);
-                action->setText(get_child_mainmenu.value(1).toString());
-                tmpString = get_child_mainmenu.value(3).toString();
-                if (tmpString != "")
-                    action->setStatusTip(tmpString);
-                tmpString = sqlc.GetValueFromTableByField("sup","mainmenumethods","mainmenumethods","idmainmenumethods",get_child_mainmenu.value(4).toString());
-                if (!sqlc.result)
+                tmptmpMenu = AddChildToMenu (vl.at(0).toInt(0));
+                if (tmptmpMenu != NULL)
                 {
-                    if (tmpString != "")
-                    {
-                        connect (action, SIGNAL(triggered()), this, SLOT(ExecuteSub()));
-                        action->setData(tmpString);
-                    }
+                    tmptmpMenu->setTitle(vl.at(1));
+                    tmpMenu->addMenu(tmptmpMenu);
                 }
-//                tmpString = get_child_mainmenu.value(4).toString();
-                tmpMenu->addAction(action);
+                else
+                {
+                    action = new QAction (this);
+                    action->setText(vl.at(1));
+                    tmpString = vl.at(3);
+                    if (tmpString != "")
+                        action->setStatusTip(tmpString);
+                    tmpString = sqlc.GetValueFromTableByField("sup","mainmenumethods","mainmenumethods","idmainmenumethods",vl.at(4));
+                    if (!sqlc.result)
+                    {
+                        if (tmpString != "")
+                        {
+                            connect (action, SIGNAL(triggered()), this, SLOT(ExecuteSub()));
+                            action->setData(tmpString);
+                        }
+                    }
+    //                tmpString = get_child_mainmenu.value(4).toString();
+                    tmpMenu->addAction(action);
+                }
             }
         }
     }

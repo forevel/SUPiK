@@ -296,7 +296,7 @@ void Client::ParseReply(QByteArray *ba)
         ArgList = SeparateBuf(RcvData);
         if (ArgList.isEmpty()) // ничего толкового не получено
             return;
-        ServerResponse = ArgList.takeFirst(); // в ArgList останутся только аргументы
+        ServerResponse = ArgList.first();
         if (ServerResponse == SERVERRSTR)
         {
             CliLog->error("Server error response");
@@ -341,10 +341,10 @@ void Client::ParseReply(QByteArray *ba)
         {
             LoginOk = true;
             bool ok;
-            pc.access = ArgList.at(0).toLong(&ok,16);
+            pc.access = ArgList.at(1).toLong(&ok,16);
             if (!ok)
             {
-                CliLog->warning("Group access undefined: "+ArgList.at(0));
+                CliLog->warning("Group access undefined: "+ArgList.at(1));
                 pc.access = 0x0; // нет доступа никуда
                 DetectedError = CLIER_GROUP;
                 return;
@@ -387,13 +387,13 @@ void Client::ParseReply(QByteArray *ba)
         if (ServerResponse == "GVSBFS")
         {
             CliLog->info("<"+ServerResponse);
-            if (ArgList.size()<1) // нет количества записей
+            if (ArgList.size()<2) // нет количества записей
             {
                 WriteErrorAndBreakReceiving("Некорректное количество аргументов");
                 return;
             }
             bool ok;
-            MsgNum = ArgList.at(0).toInt(&ok);
+            MsgNum = ArgList.at(1).toInt(&ok);
             if ((!ok) || (MsgNum <= 0))
             {
                 WriteErrorAndBreakReceiving("Некорректное количество посылок");
@@ -412,7 +412,7 @@ void Client::ParseReply(QByteArray *ba)
     }
     case ANS_GVSBFS:
     {
-        emit DataReady(ArgList);
+        Result.append(ArgList);
         MsgNum--;
         if (MsgNum == 0)
         {
@@ -429,11 +429,11 @@ void Client::ParseReply(QByteArray *ba)
     {
         if (ServerResponse == "RDY")
         {
-            if (ArgList.size()>0)
+            if (ArgList.size()>1)
             {
                 CmdOk = true;
                 bool ok;
-                filesize = ArgList.at(0).toLong(&ok,10);
+                filesize = ArgList.at(1).toLong(&ok,10);
                 filepos = 0;
                 if (!ok)
                 {

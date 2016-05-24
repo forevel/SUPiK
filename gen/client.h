@@ -70,6 +70,7 @@ public:
     };
 
     bool Busy;
+    QList<QStringList> Result;
 
     int Connect(QString Host, QString Port);
     void Disconnect();

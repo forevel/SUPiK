@@ -67,7 +67,7 @@ public:
     QList<QStringList> QueryResult;
 
 private:
-
+    QString AddQuotes(const QString str);
 };
 
 extern s_sql sqlc;

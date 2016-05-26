@@ -482,7 +482,7 @@ QString s_sql::GetValueFromTableByField (QString db, QString tble, QString field
         QSqlDatabase sqldb = GetDB(db);
         if (sqldb.isValid())
         {
-            QSqlQuery exec_db (db);
+            QSqlQuery exec_db (sqldb);
             tmpString = "SELECT `" + field + "` FROM `" + tble + "` WHERE `" + cmpfield + "`=\"" + cmpvalue + "\" AND `deleted`=0;";
             exec_db.exec(tmpString);
             if (!exec_db.isActive())
@@ -511,7 +511,7 @@ QString s_sql::GetValueFromTableByField (QString db, QString tble, QString field
     else // server mode
     {
         QStringList sl = QStringList() << "1" << "1" << db << tble << field << cmpfield << cmpvalue;
-        Cli->SendCmd(Client::CMD_GVSBFS, sl);
+        Cli->SendCmd(Client::CMD_GVBFS, sl);
         while (Cli->Busy)
         {
             QThread::msleep(10);
@@ -533,43 +533,69 @@ QString s_sql::GetValueFromTableByFields (QString db, QString tble, QString fiel
 {
     QString tmpString;
     QString vl;
-    QSqlQuery exec_db (GetDB(db));
     int i;
+    if (pc.AutonomousMode)
+    {
+        QSqlQuery exec_db (GetDB(db));
 
-    if (cmpfields.isEmpty())
-    {
-        result = 4;
-        WARNMSG(PublicClass::ER_SQL, __LINE__, "Переданный список сравнения пуст");
-        return QString();
-    }
-    if (cmpfields.size() != cmpvalues.size())
-    {
-        result = 5;
-        WARNMSG(PublicClass::ER_SQL, __LINE__, "Длина списка полей сравнения не совпадает с длиной списка значений");
-        return QString();
-    }
+        if (cmpfields.isEmpty())
+        {
+            result = 4;
+            WARNMSG(PublicClass::ER_SQL, __LINE__, "Переданный список сравнения пуст");
+            return QString();
+        }
+        if (cmpfields.size() != cmpvalues.size())
+        {
+            result = 5;
+            WARNMSG(PublicClass::ER_SQL, __LINE__, "Длина списка полей сравнения не совпадает с длиной списка значений");
+            return QString();
+        }
 
-    tmpString = "SELECT `" + field + "` FROM `" + tble + "` WHERE ";
-    for (i = 0; i < cmpfields.size(); i++)
-        tmpString += "`" + cmpfields.at(i) + "`=\""+cmpvalues.at(i)+"\" AND ";
-    tmpString = tmpString.left(tmpString.size()-5); // удаляем последний AND
-    tmpString +=  " AND `deleted`=0;";
-    exec_db.exec(tmpString);
-    if (!exec_db.isActive())
-    {
-        result =SQLC_FAILED;
-        LastError = exec_db.lastError().text();
+        tmpString = "SELECT `" + field + "` FROM `" + tble + "` WHERE ";
+        for (i = 0; i < cmpfields.size(); i++)
+            tmpString += "`" + cmpfields.at(i) + "`=\""+cmpvalues.at(i)+"\" AND ";
+        tmpString = tmpString.left(tmpString.size()-5); // удаляем последний AND
+        tmpString +=  " AND `deleted`=0;";
+        exec_db.exec(tmpString);
+        if (!exec_db.isActive())
+        {
+            result =SQLC_FAILED;
+            LastError = exec_db.lastError().text();
+            return QString();
+        }
+        exec_db.next();
+        if (exec_db.isValid())
+        {
+            vl = exec_db.value(0).toString();
+            result = SQLC_OK;
+            return vl;
+        }
+        result = SQLC_EMPTY;
         return QString();
     }
-    exec_db.next();
-    if (exec_db.isValid())
+    else
     {
-        vl = exec_db.value(0).toString();
-        result = SQLC_OK;
-        return vl;
+        int pairs_num = cmpfields.size();
+        QStringList sl = QStringList() << "1" << "1" << db << tble << field;
+        for (i=0; i<pairs_num; i++)
+        {
+            sl << AddQuotes(cmpfields.at(i));
+            sl << AddQuotes(cmpvalues.at(i));
+        }
+        Cli->SendCmd(Client::CMD_GVBFS, sl);
+        while (Cli->Busy)
+        {
+            QThread::msleep(10);
+            qApp->processEvents(QEventLoop::AllEvents);
+        }
+        if (Cli->Result.size() > 0)
+        {
+            sl = Cli->Result.at(0);
+            if (sl.size() > 0)
+                return sl.at(0);
+        }
+        return QString();
     }
-    result = SQLC_EMPTY;
-    return QString();
 }
 
 // процедура берёт из таблицы поля fields для строки, в которой поля cmpfield равны cmpvalues
@@ -848,6 +874,7 @@ QList<QStringList> s_sql::SearchInTableLike(QString db, QString tble, QString fi
 QList<QStringList> s_sql::GetMoreValuesFromTableByFields(QString db, QString tble, QStringList fields, QStringList cmpfields, QStringList cmpvalues, \
                                                         QString orderby, bool asc)
 {
+    QueryResult.clear();
     QString tmpString;
     QList<QStringList> lsl;
     QStringList vl;
@@ -901,11 +928,11 @@ QList<QStringList> s_sql::GetMoreValuesFromTableByFields(QString db, QString tbl
         int pairs_num = cmpfields.size();
         QStringList sl = QStringList() << QString::number(fields_num) << QString::number(pairs_num) << db << tble;
         for (i=0; i<fields_num; i++)
-            sl << fields.at(i);
+            sl << AddQuotes(fields.at(i));
         for (i=0; i<pairs_num; i++)
         {
-            sl << cmpfields.at(i);
-            sl << cmpvalues.at(i);
+            sl << AddQuotes(cmpfields.at(i));
+            sl << AddQuotes(cmpvalues.at(i));
         }
         if (!orderby.isEmpty())
         {
@@ -922,6 +949,18 @@ QList<QStringList> s_sql::GetMoreValuesFromTableByFields(QString db, QString tbl
             qApp->processEvents(QEventLoop::AllEvents);
         }
         QueryResult = Cli->Result;
+        result = 0;
         return QueryResult;
     }
+}
+
+QString s_sql::AddQuotes(const QString str)
+{
+    QString tmps = str;
+    if (tmps.contains(" "))
+    {
+        tmps.insert(0, "\"");
+        tmps.append("\"");
+    }
+    return tmps;
 }

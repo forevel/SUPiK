@@ -2,6 +2,7 @@
 #include <QCoreApplication>
 #include <QRegularExpression>
 #include <QDateTime>
+#include <QTextCodec>
 #include <QDir>
 
 #include "client.h"
@@ -48,7 +49,9 @@ int Client::Connect(QString Host, QString Port)
     connect(MainEthernet,SIGNAL(disconnected()),this,SLOT(ClientDisconnected()));
     connect(MainEthernet,SIGNAL(newdataarrived(QByteArray *)),this,SLOT(ParseReply(QByteArray *)));
     connect(this,SIGNAL(ClientSend(QByteArray *)),MainEthernet,SLOT(InitiateWriteDataToPort(QByteArray *)));
+#ifndef TIMERSOFF
     TimeoutTimer->start();
+#endif
     DetectedError = CLIER_NOERROR;
     LoginOk = false;
     CurrentCommand = CMD_LOGINREQ;
@@ -88,7 +91,9 @@ void Client::SendCmd(int Command, QStringList &Args)
 {
     CurrentCommand = Command;
     Busy = true;
+#ifndef TIMERSOFF
     TimeoutTimer->start();
+#endif
     QString CommandString;
     switch (Command)
     {
@@ -99,6 +104,7 @@ void Client::SendCmd(int Command, QStringList &Args)
     //      TF <numbytes_starting_from_GVBFS> GVSBFS n m table headers_0 headers_1 ... headers_n cond_header_0 value_0 cond_header_1 value_1 ... cond_header_m value_m [order_header] [ASC|DESC]
     case CMD_TF_GVSBFS:
     {
+        Result.clear();
         if (Args.size() < 2)
         {
             CliLog->error("CMD_TF_GVSBFS: Number of arguments is less than 2");
@@ -108,7 +114,7 @@ void Client::SendCmd(int Command, QStringList &Args)
         }
         bool ok;
         QString fieldsnum = Args.takeAt(0);
-        int fnum = fieldsnum.toInt(&ok);
+        GVSBFS_FieldsNum = fieldsnum.toInt(&ok);
         if (!ok)
         {
             CliLog->error("CMD_TF_GVSBFS: argument is not a number");
@@ -125,7 +131,7 @@ void Client::SendCmd(int Command, QStringList &Args)
             Busy = false;
             return;
         }
-        if (Args.size() < fnum+2*pnum+1) // +1 - table
+        if (Args.size() < GVSBFS_FieldsNum+2*pnum+1) // +1 - table
         {
             CliLog->error("CMD_TF_GVSBFS: Number of fields is less than mentioned in header");
             DetectedError = CLIER_WRARGS;
@@ -137,7 +143,7 @@ void Client::SendCmd(int Command, QStringList &Args)
         // 9 = три пробела + sizeof("GVSBFS")
         break;
     }
-    // запрос выдачи данных из БД SQL напрямую. В Args находится:
+    // запросы выдачи данных из БД SQL напрямую. В Args находится:
     // 0 - количество запрашиваемых полей n;
     // 1 - количество пар сравнения m;
     // 2 - имя БД
@@ -148,7 +154,9 @@ void Client::SendCmd(int Command, QStringList &Args)
     // Args(0)+Args(1)*2+5 - "ASC" или "DESC" - в каком порядке проводить сортировку
     // Формат: GVSBFS <numbytes_starting_from_n> n m db table headers_0 headers_1 ... headers_n cond_header_0 value_0 cond_header_1 value_1 ... cond_header_m value_m [order_header] [ASC|DESC]
     case CMD_GVSBFS:
+    case CMD_GVBFS:
     {
+        Result.clear(); // очищаем результаты
         if (Args.size() < 2)
         {
             CliLog->error("CMD_GVSBFS: Number of arguments is less than 2");
@@ -158,7 +166,7 @@ void Client::SendCmd(int Command, QStringList &Args)
         }
         QString fieldsnum = Args.takeAt(0);
         bool ok;
-        int fnum = fieldsnum.toInt(&ok);
+        GVSBFS_FieldsNum = fieldsnum.toInt(&ok);
         if (!ok)
         {
             CliLog->error("CMD_GVSBFS: argument is not a number");
@@ -175,16 +183,39 @@ void Client::SendCmd(int Command, QStringList &Args)
             Busy = false;
             return;
         }
-        if (Args.size() < fnum+2*pnum+1) // +1 - table
+        if (Args.size() < GVSBFS_FieldsNum+2*pnum+1) // +1 - table
         {
-            CliLog->error("CMD_GVSBFS: Number of fields is less than mentioned in header: "+QString::number(Args.size())+" "+QString::number(fnum+2*pnum+1));
+            CliLog->error("CMD_GVSBFS: Number of fields is less than mentioned in header: "+QString::number(Args.size())+" "+QString::number(GVSBFS_FieldsNum+2*pnum+1));
             DetectedError = CLIER_WRARGS;
             Busy = false;
             return;
         }
         QString tmps = Args.join(" ");
-        CommandString = "GVSBFS " + fieldsnum + " " + pairsnum + " " + tmps + "\n";
+        if (Command == CMD_GVBFS)
+            CommandString = "GVBFS ";
+        else
+            CommandString = "GVSBFS ";
+        CommandString.append(fieldsnum + " " + pairsnum + " " + tmps + "\n");
         // 2 = два пробела
+        break;
+    }
+        // запрос всех полей по одному полю
+        // формат запроса: GVSBC db tble column [order_header] [ASC|DESC]\n
+        // формат ответа: <value1> <value2> ... <valuen>\n
+    case CMD_GVSBC:
+    {
+        Result.clear(); // очищаем результаты
+        if (Args.size() < 3)
+        {
+            CliLog->error("CMD_GVSBC: Number of arguments is less than 2");
+            DetectedError = CLIER_WRARGS;
+            Busy = false;
+            return;
+        }
+        GVSBFS_FieldsNum = 1; // одна колонка - одно поле в каждой записи
+        QString tmps = Args.join(" ");
+        CommandString = "GVSBC ";
+        CommandString.append(tmps + "\n");
         break;
     }
     case CMD_MESSAGES:
@@ -220,6 +251,7 @@ void Client::SendCmd(int Command, QStringList &Args)
         // ANS_GETFILE - второй и последующие ответы на принятую информацию (с записью блока в файл)
     case ANS_GETFILE:
     case ANS_GVSBFS:
+    case ANS_GVSBC:
     {
         CommandString = "RDY\n";
         break;
@@ -254,18 +286,21 @@ void Client::SendCmd(int Command, QStringList &Args)
         break;
     }
     }
+    QTextCodec *codec = QTextCodec::codecForName("CP-1251");
     if (Command == ANS_PSW)
         CliLog->info(">********");
     else
-        CliLog->info(">"+CommandString.toLocal8Bit());
-    QByteArray *ba = new QByteArray(CommandString.toUtf8());
+        CliLog->info(">"+codec->fromUnicode(CommandString));
+    QByteArray *ba = new QByteArray(codec->fromUnicode(CommandString));
     emit ClientSend(ba);
 }
 
 void Client::ParseReply(QByteArray *ba)
 {
+#ifndef TIMERSOFF
     if (!ComReplyTimeoutIsSet)
         GetComReplyTimer->start(); // если не было таймаута, рестартуем таймер
+#endif
     QString ServerResponse, IncomingString;
     QStringList ArgList;
     CmdOk = false;
@@ -296,6 +331,10 @@ void Client::ParseReply(QByteArray *ba)
         ArgList = SeparateBuf(RcvData);
         if (ArgList.isEmpty()) // ничего толкового не получено
             return;
+        QString tmps = ArgList.last(); // убираем последний перевод строки
+        if (tmps.right(1) == "\n")
+            tmps.chop(1);
+        ArgList.replace(ArgList.size()-1, tmps);
         ServerResponse = ArgList.first();
         if (ServerResponse == SERVERRSTR)
         {
@@ -305,16 +344,15 @@ void Client::ParseReply(QByteArray *ba)
             TimeoutTimer->stop();
             return;
         }
-        if (ServerResponse == "IDLE\n")
+        if (ServerResponse == "IDLE")
             CurrentCommand = CMD_IDLE;
     }
     switch (CurrentCommand)
     {
     case CMD_LOGINREQ: // по сути установление соединения, должны получить запрос LOGIN
     {
-        if (ServerResponse == "LOGIN\n")
+        if (ServerResponse == "LOGIN")
         {
-            CliLog->info("<"+ServerResponse);
             CmdOk = true;
             SendCmd(ANS_LOGIN);
             return;
@@ -323,9 +361,8 @@ void Client::ParseReply(QByteArray *ba)
     }
     case ANS_LOGIN:
     {
-        if (ServerResponse == "PSW\n")
+        if (ServerResponse == "PSW")
         {
-            CliLog->info("<"+ServerResponse);
             CmdOk = true;
             SendCmd(ANS_PSW);
             return;
@@ -359,7 +396,7 @@ void Client::ParseReply(QByteArray *ba)
     }
     case CMD_QUIT:
     {
-        if (ServerResponse == "BYE\n")
+        if (ServerResponse == "BYE")
             CmdOk = true;
         break;
     }
@@ -375,6 +412,7 @@ void Client::ParseReply(QByteArray *ba)
 
         break;
     }
+    case CMD_GVSBC:
     case CMD_GVSBFS:
     {
         // Формат ответа на запрос GVSBFS:
@@ -384,9 +422,8 @@ void Client::ParseReply(QByteArray *ba)
         //      ...
         //      value[0][k] value[1][k] ... value[n][k]\n
 
-        if (ServerResponse == "GVSBFS")
+        if ((ServerResponse == "GVSBFS") || (ServerResponse == "GVSBC"))
         {
-            CliLog->info("<"+ServerResponse);
             if (ArgList.size()<2) // нет количества записей
             {
                 WriteErrorAndBreakReceiving("Некорректное количество аргументов");
@@ -394,13 +431,20 @@ void Client::ParseReply(QByteArray *ba)
             }
             bool ok;
             MsgNum = ArgList.at(1).toInt(&ok);
-            if ((!ok) || (MsgNum <= 0))
+            if ((!ok) || (MsgNum < 0))
             {
                 WriteErrorAndBreakReceiving("Некорректное количество посылок");
                 return;
             }
+            if (MsgNum == 0)
+                CliLog->info("Пустой ответ");
+#ifndef TIMERSOFF
             TimeoutTimer->start();
-            SendCmd(ANS_GVSBFS);
+#endif
+            if (CurrentCommand == CMD_GVSBFS)
+                SendCmd(ANS_GVSBFS);
+            else
+                SendCmd(ANS_GVSBC);
             return;
         }
         else
@@ -410,17 +454,43 @@ void Client::ParseReply(QByteArray *ba)
         }
         break;
     }
+    case CMD_GVBFS:
+        MsgNum = 1; // планируется приём одной записи
     case ANS_GVSBFS:
+    case ANS_GVSBC:
     {
-        Result.append(ArgList);
-        MsgNum--;
-        if (MsgNum == 0)
+        if (MsgNum == 0) // конец передачи, пришёл IDLE
         {
             CmdOk = true;
             break;
         }
+        while ((MsgNum) && (ArgList.size()))
+        {
+            if (ArgList.last() == "\n")
+                ArgList.removeLast();
+            if (ArgList.size() < GVSBFS_FieldsNum)
+            {
+                   CliLog->warning("Некратное число записей в SQL-ответе");
+                   MsgNum = 0;
+                   ArgList.clear();
+                   CmdOk = true;
+                   break;
+            }
+            QStringList sl;
+            for (int i=0; i<GVSBFS_FieldsNum; i++)
+                sl.append(ArgList.takeFirst());
+            Result.append(sl);
+            MsgNum--;
+        }
+        if (MsgNum == 0) // кончились ответы, можно выходить
+        {
+            CmdOk = true;
+            break;
+        }
+#ifndef TIMERSOFF
         TimeoutTimer->start();
-        SendCmd(ANS_GVSBFS);
+#endif
+        SendCmd(ANS_GVSBFS); // для GVSBC ответ тоже будет RDY
         return;
         break;
     }
@@ -541,7 +611,9 @@ void Client::GetFileTimerTimeout()
 void Client::ClientConnected()
 {
     Connected = true;
+#ifndef TIMERSOFF
     TimeoutTimer->start(); // рестарт таймера для получения запроса от сервера
+#endif
 }
 
 void Client::ClientDisconnected()

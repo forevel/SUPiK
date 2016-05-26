@@ -411,7 +411,7 @@ int TreeModel::PrepareTable(QString Table)
     }
     QStringList fl = QStringList() << "table" << "tablefields" << "header" << "links";
     QList<QStringList> vl = sqlc.GetMoreValuesFromTableByFields("sup", "tablefields", fl, QStringList("tablename"), QStringList(Table), "fieldsorder", true);
-    if (sqlc.result)
+    if ((sqlc.result) || (vl.size() == 0))
     {
         TMODELWARN(sqlc.LastError);
         return 1;

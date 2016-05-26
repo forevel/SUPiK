@@ -13,6 +13,7 @@
 #define CLIINFO(a) INFOMSG(PublicClass::ER_CLI,__LINE__,a)
 
 #define SERVERRSTR  "ERROR\n"
+#define TIMERSOFF // если не закомментировано, таймауты отключены
 
 class Client : public QObject
 {
@@ -53,11 +54,14 @@ public:
         ANS_DIRLIST, // выдача содержимого каталога
         ANS_QUIT, // подтверждение завершения сеанса связи
         ANS_GVSBFS, // подтверждение приёма очередной порции sql-ответа
+        ANS_GVSBC, // GetValuesByColumn
         // ClientToServer
         ANS_LOGIN, // имя пользователя
         ANS_PSW, // пароль
         CMD_TF_GVSBFS, // запросы sql для tablefields
-        CMD_GVSBFS, // запросы sql простые
+        CMD_GVSBFS, // запрос sql простой: Get Values From Table By Fields - возвращаются все записи
+        CMD_GVBFS, // запрос sql простой: Get Value From Table By Fields - возвращается одна запись
+        CMD_GVSBC, // GetValuesByColumn - возвращаются все записи
         CMD_MESSAGES, // запрос текущих сообщений для пользователя
         CMD_CHATMSGS, // запрос сообщений из чата
         CMD_CHATREQ, // запрос состояния чата (пользователи)
@@ -102,6 +106,7 @@ private:
     FILE *fp;
     size_t filesize;
     size_t filepos;
+    int GVSBFS_FieldsNum;
 
     QString RemoveSpaces(QString str);
     void WriteErrorAndBreakReceiving(QString ErMsg);

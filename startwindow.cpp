@@ -277,7 +277,7 @@ void StartWindow::OkPBClicked()
         }
         else
         {
-            MessageBox2::error(this, "Ошибка!", "Нет такого пользователя или пароль неверен!");
+            MessageBox2::error(this, "Ошибка!", "Нет такого пользователя или пароль неверен!\n"+sqlc.LastError);
             return;
         }
     }

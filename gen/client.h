@@ -14,6 +14,7 @@
 
 #define SERVERRSTR  "ERROR\n"
 #define TIMERSOFF // если не закомментировано, таймауты отключены
+#define SLNUMMAX    10 // максимальное число полей в запросе по столбцам
 
 class Client : public QObject
 {
@@ -55,6 +56,7 @@ public:
         ANS_QUIT, // подтверждение завершения сеанса связи
         ANS_GVSBFS, // подтверждение приёма очередной порции sql-ответа
         ANS_GVSBC, // GetValuesByColumn
+        ANS_GCS, // GetColumnsFromTable
         // ClientToServer
         ANS_LOGIN, // имя пользователя
         ANS_PSW, // пароль
@@ -62,6 +64,7 @@ public:
         CMD_GVSBFS, // запрос sql простой: Get Values From Table By Fields - возвращаются все записи
         CMD_GVBFS, // запрос sql простой: Get Value From Table By Fields - возвращается одна запись
         CMD_GVSBC, // GetValuesByColumn - возвращаются все записи
+        CMD_GCS, // GetColumnsFromTable - запрос полей таблицы
         CMD_MESSAGES, // запрос текущих сообщений для пользователя
         CMD_CHATMSGS, // запрос сообщений из чата
         CMD_CHATREQ, // запрос состояния чата (пользователи)

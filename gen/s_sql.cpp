@@ -61,7 +61,7 @@ QSqlDatabase s_sql::GetDBByTableName(QString tble)
 */
 // процедура возвращает все имеющиеся БД (кроме системных)
 
-QStringList s_sql::GetDBFromSQL()
+/*QStringList s_sql::GetDBFromSQL()
 {
     QStringList sl;
     sl.clear();
@@ -87,10 +87,10 @@ QStringList s_sql::GetDBFromSQL()
     sl.removeAll("test");
     return sl;
 }
-
+*/
 // процедура возвращает список таблиц из БД db
 
-QStringList s_sql::GetTablesFromDB(QString db)
+/*QStringList s_sql::GetTablesFromDB(QString db)
 {
     QStringList sl;
     QSqlQuery exec_db (GetDB(db));
@@ -100,25 +100,40 @@ QStringList s_sql::GetTablesFromDB(QString db)
     while (exec_db.next())
         sl << exec_db.value(0).toString();
     return sl;
-}
+} */
 
 // процедура возвращает список полей из db:tble
 
 QStringList s_sql::GetColumnsFromTable(QString db, QString tble)
 {
     QStringList sl;
-    QSqlQuery exec_db (GetDB(db));
-
-    sl.clear();
-    exec_db.exec("SHOW COLUMNS FROM `" + tble + "`;");
-    if (!exec_db.isActive())
+    if (pc.AutonomousMode)
     {
-        result = 1;
-        LastError = exec_db.lastError().text();
-        return QStringList();
+        QSqlQuery exec_db (GetDB(db));
+
+        sl.clear();
+        exec_db.exec("SHOW COLUMNS FROM `" + tble + "`;");
+        if (!exec_db.isActive())
+        {
+            result = 1;
+            LastError = exec_db.lastError().text();
+            return QStringList();
+        }
+        while (exec_db.next())
+            sl << exec_db.value(0).toString();
     }
-    while (exec_db.next())
-        sl << exec_db.value(0).toString();
+    else
+    {
+        QStringList fl = QStringList() << db << tble;
+        Cli->SendCmd(Client::CMD_GCS, fl);
+        while (Cli->Busy)
+        {
+            QThread::msleep(10);
+            qApp->processEvents(QEventLoop::AllEvents);
+        }
+        if (Cli->Result.size())
+            sl = Cli->Result.at(0);
+    }
     result=0;
     return sl;
 }
@@ -344,29 +359,42 @@ QStringList s_sql::GetValuesFromTableByField(QString db, QString tble, QStringLi
     QString tmpString;
     QStringList vl;
     int i;
-    QSqlQuery exec_db (GetDB(db));
-
-    tmpString = "SELECT ";
-    for (i = 0; i < fields.size(); i++)
-        tmpString += "`" + fields.at(i) + "`,";
-    tmpString = tmpString.left(tmpString.size()-1); // удаляем последнюю запятую
-    tmpString += " FROM `" + tble + "` WHERE `" + cmpfield + "`=\"" + cmpvalue + "\" AND `deleted`=0;";
-    exec_db.exec(tmpString);
-    if (exec_db.isActive())
+    if (pc.AutonomousMode)
     {
-        while (exec_db.next())
+        QSqlQuery exec_db (GetDB(db));
+
+        tmpString = "SELECT ";
+        for (i = 0; i < fields.size(); i++)
+            tmpString += "`" + fields.at(i) + "`,";
+        tmpString = tmpString.left(tmpString.size()-1); // удаляем последнюю запятую
+        tmpString += " FROM `" + tble + "` WHERE `" + cmpfield + "`=\"" + cmpvalue + "\" AND `deleted`=0;";
+        exec_db.exec(tmpString);
+        if (exec_db.isActive())
         {
-            vl.clear();
-            i = 0;
-            while (i < fields.size())
-                vl << exec_db.value(i++).toString();
+            if (exec_db.next())
+            {
+                vl.clear();
+                i = 0;
+                while (i < fields.size())
+                    vl << exec_db.value(i++).toString();
+            }
+            result=0;
+            return vl;
         }
-        result=0;
-        return vl;
+        result=1;
+        LastError = exec_db.lastError().text();
+        return QStringList();
     }
-    result=1;
-    LastError = exec_db.lastError().text();
-    return QStringList();
+    else
+    {
+        QStringList cmpfields = QStringList() << cmpfield;
+        QStringList cmpvalues = QStringList() << cmpvalue;
+        QList<QStringList> lsl = GetMoreValuesFromTableByFields(db,tble,fields,cmpfields,cmpvalues);
+        if (lsl.size())
+            return lsl.at(0);
+        else
+            return QStringList();
+    }
 }
 
 // процедура берёт из таблицы все значения по столбцу column для всех строк
@@ -375,60 +403,97 @@ QStringList s_sql::GetValuesFromTableByColumn(QString db, QString tble, QString 
 {
     QString tmpString;
     QStringList vl;
-    QSqlQuery exec_db (GetDB(db));
+    if (pc.AutonomousMode)
+    {
+        QSqlQuery exec_db (GetDB(db));
 
-    tmpString = "SELECT `" + column + "` FROM `" + tble + "` WHERE `deleted`=0";
-    if (!orderby.isEmpty())
+        tmpString = "SELECT `" + column + "` FROM `" + tble + "` WHERE `deleted`=0";
+        if (!orderby.isEmpty())
+        {
+            tmpString += " ORDER BY `"+orderby+"` ";
+            if (asc)
+                tmpString += "ASC";
+            else
+                tmpString += "DESC";
+        }
+        tmpString += ";";
+        exec_db.exec(tmpString);
+        if (!exec_db.isActive())
+        {
+            result = 2;
+            LastError = exec_db.lastError().text();
+            return QStringList();
+        }
+        vl.clear();
+        while (exec_db.next())
+            vl << exec_db.value(0).toString();
+        if (vl.isEmpty())
+        {
+            result=1;
+            return QStringList();
+        }
+        result=0;
+        return vl;
+    }
+    else
     {
-        tmpString += " ORDER BY `"+orderby+"` ";
-        if (asc)
-            tmpString += "ASC";
+        QStringList fl = QStringList() << db << tble << column;
+        if (!orderby.isEmpty())
+        {
+            fl << orderby;
+            if (asc)
+                fl << "ASC";
+            else
+                fl << "DESC";
+        }
+        Cli->SendCmd(Client::CMD_GVSBC, fl);
+        while (Cli->Busy)
+        {
+            QThread::msleep(10);
+            qApp->processEvents(QEventLoop::AllEvents);
+        }
+        if (Cli->Result.size())
+        {
+            vl = Cli->Result.at(0);
+            result = 0;
+            return vl;
+        }
         else
-            tmpString += "DESC";
+        {
+            result = 1;
+            return QStringList();
+        }
     }
-    tmpString += ";";
-    exec_db.exec(tmpString);
-    if (!exec_db.isActive())
-    {
-        result = 2;
-        LastError = exec_db.lastError().text();
-        return QStringList();
-    }
-    vl.clear();
-    while (exec_db.next())
-        vl << exec_db.value(0).toString();
-    if (vl.isEmpty())
-    {
-        result=1;
-        return QStringList();
-    }
-    result=0;
-    return vl;
 }
 
 // процедура берёт из таблицы все значения по столбцам columns
 
-QList<QStringList> s_sql::GetValuesFromTableByColumns(QString db, QString tble, QStringList columns)
+QList<QStringList> s_sql::GetValuesFromTableByColumns(QString db, QString tble, QStringList columns, QString orderby, bool asc)
 {
-    QString tmpString;
     QList<QStringList> vl;
-    QStringList tmpStringList;
-    QSqlQuery exec_db (GetDB(db));
     int i;
-
-    for (i = 0; i < columns.size(); i++)
+    if (pc.AutonomousMode)
     {
-        tmpString = "SELECT `" + columns.at(i) + "` FROM `" + tble + "` WHERE `deleted`=0;";
-        exec_db.exec(tmpString);
-        tmpStringList.clear();
-        while (exec_db.next())
-            tmpStringList.append(exec_db.value(0).toString());
-        vl.append(tmpStringList);
+        for (i=0; i<columns.size(); i++)
+        {
+            QStringList tmpStringList = GetValuesFromTableByColumn(db, tble, columns.at(i), orderby, asc);
+            if (result == 2)
+                return QList<QStringList>();
+            vl.append(tmpStringList);
+        }
+    }
+    else
+    {
+        for (i=0; i<columns.size(); i++)
+        {
+            QStringList sl = GetValuesFromTableByColumn(db, tble, columns.at(i));
+            if (!sl.isEmpty())
+                vl.append(sl);
+        }
     }
     if (vl.isEmpty())
     {
         result=1;
-        LastError = exec_db.lastError().text();
         return QList<QStringList>();
     }
     else

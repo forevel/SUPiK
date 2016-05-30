@@ -22,8 +22,8 @@ public:
 //    QSqlDatabase GetDBByTableName (QString tble); // поиск таблицы в базах данных и вернуть ссылку на БД, которая её содержит
 
     // стандартные операции с БД
-    QStringList GetDBFromSQL(); // вернуть все БД, к которым есть доступ
-    QStringList GetTablesFromDB(QString db); // вернуть все таблицы, содержащиеся в БД
+//    QStringList GetDBFromSQL(); // вернуть все БД, к которым есть доступ
+//    QStringList GetTablesFromDB(QString db); // вернуть все таблицы, содержащиеся в БД
     QStringList GetColumnsFromTable (QString db, QString tble); // вернуть все поля из таблицы tble БД db
     bool CheckForTable (QString db, QString tble); // проверить таблицу на существование
     void CreateTable(QString db, QString tble, QStringList fl, bool Simple=false); // создать таблицу с заданными в списке строк fl полями
@@ -49,7 +49,7 @@ public:
     QStringList GetValuesFromTableByFields(QString db, QString tble, QStringList fields, QStringList cmpfields, QStringList cmpvalues, \
                                             QString orderby="", bool asc=true);
     QStringList GetValuesFromTableByColumn (QString db, QString tble, QString column, QString orderby="", bool asc=true);
-    QList<QStringList> GetValuesFromTableByColumns (QString db, QString tble, QStringList columns);
+    QList<QStringList> GetValuesFromTableByColumns (QString db, QString tble, QStringList columns, QString orderby="", bool asc=true);
     QStringList GetValuesFromTableByColumnAndField(QString db, QString tble, QString field, QString cmpfield, QString cmpvalue, \
                                                    QString orderby="", bool asc=true);
     QList<QStringList> GetMoreValuesFromTableByFields (QString db, QString tble, QStringList fields, QStringList cmpfields, QStringList cmpvalues, \

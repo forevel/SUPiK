@@ -152,7 +152,7 @@ void Client::SendCmd(int Command, QStringList &Args)
     // Args(0)+4...Args(0)+Args(1)*2+3 - пары сравнения, сначала поле сравнения, затем значение
     // Args(0)+Args(1)*2+4 - поле, по которому проводить сортировку
     // Args(0)+Args(1)*2+5 - "ASC" или "DESC" - в каком порядке проводить сортировку
-    // Формат: GVSBFS <numbytes_starting_from_n> n m db table headers_0 headers_1 ... headers_n cond_header_0 value_0 cond_header_1 value_1 ... cond_header_m value_m [order_header] [ASC|DESC]
+    // Формат: GVSBFS n m db table headers_0 headers_1 ... headers_n cond_header_0 value_0 cond_header_1 value_1 ... cond_header_m value_m [order_header] [ASC|DESC]
     case CMD_GVSBFS:
     case CMD_GVBFS:
     {
@@ -199,7 +199,7 @@ void Client::SendCmd(int Command, QStringList &Args)
         // 2 = два пробела
         break;
     }
-        // запрос всех полей по одному полю
+        // запрос всех значений по одному полю
         // формат запроса: GVSBC db tble column [order_header] [ASC|DESC]\n
         // формат ответа: <value1> <value2> ... <valuen>\n
     case CMD_GVSBC:
@@ -215,6 +215,24 @@ void Client::SendCmd(int Command, QStringList &Args)
         GVSBFS_FieldsNum = 1; // одна колонка - одно поле в каждой записи
         QString tmps = Args.join(" ");
         CommandString = "GVSBC ";
+        CommandString.append(tmps + "\n");
+        break;
+    }
+        // запрос колонок (полей) из таблицы
+        // формат запроса: GCS db tble\n
+        // формат ответа: <column1> <column2> ... <columnn>\n
+    case CMD_GCS:
+    {
+        Result.clear(); // очищаем результаты
+        if (Args.size() < 2)
+        {
+            CliLog->error("CMD_GCS: Number of arguments is less than 2");
+            DetectedError = CLIER_WRARGS;
+            Busy = false;
+            return;
+        }
+        QString tmps = Args.join(" ");
+        CommandString = "GCS ";
         CommandString.append(tmps + "\n");
         break;
     }
@@ -252,6 +270,7 @@ void Client::SendCmd(int Command, QStringList &Args)
     case ANS_GETFILE:
     case ANS_GVSBFS:
     case ANS_GVSBC:
+    case ANS_GCS:
     {
         CommandString = "RDY\n";
         break;
@@ -454,10 +473,43 @@ void Client::ParseReply(QByteArray *ba)
         }
         break;
     }
+    case CMD_GCS:
+    {
+        // Формат ответа на запрос GCS:
+        //      GCS <number_of_fields>\n
+        //      column[0] colun[1] ... colun[n]\n
+        if ((ServerResponse == "GCS"))
+        {
+            if (ArgList.size()<2) // нет количества записей
+            {
+                WriteErrorAndBreakReceiving("Некорректное количество аргументов");
+                return;
+            }
+            bool ok;
+            GVSBFS_FieldsNum = ArgList.at(1).toInt(&ok);
+            if ((!ok) || (GVSBFS_FieldsNum < 0))
+            {
+                WriteErrorAndBreakReceiving("Некорректное количество посылок");
+                return;
+            }
+            if (GVSBFS_FieldsNum == 0)
+                CliLog->info("Пустой ответ");
+#ifndef TIMERSOFF
+            TimeoutTimer->start();
+#endif
+            SendCmd(ANS_GCS);
+            return;
+        }
+        else
+        {
+            WriteErrorAndBreakReceiving("Некорректный ответ сервера");
+            return;
+        }
+        break;
+    }
     case CMD_GVBFS:
         MsgNum = 1; // планируется приём одной записи
     case ANS_GVSBFS:
-    case ANS_GVSBC:
     {
         if (MsgNum == 0) // конец передачи, пришёл IDLE
         {
@@ -491,6 +543,88 @@ void Client::ParseReply(QByteArray *ba)
         TimeoutTimer->start();
 #endif
         SendCmd(ANS_GVSBFS); // для GVSBC ответ тоже будет RDY
+        return;
+        break;
+    }
+        // Get Values By Column
+    case ANS_GVSBC:
+    {
+        if (MsgNum == 0) // конец передачи, пришёл IDLE
+        {
+            CmdOk = true;
+            break;
+        }
+        const int SLNum = GVSBFS_FieldsNum;
+        if (SLNum > SLNUMMAX)
+        {
+            WriteErrorAndBreakReceiving("Too many columns to get: "+QString::number(SLNum));
+            break;
+        }
+        QStringList sl[SLNUMMAX];
+        if (!Result.isEmpty())
+        {
+            for (int i=0; i<SLNum; i++)
+                sl[i] = Result.at(i);
+        }
+        while ((MsgNum) && (ArgList.size()))
+        {
+            if (ArgList.last() == "\n")
+                ArgList.removeLast();
+            if (ArgList.size() < SLNum)
+            {
+                   CliLog->warning("Некратное число записей в SQL-ответе");
+                   MsgNum = 0;
+                   ArgList.clear();
+                   CmdOk = true;
+                   break;
+            }
+            for (int i=0; i<SLNum; i++)
+                sl[i].append(ArgList.takeFirst());
+            MsgNum--;
+        }
+        Result.clear();
+        for (int i=0; i<SLNum; i++)
+            Result.append(sl[i]);
+        if (MsgNum == 0) // кончились ответы, можно выходить
+        {
+            CmdOk = true;
+            break;
+        }
+#ifndef TIMERSOFF
+        TimeoutTimer->start();
+#endif
+        SendCmd(ANS_GVSBFS); // для GVSBC ответ тоже будет RDY
+        return;
+        break;
+    }
+    case ANS_GCS:
+    {
+        if (GVSBFS_FieldsNum == 0) // конец передачи, пришёл IDLE
+        {
+            CmdOk = true;
+            break;
+        }
+        QStringList sl;
+        if (!Result.isEmpty())
+            sl = Result.takeFirst();
+        while ((GVSBFS_FieldsNum) && (ArgList.size()))
+        {
+            if (ArgList.last() == "\n")
+                ArgList.removeLast();
+            sl.append(ArgList.takeFirst());
+            GVSBFS_FieldsNum--;
+        }
+        Result.clear();
+        Result.append(sl);
+        if (GVSBFS_FieldsNum == 0) // кончились ответы, можно выходить
+        {
+            CmdOk = true;
+            break;
+        }
+#ifndef TIMERSOFF
+        TimeoutTimer->start();
+#endif
+        SendCmd(ANS_GCS); // для GVSBC ответ тоже будет RDY
         return;
         break;
     }

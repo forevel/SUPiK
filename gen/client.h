@@ -56,7 +56,9 @@ public:
         ANS_QUIT, // подтверждение завершения сеанса связи
         ANS_GVSBFS, // подтверждение приёма очередной порции sql-ответа
         ANS_GVSBC, // GetValuesByColumn
+        ANS_GVSBCF, // GetValuesByColumnAndField
         ANS_GCS, // GetColumnsFromTable
+        ANS_SQLSRCH, // SearchInTableLike
         // ClientToServer
         ANS_LOGIN, // имя пользователя
         ANS_PSW, // пароль
@@ -64,7 +66,15 @@ public:
         CMD_GVSBFS, // запрос sql простой: Get Values From Table By Fields - возвращаются все записи
         CMD_GVBFS, // запрос sql простой: Get Value From Table By Fields - возвращается одна запись
         CMD_GVSBC, // GetValuesByColumn - возвращаются все записи
+        CMD_GVSBCF, // GetValuesByColumnAndField
         CMD_GCS, // GetColumnsFromTable - запрос полей таблицы
+        CMD_SQLTC, // Create Table - создание таблицы
+        CMD_SQLTA, // Alter Table - модификация таблицы
+        CMD_SQLTD, // Drop Table - удаление таблицы
+        CMD_SQLINS, // InsertValuesToTable - добавление записей в таблицу
+        CMD_SQLUPD, // UpdateValuesInTable - изменение записей в таблице
+        CMD_SQLDEL, // DeleteFromTable - удаление записей из таблицы
+        CMD_SQLSRCH, // SearchInTableLike - поиск похожих записей в таблице
         CMD_MESSAGES, // запрос текущих сообщений для пользователя
         CMD_CHATMSGS, // запрос сообщений из чата
         CMD_CHATREQ, // запрос состояния чата (пользователи)

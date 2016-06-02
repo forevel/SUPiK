@@ -207,7 +207,7 @@ void Client::SendCmd(int Command, QStringList &Args)
         Result.clear(); // очищаем результаты
         if (Args.size() < 3)
         {
-            CliLog->error("CMD_GVSBC: Number of arguments is less than 2");
+            CliLog->error("CMD_GVSBC: Number of arguments is less than 3");
             DetectedError = CLIER_WRARGS;
             Busy = false;
             return;
@@ -215,6 +215,22 @@ void Client::SendCmd(int Command, QStringList &Args)
         GVSBFS_FieldsNum = 1; // одна колонка - одно поле в каждой записи
         QString tmps = Args.join(" ");
         CommandString = "GVSBC ";
+        CommandString.append(tmps + "\n");
+        break;
+    }
+    case CMD_GVSBCF:
+    {
+        Result.clear();
+        if (Args.size() < 5)
+        {
+            CliLog->error("CMD_GVSBCF: Number of arguments is less than 5");
+            DetectedError = CLIER_WRARGS;
+            Busy = false;
+            return;
+        }
+        GVSBFS_FieldsNum = 1; // одна колонка - одно поле в каждой записи
+        QString tmps = Args.join(" ");
+        CommandString = "GVSBCF ";
         CommandString.append(tmps + "\n");
         break;
     }
@@ -270,6 +286,7 @@ void Client::SendCmd(int Command, QStringList &Args)
     case ANS_GETFILE:
     case ANS_GVSBFS:
     case ANS_GVSBC:
+    case ANS_GVSBCF:
     case ANS_GCS:
     {
         CommandString = "RDY\n";
@@ -432,6 +449,7 @@ void Client::ParseReply(QByteArray *ba)
         break;
     }
     case CMD_GVSBC:
+    case CMD_GVSBCF:
     case CMD_GVSBFS:
     {
         // Формат ответа на запрос GVSBFS:
@@ -441,7 +459,7 @@ void Client::ParseReply(QByteArray *ba)
         //      ...
         //      value[0][k] value[1][k] ... value[n][k]\n
 
-        if ((ServerResponse == "GVSBFS") || (ServerResponse == "GVSBC"))
+        if ((ServerResponse == "GVSBFS") || (ServerResponse == "GVSBC") || (ServerResponse == "GVSBCF"))
         {
             if (ArgList.size()<2) // нет количества записей
             {
@@ -462,8 +480,10 @@ void Client::ParseReply(QByteArray *ba)
 #endif
             if (CurrentCommand == CMD_GVSBFS)
                 SendCmd(ANS_GVSBFS);
-            else
+            else if (CurrentCommand == CMD_GVSBC)
                 SendCmd(ANS_GVSBC);
+            else if (CurrentCommand == CMD_GVSBCF)
+                SendCmd(ANS_GVSBCF);
             return;
         }
         else
@@ -548,6 +568,7 @@ void Client::ParseReply(QByteArray *ba)
     }
         // Get Values By Column
     case ANS_GVSBC:
+    case ANS_GVSBCF:
     {
         if (MsgNum == 0) // конец передачи, пришёл IDLE
         {
@@ -593,7 +614,7 @@ void Client::ParseReply(QByteArray *ba)
 #ifndef TIMERSOFF
         TimeoutTimer->start();
 #endif
-        SendCmd(ANS_GVSBFS); // для GVSBC ответ тоже будет RDY
+        SendCmd(CurrentCommand); // для GVSBC ответ тоже будет RDY
         return;
         break;
     }
@@ -607,10 +628,10 @@ void Client::ParseReply(QByteArray *ba)
         QStringList sl;
         if (!Result.isEmpty())
             sl = Result.takeFirst();
+        if (ArgList.last() == "\n")
+            ArgList.removeLast();
         while ((GVSBFS_FieldsNum) && (ArgList.size()))
         {
-            if (ArgList.last() == "\n")
-                ArgList.removeLast();
             sl.append(ArgList.takeFirst());
             GVSBFS_FieldsNum--;
         }
@@ -624,7 +645,7 @@ void Client::ParseReply(QByteArray *ba)
 #ifndef TIMERSOFF
         TimeoutTimer->start();
 #endif
-        SendCmd(ANS_GCS); // для GVSBC ответ тоже будет RDY
+        SendCmd(CurrentCommand);
         return;
         break;
     }

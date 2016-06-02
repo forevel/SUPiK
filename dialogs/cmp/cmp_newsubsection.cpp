@@ -141,7 +141,8 @@ void cmp_newsubsection::Ok()
     QStringList sl = QStringList() << "" << "А" << "З" << "Э" << "К" << "У";
     QStringList dbsl = QStringList() << "" << "alt" << "sch" << "sol" << "con" << "dev";
     QStringList Fields, Values;
-    if (!(sqlc.CheckForTable(dbsl.at(CompType), desc))) // нет такой таблицы
+    Fields = sqlc.GetColumnsFromTable(dbsl.at(CompType), desc); // проверка таблицы на существование
+    if (sqlc.result) // нет такой таблицы
     {
         switch(CompType)
         {

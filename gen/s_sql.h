@@ -25,11 +25,10 @@ public:
 //    QStringList GetDBFromSQL(); // вернуть все БД, к которым есть доступ
 //    QStringList GetTablesFromDB(QString db); // вернуть все таблицы, содержащиеся в БД
     QStringList GetColumnsFromTable (QString db, QString tble); // вернуть все поля из таблицы tble БД db
-    bool CheckForTable (QString db, QString tble); // проверить таблицу на существование
     void CreateTable(QString db, QString tble, QStringList fl, bool Simple=false); // создать таблицу с заданными в списке строк fl полями
     void AlterTable(QString db, QString tble, QStringList DeleteList, QStringList AddList); // удалить поля по списку DeleteList и добавить поля по списку AddList
     void DropTable(QString db, QString tble); // удалить таблицу из БД
-    void AddColumn(QString db, QString tble, QString col, QString def = "NULL"); // добавить поле col в таблицу tble БД db со значением по умолчанию def
+//    void AddColumn(QString db, QString tble, QString col, QString def = "NULL"); // добавить поле col в таблицу tble БД db со значением по умолчанию def
 
     // условные операции
     QString InsertValuesToTable (QString db, QString tble, QStringList fl, QStringList vl); // вставить в таблицу tble значения vl по полям fl
@@ -59,7 +58,7 @@ public:
     int GetNextFreeIndex(QString db, QString tble); // вернуть ИД первого попавшегося свободного места, в порядке по возрастанию ИД, в таблице поле ИД идёт как id<tble>
     int GetNextFreeIndexSimple(QString db, QString tble); // вернуть ИД первого попавшегося свободного места, в порядке по возрастанию ИД, в таблице поле ИД идёт как id
     QString GetFullPathToChild(QString db, QString tble, QString idalias);
-    int CheckDBForEmptyFields (QString db, QString tble, QString field, QStringList &probid);
+//    int CheckDBForEmptyFields (QString db, QString tble, QString field, QStringList &probid);
     int RealDeleteFromDB (QString db, QString tble, QStringList fields, QStringList values); // процедура реально удаляет строку, для которой field равно value
 
     int result;

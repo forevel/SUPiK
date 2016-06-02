@@ -138,21 +138,6 @@ QStringList s_sql::GetColumnsFromTable(QString db, QString tble)
     return sl;
 }
 
-// процедура возвращает true в случае наличия таблицы в БД, иначе false
-
-bool s_sql::CheckForTable(QString db, QString tble)
-{
-    QSqlQuery exec_db (GetDB(db));
-    exec_db.exec("SELECT * FROM `" + tble + "`;");
-    if (!exec_db.isActive())
-    {
-        result = 1;
-        return false;
-    }
-    result=0;
-    return true;
-}
-
 // процедура создаёт новую таблицу, в fl имена столбцов
 
 void s_sql::CreateTable(QString db, QString tble, QStringList fl, bool Simple)
@@ -259,7 +244,7 @@ void s_sql::DropTable(QString db, QString tble)
 
 // процедура добавляет столбец к таблице
 
-void s_sql::AddColumn(QString db, QString tble, QString col, QString def)
+/*void s_sql::AddColumn(QString db, QString tble, QString col, QString def)
 {
     QStringList lastcol = sqlc.GetColumnsFromTable(db, tble);
     QSqlQuery exec_db(GetDB(db));
@@ -274,7 +259,7 @@ void s_sql::AddColumn(QString db, QString tble, QString col, QString def)
         result = 1;
     }
     return;
-}
+} */
 
 // взять следующий свободный индекс из БД db, таблицы tble и вернуть его int-ом
 
@@ -510,28 +495,55 @@ QStringList s_sql::GetValuesFromTableByColumnAndField(QString db, QString tble, 
 {
     QString tmpString;
     QStringList vl;
-    QSqlQuery exec_db (GetDB(db));
+    if (pc.AutonomousMode)
+    {
+        QSqlQuery exec_db (GetDB(db));
 
-    tmpString = "SELECT `" + column + "` FROM `" + tble + "` WHERE `deleted`=0 AND `" + cmpfield + "`=\"" + cmpvalue + "\"";
-    if (!orderby.isEmpty())
-    {
-        tmpString += " ORDER BY `"+orderby+"` ";
-        if (asc)
-            tmpString += "ASC";
-        else
-            tmpString += "DESC";
+        tmpString = "SELECT `" + column + "` FROM `" + tble + "` WHERE `deleted`=0 AND `" + cmpfield + "`=\"" + cmpvalue + "\"";
+        if (!orderby.isEmpty())
+        {
+            tmpString += " ORDER BY `"+orderby+"` ";
+            if (asc)
+                tmpString += "ASC";
+            else
+                tmpString += "DESC";
+        }
+        tmpString += ";";
+        exec_db.exec(tmpString);
+        if (!exec_db.isActive())
+        {
+            result = 1;
+            LastError = exec_db.lastError().text();
+            return QStringList();
+        }
+        vl.clear();
+        while (exec_db.next())
+            vl << exec_db.value(0).toString();
     }
-    tmpString += ";";
-    exec_db.exec(tmpString);
-    if (!exec_db.isActive())
+    else
     {
-        result = 1;
-        LastError = exec_db.lastError().text();
-        return QStringList();
+        QStringList fl = QStringList() << db << tble << column << cmpfield << cmpvalue;
+        if (!orderby.isEmpty())
+        {
+            fl << orderby;
+            if (asc)
+                fl << "ASC";
+            else
+                fl << "DESC";
+        }
+        Cli->SendCmd(Client::CMD_GVSBCF, fl);
+        while (Cli->Busy)
+        {
+            QThread::msleep(10);
+            qApp->processEvents(QEventLoop::AllEvents);
+        }
+        if (!Cli->Result.size())
+        {
+            result = 1;
+            return QStringList();
+        }
+        vl = Cli->Result.at(0);
     }
-    vl.clear();
-    while (exec_db.next())
-        vl << exec_db.value(0).toString();
     result=0;
     return vl;
 }
@@ -663,7 +675,7 @@ QString s_sql::GetValueFromTableByFields (QString db, QString tble, QString fiel
     }
 }
 
-// процедура берёт из таблицы поля fields для строки, в которой поля cmpfield равны cmpvalues
+// процедура берёт из таблицы поля fields для первой строки, в которой поля cmpfield равны cmpvalues
 
 QStringList s_sql::GetValuesFromTableByFields (QString db, QString tble, QStringList fields, QStringList cmpfields, QStringList cmpvalues, QString orderby, bool asc)
 {
@@ -877,7 +889,7 @@ int s_sql::RealDeleteFromDB(QString db, QString tble, QStringList fields, QStrin
 
 // процедура ищет записи с пустыми полями fields и записывает их ИД в список probid, при этом возвращая ненулевой результат
 
-int s_sql::CheckDBForEmptyFields(QString db, QString tble, QString field, QStringList &probid)
+/*int s_sql::CheckDBForEmptyFields(QString db, QString tble, QString field, QStringList &probid)
 {
     probid.clear();
 
@@ -891,7 +903,7 @@ int s_sql::CheckDBForEmptyFields(QString db, QString tble, QString field, QStrin
     if (probid.isEmpty())
         return 0;
     return 1;
-}
+} */
 
 // вернуть список из записей, для которых field похож на regexpstr
 

@@ -159,6 +159,11 @@ void dir_maindialog::ShowSlaveTree(QString str)
     values = tfl.valuesbyfield(MainTable+"_полн",fields,"Наименование",str);
     if (!tfl.result)
     {
+        if (values.size() < 3)
+        {
+            DIRMWARN;
+            return;
+        }
         if (values.at(2).toUInt(0,16) & pc.access)
         {
             Tables.clear();

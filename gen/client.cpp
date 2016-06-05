@@ -322,12 +322,12 @@ void Client::SendCmd(int Command, QStringList &Args)
         break;
     }
     }
-    QTextCodec *codec = QTextCodec::codecForName("CP-1251");
+    QTextCodec *codec = QTextCodec::codecForName("UTF-8");
     if (Command == ANS_PSW)
         CliLog->info(">********");
     else
-        CliLog->info(">"+codec->fromUnicode(CommandString));
-    QByteArray *ba = new QByteArray(codec->fromUnicode(CommandString));
+        CliLog->info(">"+CommandString); //+codec->fromUnicode(CommandString));
+    QByteArray *ba = new QByteArray(CommandString.toUtf8());//codec->fromUnicode(CommandString));
     emit ClientSend(ba);
 }
 
@@ -340,6 +340,7 @@ void Client::ParseReply(QByteArray *ba)
     QString ServerResponse, IncomingString;
     QStringList ArgList;
     CmdOk = false;
+    QTextCodec *codec = QTextCodec::codecForName("Windows-1251");
     if (CurrentCommand != ANS_GETFILE) // приём файла обрабатывается по-другому
     {
         switch (FirstReplyPass)
@@ -347,7 +348,7 @@ void Client::ParseReply(QByteArray *ba)
         case true:
         {
             RcvData.clear();
-            RcvData.append(*ba);
+            RcvData.append(codec->fromUnicode(*ba));
             if (RcvData.right(1) == "\n") // очередная посылка закончена, надо передать её на обработку
                 break;
             FirstReplyPass = false;
@@ -355,7 +356,7 @@ void Client::ParseReply(QByteArray *ba)
         }
         case false:
         {
-            RcvData.append(*ba);
+            RcvData.append(codec->fromUnicode(*ba));
             if (RcvData.right(1) == "\n") // очередная посылка закончена, надо передать её на обработку
                 break;
             return;

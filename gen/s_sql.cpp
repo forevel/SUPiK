@@ -201,8 +201,6 @@ void s_sql::AlterTable(QString db, QString tble, QStringList DeleteList, QString
             tmpString += "ADD COLUMN `"+tmps+"` VARCHAR(128) NULL,";
             AddList.removeFirst();
         }
-        tmpString.chop(1); // последняя запятая
-        tmpString.append(",");
     }
     if (!DeleteList.isEmpty())
     {

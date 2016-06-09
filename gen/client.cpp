@@ -8,6 +8,8 @@
 #include "client.h"
 #include "log.h"
 
+#define _CRT_SECURE_NO_WARNINGS
+
 Client *Cli = 0;
 Log *CliLog;
 
@@ -183,7 +185,7 @@ void Client::SendCmd(int Command, QStringList &Args)
             Busy = false;
             return;
         }
-        if (Args.size() < GVSBFS_FieldsNum+2*pnum+1) // +1 - table
+        if (Args.size() < GVSBFS_FieldsNum+2*pnum+2) // +1 - db, table
         {
             CliLog->error("CMD_GVSBFS: Number of fields is less than mentioned in header: "+QString::number(Args.size())+" "+QString::number(GVSBFS_FieldsNum+2*pnum+1));
             DetectedError = CLIER_WRARGS;
@@ -250,6 +252,44 @@ void Client::SendCmd(int Command, QStringList &Args)
         QString tmps = Args.join(" ");
         CommandString = "GCS ";
         CommandString.append(tmps + "\n");
+        break;
+    }
+    case CMD_SQLTC:
+    {
+        if (Args.size() < 3)
+        {
+            CliLog->error("CMD_SQLTC: Number of arguments is less than 3");
+            DetectedError = CLIER_WRARGS;
+            Busy = false;
+            return;
+        }
+        QString tmps = Args.join(" ");
+        CommandString = "SQLTC ";
+        CommandString.append(tmps + "\n");
+        break;
+    }
+    case CMD_SQLTA:
+    {
+        QString fieldsnum = Args.takeAt(0);
+        bool ok;
+        GVSBFS_FieldsNum = fieldsnum.toInt(&ok);
+        if (!ok)
+        {
+            CliLog->error("CMD_SQLTA: argument is not a number");
+            DetectedError = CLIER_WRARGS;
+            Busy = false;
+            return;
+        }
+        if (Args.size() < GVSBFS_FieldsNum+2) // +2 - db,table
+        {
+            CliLog->error("CMD_SQLTA: Number of fields is less than mentioned in header: "+QString::number(Args.size())+" "+QString::number(GVSBFS_FieldsNum+2));
+            DetectedError = CLIER_WRARGS;
+            Busy = false;
+            return;
+        }
+        QString tmps = Args.join(" ");
+        CommandString = "SQLTA ";
+        CommandString.append(fieldsnum + " " + tmps + "\n");
         break;
     }
     case CMD_MESSAGES:
@@ -322,7 +362,6 @@ void Client::SendCmd(int Command, QStringList &Args)
         break;
     }
     }
-    QTextCodec *codec = QTextCodec::codecForName("UTF-8");
     if (Command == ANS_PSW)
         CliLog->info(">********");
     else
@@ -437,6 +476,12 @@ void Client::ParseReply(QByteArray *ba)
             CmdOk = true;
         break;
     }
+    case CMD_SQLTC:
+    case CMD_SQLTA:
+    case CMD_SQLTD:
+        if (ServerResponse == "OK")
+            CmdOk = true;
+        break;
     case CMD_TF_GVSBFS:
     {
         // Формат ответа на запрос из таблицы tablefields:

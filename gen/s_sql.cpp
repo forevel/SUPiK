@@ -142,29 +142,46 @@ QStringList s_sql::GetColumnsFromTable(QString db, QString tble)
 
 void s_sql::CreateTable(QString db, QString tble, QStringList fl, bool Simple)
 {
-    QSqlQuery exec_db(GetDB(db));
     QString tmpString;
-    if (Simple)
-        tmpString = "CREATE TABLE `"+tble+"` (`id` int(11) NOT NULL,";
-    else
-        tmpString = "CREATE TABLE `"+tble+"` (`id"+tble+"` int(11) NOT NULL,";
-    for (int i = 0; i < fl.size(); i++)
-        tmpString += "`"+fl.at(i)+"` varchar(128) DEFAULT NULL,";
-    if (Simple)
-        tmpString += "`idpers` varchar(128) DEFAULT NULL,`date` VARCHAR(128) DEFAULT NULL,`deleted` int(1) NOT NULL DEFAULT '0',"
-                "PRIMARY KEY (`id`),UNIQUE KEY `id_UNIQUE` (`id`)) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
-    else
-        tmpString += "`idpers` varchar(128) DEFAULT NULL,`date` VARCHAR(128) DEFAULT NULL,`deleted` int(1) NOT NULL DEFAULT '0',"
-                "PRIMARY KEY (`id"+tble+"`),UNIQUE KEY `id"+tble+"_UNIQUE` (`id"+tble+"`)) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
-    exec_db.exec(tmpString);
-    if (exec_db.isActive())
+    if (pc.AutonomousMode)
     {
+        QSqlQuery exec_db(GetDB(db));
+        if (Simple)
+            tmpString = "CREATE TABLE `"+tble+"` (`id` int(11) NOT NULL,";
+        else
+            tmpString = "CREATE TABLE `"+tble+"` (`id"+tble+"` int(11) NOT NULL,";
+        for (int i = 0; i < fl.size(); i++)
+            tmpString += "`"+fl.at(i)+"` varchar(128) DEFAULT NULL,";
+        if (Simple)
+            tmpString += "`idpers` varchar(128) DEFAULT NULL,`date` VARCHAR(128) DEFAULT NULL,`deleted` int(1) NOT NULL DEFAULT '0',"
+                    "PRIMARY KEY (`id`),UNIQUE KEY `id_UNIQUE` (`id`)) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
+        else
+            tmpString += "`idpers` varchar(128) DEFAULT NULL,`date` VARCHAR(128) DEFAULT NULL,`deleted` int(1) NOT NULL DEFAULT '0',"
+                    "PRIMARY KEY (`id"+tble+"`),UNIQUE KEY `id"+tble+"_UNIQUE` (`id"+tble+"`)) ENGINE=MyISAM DEFAULT CHARSET=utf8;";
+        exec_db.exec(tmpString);
+        if (exec_db.isActive())
+        {
+            result = 0;
+            return;
+        }
+        result = 1;
+        LastError = exec_db.lastError().text();
+        return;
+    }
+    else
+    {
+        tmpString = (Simple) ? "id" : "id"+tble;
+        QStringList sl = QStringList() << db << tble << tmpString;
+        sl << fl;
+        Cli->SendCmd(Client::CMD_SQLTC, sl);
+        while (Cli->Busy)
+        {
+            QThread::msleep(10);
+            qApp->processEvents(QEventLoop::AllEvents);
+        }
         result = 0;
         return;
     }
-    result = 1;
-    LastError = exec_db.lastError().text();
-    return;
 }
 
 // удалить поля по списку DeleteList и добавить поля по списку AddList. Добавить id<tble>, если требуется

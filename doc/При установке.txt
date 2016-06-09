@@ -1,2 +1,91 @@
 1. supikd: создавать в домашней папке каталог .supik с деревом каталогов chat, dev, old
 2. СУПиК: создавать в домашней папке пользователя каталог .supik с каталогом incoming для принимаемых файлов
+3. Создавать SQL-БД (а вдруг не будет сервера):
+@echo off
+
+REM mysql server hostname
+set host=localhost
+
+REM mysql data base user
+set db_user1=target3001user1
+set db_user2=target3001user2
+
+REM mysql data base password
+set db_passwd1=
+set db_passwd2=
+
+REM mysql data base name
+set db_name=target3001db
+
+REM mysql data base_dump name
+set db_dump_name=target3001db.sql
+
+REM mysql port
+set port=3306
+
+#######################################################################################################
+cls
+
+REM #check dump exists
+if exist "%db_dump_name%" goto DumpExist
+  echo "The file '%db_dump_name%' does not exist."
+  echo "The dump should be saved within the same directory as the script."
+  pause
+  exit
+
+:DumpExist
+echo.
+echo.
+
+
+REM Data base root-user who is allowed to create the data base (e.g. root)
+echo Enter a user having rights to create a new
+set /p root_user=user as well as a new data base: 
+echo.
+echo.
+
+
+REM Data base root-user password
+set /p root_passwd=Enter root user password '%root_user%':
+echo.
+echo.
+
+
+if "%db_passwd1%" NEQ "" goto db_passwd1_OK
+  REM Data base user password
+  set /p db_passwd1=Enter the data base user's password '%db_user1%':
+  if "%db_passwd1%" NEQ "" goto db_passwd1_OK
+    echo Password mustn't be empty.
+    pause
+    exit
+
+:db_passwd1_OK
+	
+if "%db_passwd2%" NEQ "" goto db_passwd2_OK
+  set /p db_passwd2=Enter the data base user's password '%db_user2%':
+  if "%db_passwd2%" NEQ "" goto db_passwd2_OK
+    echo Password mustn't be empty.
+    pause
+    exit
+
+:db_passwd2_OK
+
+echo.
+echo.
+echo A new user will be created having the user name '%db_user1%' and '%db_user2%'
+echo and a new data base will be created having the name '%db_name%'.
+echo Please wait...
+echo.
+
+REM Create database user
+mysql --port=%port% --user=%root_user% --password=%root_passwd% -e "GRANT USAGE ON *.* TO '%db_user1%'@'%%' IDENTIFIED BY '%db_passwd1%'";
+mysql --port=%port% --user=%root_user% --password=%root_passwd% -e "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER, CREATE TEMPORARY TABLES, EXECUTE, CREATE ROUTINE, ALTER ROUTINE, TRIGGER ON %db_name%.* TO '%db_user1%'@'%%';"
+mysql --port=%port% --user=%root_user% --password=%root_passwd% -e "GRANT USAGE ON *.* TO '%db_user2%'@'%%' IDENTIFIED BY '%db_passwd2%'";
+mysql --port=%port% --user=%root_user% --password=%root_passwd% -e "GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, INDEX, ALTER, CREATE TEMPORARY TABLES, EXECUTE, CREATE ROUTINE, ALTER ROUTINE, TRIGGER ON %db_name%.* TO '%db_user2%'@'%%';"
+REM Create database
+mysql --port=%port% --user=%root_user% --password=%root_passwd% -e "CREATE DATABASE %db_name% CHARACTER SET utf8 COLLATE utf8_general_ci;"
+mysql --port=%port% --user=%root_user% --password=%root_passwd% %db_name% < %db_dump_name%
+
+
+
+pause

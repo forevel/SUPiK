@@ -344,7 +344,7 @@ void StartWindow::OpenSettingsDialog()
 
 bool StartWindow::OpenAndCheckDB(QSqlDatabase db)
 {
-    db.setConnectOptions("MYSQL_OPT_CONNECT_TIMEOUT=4");
+//    db.setConnectOptions("MYSQL_OPT_CONNECT_TIMEOUT=4");
     if (!db.open())
         return false;
     return true;

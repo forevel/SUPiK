@@ -231,56 +231,53 @@ void StartWindow::OkPBClicked()
             SupLog->error("Local database not found, exiting...");
             return;
         }
-
         tmpString = sqlc.GetValueFromTableByField("sup", "personel", "psw", "login", pc.PersLogin);
-        if (tmpString == pc.PersPsw)
-        {
-            QStringList sl, vl;
-            sl << "idpersonel" << "personel" << "group";
-            vl = sqlc.GetValuesFromTableByField("sup", "personel", sl, "login", pc.PersLogin);
-            if (sqlc.result)
-            {
-                MessageBox2::error(this, "Ошибка!", sqlc.LastError);
-                SupLog->error(sqlc.LastError);
-                return;
-            }
-            if (!vl.isEmpty())
-            {
-                pc.idPers=vl.at(0).toInt();
-                pc.Pers=vl.at(1);
-                pc.idGroup=vl.at(2).toInt(0);
-            }
-            else
-            {
-                MessageBox2::error(this, "Ошибка!", "Пользователь не найден!");
-                SupLog->error("User not found");
-                return;
-            }
-
-            // считывание прав доступа к СУПиКу
-            tmpString = sqlc.GetValueFromTableByID("sup", "groups", "access", QString::number(pc.idGroup));
-            if (!tmpString.isEmpty())
-                pc.access = tmpString.toLong(0, 16); // права доступа - в hex формате
-            else // не нашли запись
-            {
-                MessageBox2::error(this, "Ошибка!", "Не найдена группа доступа, обратитесь к администратору!");
-                SupLog->error("User group not found");
-                return;
-            }
-
-            // далее надо открыть только те БД, права на которые есть у товарища
-/*            OpenAndCheckDB(pc.alt);
-            OpenAndCheckDB(pc.con);
-            OpenAndCheckDB(pc.dev);
-            OpenAndCheckDB(pc.sch);
-            OpenAndCheckDB(pc.sol); */
-        }
-        else
+        if (tmpString != pc.PersPsw)
         {
             MessageBox2::error(this, "Ошибка!", "Нет такого пользователя или пароль неверен!\n"+sqlc.LastError);
             return;
         }
     }
+
+    QStringList sl, vl;
+    sl << "idpersonel" << "personel" << "group";
+    vl = sqlc.GetValuesFromTableByField("sup", "personel", sl, "login", pc.PersLogin);
+    if (sqlc.result)
+    {
+        MessageBox2::error(this, "Ошибка!", sqlc.LastError);
+        SupLog->error(sqlc.LastError);
+        return;
+    }
+    if (!vl.isEmpty())
+    {
+        pc.idPers=vl.at(0).toInt();
+        pc.Pers=vl.at(1);
+        pc.idGroup=vl.at(2).toInt(0);
+    }
+    else
+    {
+        MessageBox2::error(this, "Ошибка!", "Пользователь не найден!");
+        SupLog->error("User not found");
+        return;
+    }
+
+    // считывание прав доступа к СУПиКу
+    tmpString = sqlc.GetValueFromTableByID("sup", "groups", "access", QString::number(pc.idGroup));
+    if (!tmpString.isEmpty())
+        pc.access = tmpString.toLong(0, 16); // права доступа - в hex формате
+    else // не нашли запись
+    {
+        MessageBox2::error(this, "Ошибка!", "Не найдена группа доступа, обратитесь к администратору!");
+        SupLog->error("User group not found");
+        return;
+    }
+
+        // далее надо открыть только те БД, права на которые есть у товарища
+/*            OpenAndCheckDB(pc.alt);
+        OpenAndCheckDB(pc.con);
+        OpenAndCheckDB(pc.dev);
+        OpenAndCheckDB(pc.sch);
+        OpenAndCheckDB(pc.sol); */
 
     StartWindowSplashScreen->finish(this);
 

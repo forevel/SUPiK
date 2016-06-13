@@ -46,7 +46,7 @@ dir_adddialog::dir_adddialog(bool update, QString dirtype, QString dir, QWidget 
     dirBelongAliases.insert("Solidworks","sol");
     dirBelongAliases.insert("Устройства","dev");
     dirBelongAliases.insert("Конструктивы","con");
-    dirBelongAliases.insert("ОТ и ТБ","otb");
+    dirBelongAliases.insert("ОТ и ТБ","tb");
     dirBelongAliases.insert("СисАдмин","sys");
     dirBelongAliases.insert("Системный","sup");
     setupUI();

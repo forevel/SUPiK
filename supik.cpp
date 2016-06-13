@@ -715,19 +715,19 @@ void supik::UpdateProblemsNumberInTab()
 
 void supik::resizeEvent(QResizeEvent *e)
 {
-    QMainWindow::resizeEvent(e);
+/*    QMainWindow::resizeEvent(e);
     if (!ERHide)
     {
         ErrorProtocolWidget *erw = this->findChild<ErrorProtocolWidget *>("errorwidget");
         if (erw == 0)
             return;
         erw->setGeometry(QRect(0, height()-erw->height(), width(), erw->height()));
-    }
+    }*/
 }
 
 void supik::MouseMove()
 {
-    if (!pc.ErWidgetShowing)
+/*    if (!pc.ErWidgetShowing)
         return;
     QPoint curPos = mapFromGlobal(QCursor::pos());
     if ((abs(curPos.y() - height()) < 10) && (curPos.x() > 0) && (curPos.x() < width()))
@@ -739,12 +739,12 @@ void supik::MouseMove()
     {
         if ((!ERHide) && (!ERTimerIsOn))
             ShowOrHideSlideER();
-    }
+    }*/
 }
 
 void supik::ShowOrHideSlideER()
 {
-    ErrorProtocolWidget *w = this->findChild<ErrorProtocolWidget *>("errorwidget");
+/*    ErrorProtocolWidget *w = this->findChild<ErrorProtocolWidget *>("errorwidget");
     if (w == 0)
     {
         SUPIKDBG;
@@ -769,12 +769,12 @@ void supik::ShowOrHideSlideER()
         ani->setEndValue(startRect);
     }
     ani->start();
-    ERHide = !ERHide;
+    ERHide = !ERHide;*/
 }
 
 void supik::UpdateErrorProtocol()
 {
-    ErrorProtocolWidget *ErWidget = this->findChild<ErrorProtocolWidget *>("errorwidget");
+/*    ErrorProtocolWidget *ErWidget = this->findChild<ErrorProtocolWidget *>("errorwidget");
     if (ErWidget == 0)
     {
         SUPIKDBG;
@@ -794,12 +794,12 @@ void supik::UpdateErrorProtocol()
         pc.ermsgpool.removeFirst();
     }
     if (pc.ErWidgetShowing)
-        ERTimer->start();
+        ERTimer->start();*/
 }
 
 void supik::HideErrorProtocol()
 {
-    ERTimer->stop();
+/*    ERTimer->stop();
     ERTimerIsOn = false;
-    ShowOrHideSlideER();
+    ShowOrHideSlideER();*/
 }

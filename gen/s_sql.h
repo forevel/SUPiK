@@ -11,6 +11,9 @@
 #define SQLC_EMPTY  1
 #define SQLC_FAILED 2
 
+#define ASC         true
+#define DESC        false
+
 class s_sql
 {
 public:

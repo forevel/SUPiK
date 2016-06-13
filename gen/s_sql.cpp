@@ -131,6 +131,11 @@ QStringList s_sql::GetColumnsFromTable(QString db, QString tble)
             QThread::msleep(10);
             qApp->processEvents(QEventLoop::AllEvents);
         }
+        if (Cli->DetectedError != Client::CLIER_NOERROR)
+        {
+            result = 1;
+            return QStringList();
+        }
         if (Cli->Result.size())
             sl = Cli->Result.at(0);
     }
@@ -179,7 +184,10 @@ void s_sql::CreateTable(QString db, QString tble, QStringList fl, bool Simple)
             QThread::msleep(10);
             qApp->processEvents(QEventLoop::AllEvents);
         }
-        result = 0;
+        if (Cli->DetectedError != Client::CLIER_NOERROR)
+            result = 1;
+        else
+            result = 0;
         return;
     }
 }
@@ -188,73 +196,111 @@ void s_sql::CreateTable(QString db, QString tble, QStringList fl, bool Simple)
 
 void s_sql::AlterTable(QString db, QString tble, QStringList DeleteList, QStringList AddList)
 {
-    QSqlQuery exec_db(GetDB(db));
-    // сначала проверим наличие полей id<tble>,idpers,date,deleted
-    QStringList sl = GetColumnsFromTable(db, tble);
-    bool IdExist = (sl.indexOf("id"+tble) != -1);
-    bool DateExist = (sl.indexOf("date") != -1);
-    bool IdpersExist = (sl.indexOf("idpers") != -1);
-    bool DeletedExist = (sl.indexOf("deleted") != -1);
-    if (result)
+    if (pc.AutonomousMode)
     {
+        QSqlQuery exec_db(GetDB(db));
+        // сначала проверим наличие полей id<tble>,idpers,date,deleted
+        QStringList sl = GetColumnsFromTable(db, tble);
+        bool IdExist = (sl.indexOf("id"+tble) != -1);
+        bool DateExist = (sl.indexOf("date") != -1);
+        bool IdpersExist = (sl.indexOf("idpers") != -1);
+        bool DeletedExist = (sl.indexOf("deleted") != -1);
+        if (result)
+        {
+            LastError = exec_db.lastError().text();
+            return;
+        }
+        QString tmpString = "ALTER TABLE `"+tble+"` ";
+        if ((!AddList.isEmpty()) || !IdExist || !DateExist || !IdpersExist || !DeletedExist)
+            // нет одного из стандартных полей или есть что-то в списке на добавление
+        {
+            if (!IdExist)
+                tmpString += "ADD COLUMN `id"+tble+"` int(11) NOT NULL,";
+            if (!DateExist)
+                tmpString += "ADD COLUMN `date` VARCHAR(128) DEFAULT NULL,";
+            if (!IdpersExist)
+                tmpString += "ADD COLUMN `idpers` VARCHAR(128) DEFAULT NULL,";
+            if (!DeletedExist)
+                tmpString += "ADD COLUMN `deleted` int(1) NOT NULL DEFAULT '0',";
+            while (!AddList.isEmpty())
+            {
+                QString tmps = AddList.first();
+                tmpString += "ADD COLUMN `"+tmps+"` VARCHAR(128) NULL,";
+                AddList.removeFirst();
+            }
+        }
+        if (!DeleteList.isEmpty())
+        {
+            while (!DeleteList.isEmpty())
+            {
+                QString tmps = DeleteList.first();
+                tmpString += "DROP COLUMN `"+tmps+"`,";
+                DeleteList.removeFirst();
+            }
+        }
+        tmpString.chop(1);
+        tmpString += ";";
+        exec_db.exec(tmpString);
+        if (exec_db.isActive())
+        {
+            result = 0;
+            return;
+        }
+        result = 1;
         LastError = exec_db.lastError().text();
         return;
     }
-    QString tmpString = "ALTER TABLE `"+tble+"` ";
-    if ((!AddList.isEmpty()) || !IdExist || !DateExist || !IdpersExist || !DeletedExist)
-        // нет одного из стандартных полей или есть что-то в списке на добавление
+    else
     {
-        if (!IdExist)
-            tmpString += "ADD COLUMN `id"+tble+"` int(11) NOT NULL,";
-        if (!DateExist)
-            tmpString += "ADD COLUMN `date` VARCHAR(128) DEFAULT NULL,";
-        if (!IdpersExist)
-            tmpString += "ADD COLUMN `idpers` VARCHAR(128) DEFAULT NULL,";
-        if (!DeletedExist)
-            tmpString += "ADD COLUMN `deleted` int(1) NOT NULL DEFAULT '0',";
-        while (!AddList.isEmpty())
+        QStringList sl;
+        sl << QString::number(AddList.size()) << QString::number(DeleteList.size()) << db << tble << AddList << DeleteList;
+        Cli->SendCmd(Client::CMD_SQLTA, sl);
+        while (Cli->Busy)
         {
-            QString tmps = AddList.first();
-            tmpString += "ADD COLUMN `"+tmps+"` VARCHAR(128) NULL,";
-            AddList.removeFirst();
+            QThread::msleep(10);
+            qApp->processEvents(QEventLoop::AllEvents);
         }
-    }
-    if (!DeleteList.isEmpty())
-    {
-        while (!DeleteList.isEmpty())
-        {
-            QString tmps = DeleteList.first();
-            tmpString += "DROP COLUMN `"+tmps+"`,";
-            DeleteList.removeFirst();
-        }
-    }
-    tmpString.chop(1);
-    tmpString += ";";
-    exec_db.exec(tmpString);
-    if (exec_db.isActive())
-    {
-        result = 0;
+        if (Cli->DetectedError != Client::CLIER_NOERROR)
+            result = 1;
+        else
+            result = 0;
         return;
     }
-    result = 1;
-    LastError = exec_db.lastError().text();
-    return;
 }
 
 // процедура удаляет таблицу из БД
 
 void s_sql::DropTable(QString db, QString tble)
 {
-    QSqlQuery exec_db (GetDB(db));
-    exec_db.exec("DROP TABLE IF EXISTS `"+tble+"`;");
-    if (exec_db.isActive())
+    if (pc.AutonomousMode)
     {
-        result = 0;
+        QSqlQuery exec_db (GetDB(db));
+        exec_db.exec("DROP TABLE IF EXISTS `"+tble+"`;");
+        if (exec_db.isActive())
+        {
+            result = 0;
+            return;
+        }
+        result = 1;
+        LastError = exec_db.lastError().text();
         return;
     }
-    result = 1;
-    LastError = exec_db.lastError().text();
-    return;
+    else
+    {
+        QStringList sl;
+        sl << db << tble;
+        Cli->SendCmd(Client::CMD_SQLTD, sl);
+        while (Cli->Busy)
+        {
+            QThread::msleep(10);
+            qApp->processEvents(QEventLoop::AllEvents);
+        }
+        if (Cli->DetectedError != Client::CLIER_NOERROR)
+            result = 1;
+        else
+            result = 0;
+        return;
+    }
 }
 
 // процедура добавляет столбец к таблице
@@ -280,22 +326,43 @@ void s_sql::DropTable(QString db, QString tble)
 
 int s_sql::GetNextFreeIndex(QString db, QString tble)
 {
-    long i = 1;
-    QSqlQuery exec_db (GetDB(db));
-    QString tmpString = "SELECT `id" + tble + "` FROM `" + tble + "` ORDER BY `id" + tble + "` ASC;";
-    exec_db.exec(tmpString); // индексы сортируем по возрастанию
-    if (exec_db.isActive())
+    if (pc.AutonomousMode)
     {
-        while ((exec_db.next()) && (exec_db.value(0).toInt(0) == i)) // пока нет пропусков
-            i++;
-        result = 0;
-        return i;
+        long i = 1;
+        QSqlQuery exec_db (GetDB(db));
+        QString tmpString = "SELECT `id" + tble + "` FROM `" + tble + "` ORDER BY `id" + tble + "` ASC;";
+        exec_db.exec(tmpString); // индексы сортируем по возрастанию
+        if (exec_db.isActive())
+        {
+            while ((exec_db.next()) && (exec_db.value(0).toInt(0) == i)) // пока нет пропусков
+                i++;
+            result = 0;
+            return i;
+        }
+        else
+        {
+            result = 1;
+            LastError = exec_db.lastError().text();
+            return -1;
+        }
     }
     else
     {
-        result = 1;
-        LastError = exec_db.lastError().text();
-        return -1;
+        QStringList sl;
+        sl << db << tble;
+        Cli->SendCmd(Client::CMD_SQLGID, sl);
+        while (Cli->Busy)
+        {
+            QThread::msleep(10);
+            qApp->processEvents(QEventLoop::AllEvents);
+        }
+        if (Cli->DetectedError != Client::CLIER_NOERROR)
+        {
+            result = 1;
+            return -1;
+        }
+        result = 0;
+        return Cli->ResultInt;
     }
 }
 
@@ -303,23 +370,28 @@ int s_sql::GetNextFreeIndex(QString db, QString tble)
 
 int s_sql::GetNextFreeIndexSimple(QString db, QString tble)
 {
-    long i = 1;
-    QSqlQuery exec_db (GetDB(db));
-    QString tmpString = "SELECT `id` FROM `" + tble + "` ORDER BY `id` ASC;";
-    exec_db.exec(tmpString); // индексы сортируем по возрастанию
-    if (exec_db.isActive())
+    if (pc.AutonomousMode)
     {
-        while ((exec_db.next()) && (exec_db.value(0).toInt(0) == i)) // пока нет пропусков
-            i++;
-        result = 0;
-        return i;
+        long i = 1;
+        QSqlQuery exec_db (GetDB(db));
+        QString tmpString = "SELECT `id` FROM `" + tble + "` ORDER BY `id` ASC;";
+        exec_db.exec(tmpString); // индексы сортируем по возрастанию
+        if (exec_db.isActive())
+        {
+            while ((exec_db.next()) && (exec_db.value(0).toInt(0) == i)) // пока нет пропусков
+                i++;
+            result = 0;
+            return i;
+        }
+        else
+        {
+            result = 1;
+            LastError = exec_db.lastError().text();
+            return -1;
+        }
     }
     else
-    {
-        result = 1;
-        LastError = exec_db.lastError().text();
-        return -1;
-    }
+        return GetNextFreeIndex(db, tble);
 }
 
 // процедура берёт из таблицы запись № id<tble> по полям fields и возвращает значения полей
@@ -668,7 +740,7 @@ QString s_sql::GetValueFromTableByFields (QString db, QString tble, QString fiel
     else
     {
         int pairs_num = cmpfields.size();
-        QStringList sl = QStringList() << "1" << "1" << db << tble << field;
+        QStringList sl = QStringList() << "1" << QString::number(pairs_num) << db << tble << field;
         for (i=0; i<pairs_num; i++)
         {
             sl << AddQuotes(cmpfields.at(i));
@@ -705,80 +777,122 @@ QStringList s_sql::GetValuesFromTableByFields (QString db, QString tble, QString
 
 QString s_sql::GetLastValueFromTableByField (QString db, QString tble, QString field, QString cmpfield, QString cmpvalue)
 {
-    QString tmpString;
-    QString vl;
-    QSqlQuery exec_db (GetDB(db));
-
-    tmpString = "SELECT `" + field + "` FROM `" + tble + "` WHERE `" + cmpfield + "`=\"" + cmpvalue + "\" AND `deleted`=0 ORDER BY `id"+tble+"` DESC;";
-    exec_db.exec(tmpString);
-    exec_db.next();
-    if (exec_db.isValid())
+    if (pc.AutonomousMode)
     {
-        vl = exec_db.value(0).toString();
-        result = 0;
-        return vl;
+        QString tmpString;
+        QString vl;
+        QSqlQuery exec_db (GetDB(db));
+
+        tmpString = "SELECT `" + field + "` FROM `" + tble + "` WHERE `" + cmpfield + "`=\"" + cmpvalue + "\" AND `deleted`=0 ORDER BY `id"+tble+"` DESC;";
+        exec_db.exec(tmpString);
+        exec_db.next();
+        if (exec_db.isValid())
+        {
+            vl = exec_db.value(0).toString();
+            result = 0;
+            return vl;
+        }
+        result = 1;
+        LastError = exec_db.lastError().text();
+        return QString();
     }
-    result = 1;
-    LastError = exec_db.lastError().text();
-    return QString();
+    else
+    {
+        QStringList sl = GetValuesFromTableByColumnAndField(db,  tble, field, cmpfield, cmpvalue, "id"+tble, DESC);
+        if (sl.isEmpty() || result != 0)
+            return QString();
+        result = 0;
+        return sl.at(0);
+    }
 }
 
 // добавление новой пустой записи и возврат нового ИД для БД Altium
 
 QString s_sql::InsertValuesSimple(QString db, QString tble, QStringList fl, QStringList vl)
 {
-    int i;
-    QSqlQuery exec_db (GetDB(db));
-    QString newID = QString::number(GetNextFreeIndexSimple(db, tble));
-    QString tmpString = "INSERT INTO `" + tble + "` (`id`";
-    for (i = 0; i < fl.size(); i++)
-        tmpString += ",`" + fl.at(i) + "`";
-    tmpString += ") VALUES(\"" + newID + "\"";
-    for (i = 0; i < vl.size(); i++)
-        tmpString += ",\"" + vl.at(i) + "\"";
-    tmpString += ");";
-    exec_db.exec(tmpString);
-    if (exec_db.isActive())
+    if (pc.AutonomousMode)
     {
-        result = 0;
-        return newID; // всё ок
+        int i;
+        QSqlQuery exec_db (GetDB(db));
+        QString newID = QString::number(GetNextFreeIndexSimple(db, tble));
+        QString tmpString = "INSERT INTO `" + tble + "` (`id`";
+        for (i = 0; i < fl.size(); i++)
+            tmpString += ",`" + fl.at(i) + "`";
+        tmpString += ") VALUES(\"" + newID + "\"";
+        for (i = 0; i < vl.size(); i++)
+            tmpString += ",\"" + vl.at(i) + "\"";
+        tmpString += ");";
+        exec_db.exec(tmpString);
+        if (exec_db.isActive())
+        {
+            result = 0;
+            return newID; // всё ок
+        }
+        LastError = exec_db.lastError().text();
+        result=2;
+        return QString(); // проблемы с записью
     }
-    LastError = exec_db.lastError().text();
-    result=2;
-    return QString(); // проблемы с записью
+    else
+        return InsertValuesToTable(db, tble, fl, vl);
 }
 
 // процедура вставляет новую запись с первым свободным индексом в db:tble, используя имена полей из fl и значения из vl
 
 QString s_sql::InsertValuesToTable(QString db, QString tble, QStringList fl, QStringList vl)
 {
-    int i;
-
     if (fl.size() != vl.size())
     {
         result=1; // кол-во полей и кол-во значений не равны друг другу, ошибка
         WARNMSG(PublicClass::ER_SQL, __LINE__, "Длина списка полей сравнения не совпадает с длиной списка значений");
         return QString(); // проблемы с записью
     }
-    QSqlQuery exec_db (GetDB(db));
-    QString newID;
-    newID = QString::number(GetNextFreeIndex(db, tble));
-    QString tmpString = "INSERT INTO `" + tble + "` (`id" + tble + "`";
-    for (i = 0; i < fl.size(); i++)
-        tmpString += ",`" + fl.at(i) + "`";
-    tmpString += ") VALUES(\"" + newID + "\"";
-    for (i = 0; i < vl.size(); i++)
-        tmpString += ",\"" + vl.at(i) + "\"";
-    tmpString += ");";
-    exec_db.exec(tmpString);
-    if (exec_db.isActive())
+    if (pc.AutonomousMode)
     {
-        result = 0;
-        return newID; // всё ок
+        int i;
+        QSqlQuery exec_db (GetDB(db));
+        QString newID;
+        newID = QString::number(GetNextFreeIndex(db, tble));
+        QString tmpString = "INSERT INTO `" + tble + "` (`id" + tble + "`";
+        for (i = 0; i < fl.size(); i++)
+            tmpString += ",`" + fl.at(i) + "`";
+        tmpString += ") VALUES(\"" + newID + "\"";
+        for (i = 0; i < vl.size(); i++)
+            tmpString += ",\"" + vl.at(i) + "\"";
+        tmpString += ");";
+        exec_db.exec(tmpString);
+        if (exec_db.isActive())
+        {
+            result = 0;
+            return newID; // всё ок
+        }
+        LastError = exec_db.lastError().text();
+        result=2;
+        return QString(); // проблемы с записью
     }
-    LastError = exec_db.lastError().text();
-    result=2;
-    return QString(); // проблемы с записью
+    else
+    {
+        QStringList sl;
+        int i;
+        sl << db << tble;
+        for (i=0; i<fl.size(); i++)
+        {
+            sl << AddQuotes(fl.at(i));
+            sl << AddQuotes(vl.at(i));
+        }
+        Cli->SendCmd(Client::CMD_SQLINS, sl);
+        while (Cli->Busy)
+        {
+            QThread::msleep(10);
+            qApp->processEvents(QEventLoop::AllEvents);
+        }
+        if (Cli->ResultInt > 0)
+        {
+            result = 0;
+            return QString::number(Cli->ResultInt);
+        }
+        result = 1;
+        return QString();
+    }
 }
 
 // процедура обновления данных в таблице db:tble в полях fl значениями vl, в строке, где field = value
@@ -789,18 +903,45 @@ int s_sql::UpdateValuesInTable(QString db, QString tble, QStringList fl, QString
 
     if (fl.size() != vl.size())
         return 1; // кол-во полей и кол-во значений не равны друг другу, ошибка
-    QSqlQuery exec_db (GetDB(db));
-    QString tmpString = "UPDATE `" + tble + "` SET ";
-    for (i = 0; i < fl.size(); i++)
-        tmpString += "`" + fl.at(i) + "`=\"" + vl.at(i) + "\",";
-    tmpString = tmpString.left(tmpString.size()-1);
-    tmpString += " WHERE `" + field + "`=\"" + value + "\";";
-    exec_db.exec(tmpString);
-    if (exec_db.isActive())
-        return 0; // всё ок
-    result = 2;
-    LastError = exec_db.lastError().text();
-    return 2; // проблемы с записью
+    if (pc.AutonomousMode)
+    {
+        QSqlQuery exec_db (GetDB(db));
+        QString tmpString = "UPDATE `" + tble + "` SET ";
+        for (i = 0; i < fl.size(); i++)
+            tmpString += "`" + fl.at(i) + "`=\"" + vl.at(i) + "\",";
+        tmpString = tmpString.left(tmpString.size()-1);
+        tmpString += " WHERE `" + field + "`=\"" + value + "\";";
+        exec_db.exec(tmpString);
+        if (exec_db.isActive())
+            return 0; // всё ок
+        result = 2;
+        LastError = exec_db.lastError().text();
+        return 2; // проблемы с записью
+    }
+    else
+    {
+        QStringList sl;
+        sl << db << tble;
+        for (i=0; i<fl.size(); i++)
+        {
+            sl << AddQuotes(fl.at(i));
+            sl << AddQuotes(vl.at(i));
+        }
+        sl << field << value;
+        Cli->SendCmd(Client::CMD_SQLUPD, sl);
+        while (Cli->Busy)
+        {
+            QThread::msleep(10);
+            qApp->processEvents(QEventLoop::AllEvents);
+        }
+        if (Cli->DetectedError == Client::CLIER_NOERROR)
+        {
+            result = 0;
+            return 0;
+        }
+        result = 2;
+        return 2;
+    }
 }
 
 // процедура восстанавливает в path полный путь до потомка, ИД которого ссылается на db:tble:idalias
@@ -857,18 +998,39 @@ QString s_sql::GetFullPathToChild(QString db, QString tble, QString idalias)
 
 int s_sql::DeleteFromDB(QString db, QString tble, QString field, QString value)
 {
-    QSqlQuery exec_db(GetDB(db));
-    exec_db.exec("UPDATE `"+tble+"` SET `deleted`=1 WHERE `"+field+"`=\""+value+"\";");
-    if (exec_db.isActive())
+    if (pc.AutonomousMode)
     {
-        result = 0;
-        return 0;
+        QSqlQuery exec_db(GetDB(db));
+        exec_db.exec("UPDATE `"+tble+"` SET `deleted`=1 WHERE `"+field+"`=\""+value+"\";");
+        if (exec_db.isActive())
+        {
+            result = 0;
+            return 0;
+        }
+        else
+        {
+            result = 1;
+            LastError = exec_db.lastError().text();
+            return 1;
+        }
     }
     else
     {
-        result = 1;
-        LastError = exec_db.lastError().text();
-        return 1;
+        QStringList sl;
+        sl << db << tble << field << value;
+        Cli->SendCmd(Client::CMD_SQLDEL, sl);
+        while (Cli->Busy)
+        {
+            QThread::msleep(10);
+            qApp->processEvents(QEventLoop::AllEvents);
+        }
+        if (Cli->DetectedError == Client::CLIER_NOERROR)
+        {
+            result = 0;
+            return 0;
+        }
+        result = 2;
+        return 2;
     }
 }
 
@@ -876,29 +1038,56 @@ int s_sql::DeleteFromDB(QString db, QString tble, QString field, QString value)
 
 int s_sql::RealDeleteFromDB(QString db, QString tble, QStringList fields, QStringList values)
 {
-    QSqlQuery exec_db(GetDB(db));
-    if (fields.size() != values.size())
+    if (pc.AutonomousMode)
     {
-        LastError = exec_db.lastError().text();
-        result = 1;
-        return 1;
-    }
-    QString tmps = "DELETE FROM `"+tble+"` WHERE ";
-    for (int i=0; i<fields.size(); i++)
-        tmps += "`"+fields.at(i)+"`=\""+values.at(i)+"\" AND ";
-    tmps.chop(5); // убрали " AND "
-    tmps += ";";
-    exec_db.exec(tmps);
-    if (exec_db.isActive())
-    {
-        result = 0;
-        return 0;
+        QSqlQuery exec_db(GetDB(db));
+        if (fields.size() != values.size())
+        {
+            LastError = exec_db.lastError().text();
+            result = 1;
+            return 1;
+        }
+        QString tmps = "DELETE FROM `"+tble+"` WHERE ";
+        for (int i=0; i<fields.size(); i++)
+            tmps += "`"+fields.at(i)+"`=\""+values.at(i)+"\" AND ";
+        tmps.chop(5); // убрали " AND "
+        tmps += ";";
+        exec_db.exec(tmps);
+        if (exec_db.isActive())
+        {
+            result = 0;
+            return 0;
+        }
+        else
+        {
+            result = 1;
+            LastError = exec_db.lastError().text();
+            return 1;
+        }
     }
     else
     {
-        result = 1;
-        LastError = exec_db.lastError().text();
-        return 1;
+        QStringList sl;
+        int i;
+        sl << db << tble;
+        for (i=0; i<fields.size(); i++)
+        {
+            sl << AddQuotes(fields.at(i));
+            sl << AddQuotes(values.at(i));
+        }
+        Cli->SendCmd(Client::CMD_SQLRDEL, sl);
+        while (Cli->Busy)
+        {
+            QThread::msleep(10);
+            qApp->processEvents(QEventLoop::AllEvents);
+        }
+        if (Cli->DetectedError == Client::CLIER_NOERROR)
+        {
+            result = 0;
+            return 0;
+        }
+        result = 2;
+        return 2;
     }
 }
 
@@ -924,41 +1113,63 @@ int s_sql::RealDeleteFromDB(QString db, QString tble, QStringList fields, QStrin
 
 QList<QStringList> s_sql::SearchInTableLike(QString db, QString tble, QString field, QString regexpstr)
 {
-    QList<QStringList> sl;
-    QStringList tmpsl;
-    QSqlQuery exec_db(GetDB(db));
-    int i;
-    sl.clear();
-    QStringList col = GetColumnsFromTable(db, tble);
-    if (result)
-        return QList<QStringList>();
-    QString tmpString = "SELECT ";
-    for (i = 0; i < col.size(); i++)
-        tmpString += "`"+col.at(i)+"`,";
-    tmpString.chop(1);
-    tmpString +=  "FROM `"+tble+"` WHERE `"+field+"` RLIKE '"+regexpstr+"' AND `deleted`=0;";
-    exec_db.exec(tmpString);
-    if (!exec_db.isActive())
+    if (pc.AutonomousMode)
     {
-        LastError = exec_db.lastError().text();
+        QList<QStringList> sl;
+        QStringList tmpsl;
+        QSqlQuery exec_db(GetDB(db));
+        int i;
+        sl.clear();
+        QStringList col = GetColumnsFromTable(db, tble);
+        if (result)
+            return QList<QStringList>();
+        QString tmpString = "SELECT ";
+        for (i = 0; i < col.size(); i++)
+            tmpString += "`"+col.at(i)+"`,";
+        tmpString.chop(1);
+        tmpString +=  "FROM `"+tble+"` WHERE `"+field+"` RLIKE '"+regexpstr+"' AND `deleted`=0;";
+        exec_db.exec(tmpString);
+        if (!exec_db.isActive())
+        {
+            LastError = exec_db.lastError().text();
+            result = 2;
+            return QList<QStringList>();
+        }
+        while (exec_db.next())
+        {
+            tmpsl.clear();
+            for (i=0; i<col.size(); i++)
+                tmpsl.append(exec_db.value(i).toString());
+            sl.append(tmpsl);
+        }
+        if (sl.isEmpty())
+        {
+            result = 1;
+            LastError = exec_db.lastError().text();
+            return sl;
+        }
+        result = 0;
+        return sl;
+    }
+    else
+    {
+        QStringList sl;
+        sl << db << tble << field << AddQuotes(regexpstr);
+        Cli->SendCmd(Client::CMD_SQLSRCH, sl);
+        while (Cli->Busy)
+        {
+            QThread::msleep(10);
+            qApp->processEvents(QEventLoop::AllEvents);
+        }
+        if (Cli->DetectedError == Client::CLIER_NOERROR)
+        {
+            QueryResult = Cli->Result;
+            result = 0;
+            return QueryResult;
+        }
         result = 2;
         return QList<QStringList>();
     }
-    while (exec_db.next())
-    {
-        tmpsl.clear();
-        for (i=0; i<col.size(); i++)
-            tmpsl.append(exec_db.value(i).toString());
-        sl.append(tmpsl);
-    }
-    if (sl.isEmpty())
-    {
-        result = 1;
-        LastError = exec_db.lastError().text();
-        return sl;
-    }
-    result = 0;
-    return sl;
 }
 
 // процедура возвращает набор строк из таблицы db.tble, значения cmpfield которых равны значению cmpvalue

@@ -12,7 +12,7 @@
 #define CLIWARN    WARNMSG(PublicClass::ER_CLI,__LINE__)
 #define CLIINFO(a) INFOMSG(PublicClass::ER_CLI,__LINE__,a)
 
-#define SERVERRSTR  "ERROR\n"
+#define SERVERRSTR  "ERROR"
 #define TIMERSOFF // если не закомментировано, таймауты отключены
 #define SLNUMMAX    10 // максимальное число полей в запросе по столбцам
 
@@ -35,7 +35,10 @@ public:
         CLIER_GROUP,     // не найдена группа доступа
         CLIER_WRARGS,    // неправильные аргументы
         CLIER_GETFTOUT,  // таймаут во время приёма файла
-        CLIER_GETFER    // ошибка во время приёма файла
+        CLIER_GETFER,    // ошибка во время приёма файла
+        CLIER_WRANSW,    // кривой ответ от сервера
+        CLIER_CMDER,     // ошибка обработки команды
+        CLIER_EMPTY     // пустой ответ
     };
 
     enum Messages
@@ -58,6 +61,7 @@ public:
         ANS_GVSBC, // GetValuesByColumn
         ANS_GVSBCF, // GetValuesByColumnAndField
         ANS_GCS, // GetColumnsFromTable
+        ANS_GVBFS, // GetValueByFields
         ANS_SQLSRCH, // SearchInTableLike
         // ClientToServer
         ANS_LOGIN, // имя пользователя
@@ -74,7 +78,9 @@ public:
         CMD_SQLINS, // InsertValuesToTable - добавление записей в таблицу
         CMD_SQLUPD, // UpdateValuesInTable - изменение записей в таблице
         CMD_SQLDEL, // DeleteFromTable - удаление записей из таблицы
+        CMD_SQLRDEL, // RealDeleteFromTable - удаление записей из таблицы
         CMD_SQLSRCH, // SearchInTableLike - поиск похожих записей в таблице
+        CMD_SQLGID, // GetNextFreeIndex - поиск первого свободного ИД
         CMD_MESSAGES, // запрос текущих сообщений для пользователя
         CMD_CHATMSGS, // запрос сообщений из чата
         CMD_CHATREQ, // запрос состояния чата (пользователи)
@@ -88,6 +94,8 @@ public:
 
     bool Busy;
     QList<QStringList> Result;
+    QString ResultStr;
+    int ResultInt, DetectedError;
 
     int Connect(QString Host, QString Port);
     void Disconnect();
@@ -115,7 +123,7 @@ private:
     QString FileHost;
     quint16 FilePort;
     qint64 WrittenBytes, ReadBytes, MsgNum;
-    int CurrentCommand, RcvDataSize, XmitDataSize, DetectedError;
+    int CurrentCommand, RcvDataSize, XmitDataSize;
     FILE *fp;
     size_t filesize;
     size_t filepos;

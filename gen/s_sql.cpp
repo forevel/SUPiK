@@ -687,6 +687,13 @@ QString s_sql::GetValueFromTableByField (QString db, QString tble, QString field
             if (sl.size() > 0)
                 return sl.at(0);
         }
+        if (Cli->DetectedError == Client::CLIER_EMPTY)
+        {
+            result = SQLC_EMPTY;
+            return QString();
+        }
+        result = SQLC_FAILED;
+        LastError = "Ошибка при получении данных от сервера";
         return QString();
     }
 }
@@ -723,7 +730,7 @@ QString s_sql::GetValueFromTableByFields (QString db, QString tble, QString fiel
         exec_db.exec(tmpString);
         if (!exec_db.isActive())
         {
-            result =SQLC_FAILED;
+            result = SQLC_FAILED;
             LastError = exec_db.lastError().text();
             return QString();
         }
@@ -758,6 +765,13 @@ QString s_sql::GetValueFromTableByFields (QString db, QString tble, QString fiel
             if (sl.size() > 0)
                 return sl.at(0);
         }
+        if (Cli->DetectedError == Client::CLIER_EMPTY)
+        {
+            result = SQLC_EMPTY;
+            return QString();
+        }
+        result = SQLC_FAILED;
+        LastError = "Ошибка при получении данных от сервера";
         return QString();
     }
 }

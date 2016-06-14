@@ -313,9 +313,9 @@ void Client::SendCmd(int Command, QStringList &Args)
         // формат ответа: OK или ERROR
     case CMD_SQLTA:
     {
-        if (Args.size() < 7)
+        if (Args.size() < 5)
         {
-            CliLog->error("CMD_SQLTA: Number of arguments is less than 7");
+            CliLog->error("CMD_SQLTA: Number of arguments is less than 5");
             DetectedError = CLIER_WRARGS;
             Busy = false;
             return;
@@ -330,7 +330,7 @@ void Client::SendCmd(int Command, QStringList &Args)
             Busy = false;
             return;
         }
-        QString DelNum = Args.takeAt(1);
+        QString DelNum = Args.takeAt(0);
         int DelNumInt = DelNum.toInt(&ok);
         if (!ok)
         {

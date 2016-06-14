@@ -523,7 +523,7 @@ void dir_adddialog::WriteAndClose()
 void dir_adddialog::WriteToTfl(QStringList fl, QStringList vl, QStringList cmpfl, QStringList cmpvl)
 {
     QString id = sqlc.GetValueFromTableByFields("sup", "tablefields", "idtablefields", cmpfl, cmpvl);
-    if (sqlc.result == 1) // нет такой записи
+    if (sqlc.result == SQLC_EMPTY) // нет такой записи
         sqlc.InsertValuesToTable("sup", "tablefields", fl, vl);
     else
         sqlc.UpdateValuesInTable("sup", "tablefields", fl, vl, "idtablefields", id);

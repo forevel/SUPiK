@@ -683,6 +683,7 @@ QString s_sql::GetValueFromTableByField (QString db, QString tble, QString field
         }
         if (Cli->Result.size() > 0)
         {
+            result = SQLC_OK;
             sl = Cli->Result.at(0);
             if (sl.size() > 0)
                 return sl.at(0);
@@ -761,6 +762,7 @@ QString s_sql::GetValueFromTableByFields (QString db, QString tble, QString fiel
         }
         if (Cli->Result.size() > 0)
         {
+            result = SQLC_OK;
             sl = Cli->Result.at(0);
             if (sl.size() > 0)
                 return sl.at(0);

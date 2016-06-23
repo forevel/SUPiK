@@ -1042,17 +1042,14 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
     hlyout->setAlignment(lbl2, Qt::AlignRight);
     hlyout->addWidget(ltypecb, 20);
     lyout->addLayout(hlyout);
-    dtypecb->setCurrentIndex(0); // если links нет, то хотя бы установить выбор ссылки по 0-му делегату
     QStringList ids, vls;
-    int i = 0;
-    QSqlQuery get_tables(sqlc.GetDB("sup"));
-    get_tables.exec("SELECT DISTINCT `tablename` FROM `tablefields` ORDER BY `tablename` ASC;");
-    while (get_tables.next())
-    {
-        i++;
+    int i; // = 0;
+/*    QSqlQuery get_tables(sqlc.GetDB("sup"));
+    get_tables.exec("SELECT DISTINCT `tablename` FROM `tablefields` ORDER BY `tablename` ASC;"); */
+    vls = sqlc.GetValuesFromTableByColumn("sup", "tablefields", "tablename", "tablename");
+    vls.removeDuplicates();
+    for (i=0; i<vls.size(); i++)
         ids << QString("%1").arg(i, 5, 10, QChar('0'));
-        vls << get_tables.value(0).toString();
-    }
 
     s_tqLabel *lbl = new s_tqLabel("Зависимость от элемента");
     hlyout = new QHBoxLayout;
@@ -1359,6 +1356,8 @@ void dir_adddialog::FPBPressed(s_tqPushButton *ptr)
         ltypecb->setCurrentText(LTypeCBString);
     }
 
+    dlg->show();
+    DTypeCBIndexChanged(0); // если links нет, то хотя бы установить выбор ссылки по 0-му делегату
     dlg->exec();
 //    updateTWFields(sb->value());
 }

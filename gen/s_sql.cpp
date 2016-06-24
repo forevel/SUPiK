@@ -609,7 +609,7 @@ QStringList s_sql::GetValuesFromTableByColumnAndField(QString db, QString tble, 
     }
     else
     {
-        QStringList fl = QStringList() << db << tble << column << cmpfield << cmpvalue;
+        QStringList fl = QStringList() << db << tble << column << cmpfield << AddQuotes(cmpvalue);
         if (!orderby.isEmpty())
         {
             fl << orderby;
@@ -674,7 +674,7 @@ QString s_sql::GetValueFromTableByField (QString db, QString tble, QString field
     }
     else // server mode
     {
-        QStringList sl = QStringList() << "1" << "1" << db << tble << field << cmpfield << cmpvalue;
+        QStringList sl = QStringList() << "1" << "1" << db << tble << field << cmpfield << AddQuotes(cmpvalue);
         Cli->SendCmd(Client::CMD_GVBFS, sl);
         while (Cli->Busy)
         {
@@ -943,7 +943,7 @@ int s_sql::UpdateValuesInTable(QString db, QString tble, QStringList fl, QString
             sl << AddQuotes(fl.at(i));
             sl << AddQuotes(vl.at(i));
         }
-        sl << field << value;
+        sl << field << AddQuotes(value);
         Cli->SendCmd(Client::CMD_SQLUPD, sl);
         while (Cli->Busy)
         {
@@ -1033,7 +1033,7 @@ int s_sql::DeleteFromDB(QString db, QString tble, QString field, QString value)
     else
     {
         QStringList sl;
-        sl << db << tble << field << value;
+        sl << db << tble << field << AddQuotes(value);
         Cli->SendCmd(Client::CMD_SQLDEL, sl);
         while (Cli->Busy)
         {

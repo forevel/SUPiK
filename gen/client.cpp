@@ -644,27 +644,6 @@ void Client::ParseReply(QByteArray *ba)
         }
         break;
     case CMD_SQLGID:
-    {
-        if (ServerResponse == "SQLGID")
-        {
-            bool ok;
-            ResultInt = ArgList.at(1).toInt(&ok);
-            if (!ok)
-            {
-                CliLog->warning("It's not possible to convert to integer: "+ArgList.at(1));
-                DetectedError = CLIER_WRANSW;
-                return;
-            }
-            CmdOk = true;
-        }
-        else
-        {
-            CliLog->warning("Server returned unknown answer: "+IncomingString);
-            DetectedError = CLIER_WRANSW;
-            return;
-        }
-        break;
-    }
     case CMD_SQLINS:
     {
         bool ok;

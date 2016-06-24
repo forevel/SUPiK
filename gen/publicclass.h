@@ -156,7 +156,8 @@ public:
         ER_FTP,      // Ftp
         ER_CLI,      // Client
         ER_LOG,      // Log
-        ER_ETH      // Ethernet
+        ER_ETH,      // Ethernet
+        ER_SIMP     // sys_importclass
     };
 
     static QMap<int, QString> ermsgs()
@@ -197,6 +198,7 @@ public:
         map.insert(ER_CLI, QString::fromLocal8Bit("Клиент"));
         map.insert(ER_LOG, QString::fromLocal8Bit("Логи"));
         map.insert(ER_ETH, QString::fromLocal8Bit("Ethernet"));
+        map.insert(ER_SIMP, QString::fromLocal8Bit("Импорт"));
         return map;
     }
 

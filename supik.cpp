@@ -368,7 +368,7 @@ void supik::SysImportClass()
     }
 
     sys_ImportClass *dlg = new sys_ImportClass;
-    int ids = MainTW->addTab(dlg, "Система::Импорт классификатора ЕСКД");
+    int ids = MainTW->addTab(dlg, "Система::Импорт из XLSX");
     MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_SYSIC));
     MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
     MainTW->tabBar()->setCurrentIndex(ids);

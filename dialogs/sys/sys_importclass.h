@@ -2,6 +2,7 @@
 #define SYS_IMPORTCLASS_H
 
 #include <QDialog>
+#include <QMap>
 #include <QStringListModel>
 #include "../../models/s_ncmodel.h"
 #include "../../widgets/s_tqtableview.h"
@@ -26,11 +27,14 @@ public slots:
 private:
     s_ncmodel *mainmodel;
     QStringListModel *dirM, *fM;
-    void SetupUI();
-    void updateView();
+    int MaxXLSColumn;
     bool isImport;
     QString filename;
     WaitWidget *WWidget;
+    QMap<int, QString> XLSMap;
+
+    void SetupUI();
+    void updateView();
 
 private slots:
     void ImpExpPBPressed();

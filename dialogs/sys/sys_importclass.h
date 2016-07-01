@@ -3,9 +3,6 @@
 
 #include <QDialog>
 #include <QMap>
-#include <QStringListModel>
-#include "../../models/s_ncmodel.h"
-#include "../../widgets/s_tqtableview.h"
 #include "../../widgets/waitwidget.h"
 
 #define SIMPDBG     DBGMSG(PublicClass::ER_SIMP,__LINE__)
@@ -25,13 +22,11 @@ signals:
 public slots:
 
 private:
-    s_ncmodel *mainmodel;
-    QStringListModel *dirM, *fM;
     int MaxXLSColumn;
     bool isImport;
-    QString filename;
+    QString filename, tblename;
     WaitWidget *WWidget;
-    QMap<int, QString> XLSMap;
+    QMap<QString, QString> *XLSMap;
 
     void SetupUI();
     void updateView();
@@ -39,7 +34,6 @@ private:
 private slots:
     void ImpExpPBPressed();
     void CancelPBPressed();
-    void SysICTFinished();
     void LoadAndCheckFile();
     void TableChoosed(QString tble);
     void MakeConnection();

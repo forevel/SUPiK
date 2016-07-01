@@ -187,7 +187,7 @@ public:
         map.insert(ER_ACC, QString::fromLocal8Bit("Права_доступа"));
         map.insert(ER_SFTP, QString::fromLocal8Bit("Ftp_клиент"));
         map.insert(ER_SYSSET, QString::fromLocal8Bit("Система_настройки"));
-        map.insert(ER_SYSICT, QString::fromLocal8Bit("Система_импортЕСКД_т"));
+        map.insert(ER_SYSICT, QString::fromLocal8Bit("Система_импорт_XLS"));
         map.insert(ER_TMODEL, QString::fromLocal8Bit("Дерево_модель"));
         map.insert(ER_EMODEL, QString::fromLocal8Bit("Табл_ред_модель"));
         map.insert(ER_CHIDLG, QString::fromLocal8Bit("Выбор_элем_диалог"));
@@ -214,6 +214,7 @@ public:
         TW_COMP,    // редактор компонентов
         TW_DIR,     // справочники
         TW_PROB,    // диалог событий
+        TW_ERPROT,  // протокол ошибок
         TW_WH,      // склады
         TW_QUAR,    // работа с карантином
         TW_DEV,     // редактор документов
@@ -311,8 +312,8 @@ public:
         QString Links; // строка ссылок
     };
 
-    double timerperiod, ErWidgetPeriod;
-    bool ErWidgetShowing;
+    double timerperiod; //, ErWidgetPeriod;
+//    bool ErWidgetShowing;
     bool AutonomousMode; // если сервер СУПиК (становится) недоступен, признак автономного режима становится равен true
     QString SQLUser, SQLPsw;
     QSqlDatabase ent, alt, sup, con, sol, sch, dev;
@@ -456,8 +457,10 @@ public:
         QString module;
         quint64 line;
         QString msg;
+        int ErNum;
     };
     QList<ermsg> ermsgpool;
+    int ErNum;
 
     void AddErrMsg(ermsgtype msgtype, quint64 ernum, quint64 ersubnum, QString msg="");
     QString ConvertId (bool ColumnZero, QString Id); // преобразование <tble>.000<id> в нормальный id

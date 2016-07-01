@@ -38,11 +38,11 @@ signals:
 public slots:
 
 private:
-    bool ERHide, ERTimerIsOn, IsProblemsDetected, PeriodicOddSecond;
-    QTimer *ERTimer;
-    QRect ERGeometry;
+    bool IsProblemsDetected, PeriodicOddSecond;
     int WarningActionIndex;
     QHash <QString, void (supik::*)()> pf;
+    int ErMsgNum;
+
     void SetSupikMenuBar();
     QMenu *AddChildToMenu(int);
     void AddChildToAction (QAction *, int);
@@ -66,17 +66,15 @@ private:
     void Quarantine();
     void Dummy();
     void SysDirectories();
-    void ShowOrHideSlideER();
     void ClearProblems();
+    void UpdateErStatus();
 
 private slots:
     void ExecuteSub();
     void executeDirDialog();
     void UpdateProblemsNumberInTab();
     void periodic1s();
-    void MouseMove();
-    void UpdateErrorProtocol();
-    void HideErrorProtocol();
+    void ErrorProtocol();
 
     void Components();
     void Directories();
@@ -84,7 +82,6 @@ private slots:
 
 protected:
     void showEvent(QShowEvent *event);
-    void resizeEvent(QResizeEvent *e);
     void closeEvent(QCloseEvent *e);
 };
 

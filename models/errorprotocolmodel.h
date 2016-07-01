@@ -1,10 +1,9 @@
-#ifndef ERRORPROTOCOLWIDGET_H
-#define ERRORPROTOCOLWIDGET_H
+#ifndef ERRORPROTOCOLMODEL_H
+#define ERRORPROTOCOLMODEL_H
 
 #include <QWidget>
 
 #include <QAbstractTableModel>
-#include <QWidget>
 #include "../gen/publicclass.h"
 
 #define ERPROTCLR   "rgba(248,214,255,255)"
@@ -32,21 +31,4 @@ private:
 private slots:
 };
 
-class ErrorProtocolWidget : public QWidget
-{
-    Q_OBJECT
-public:
-    explicit ErrorProtocolWidget(QWidget *parent = 0);
-    ~ErrorProtocolWidget();
-
-    void AddRowToProt(PublicClass::ermsg ermsg);
-signals:
-
-public slots:
-
-private slots:
-
-protected:
-};
-
-#endif // ERRORPROTOCOLWIDGET_H
+#endif // ERRORPROTOCOLMODEL_H

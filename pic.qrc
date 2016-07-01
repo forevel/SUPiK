@@ -72,5 +72,7 @@
         <file>res/1ud.png</file>
         <file>res/2off.png</file>
         <file>res/2on.png</file>
+        <file>res/ErNo.png</file>
+        <file>res/ErYes.png</file>
     </qresource>
 </RCC>

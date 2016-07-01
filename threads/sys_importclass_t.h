@@ -1,35 +1,45 @@
 #ifndef SYS_IMPORTCLASS_T_H
 #define SYS_IMPORTCLASS_T_H
 
-#include <QThread>
 #include "../gen/publicclass.h"
+#include <QMap>
 
 #define ROOTSIZE    2 // размер корневого элемента
 
 #define SYSICTER(a)     ERMSG(PublicClass::ER_SYSICT, __LINE__, a)
 #define SYSICTINFO(a)   INFOMSG(PublicClass::ER_SYSICT, __LINE__, a)
 
-class sys_ImportClass_T : public QThread
+class sys_ImportClass_T : public QObject
 {
     Q_OBJECT
 public:
-    explicit sys_ImportClass_T(QString Filename, QObject *parent = 0);
+    explicit sys_ImportClass_T(QObject *parent = 0);
+
+    struct imp_struct
+    {
+        QString filename;
+        QMap<QString, QString> *map;
+        bool istree;
+        QString tablename;
+    };
+
+    void Set(imp_struct &data);
 
 signals:
     void ProcessFinished();
     void RowProcessing(QString row);
 
 public slots:
+    void Run();
 
 private:
-    QString Filename;
+    imp_struct ImpInitial;
     int RowNum;
 
 private slots:
     void EmitRowProcessing();
 
 protected:
-    void run();
 };
 
 #endif // SYS_IMPORTCLASS_T_H

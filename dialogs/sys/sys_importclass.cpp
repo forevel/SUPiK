@@ -7,6 +7,8 @@
 #include <QHeaderView>
 #include <QPaintEvent>
 #include <QPainter>
+#include <QThread>
+#include <QStringListModel>
 #include <QTableWidget>
 #include <QtXlsx/xlsxdocument.h>
 #include "sys_importclass.h"
@@ -17,6 +19,7 @@
 #include "../../widgets/s_tqtableview.h"
 #include "../../widgets/s_tqchoosewidget.h"
 #include "../../widgets/s_tqcombobox.h"
+#include "../../widgets/s_tqcheckbox.h"
 #include "../../gen/publicclass.h"
 #include "../../gen/s_sql.h"
 #include "../../gen/s_tablefields.h"
@@ -25,7 +28,8 @@
 sys_ImportClass::sys_ImportClass(QWidget *parent) : QDialog(parent)
 {
     MaxXLSColumn = 0;
-    XLSMap.clear();
+    XLSMap = new QMap<QString,QString>();
+    XLSMap->clear();
     setAttribute(Qt::WA_DeleteOnClose);
     SetupUI();
 }
@@ -97,8 +101,11 @@ void sys_ImportClass::SetupUI()
     cb = new s_tqComboBox;
     cb->setObjectName("tablecb");
     hlyout->addWidget(cb,10);
-    lbl = new s_tqLabel(" таблицы в БД");
+    lbl = new s_tqLabel(" таблицы в БД или значение по умолчанию:");
     hlyout->addWidget(lbl);
+    s_tqLineEdit *le = new s_tqLineEdit;
+    le->setObjectName("defaultle");
+    hlyout->addWidget(le);
     pb = new s_tqPushButton("Выполнить");
     connect(pb,SIGNAL(clicked()),this,SLOT(MakeConnection()));
     hlyout->addWidget(pb);
@@ -110,31 +117,56 @@ void sys_ImportClass::SetupUI()
     lyout->addWidget(connectiontv, 10);
 
     hlyout = new QHBoxLayout;
+    s_tqCheckBox *chb = new s_tqCheckBox;
+    chb->setText("Дерево");
+    chb->setObjectName("treechb");
+    QString tmps = "1. В импортируемом файле для структуры дерева необходимо в первом столбце\n"
+            "иметь числа в виде: 01 010 011 012 013 0131 0132 и т.д.\n"
+            "2. Принадлежность потомков родителям определяется по началу чисел (01->013->0132)\n"
+            "3. Задавать соответствие первого столбца не требуется";
+    chb->setToolTip(tmps);
+    hlyout->addWidget(chb);
+    hlyout->addStretch(10);
     pb = new s_tqPushButton("Начать импорт");
     pb->setIcon(QIcon(":/res/import.png"));
     connect(pb, SIGNAL(clicked()), this, SLOT(ImpExpPBPressed()));
-    hlyout->addStretch(10);
+//    hlyout->addStretch(10);
     hlyout->addWidget(pb);
-    hlyout->addStretch(10);
+//    hlyout->addStretch(10);
     lyout->addLayout(hlyout);
     setLayout(lyout);
 }
 
 void sys_ImportClass::ImpExpPBPressed()
 {
-    s_tqChooseWidget *cw = this->findChild<s_tqChooseWidget *>("loadfilecw");
-    if (cw == 0)
+    s_tqCheckBox *chb = this->findChild<s_tqCheckBox *>("treechb");
+    if (chb == 0)
     {
-        MessageBox2::information(this,"","Элемент CW не найден");
+        SIMPDBG;
         return;
     }
-    sys_ImportClass_T *t = new sys_ImportClass_T(cw->Value());
+    sys_ImportClass_T *t = new sys_ImportClass_T;
+    sys_ImportClass_T::imp_struct InitialData;
+    if ((filename.isEmpty()) || (XLSMap->isEmpty()))
+    {
+        SIMPWARN;
+        return;
+    }
+    InitialData.filename = filename;
+    InitialData.istree = chb->isChecked();
+    InitialData.map = XLSMap;
+    InitialData.tablename = tblename;
+    t->Set(InitialData);
     WWidget = new WaitWidget;
     WWidget->setObjectName("waitwidget");
+    QThread *thr = new QThread;
+    t->moveToThread(thr);
     connect(t,SIGNAL(RowProcessing(QString)),WWidget,SLOT(SetMessage(QString)));
-    connect(t,SIGNAL(ProcessFinished()),this,SLOT(SysICTFinished()));
-    connect(t,SIGNAL(finished()),t,SLOT(deleteLater()));
-    t->start();
+    connect(thr,SIGNAL(started()),t,SLOT(Run()));
+    connect(thr,SIGNAL(finished()),t,SLOT(deleteLater()));
+    connect(thr,SIGNAL(finished()),thr,SLOT(deleteLater()));
+    connect(t,SIGNAL(ProcessFinished()),WWidget,SLOT(Stop()));
+    thr->start();
     WWidget->Start();
 }
 
@@ -147,7 +179,7 @@ void sys_ImportClass::LoadAndCheckFile()
         SIMPDBG;
         return;
     }
-    QString filename = cw->Value();
+    filename = cw->Value();
     QXlsx::Document xlsx(filename.toUtf8());
     int row = 1;
     MaxXLSColumn = 10;
@@ -199,6 +231,12 @@ void sys_ImportClass::TableChoosed(QString tble)
     // 1. Прочитать структуру таблицы
     // 2. Заполнить структурой комбобокс tablecb
     QStringList sl = tfl.TableColumn(tble, "header");
+    if (tfl.result)
+    {
+        SIMPWARN;
+        return;
+    }
+    tblename = tble;
     s_tqComboBox *cb = this->findChild<s_tqComboBox *>("tablecb");
     if (cb == 0)
     {
@@ -215,13 +253,31 @@ void sys_ImportClass::MakeConnection()
     s_tqComboBox *tablecb = this->findChild<s_tqComboBox *>("tablecb");
     s_tqComboBox *xlscb = this->findChild<s_tqComboBox *>("xlscb");
     QTableWidget *conntw = this->findChild<QTableWidget *>("connectiontv");
-    if ((tablecb == 0) || (xlscb == 0) || (conntw == 0))
+    s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("defaultle");
+    if ((tablecb == 0) || (xlscb == 0) || (conntw == 0) || (le == 0))
     {
         SIMPDBG;
         return;
     }
+    if (tablecb->count() == 0)
+    {
+        SIMPWARN;
+        return;
+    }
+    QString xlscbitem;
+    if (!le->text().isEmpty())
+        xlscbitem = "_"+le->text();
+    else if (xlscb->count() != 0)
+    {
+        xlscbitem = xlscb->currentText();
+        xlscb->removeItem(xlscb->currentIndex());
+    }
+    else
+    {
+        SIMPWARN;
+        return;
+    }
     QString tablecbitem = tablecb->currentText();
-    QString xlscbitem = xlscb->currentText();
     int currow = conntw->rowCount();
     conntw->setRowCount(currow+1); // добавляем строку в таблицу
     if (conntw->columnCount() < 2)
@@ -230,17 +286,13 @@ void sys_ImportClass::MakeConnection()
     conntw->setItem(currow,0,item);
     item = new QTableWidgetItem(tablecbitem);
     conntw->setItem(currow,1,item);
+    XLSMap->insert(xlscbitem, tablecbitem);
     // удаляем соотв. элементы из обоих комбобоксов, чтобы не было дублирующихся строк
     tablecb->removeItem(tablecb->currentIndex());
-    xlscb->removeItem(xlscb->currentIndex());
+    le->clear();
 }
 
 void sys_ImportClass::CancelPBPressed()
 {
     this->close();
-}
-
-void sys_ImportClass::SysICTFinished()
-{
-    WWidget->Stop();
 }

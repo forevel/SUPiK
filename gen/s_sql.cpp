@@ -706,22 +706,21 @@ QString s_sql::GetValueFromTableByFields (QString db, QString tble, QString fiel
     QString tmpString;
     QString vl;
     int i;
+    if (cmpfields.isEmpty())
+    {
+        result = 4;
+        WARNMSG(PublicClass::ER_SQL, __LINE__, "Переданный список сравнения пуст");
+        return QString();
+    }
+    if (cmpfields.size() != cmpvalues.size())
+    {
+        result = 5;
+        WARNMSG(PublicClass::ER_SQL, __LINE__, "Длина списка полей сравнения не совпадает с длиной списка значений");
+        return QString();
+    }
     if (pc.AutonomousMode)
     {
         QSqlQuery exec_db (GetDB(db));
-
-        if (cmpfields.isEmpty())
-        {
-            result = 4;
-            WARNMSG(PublicClass::ER_SQL, __LINE__, "Переданный список сравнения пуст");
-            return QString();
-        }
-        if (cmpfields.size() != cmpvalues.size())
-        {
-            result = 5;
-            WARNMSG(PublicClass::ER_SQL, __LINE__, "Длина списка полей сравнения не совпадает с длиной списка значений");
-            return QString();
-        }
 
         tmpString = "SELECT `" + field + "` FROM `" + tble + "` WHERE ";
         for (i = 0; i < cmpfields.size(); i++)
@@ -1278,8 +1277,8 @@ QString s_sql::AddQuotes(const QString str)
     QString tmps = str;
     if (tmps.contains(" "))
     {
-        tmps.insert(0, "\"");
-        tmps.append("\"");
+        tmps.insert(0, 0x7F);
+        tmps.append(0x7F);
     }
     return tmps;
 }

@@ -37,6 +37,7 @@ SOURCES += main.cpp\
     dialogs/dir/dir_adddialog.cpp \
     dialogs/dir/dir_maindialog.cpp \
     dialogs/sys/sys_backuprestoredirdialog.cpp \
+    dialogs/sys/sys_erdialog.cpp \
     dialogs/sys/sys_importclass.cpp \
     dialogs/sys/sys_probsdialog.cpp \
     dialogs/sys/sys_settingsdialog.cpp \
@@ -54,6 +55,7 @@ SOURCES += main.cpp\
     gen/s_tablefields.cpp \
     gen/wh_func.cpp \
     models/editmodel.cpp \
+    models/errorprotocolmodel.cpp \
     models/flowmodel.cpp \
     models/griddelegate.cpp \
     models/placedelegate.cpp \
@@ -70,7 +72,6 @@ SOURCES += main.cpp\
     threads/ethernet.cpp \
     threads/sys_importclass_t.cpp \
     threads/waitthread.cpp \
-    widgets/errorprotocolwidget.cpp \
     widgets/s_colortabbar.cpp \
     widgets/s_colortabwidget.cpp \
     widgets/s_maskedle.cpp \
@@ -112,6 +113,7 @@ HEADERS  += startwindow.h \
     dialogs/dir/dir_adddialog.h \
     dialogs/dir/dir_maindialog.h \
     dialogs/sys/sys_backuprestoredirdialog.h \
+    dialogs/sys/sys_erdialog.h \
     dialogs/sys/sys_importclass.h \
     dialogs/sys/sys_probsdialog.h \
     dialogs/sys/sys_settingsdialog.h \
@@ -129,6 +131,7 @@ HEADERS  += startwindow.h \
     gen/s_tablefields.h \
     gen/wh_func.h \
     models/editmodel.h \
+    models/errorprotocolmodel.h \
     models/flowmodel.h \
     models/griddelegate.h \
     models/placedelegate.h \
@@ -145,7 +148,6 @@ HEADERS  += startwindow.h \
     threads/ethernet.h \
     threads/sys_importclass_t.h \
     threads/waitthread.h \
-    widgets/errorprotocolwidget.h \
     widgets/s_colortabbar.h \
     widgets/s_colortabwidget.h \
     widgets/s_maskedle.h \

@@ -20,7 +20,7 @@ PublicClass::PublicClass()
     HomeDir = QDir::homePath()+"/.supik/";
     LandP = new QSettings ("EvelSoft","Supik");
     TabColors[TW_PROB] = QColor(153, 153, 153); // GENERAL
-    TabColors[TW_SYSBU] = TabColors[TW_SYSRS] = TabColors[TW_SYSST] = TabColors[TW_SYSDIR] = TabColors[TW_SYSIC] = QColor(194, 194, 194); // SYSTEM
+    TabColors[TW_ERPROT] = TabColors[TW_SYSBU] = TabColors[TW_SYSRS] = TabColors[TW_SYSST] = TabColors[TW_SYSDIR] = TabColors[TW_SYSIC] = QColor(194, 194, 194); // SYSTEM
     TabColors[TW_SET] = QColor(255, 204, 204); // SETTINGS
     TabColors[TW_COMP] = QColor(153, 204, 153); // COMPONENTS
     TabColors[TW_DIR] = QColor(255, 255, 153); // DIRECTORY
@@ -30,6 +30,7 @@ PublicClass::PublicClass()
     AutonomousMode = true; // изначально неизвестно, доступен ли сервер, поэтому на всякий случай ставим признак автономности
     PCLog = new Log;
     PCLog->Init(HomeDir+"sup.log");
+    ErNum = 1;
 }
 
 PublicClass::~PublicClass()
@@ -62,8 +63,6 @@ void PublicClass::InitiatePublicClass()
     PathToSup = LandP->value("settings/pathtosup","").toString();
     timerperiod = LandP->value("settings/timerperiod","1").toInt();
     FtpServer = LandP->value("settings/FtpServer","ftp.asu-vei.ru").toString();
-    ErWidgetPeriod = LandP->value("settings/ErPeriod","2000").toInt();
-    ErWidgetShowing = LandP->value("settings/ErShow","true").toBool();
     SupikServer = LandP->value("settings/Server","asu-vei.ru").toString();
     SupikPort = LandP->value("settings/Port","9687").toString();
 
@@ -171,6 +170,8 @@ void PublicClass::AddErrMsg(ermsgtype msgtype, quint64 ernum, quint64 ersubnum, 
         ermsgpool.removeFirst();
     ermsg tmpm;
     tmpm.DateTime = DateTime;
+    tmpm.ErNum = ErNum;
+    ErNum++;
     tmpm.type = msgtype;
     if (ernum < ermsgs().size())
         tmpm.module = ermsgs().value(ernum).toUtf8();
@@ -184,18 +185,17 @@ void PublicClass::AddErrMsg(ermsgtype msgtype, quint64 ernum, quint64 ersubnum, 
     {
     case ER_MSG:
     case DBG_MSG:
-        PCLog->error(QString::number(ernum)+"."+QString::number(ersubnum)+": "+msg);
+        PCLog->error(tmpm.module+"."+QString::number(ersubnum)+": "+msg);
         break;
     case WARN_MSG:
-        PCLog->warning(QString::number(ernum)+"."+QString::number(ersubnum)+": "+msg);
+        PCLog->warning(tmpm.module+"."+QString::number(ersubnum)+": "+msg);
         break;
     case INFO_MSG:
-        PCLog->info(QString::number(ernum)+"."+QString::number(ersubnum)+": "+msg);
+        PCLog->info(tmpm.module+"."+QString::number(ersubnum)+": "+msg);
         break;
     default:
         break;
     }
-
     ermsgpool.append(tmpm);
 }
 

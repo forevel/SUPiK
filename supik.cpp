@@ -14,10 +14,10 @@
 #include "dialogs/wh/wh_editor.h"
 #include "dialogs/sys/sys_backuprestoredirdialog.h"
 #include "dialogs/sys/sys_importclass.h"
+#include "dialogs/sys/sys_erdialog.h"
 #include "widgets/s_tqlabel.h"
 #include "widgets/s_colortabwidget.h"
 #include "widgets/s_tqtableview.h"
-#include "widgets/errorprotocolwidget.h"
 #include "widgets/portactivity.h"
 #include "threads/checkthread.h"
 #include "gen/publiclang.h"
@@ -33,10 +33,6 @@ supik::supik()
     connect(thr,SIGNAL(finished()),thr,SLOT(deleteLater()));
     connect(this,SIGNAL(stopall()),CThread,SLOT(Finish()));
     thr->start();
-    ERTimer = new QTimer;
-    ERTimer->setInterval(pc.ErWidgetPeriod);
-    connect(ERTimer,SIGNAL(timeout()),this,SLOT(HideErrorProtocol()));
-    ERTimerIsOn = false;
     IsProblemsDetected = false;
     PeriodicOddSecond = true;
     SetSupikWindow();
@@ -61,6 +57,7 @@ supik::supik()
     pf["DevDev"] = &supik::DevDev;
     pf["Dummy"]=&supik::Dummy;
     pf["SysImportClass"] = &supik::SysImportClass;
+    ErMsgNum = 0;
 }
 
 void supik::showEvent(QShowEvent *event)
@@ -80,13 +77,6 @@ void supik::closeEvent(QCloseEvent *e)
 
 void supik::SetSupikWindow()
 {
-    QTimer *MouseTimer = new QTimer;
-    connect(MouseTimer,SIGNAL(timeout()),this,SLOT(MouseMove()));
-    MouseTimer->start(50);
-    QTimer *ErrorProtocolUpdateTimer = new QTimer;
-    ErrorProtocolUpdateTimer->setInterval(1000);
-    connect(ErrorProtocolUpdateTimer,SIGNAL(timeout()),this,SLOT(UpdateErrorProtocol()));
-    ErrorProtocolUpdateTimer->start();
     QString tmps = "Супик "+QString(PROGVER);
     setWindowTitle(tmps);
     resize (984, 688);
@@ -113,6 +103,12 @@ void supik::SetSupikWindow()
     pb->setToolTip("Редактор складов");
     upperLayout->addWidget(pb);
     pb = new s_tqPushButton;
+    pb->setIcon(QIcon(":/res/ErNo.png"));
+    connect(pb, SIGNAL(clicked()), this, SLOT(ErrorProtocol()));
+    pb->setToolTip("Протокол ошибок");
+    pb->setObjectName("errorprotpb");
+    upperLayout->addWidget(pb);
+    pb = new s_tqPushButton;
     pb->setIcon(QIcon(":/res/cross.png"));
     connect(pb, SIGNAL(clicked()), this, SLOT(close()));
     pb->setToolTip("Выход из программы");
@@ -131,16 +127,6 @@ void supik::SetSupikWindow()
     wdgt->setLayout(mainLayout);
     setCentralWidget(wdgt);
     SetSupikMenuBar();
-
-    ErrorProtocolWidget *ErrorWidget = new ErrorProtocolWidget(this);
-    ErrorWidget->setObjectName("errorwidget");
-    QString ErrWss = "QWidget {background-color: "+QString(ERPROTCLR)+";}";
-    ErrorWidget->setStyleSheet(ErrWss);
-    ErrorWidget->setAutoFillBackground(true);
-    ErrorWidget->setMinimumHeight(150);
-    ErrorWidget->hide();
-    ERGeometry = ErrorWidget->geometry();
-    ERHide = true;
 }
 
 void supik::SetSupikMenuBar()
@@ -648,6 +634,36 @@ void supik::Quarantine()
     MainTW->repaint();
 }
 
+void supik::ErrorProtocol()
+{
+    S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
+    if (MainTW == 0)
+        return;
+
+    int idx = CheckForWidget(PublicClass::TW_ERPROT);
+    if (idx != -1)
+    {
+        MainTW->setCurrentIndex(idx);
+        return;
+    }
+    s_tqPushButton *pb = this->findChild<s_tqPushButton *>("errorprotpb");
+    if (pb == 0)
+    {
+        SUPIKDBG;
+        return;
+    }
+    pb->setIcon(QIcon(":/res/ErNo.png"));
+    ErMsgNum = pc.ermsgpool.size();
+    SysErDialog *serr = new SysErDialog;
+    serr->InitiateDialog();
+
+    int ids = MainTW->addTab(serr, "Протокол ошибок");
+    MainTW->tabBar()->setTabData(ids, QVariant(PublicClass::TW_ERPROT));
+    MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
+    MainTW->tabBar()->setCurrentIndex(ids);
+    MainTW->repaint();
+}
+
 void supik::executeDirDialog()
 {
     Directories();
@@ -675,6 +691,17 @@ void supik::periodic1s()
             else
                 ta->setEnabled(true);
         }
+    }
+    // проверка, не пришло ли новых сообщений в протокол ошибок
+    if (ErMsgNum < pc.ermsgpool.size())
+    {
+        s_tqPushButton *pb = this->findChild<s_tqPushButton *>("errorprotpb");
+        if (pb == 0)
+        {
+            SUPIKDBG;
+            return;
+        }
+        pb->setIcon(QIcon(":/res/ErYes.png"));
     }
 }
 
@@ -711,95 +738,4 @@ void supik::UpdateProblemsNumberInTab()
             }
         }
     }
-}
-
-void supik::resizeEvent(QResizeEvent *e)
-{
-/*    QMainWindow::resizeEvent(e);
-    if (!ERHide)
-    {
-        ErrorProtocolWidget *erw = this->findChild<ErrorProtocolWidget *>("errorwidget");
-        if (erw == 0)
-            return;
-        erw->setGeometry(QRect(0, height()-erw->height(), width(), erw->height()));
-    }*/
-}
-
-void supik::MouseMove()
-{
-/*    if (!pc.ErWidgetShowing)
-        return;
-    QPoint curPos = mapFromGlobal(QCursor::pos());
-    if ((abs(curPos.y() - height()) < 10) && (curPos.x() > 0) && (curPos.x() < width()))
-    {
-        if (ERHide)
-            ShowOrHideSlideER();
-    }
-    else if ((abs(curPos.y() - height()) > 120) && (curPos.x() > 0) && (curPos.x() < width()))
-    {
-        if ((!ERHide) && (!ERTimerIsOn))
-            ShowOrHideSlideER();
-    }*/
-}
-
-void supik::ShowOrHideSlideER()
-{
-/*    ErrorProtocolWidget *w = this->findChild<ErrorProtocolWidget *>("errorwidget");
-    if (w == 0)
-    {
-        SUPIKDBG;
-        return;
-    }
-    if (w->isHidden())
-        w->show();
-    if (ERHide)
-        w->setGeometry(ERGeometry);
-    QPropertyAnimation *ani = new QPropertyAnimation(w, "geometry");
-    ani->setDuration(500);
-    QRect startRect(0, height(), width(), 0);
-    QRect endRect(0, height()-w->height(), width(), w->height());
-    if (ERHide)
-    {
-        ani->setStartValue(startRect);
-        ani->setEndValue(endRect);
-    }
-    else
-    {
-        ani->setStartValue(endRect);
-        ani->setEndValue(startRect);
-    }
-    ani->start();
-    ERHide = !ERHide;*/
-}
-
-void supik::UpdateErrorProtocol()
-{
-/*    ErrorProtocolWidget *ErWidget = this->findChild<ErrorProtocolWidget *>("errorwidget");
-    if (ErWidget == 0)
-    {
-        SUPIKDBG;
-        return;
-    }
-    if (pc.ermsgpool.isEmpty())
-        return;
-    if ((!ERTimerIsOn) && (pc.ErWidgetShowing))
-    {
-        ERTimerIsOn = true;
-        ERHide = true;
-        ShowOrHideSlideER();
-    }
-    while (!pc.ermsgpool.isEmpty())
-    {
-        ErWidget->AddRowToProt(pc.ermsgpool.first());
-        pc.ermsgpool.removeFirst();
-    }
-    if (pc.ErWidgetShowing)
-        ERTimer->start();*/
-}
-
-void supik::HideErrorProtocol()
-{
-/*    ERTimer->stop();
-    ERTimerIsOn = false;
-    ShowOrHideSlideER();*/
 }

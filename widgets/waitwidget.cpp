@@ -47,6 +47,7 @@ void WaitWidget::Start()
         while (tme.elapsed() < 100)
             qApp->processEvents();
     }
+    this->close();
 }
 
 void WaitWidget::Stop()

@@ -141,8 +141,11 @@ void Client::SendCmd(int Command, QStringList &Args)
             Busy = false;
             return;
         }
-        QString tmps = Args.join(" ");
-        CommandString = "TF " + QString::number(tmps.size()+fieldsnum.size()+pairsnum.size()+9) + " GVSBFS " + fieldsnum + " " + pairsnum + " " + tmps + "\n";
+        QStringList sl;
+        sl << "TF" << QString::number(fieldsnum.size()+pairsnum.size()+9) << "GVSBFS" << fieldsnum << pairsnum;
+        sl.append(Args);
+        QString tmps = Join(sl);
+        CommandString = tmps + "\n";
         // 9 = три пробела + sizeof("GVSBFS")
         break;
     }
@@ -193,13 +196,15 @@ void Client::SendCmd(int Command, QStringList &Args)
             Busy = false;
             return;
         }
-        QString tmps = Args.join(" ");
+        QStringList sl;
         if (Command == CMD_GVBFS)
-            CommandString = "GVBFS ";
+            sl << "GVBFS";
         else
-            CommandString = "GVSBFS ";
-        CommandString.append(fieldsnum + " " + pairsnum + " " + tmps + "\n");
-        // 2 = два пробела
+            sl << "GVSBFS";
+        sl << fieldsnum << pairsnum;
+        sl.append(Args);
+        QString tmps = Join(sl);
+        CommandString = tmps + "\n";
         break;
     }
         // поиск записей, в которых поле field похоже на выражение value
@@ -216,9 +221,11 @@ void Client::SendCmd(int Command, QStringList &Args)
             Busy = false;
             return;
         }
-        QString tmps = Args.join(" ");
-        CommandString = "SQLSRCH ";
-        CommandString.append(tmps + "\n");
+        QStringList sl;
+        sl << "SQLSRCH";
+        sl.append(Args);
+        QString tmps = Join(sl);
+        CommandString = tmps + "\n";
         break;
     }
         // запрос всех значений по одному полю
@@ -235,9 +242,11 @@ void Client::SendCmd(int Command, QStringList &Args)
             return;
         }
         GVSBFS_FieldsNum = 1; // одна колонка - одно поле в каждой записи
-        QString tmps = Args.join(" ");
-        CommandString = "GVSBC ";
-        CommandString.append(tmps + "\n");
+        QStringList sl;
+        sl << "GVSBC";
+        sl.append(Args);
+        QString tmps = Join(sl);
+        CommandString = tmps + "\n";
         break;
     }
     case CMD_GVSBCF:
@@ -251,9 +260,11 @@ void Client::SendCmd(int Command, QStringList &Args)
             return;
         }
         GVSBFS_FieldsNum = 1; // одна колонка - одно поле в каждой записи
-        QString tmps = Args.join(" ");
-        CommandString = "GVSBCF ";
-        CommandString.append(tmps + "\n");
+        QStringList sl;
+        sl << "GVSBCF";
+        sl.append(Args);
+        QString tmps = Join(sl);
+        CommandString = tmps + "\n";
         break;
     }
         // запрос колонок (полей) из таблицы
@@ -269,9 +280,11 @@ void Client::SendCmd(int Command, QStringList &Args)
             Busy = false;
             return;
         }
-        QString tmps = Args.join(" ");
-        CommandString = "GCS ";
-        CommandString.append(tmps + "\n");
+        QStringList sl;
+        sl << "GCS";
+        sl.append(Args);
+        QString tmps = Join(sl);
+        CommandString = tmps + "\n";
         break;
     }
         // создание таблицы
@@ -286,9 +299,11 @@ void Client::SendCmd(int Command, QStringList &Args)
             Busy = false;
             return;
         }
-        QString tmps = Args.join(" ");
-        CommandString = "SQLTC ";
-        CommandString.append(tmps + "\n");
+        QStringList sl;
+        sl << "SQLTC";
+        sl.append(Args);
+        QString tmps = Join(sl);
+        CommandString = tmps + "\n";
         break;
     }
         // удаление таблицы
@@ -303,9 +318,11 @@ void Client::SendCmd(int Command, QStringList &Args)
             Busy = false;
             return;
         }
-        QString tmps = Args.join(" ");
-        CommandString = "SQLTD ";
-        CommandString.append(tmps + "\n");
+        QStringList sl;
+        sl << "SQLTD";
+        sl.append(Args);
+        QString tmps = Join(sl);
+        CommandString = tmps + "\n";
         break;
     }
         // изменение таблицы
@@ -346,9 +363,11 @@ void Client::SendCmd(int Command, QStringList &Args)
             Busy = false;
             return;
         }
-        QString tmps = Args.join(" ");
-        CommandString = "SQLTA ";
-        CommandString.append(AddNum + " " + DelNum + " " + tmps + "\n");
+        QStringList sl;
+        sl << "SQLTA" << AddNum << DelNum;
+        sl.append(Args);
+        QString tmps = Join(sl);
+        CommandString = tmps + "\n";
         break;
     }
         // получение первого свободного ИД из таблицы
@@ -363,9 +382,11 @@ void Client::SendCmd(int Command, QStringList &Args)
             Busy = false;
             return;
         }
-        QString tmps = Args.join(" ");
-        CommandString = "SQLGID ";
-        CommandString.append(tmps + "\n");
+        QStringList sl;
+        sl << "SQLGID";
+        sl.append(Args);
+        QString tmps = Join(sl);
+        CommandString = tmps + "\n";
         break;
     }
         // вставка записи в таблицу
@@ -380,9 +401,11 @@ void Client::SendCmd(int Command, QStringList &Args)
             Busy = false;
             return;
         }
-        QString tmps = Args.join(" ");
-        CommandString = "SQLINS ";
-        CommandString.append(tmps + "\n");
+        QStringList sl;
+        sl << "SQLINS";
+        sl.append(Args);
+        QString tmps = Join(sl);
+        CommandString = tmps + "\n";
         break;
     }
         // обновление записей в таблице
@@ -397,9 +420,11 @@ void Client::SendCmd(int Command, QStringList &Args)
             Busy = false;
             return;
         }
-        QString tmps = Args.join(" ");
-        CommandString = "SQLUPD ";
-        CommandString.append(tmps + "\n");
+        QStringList sl;
+        sl << "SQLUPD";
+        sl.append(Args);
+        QString tmps = Join(sl);
+        CommandString = tmps + "\n";
         break;
     }
         // удаление записей из таблицы
@@ -414,9 +439,11 @@ void Client::SendCmd(int Command, QStringList &Args)
             Busy = false;
             return;
         }
-        QString tmps = Args.join(" ");
-        CommandString = "SQLDEL ";
-        CommandString.append(tmps + "\n");
+        QStringList sl;
+        sl << "SQLDEL";
+        sl.append(Args);
+        QString tmps = Join(sl);
+        CommandString = tmps + "\n";
         break;
     }
         // реальное удаление записей из таблицы
@@ -431,9 +458,11 @@ void Client::SendCmd(int Command, QStringList &Args)
             Busy = false;
             return;
         }
-        QString tmps = Args.join(" ");
-        CommandString = "SQLRDEL ";
-        CommandString.append(tmps + "\n");
+        QStringList sl;
+        sl << "SQLRDEL";
+        sl.append(Args);
+        QString tmps = Join(sl);
+        CommandString = tmps + "\n";
         break;
     }
     case CMD_MESSAGES:
@@ -461,7 +490,11 @@ void Client::SendCmd(int Command, QStringList &Args)
         }
         QString path = Args.takeAt(0);
         QString filename = Args.takeAt(0);
-        CommandString = "GETF \"" + path + "\" \"" +filename + "\"\n";
+        QStringList sl;
+        sl << "GETF" << path << filename;
+        sl.append(Args);
+        QString tmps = Join(sl);
+        CommandString = tmps + "\n";
         QString fullfilename = pc.HomeDir+"Incoming/"+filename;
         fp = fopen(fullfilename.toStdString().c_str(), "wb");
         break;
@@ -486,7 +519,6 @@ void Client::SendCmd(int Command, QStringList &Args)
         // по окончании контроль прихода IDLE\n
     case CMD_PUTFILE:
     {
-//        CommandString = "STOR " + Args + "\n";
         break;
     }
     case CMD_QUIT:
@@ -507,9 +539,9 @@ void Client::SendCmd(int Command, QStringList &Args)
         break;
     }
     }
-    if (Command == ANS_PSW)
+/*    if (Command == ANS_PSW)
         CliLog->info(">********");
-    else
+    else */
         CliLog->info(">"+CommandString); //+codec->fromUnicode(CommandString));
     QByteArray *ba = new QByteArray(CommandString.toUtf8());//codec->fromUnicode(CommandString));
     emit ClientSend(ba);
@@ -1113,34 +1145,12 @@ void Client::ComReplyTimeout()
 
 QStringList Client::SeparateBuf(QByteArray &buf)
 {
-    QStringList retvect, tmpsl;
-    QString tmps,tmps2;
-    int i;
-    bool QuotesEnabled = false;
+    return QString::fromLocal8Bit(buf).split(0x7F);
+}
 
-    tmpsl = QString::fromLocal8Bit(buf).split(" ");
-    tmps2.clear();
-    for (i=0; i<tmpsl.size(); i++)
-    {
-        tmps2 = tmpsl.at(i);
-        if ((tmps2.left(1) == "\"") && (!QuotesEnabled)) // начало блока в кавычках
-        {
-            tmps2.remove(0,1); // убираем первую кавычку
-            QuotesEnabled = true;
-        }
-        if ((tmps2.right(1) == "\"") && (QuotesEnabled)) // конец блока в кавычках
-        {
-            tmps2.chop(1); // убираем последнюю кавычку
-            QuotesEnabled = false;
-        }
-        tmps.append(tmps2);
-        if (!QuotesEnabled)
-        {
-            retvect.append(tmps);
-            tmps.clear();
-        }
-        else
-          tmps.append(" ");
-    }
-    return retvect;
+// объединение списка строк в одну строку через разделитель
+
+QString Client::Join(QStringList &sl)
+{
+    return sl.join(TOKEN);
 }

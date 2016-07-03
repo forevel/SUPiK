@@ -15,6 +15,7 @@
 #define SERVERRSTR  "ERROR"
 #define TIMERSOFF // если не закомментировано, таймауты отключены
 #define SLNUMMAX    10 // максимальное число полей в запросе по столбцам
+#define TOKEN       0x7F // разделитель
 
 class Client : public QObject
 {
@@ -100,6 +101,7 @@ public:
     int Connect(QString Host, QString Port);
     void Disconnect();
     void SendCmd(int Command, QStringList &Args=QStringList());
+    QString Join(QStringList &sl);
 
 public slots:
     void StopThreads();

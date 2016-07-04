@@ -1274,11 +1274,12 @@ QList<QStringList> s_sql::GetMoreValuesFromTableByFields(QString db, QString tbl
 
 QString s_sql::AddQuotes(const QString str)
 {
-    QString tmps = str;
+/*    QString tmps = str;
     if (tmps.contains(" "))
     {
         tmps.insert(0, 0x7F);
         tmps.append(0x7F);
     }
-    return tmps;
+    return tmps; */
+    return str;
 }

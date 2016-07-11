@@ -36,7 +36,16 @@ void sys_ImportClass_T::Run()
     QStringList TableFields; // подготовка списка полей для записи
     QMap<QString, QString>::const_iterator i;
     for (i=ImpInitial.map->constBegin(); i!=ImpInitial.map->constEnd(); i++)
-        TableFields.append(tfl.tablefields(ImpInitial.tablename, i.value()).at(1));
+    {
+        QStringList tmpsl = tfl.tablefields(ImpInitial.tablename, i.value());
+        if (tmpsl.size()>1)
+            TableFields.append(tmpsl.at(1));
+        else
+        {
+            SYSICTER("Пустой ответ");
+            break;
+        }
+    }
     if (ImpInitial.istree)
     {
         QString ParentID;

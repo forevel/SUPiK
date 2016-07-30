@@ -24,6 +24,13 @@ public:
     explicit Client(QObject *parent=0);
     ~Client();
 
+    enum ResultTypes
+    {
+        RESULT_MATRIX,  // результат - таблица строк
+        RESULT_VECTOR,  // результат - вектор значений
+        RESULT_STRING   // результат - одна строка
+    };
+
     enum ClientErrors
     {
         CLIER_NOERROR,
@@ -64,6 +71,7 @@ public:
         ANS_GCS, // GetColumnsFromTable
         ANS_GVBFS, // GetValueByFields
         ANS_SQLSRCH, // SearchInTableLike
+        ANS_NEXT,   // подтверждение готовности приёма следующей порции данных
         // ClientToServer
         ANS_LOGIN, // имя пользователя
         ANS_PSW, // пароль
@@ -129,7 +137,8 @@ private:
     FILE *fp;
     size_t filesize;
     size_t filepos;
-    int GVSBFS_FieldsNum;
+    int FieldsNum;
+    int ResultType;
 
     QString RemoveSpaces(QString str);
     void WriteErrorAndBreakReceiving(QString ErMsg);

@@ -19,6 +19,7 @@ Client::Client(QObject *parent) : QObject(parent)
     FirstReplyPass = true;
     ComReplyTimeoutIsSet = false;
     fp = 0;
+    ResultType = RESULT_MATRIX;
 }
 
 Client::~Client()
@@ -74,7 +75,7 @@ int Client::Connect(QString Host, QString Port)
         CliLog->warning("Wrong login or password");
         return DetectedError;
     }
-    return CLIER_NOERROR;
+    return DetectedError;
 }
 
 void Client::StopThreads()
@@ -100,82 +101,33 @@ void Client::SendCmd(int Command, QStringList &Args)
     QString CommandString;
     switch (Command)
     {
-    // запрос обработки и выдачи данных для tablefields. В Args - описание того, что хотим получить:
-    // 1. Взять из таблицы Args(2)=table все значения по полям Args(3...n+3)=headers, для которых поле Args(n+4)=cond_header_0 равно Args(n+5)=value_0, поле
-    //    Args(n+6)=cond_header_1 равно Args(n+7)=value_1, ... поле Args(n+m*2+2)=cond_header_m равно Args(n+m*2+3)=value_m
-    //    Args(0) = n, Args(1) = m
-    //      TF <numbytes_starting_from_GVBFS> GVSBFS n m table headers_0 headers_1 ... headers_n cond_header_0 value_0 cond_header_1 value_1 ... cond_header_m value_m [order_header] [ASC|DESC]
-    case CMD_TF_GVSBFS:
-    {
-        Result.clear();
-        if (Args.size() < 2)
-        {
-            CliLog->error("CMD_TF_GVSBFS: Number of arguments is less than 2");
-            DetectedError = CLIER_WRARGS;
-            Busy = false;
-            return;
-        }
-        bool ok;
-        QString fieldsnum = Args.takeAt(0);
-        GVSBFS_FieldsNum = fieldsnum.toInt(&ok);
-        if (!ok)
-        {
-            CliLog->error("CMD_TF_GVSBFS: argument is not a number");
-            DetectedError = CLIER_WRARGS;
-            Busy = false;
-            return;
-        }
-        QString pairsnum = Args.takeAt(0);
-        int pnum = fieldsnum.toInt(&ok);
-        if (!ok)
-        {
-            CliLog->error("CMD_TF_GVSBFS: argument is not a number");
-            DetectedError = CLIER_WRARGS;
-            Busy = false;
-            return;
-        }
-        if (Args.size() < GVSBFS_FieldsNum+2*pnum+1) // +1 - table
-        {
-            CliLog->error("CMD_TF_GVSBFS: Number of fields is less than mentioned in header");
-            DetectedError = CLIER_WRARGS;
-            Busy = false;
-            return;
-        }
-        QStringList sl;
-        sl << "TF" << QString::number(fieldsnum.size()+pairsnum.size()+9) << "GVSBFS" << fieldsnum << pairsnum;
-        sl.append(Args);
-        QString tmps = Join(sl);
-        CommandString = tmps + "\n";
-        // 9 = три пробела + sizeof("GVSBFS")
-        break;
-    }
-    // запросы выдачи данных из БД SQL напрямую. В Args находится:
-    // 0 - количество запрашиваемых полей n;
-    // 1 - количество пар сравнения m;
-    // 2 - имя БД
-    // 3 - имя таблицы
-    // 4...Args(0)+3 - наименования полей запроса
-    // Args(0)+4...Args(0)+Args(1)*2+3 - пары сравнения, сначала поле сравнения, затем значение
-    // Args(0)+Args(1)*2+4 - поле, по которому проводить сортировку
-    // Args(0)+Args(1)*2+5 - "ASC" или "DESC" - в каком порядке проводить сортировку
-    // Формат: GVSBFS n m db table headers_0 headers_1 ... headers_n cond_header_0 value_0 cond_header_1 value_1 ... cond_header_m value_m [order_header] [ASC|DESC]
+        // запросы выдачи данных из БД SQL напрямую. В Args находится:
+        // 0 - количество запрашиваемых полей n;
+        // 1 - количество пар сравнения m;
+        // 2 - имя БД
+        // 3 - имя таблицы
+        // 4...Args(0)+3 - наименования полей запроса
+        // Args(0)+4...Args(0)+Args(1)*2+3 - пары сравнения, сначала поле сравнения, затем значение
+        // Args(0)+Args(1)*2+4 - поле, по которому проводить сортировку
+        // Args(0)+Args(1)*2+5 - "ASC" или "DESC" - в каком порядке проводить сортировку
+        // Формат: GVSBFS n m db table headers_0 headers_1 ... headers_n cond_header_0 value_0 cond_header_1 value_1 ... cond_header_m value_m [order_header] [ASC|DESC]
     case CMD_GVSBFS:
     case CMD_GVBFS:
     {
         Result.clear(); // очищаем результаты
-        if (Args.size() < 2)
+        if (Args.size() < 7)
         {
-            CliLog->error("CMD_GVSBFS: Number of arguments is less than 2");
+            CliLog->error("CMD_GV[S]BFS: Number of arguments is less than 7");
             DetectedError = CLIER_WRARGS;
             Busy = false;
             return;
         }
         QString fieldsnum = Args.takeAt(0);
         bool ok;
-        GVSBFS_FieldsNum = fieldsnum.toInt(&ok);
+        FieldsNum = fieldsnum.toInt(&ok);
         if (!ok)
         {
-            CliLog->error("CMD_GVSBFS: argument is not a number");
+            CliLog->error("CMD_GV[S]BFS: argument is not a number");
             DetectedError = CLIER_WRARGS;
             Busy = false;
             return;
@@ -184,14 +136,14 @@ void Client::SendCmd(int Command, QStringList &Args)
         int pnum = pairsnum.toInt(&ok);
         if (!ok)
         {
-            CliLog->error("CMD_GVSBFS: argument is not a number");
+            CliLog->error("CMD_GV[S]BFS: argument is not a number");
             DetectedError = CLIER_WRARGS;
             Busy = false;
             return;
         }
-        if (Args.size() < GVSBFS_FieldsNum+2*pnum+2) // +1 - db, table
+        if (Args.size() < FieldsNum+2*pnum+2) // +1 - db, table
         {
-            CliLog->error("CMD_GVSBFS: Number of fields is less than mentioned in header: "+QString::number(Args.size())+" "+QString::number(GVSBFS_FieldsNum+2*pnum+1));
+            CliLog->error("CMD_GV[S]BFS: Number of fields is less than mentioned in header: "+QString::number(Args.size())+" "+QString::number(FieldsNum+2*pnum+1));
             DetectedError = CLIER_WRARGS;
             Busy = false;
             return;
@@ -205,27 +157,7 @@ void Client::SendCmd(int Command, QStringList &Args)
         sl.append(Args);
         QString tmps = Join(sl);
         CommandString = tmps + "\n";
-        break;
-    }
-        // поиск записей, в которых поле field похоже на выражение value
-        // формат запроса: SQLSRCH db tble field value\n
-        // формат ответа: SQLSRCH <num>\n
-        // <value1> <value2> ... <valuenum>
-    case CMD_SQLSRCH:
-    {
-        Result.clear(); // очищаем результаты
-        if (Args.size() < 4)
-        {
-            CliLog->error("CMD_SQLSRCH: Number of arguments is less than 4");
-            DetectedError = CLIER_WRARGS;
-            Busy = false;
-            return;
-        }
-        QStringList sl;
-        sl << "SQLSRCH";
-        sl.append(Args);
-        QString tmps = Join(sl);
-        CommandString = tmps + "\n";
+        ResultType = RESULT_MATRIX;
         break;
     }
         // запрос всех значений по одному полю
@@ -241,12 +173,13 @@ void Client::SendCmd(int Command, QStringList &Args)
             Busy = false;
             return;
         }
-        GVSBFS_FieldsNum = 1; // одна колонка - одно поле в каждой записи
+        FieldsNum = 1; // одна колонка - одно поле в каждой записи
         QStringList sl;
         sl << "GVSBC";
         sl.append(Args);
         QString tmps = Join(sl);
         CommandString = tmps + "\n";
+        ResultType = RESULT_VECTOR;
         break;
     }
     case CMD_GVSBCF:
@@ -259,12 +192,13 @@ void Client::SendCmd(int Command, QStringList &Args)
             Busy = false;
             return;
         }
-        GVSBFS_FieldsNum = 1; // одна колонка - одно поле в каждой записи
+        FieldsNum = 1; // одна колонка - одно поле в каждой записи
         QStringList sl;
         sl << "GVSBCF";
         sl.append(Args);
         QString tmps = Join(sl);
         CommandString = tmps + "\n";
+        ResultType = RESULT_VECTOR;
         break;
     }
         // запрос колонок (полей) из таблицы
@@ -280,11 +214,52 @@ void Client::SendCmd(int Command, QStringList &Args)
             Busy = false;
             return;
         }
+        FieldsNum = 1; // одно поле в каждой записи
         QStringList sl;
         sl << "GCS";
         sl.append(Args);
         QString tmps = Join(sl);
         CommandString = tmps + "\n";
+        ResultType = RESULT_VECTOR;
+        break;
+    }
+        // поиск записей, в которых поле field похоже на выражение value
+        // формат запроса: SQLSRCH db tble field value\n
+        // формат ответа: SQLSRCH <num>\n
+        // <value1> <value2> ... <valuenum>
+    case CMD_SQLSRCH:
+    {
+        Result.clear(); // очищаем результаты
+        if (Args.size() < 5) // field_num db tble col regexp
+        {
+            CliLog->error("CMD_SQLSRCH: Number of arguments is less than 5");
+            DetectedError = CLIER_WRARGS;
+            Busy = false;
+            return;
+        }
+        QString fieldsnum = Args.takeAt(0);
+        bool ok;
+        FieldsNum = fieldsnum.toInt(&ok);
+        if (!ok)
+        {
+            CliLog->error("CMD_SQLSRCH: argument is not a number");
+            DetectedError = CLIER_WRARGS;
+            Busy = false;
+            return;
+        }
+        if (Args.size() < FieldsNum+4) // +1 - db, table, col, regexp
+        {
+            CliLog->error("CMD_SQLSRCH: Number of fields is less than mentioned in header: "+QString::number(Args.size())+" "+QString::number(FieldsNum+4));
+            DetectedError = CLIER_WRARGS;
+            Busy = false;
+            return;
+        }
+        QStringList sl;
+        sl << "SQLSRCH" << fieldsnum;
+        sl.append(Args);
+        QString tmps = Join(sl);
+        CommandString = tmps + "\n";
+        ResultType = RESULT_MATRIX;
         break;
     }
         // создание таблицы
@@ -501,11 +476,7 @@ void Client::SendCmd(int Command, QStringList &Args)
     }
         // ANS_GETFILE - второй и последующие ответы на принятую информацию (с записью блока в файл)
     case ANS_GETFILE:
-    case ANS_GVSBFS:
-    case ANS_GVSBC:
-    case ANS_GVSBCF:
-    case ANS_GVBFS:
-    case ANS_GCS:
+    case ANS_NEXT:
     {
         CommandString = "RDY\n";
         break;
@@ -551,6 +522,7 @@ void Client::SendCmd(int Command, QStringList &Args)
 
 void Client::ParseReply(QByteArray *ba)
 {
+    CliLog->info(QString(*ba));
 #ifndef TIMERSOFF
     if (!ComReplyTimeoutIsSet)
         GetComReplyTimer->start(); // если не было таймаута, рестартуем таймер
@@ -565,6 +537,8 @@ void Client::ParseReply(QByteArray *ba)
         {
         case true:
         {
+            if (CurrentCommand == CMD_GVSBFS)
+                RcvData.clear();
             RcvData.clear();
             RcvData.append(codec->fromUnicode(*ba));
             if (RcvData.right(1) == "\n") // очередная посылка закончена, надо передать её на обработку
@@ -689,168 +663,66 @@ void Client::ParseReply(QByteArray *ba)
         CmdOk = true;
         break;
     }
-    case CMD_TF_GVSBFS:
-    {
-        // Формат ответа на запрос из таблицы tablefields:
-        // 1. Ответ на GVSBFS:
-        //      TF <number_of_records>\n
-        //      value[0][0] value[1][0] ... value[n][0]\n
-        //      value[0][1] value[1][1] ... value[n][1]\n
-        //      ...
-        //      value[0][k] value[1][k] ... value[n][k]\n
-
-        break;
-    }
     case CMD_GVSBC:
     case CMD_GVSBCF:
     case CMD_GVSBFS:
     case CMD_GVBFS:
-    {
-        // Формат ответа на запрос GVSBFS:
-        //      GVSBFS <number_of_records>\n
-        //      value[0][0] value[1][0] ... value[n][0]\n
-        //      value[0][1] value[1][1] ... value[n][1]\n
-        //      ...
-        //      value[0][k] value[1][k] ... value[n][k]\n
-
-        if ((ServerResponse == "GVSBFS") || (ServerResponse == "GVSBC") || (ServerResponse == "GVSBCF") || (ServerResponse == "GVBFS"))
-        {
-            if (ArgList.size()<2) // нет количества записей
-            {
-                WriteErrorAndBreakReceiving("Некорректное количество аргументов");
-                DetectedError = CLIER_WRANSW;
-                return;
-            }
-            bool ok;
-            MsgNum = ArgList.at(1).toInt(&ok);
-            if ((!ok) || (MsgNum < 0))
-            {
-                WriteErrorAndBreakReceiving("Некорректное количество посылок");
-                DetectedError = CLIER_WRANSW;
-                return;
-            }
-            if (MsgNum == 0)
-            {
-                CliLog->info("Пустой ответ");
-                Busy = false;
-                DetectedError = CLIER_EMPTY;
-                break;
-            }
-#ifndef TIMERSOFF
-            TimeoutTimer->start();
-#endif
-            if (CurrentCommand == CMD_GVSBFS)
-                SendCmd(ANS_GVSBFS);
-            else if (CurrentCommand == CMD_GVSBC)
-                SendCmd(ANS_GVSBC);
-            else if (CurrentCommand == CMD_GVSBCF)
-                SendCmd(ANS_GVSBCF);
-            else if (CurrentCommand == CMD_GVBFS)
-                SendCmd(ANS_GVBFS);
-            return;
-        }
-        else
-        {
-            WriteErrorAndBreakReceiving("Некорректный ответ сервера");
-            DetectedError = CLIER_WRANSW;
-            return;
-        }
-        break;
-    }
+    case CMD_GCS:
     case CMD_SQLSRCH:
     {
-        // Формат ответа на запрос SQLSRCH:
-        //      SQLSRCH <number_of_records> <number_of_fields\n
-        //      value[0][0] value[1][0] ... value[n][0]\n
-        //      value[0][1] value[1][1] ... value[n][1]\n
-        //      ...
-        //      value[0][k] value[1][k] ... value[n][k]\n
+        // Формат ответа на запрос:
+        //      <number_of_records>\n
+        //      value[0][0] value[1][0] ... value[n][0] value[0][1] value[1][1] ... value[n][1] ... value[0][k] value[1][k] ... value[n][k]\n
 
-        if (ServerResponse == "SQLSRCH")
+        if (ArgList.size()<1) // нет количества записей
         {
-            if (ArgList.size()<3) // нет количества записей
-            {
-                WriteErrorAndBreakReceiving("Некорректное количество аргументов");
-                return;
-            }
-            bool ok;
-            MsgNum = ArgList.at(1).toInt(&ok);
-            if ((!ok) || (MsgNum < 0))
-            {
-                WriteErrorAndBreakReceiving("Некорректное количество записей");
-                DetectedError = CLIER_WRANSW;
-                return;
-            }
-            GVSBFS_FieldsNum = ArgList.at(2).toInt(&ok);
-            if ((!ok) || (GVSBFS_FieldsNum < 0))
-            {
-                WriteErrorAndBreakReceiving("Некорректное количество полей");
-                DetectedError = CLIER_WRANSW;
-                return;
-            }
-            if ((MsgNum == 0) || (GVSBFS_FieldsNum == 0))
-                CliLog->info("Пустой ответ");
-#ifndef TIMERSOFF
-            TimeoutTimer->start();
-#endif
-            SendCmd(ANS_SQLSRCH);
-            return;
-        }
-        else
-        {
-            WriteErrorAndBreakReceiving("Некорректный ответ сервера");
+            WriteErrorAndBreakReceiving("Некорректное количество аргументов");
             DetectedError = CLIER_WRANSW;
             return;
         }
-        break;
-    }
-    case CMD_GCS:
-    {
-        // Формат ответа на запрос GCS:
-        //      GCS <number_of_fields>\n
-        //      column[0] colun[1] ... colun[n]\n
-        if ((ServerResponse == "GCS"))
+        bool ok;
+        MsgNum = ArgList.at(0).toInt(&ok);
+        if ((!ok) || (MsgNum < 0))
         {
-            if (ArgList.size()<2) // нет количества записей
-            {
-                WriteErrorAndBreakReceiving("Некорректное количество аргументов");
-                return;
-            }
-            bool ok;
-            GVSBFS_FieldsNum = ArgList.at(1).toInt(&ok);
-            if ((!ok) || (GVSBFS_FieldsNum < 0))
-            {
-                WriteErrorAndBreakReceiving("Некорректное количество посылок");
-                return;
-            }
-            if (GVSBFS_FieldsNum == 0)
-                CliLog->info("Пустой ответ");
+            WriteErrorAndBreakReceiving("Некорректное количество посылок");
+            DetectedError = CLIER_WRANSW;
+            return;
+        }
+        if (MsgNum == 0)
+        {
+            CliLog->info("Пустой ответ");
+            Busy = false;
+            DetectedError = CLIER_EMPTY;
+            break;
+        }
 #ifndef TIMERSOFF
-            TimeoutTimer->start();
+        TimeoutTimer->start();
 #endif
-            SendCmd(ANS_GCS);
-            return;
-        }
-        else
-        {
-            WriteErrorAndBreakReceiving("Некорректный ответ сервера");
-            return;
-        }
+        SendCmd(ANS_NEXT);
+        return;
         break;
     }
     case ANS_GVBFS:
     case ANS_GVSBFS:
+    case ANS_NEXT:
     {
         if (MsgNum == 0) // конец передачи, пришёл IDLE
         {
             CmdOk = true;
             break;
         }
+        if (ArgList.last() == "\n")
+            ArgList.removeLast();
+        QStringList sl;
+        if (ResultType == RESULT_VECTOR)
+        {
+            if (Result.size() > 0)
+                sl = Result.takeFirst();
+            Result.clear();
+        }
         while ((MsgNum) && (ArgList.size()))
         {
-            if (ArgList.last() == "\n")
-                ArgList.removeLast();
-            if (ArgList.size() < GVSBFS_FieldsNum)
+            if (ArgList.size() < FieldsNum)
             {
                    CliLog->warning("Некратное число записей в SQL-ответе");
                    MsgNum = 0;
@@ -858,12 +730,21 @@ void Client::ParseReply(QByteArray *ba)
                    CmdOk = true;
                    break;
             }
-            QStringList sl;
-            for (int i=0; i<GVSBFS_FieldsNum; i++)
-                sl.append(ArgList.takeFirst());
-            Result.append(sl);
+            if (ResultType == RESULT_MATRIX)
+            {
+                sl.clear();
+                for (int i=0; i<FieldsNum; i++)
+                    sl.append(ArgList.takeFirst());
+                Result.append(sl);
+            }
+            else
+            {
+                for (int i=0; i<FieldsNum; i++)
+                    sl.append(ArgList.takeFirst());
+            }
             MsgNum--;
         }
+        Result.append(sl);
         if (MsgNum == 0) // кончились ответы, можно выходить
         {
             CmdOk = true;
@@ -872,7 +753,7 @@ void Client::ParseReply(QByteArray *ba)
 #ifndef TIMERSOFF
         TimeoutTimer->start();
 #endif
-        SendCmd(ANS_GVSBFS); // для GVSBC ответ тоже будет RDY
+        SendCmd(ANS_NEXT);
         return;
         break;
     }
@@ -888,7 +769,7 @@ void Client::ParseReply(QByteArray *ba)
             if (ArgList.last() == "\n")
                 ArgList.removeLast();
             QStringList sl;
-            for (int i=0; i<GVSBFS_FieldsNum; i++)
+            for (int i=0; i<FieldsNum; i++)
                 sl.append(ArgList.takeFirst());
             Result.append(sl);
             MsgNum--;
@@ -902,89 +783,6 @@ void Client::ParseReply(QByteArray *ba)
         TimeoutTimer->start();
 #endif
         SendCmd(ANS_GVSBFS); // для GVSBC ответ тоже будет RDY
-        break;
-    }
-        // Get Values By Column
-    case ANS_GVSBC:
-    case ANS_GVSBCF:
-    {
-        if (MsgNum == 0) // конец передачи, пришёл IDLE
-        {
-            CmdOk = true;
-            break;
-        }
-        const int SLNum = GVSBFS_FieldsNum;
-        if (SLNum > SLNUMMAX)
-        {
-            WriteErrorAndBreakReceiving("Too many columns to get: "+QString::number(SLNum));
-            break;
-        }
-        QStringList sl[SLNUMMAX];
-        if (!Result.isEmpty())
-        {
-            for (int i=0; i<SLNum; i++)
-                sl[i] = Result.at(i);
-        }
-        while ((MsgNum) && (ArgList.size()))
-        {
-            if (ArgList.last() == "\n")
-                ArgList.removeLast();
-            if (ArgList.size() < SLNum)
-            {
-                   CliLog->warning("Некратное число записей в SQL-ответе");
-                   MsgNum = 0;
-                   ArgList.clear();
-                   CmdOk = true;
-                   break;
-            }
-            for (int i=0; i<SLNum; i++)
-                sl[i].append(ArgList.takeFirst());
-            MsgNum--;
-        }
-        Result.clear();
-        for (int i=0; i<SLNum; i++)
-            Result.append(sl[i]);
-        if (MsgNum == 0) // кончились ответы, можно выходить
-        {
-            CmdOk = true;
-            break;
-        }
-#ifndef TIMERSOFF
-        TimeoutTimer->start();
-#endif
-        SendCmd(CurrentCommand); // для GVSBC ответ тоже будет RDY
-        return;
-        break;
-    }
-    case ANS_GCS:
-    {
-        if (GVSBFS_FieldsNum == 0) // конец передачи, пришёл IDLE
-        {
-            CmdOk = true;
-            break;
-        }
-        QStringList sl;
-        if (!Result.isEmpty())
-            sl = Result.takeFirst();
-        if (ArgList.last() == "\n")
-            ArgList.removeLast();
-        while ((GVSBFS_FieldsNum) && (ArgList.size()))
-        {
-            sl.append(ArgList.takeFirst());
-            GVSBFS_FieldsNum--;
-        }
-        Result.clear();
-        Result.append(sl);
-        if (GVSBFS_FieldsNum == 0) // кончились ответы, можно выходить
-        {
-            CmdOk = true;
-            break;
-        }
-#ifndef TIMERSOFF
-        TimeoutTimer->start();
-#endif
-        SendCmd(CurrentCommand);
-        return;
         break;
     }
     // первый приём после команды

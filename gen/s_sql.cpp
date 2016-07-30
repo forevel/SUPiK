@@ -609,7 +609,7 @@ QStringList s_sql::GetValuesFromTableByColumnAndField(QString db, QString tble, 
     }
     else
     {
-        QStringList fl = QStringList() << db << tble << column << cmpfield << AddQuotes(cmpvalue);
+        QStringList fl = QStringList() << db << tble << column << cmpfield << cmpvalue;
         if (!orderby.isEmpty())
         {
             fl << orderby;
@@ -1169,7 +1169,12 @@ QList<QStringList> s_sql::SearchInTableLike(QString db, QString tble, QString fi
     else
     {
         QStringList sl;
-        sl << db << tble << field << AddQuotes(regexpstr);
+        QStringList col = GetColumnsFromTable(db, tble);
+        if (result)
+            return QList<QStringList>();
+        sl << QString::number(col.size()) << db << tble;
+        sl.append(col);
+        sl << regexpstr;
         Cli->SendCmd(Client::CMD_SQLSRCH, sl);
         while (Cli->Busy)
         {

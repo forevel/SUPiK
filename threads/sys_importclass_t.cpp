@@ -23,6 +23,12 @@ void sys_ImportClass_T::Run()
     QXlsx::Document TableDoc(ImpInitial.filename.toUtf8());
     RowNum = 1;
     QStringList sl = tfl.tablefields(ImpInitial.tablename, "ИД");
+    if (tfl.result)
+    {
+        SYSICTER("Проблема получения данных из таблицы "+ImpInitial.tablename);
+        emit ProcessFinished();
+        return;
+    }
     QString DbTble = sl.at(0);
     sl = DbTble.split(".");
     if (sl.size() < 2)

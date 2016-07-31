@@ -522,7 +522,6 @@ void Client::SendCmd(int Command, QStringList &Args)
 
 void Client::ParseReply(QByteArray *ba)
 {
-    CliLog->info(QString(*ba));
 #ifndef TIMERSOFF
     if (!ComReplyTimeoutIsSet)
         GetComReplyTimer->start(); // если не было таймаута, рестартуем таймер
@@ -530,6 +529,7 @@ void Client::ParseReply(QByteArray *ba)
     QString ServerResponse, IncomingString;
     QStringList ArgList;
     CmdOk = false;
+    DetectedError = CLIER_NOERROR;
     QTextCodec *codec = QTextCodec::codecForName("Windows-1251");
     if (CurrentCommand != ANS_GETFILE) // приём файла обрабатывается по-другому
     {
@@ -537,8 +537,6 @@ void Client::ParseReply(QByteArray *ba)
         {
         case true:
         {
-            if (CurrentCommand == CMD_GVSBFS)
-                RcvData.clear();
             RcvData.clear();
             RcvData.append(codec->fromUnicode(*ba));
             if (RcvData.right(1) == "\n") // очередная посылка закончена, надо передать её на обработку
@@ -702,8 +700,6 @@ void Client::ParseReply(QByteArray *ba)
         return;
         break;
     }
-    case ANS_GVBFS:
-    case ANS_GVSBFS:
     case ANS_NEXT:
     {
         if (MsgNum == 0) // конец передачи, пришёл IDLE
@@ -711,8 +707,8 @@ void Client::ParseReply(QByteArray *ba)
             CmdOk = true;
             break;
         }
-        if (ArgList.last() == "\n")
-            ArgList.removeLast();
+        if (ArgList.last().endsWith('\n'))
+            ArgList.last().chop(1);
         QStringList sl;
         if (ResultType == RESULT_VECTOR)
         {
@@ -727,7 +723,7 @@ void Client::ParseReply(QByteArray *ba)
                    CliLog->warning("Некратное число записей в SQL-ответе");
                    MsgNum = 0;
                    ArgList.clear();
-                   CmdOk = true;
+                   DetectedError = CLIER_EMPTY;
                    break;
             }
             if (ResultType == RESULT_MATRIX)
@@ -744,7 +740,10 @@ void Client::ParseReply(QByteArray *ba)
             }
             MsgNum--;
         }
-        Result.append(sl);
+        if (DetectedError != CLIER_NOERROR)
+            break;
+        if (ResultType == RESULT_VECTOR)
+            Result.append(sl);
         if (MsgNum == 0) // кончились ответы, можно выходить
         {
             CmdOk = true;
@@ -755,34 +754,6 @@ void Client::ParseReply(QByteArray *ba)
 #endif
         SendCmd(ANS_NEXT);
         return;
-        break;
-    }
-    case ANS_SQLSRCH:
-    {
-        if (MsgNum == 0) // конец передачи, пришёл IDLE
-        {
-            CmdOk = true;
-            break;
-        }
-        while ((MsgNum) && (ArgList.size()))
-        {
-            if (ArgList.last() == "\n")
-                ArgList.removeLast();
-            QStringList sl;
-            for (int i=0; i<FieldsNum; i++)
-                sl.append(ArgList.takeFirst());
-            Result.append(sl);
-            MsgNum--;
-        }
-        if (MsgNum == 0) // кончились ответы, можно выходить
-        {
-            CmdOk = true;
-            break;
-        }
-#ifndef TIMERSOFF
-        TimeoutTimer->start();
-#endif
-        SendCmd(ANS_GVSBFS); // для GVSBC ответ тоже будет RDY
         break;
     }
     // первый приём после команды

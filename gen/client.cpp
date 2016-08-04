@@ -115,6 +115,8 @@ void Client::SendCmd(int Command, QStringList &Args)
     case CMD_GVBFS:
     {
         Result.clear(); // очищаем результаты
+        FieldsLeast = false;
+        FieldsLeastToAdd = 0;
         if (Args.size() < 7)
         {
             CliLog->error("CMD_GV[S]BFS: Number of arguments is less than 7");
@@ -166,6 +168,8 @@ void Client::SendCmd(int Command, QStringList &Args)
     case CMD_GVSBC:
     {
         Result.clear(); // очищаем результаты
+        FieldsLeast = false;
+        FieldsLeastToAdd = 0;
         if (Args.size() < 3)
         {
             CliLog->error("CMD_GVSBC: Number of arguments is less than 3");
@@ -184,7 +188,9 @@ void Client::SendCmd(int Command, QStringList &Args)
     }
     case CMD_GVSBCF:
     {
-        Result.clear();
+        Result.clear(); // очищаем результаты
+        FieldsLeast = false;
+        FieldsLeastToAdd = 0;
         if (Args.size() < 5)
         {
             CliLog->error("CMD_GVSBCF: Number of arguments is less than 5");
@@ -207,6 +213,8 @@ void Client::SendCmd(int Command, QStringList &Args)
     case CMD_GCS:
     {
         Result.clear(); // очищаем результаты
+        FieldsLeast = false;
+        FieldsLeastToAdd = 0;
         if (Args.size() < 2)
         {
             CliLog->error("CMD_GCS: Number of arguments is less than 2");
@@ -230,6 +238,8 @@ void Client::SendCmd(int Command, QStringList &Args)
     case CMD_SQLSRCH:
     {
         Result.clear(); // очищаем результаты
+        FieldsLeast = false;
+        FieldsLeastToAdd = 0;
         if (Args.size() < 5) // field_num db tble col regexp
         {
             CliLog->error("CMD_SQLSRCH: Number of arguments is less than 5");
@@ -365,13 +375,13 @@ void Client::SendCmd(int Command, QStringList &Args)
         break;
     }
         // вставка записи в таблицу
-        // формат запроса: SQLINS db tble <field1> <value1> <field2> <value2> ... <fieldn> <valuen>\n
+        // формат запроса: SQLINS db tble [<field1> <value1>] [<field2> <value2>] ... [<fieldn> <valuen>]\n
         // формат ответа: SQLGID <id> или ERROR
     case CMD_SQLINS:
     {
-        if (Args.size() < 4)
+        if (Args.size() < 2)
         {
-            CliLog->error("CMD_SQLINS: Number of arguments is less than 4");
+            CliLog->error("CMD_SQLINS: Number of arguments is less than 2");
             DetectedError = CLIER_WRARGS;
             Busy = false;
             return;
@@ -541,7 +551,8 @@ void Client::ParseReply(QByteArray *ba)
             RcvData.append(codec->fromUnicode(*ba));
             if (RcvData.right(1) == "\n") // очередная посылка закончена, надо передать её на обработку
             {
-                RcvData.chop(1);
+                while (RcvData.right(1) == "\n") // убираем все переводы строки
+                    RcvData.chop(1);
                 break;
             }
             FirstReplyPass = false;
@@ -552,7 +563,8 @@ void Client::ParseReply(QByteArray *ba)
             RcvData.append(codec->fromUnicode(*ba));
             if (RcvData.right(1) == "\n") // очередная посылка закончена, надо передать её на обработку
             {
-                RcvData.chop(1);
+                while (RcvData.right(1) == "\n") // убираем все переводы строки
+                    RcvData.chop(1);
                 break;
             }
             return;
@@ -562,12 +574,10 @@ void Client::ParseReply(QByteArray *ba)
         IncomingString = QString::fromLocal8Bit(RcvData);
         CliLog->info("<"+IncomingString);
         ArgList = SeparateBuf(RcvData);
+//        while (ArgList.last().isEmpty())
+//            ArgList.removeLast();
         if (ArgList.isEmpty()) // ничего толкового не получено
             return;
-/*        QString tmps = ArgList.last(); // убираем последний перевод строки
-        if (tmps.right(1) == "\n")
-            tmps.chop(1);
-        ArgList.replace(ArgList.size()-1, tmps); */
         ServerResponse = ArgList.first();
         if (ServerResponse == SERVERRSTR)
         {
@@ -707,8 +717,6 @@ void Client::ParseReply(QByteArray *ba)
             CmdOk = true;
             break;
         }
-        if (ArgList.last().endsWith('\n'))
-            ArgList.last().chop(1);
         QStringList sl;
         if (ResultType == RESULT_VECTOR)
         {
@@ -720,32 +728,56 @@ void Client::ParseReply(QByteArray *ba)
         {
             if (ArgList.size() < FieldsNum)
             {
+                if (MsgNum == 1)
+                {
                    CliLog->warning("Некратное число записей в SQL-ответе");
                    MsgNum = 0;
                    ArgList.clear();
                    DetectedError = CLIER_EMPTY;
                    break;
+                }
+                else // блок из READBUFMAX символов был считан, будет следующий
+                    FieldsLeastToAdd = FieldsNum - ArgList.size();
             }
             if (ResultType == RESULT_MATRIX)
             {
                 sl.clear();
-                for (int i=0; i<FieldsNum; i++)
-                    sl.append(ArgList.takeFirst());
+                if (FieldsLeast) // осталось с предыдущего раза
+                {
+                    sl = Result.takeLast(); // берём предыдущий считанный кусок
+                    for (int i=0; i<FieldsLeastToAdd; i++)
+                        sl.append(ArgList.takeFirst());
+                    FieldsLeast = false;
+                    FieldsLeastToAdd = 0;
+                    MsgNum--;
+                }
+                else if (FieldsLeastToAdd != 0)
+                {
+                    FieldsLeast = true;
+                    for (int i=0; i<ArgList.size(); i++)
+                        sl.append(ArgList.takeFirst());
+                }
+                else
+                {
+                    for (int i=0; i<FieldsNum; i++)
+                        sl.append(ArgList.takeFirst());
+                    MsgNum--;
+                }
                 Result.append(sl);
             }
-            else
+            else // ResultType == RESULT_VECTOR
             {
                 for (int i=0; i<FieldsNum; i++)
                     sl.append(ArgList.takeFirst());
+                MsgNum--;
             }
-            MsgNum--;
         }
         if (DetectedError != CLIER_NOERROR)
             break;
-        if (ResultType == RESULT_VECTOR)
-            Result.append(sl);
         if (MsgNum == 0) // кончились ответы, можно выходить
         {
+            if (ResultType == RESULT_VECTOR)
+                Result.append(sl);
             CmdOk = true;
             break;
         }

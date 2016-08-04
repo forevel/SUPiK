@@ -43,7 +43,7 @@ void sys_ImportClass_T::Run()
     QMap<QString, QString>::const_iterator i;
     for (i=ImpInitial.map->constBegin(); i!=ImpInitial.map->constEnd(); i++)
     {
-        QStringList tmpsl = tfl.tablefields(ImpInitial.tablename, i.value());
+        QStringList tmpsl = tfl.tablefields(ImpInitial.tablename, i.key());
         if (tmpsl.size()>1)
             TableFields.append(tmpsl.at(1));
         else
@@ -62,7 +62,7 @@ void sys_ImportClass_T::Run()
             QStringList TableValues;
             for (int j=0; j<TableFields.size()-1; j++) // кроме idalias
             {
-                QString tmps = ImpInitial.map->keys().at(j);
+                QString tmps = ImpInitial.map->values().at(j);
                 if (tmps.isEmpty())
                     continue;
                 if (tmps.at(0) == "_") // значение по умолчанию
@@ -134,7 +134,7 @@ void sys_ImportClass_T::Run()
             bool RecordIsEmpty = true;
             for (int j=0; j<TableFields.size(); j++) // кроме idalias
             {
-                QString tmps = ImpInitial.map->keys().at(j);
+                QString tmps = ImpInitial.map->values().at(j);
                 if (tmps.isEmpty())
                     continue;
                 if (tmps.at(0) == "_") // значение по умолчанию

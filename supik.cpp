@@ -15,6 +15,7 @@
 #include "dialogs/sys/sys_backuprestoredirdialog.h"
 #include "dialogs/sys/sys_importclass.h"
 #include "dialogs/sys/sys_erdialog.h"
+#include "dialogs/tb/tb_maindialog.h"
 #include "widgets/s_tqlabel.h"
 #include "widgets/s_colortabwidget.h"
 #include "widgets/s_tqtableview.h"
@@ -38,7 +39,7 @@ supik::supik()
     SetSupikWindow();
     SetSupikStatusBar();
     pc.supikprocs << "ExitSupik" << "SysStructEdit" << "SettingsEdit" << "Components" << "Directories" << "BackupDir" << "RestoreDir" << "ProbCheck";
-    pc.supikprocs << "WhIncome" << "WhOutgoing" << "WhSearch" << "DevDoc" << "DevDev" << "Quarantine" << "" << "SysImportClass";
+    pc.supikprocs << "WhIncome" << "WhOutgoing" << "WhSearch" << "DevDoc" << "DevDev" << "Quarantine" << "" << "SysImportClass" << "TBExam";
     pf["ExitSupik"] = &supik::ExitSupik;
     pf["SysStructEdit"] = &supik::SysStructEdit;
     pf["SettingsEdit"] = &supik::SettingsEdit;
@@ -57,6 +58,7 @@ supik::supik()
     pf["DevDev"] = &supik::DevDev;
     pf["Dummy"]=&supik::Dummy;
     pf["SysImportClass"] = &supik::SysImportClass;
+    pf["TBExam"] = &supik::TBExam;
     ErMsgNum = 0;
 }
 
@@ -561,6 +563,26 @@ void supik::DevDev() // редактор изделий (классификат�
 
     int ids = MainTW->addTab(ddd, "Изделия::Классификатор");
     MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_DEV));
+    MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
+    MainTW->tabBar()->setCurrentIndex(ids);
+    MainTW->repaint();
+}
+
+void supik::TBExam()
+{
+    S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
+    if (MainTW == 0)
+        return;
+    if (!(pc.access & (ACC_TB_RO | ACC_TB_WR)))
+    {
+        SUPIKER("Недостаточно прав для продолжения!");
+        return;
+    }
+
+    tb_maindialog *tbm = new tb_maindialog;
+
+    int ids = MainTW->addTab(tbm, "ОТ и ТБ");
+    MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_TB));
     MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
     MainTW->tabBar()->setCurrentIndex(ids);
     MainTW->repaint();

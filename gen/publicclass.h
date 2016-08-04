@@ -157,7 +157,8 @@ public:
         ER_CLI,      // Client
         ER_LOG,      // Log
         ER_ETH,      // Ethernet
-        ER_SIMP     // sys_importclass
+        ER_SIMP,     // sys_importclass
+        ER_TBM      // tb_maindialog
     };
 
     static QMap<int, QString> ermsgs()
@@ -199,6 +200,7 @@ public:
         map.insert(ER_LOG, QString::fromLocal8Bit("Логи"));
         map.insert(ER_ETH, QString::fromLocal8Bit("Ethernet"));
         map.insert(ER_SIMP, QString::fromLocal8Bit("Импорт"));
+        map.insert(ER_TBM, QString::fromLocal8Bit("ТБ_гл"));
         return map;
     }
 
@@ -218,7 +220,8 @@ public:
         TW_WH,      // склады
         TW_QUAR,    // работа с карантином
         TW_DEV,     // редактор документов
-        TW_ADM      // сисадминистрирование
+        TW_ADM,     // сисадминистрирование
+        TW_TB       // техника безопасности
     };
 
     // определение проблем
@@ -316,7 +319,7 @@ public:
 //    bool ErWidgetShowing;
     bool AutonomousMode; // если сервер СУПиК (становится) недоступен, признак автономного режима становится равен true
     QString SQLUser, SQLPsw;
-    QSqlDatabase ent, alt, sup, con, sol, sch, dev;
+    QSqlDatabase ent, alt, sup, con, sol, sch, dev, tb;
     QMap<QString, QSqlDatabase> db;
 //    QString Date; // Сегодняшняя дата
     QString DateTime; // Сегодняшнее время

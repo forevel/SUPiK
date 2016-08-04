@@ -68,6 +68,7 @@ private:
     void SysDirectories();
     void ClearProblems();
     void UpdateErStatus();
+    void TBExam();
 
 private slots:
     void ExecuteSub();

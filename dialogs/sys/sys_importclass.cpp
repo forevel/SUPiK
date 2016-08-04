@@ -166,6 +166,7 @@ void sys_ImportClass::ImpExpPBPressed()
     connect(thr,SIGNAL(finished()),t,SLOT(deleteLater()));
     connect(thr,SIGNAL(finished()),thr,SLOT(deleteLater()));
     connect(t,SIGNAL(ProcessFinished()),WWidget,SLOT(Stop()));
+    connect(WWidget,SIGNAL(finished()),this,SLOT(Done()));
     thr->start();
     WWidget->Start();
 }
@@ -286,7 +287,7 @@ void sys_ImportClass::MakeConnection()
     conntw->setItem(currow,0,item);
     item = new QTableWidgetItem(tablecbitem);
     conntw->setItem(currow,1,item);
-    XLSMap->insert(xlscbitem, tablecbitem);
+    XLSMap->insert(tablecbitem, xlscbitem);
     // удаляем соотв. элементы из обоих комбобоксов, чтобы не было дублирующихся строк
     tablecb->removeItem(tablecb->currentIndex());
     le->clear();
@@ -294,5 +295,12 @@ void sys_ImportClass::MakeConnection()
 
 void sys_ImportClass::CancelPBPressed()
 {
+    this->close();
+}
+
+void sys_ImportClass::Done()
+{
+    WWidget->close();
+    MessageBox2::information(this,"Успешно!","Импорт завершён успешно!");
     this->close();
 }

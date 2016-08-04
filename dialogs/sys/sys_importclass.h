@@ -37,6 +37,7 @@ private slots:
     void LoadAndCheckFile();
     void TableChoosed(QString tble);
     void MakeConnection();
+    void Done();
 
 protected:
     void paintEvent(QPaintEvent *);

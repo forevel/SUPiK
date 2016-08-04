@@ -26,7 +26,8 @@ PublicClass::PublicClass()
     TabColors[TW_DIR] = QColor(255, 255, 153); // DIRECTORY
     TabColors[TW_ADM] = QColor(102, 102, 153); // ADMIN
     TabColors[TW_WH] = QColor(204, 204, 51); // WAREHOUSE
-    TabColors[TW_DEV] = QColor(204, 204, 255); // DEVICES
+    TabColors[TW_DEV] = QColor(204, 255, 255); // DEVICES
+    TabColors[TW_TB] = QColor(204, 204, 255); // TB
     AutonomousMode = true; // изначально неизвестно, доступен ли сервер, поэтому на всякий случай ставим признак автономности
     PCLog = new Log;
     PCLog->Init(HomeDir+"sup.log");
@@ -75,6 +76,7 @@ void PublicClass::InitiatePublicClass()
     openBD(sch, "SCH", "schemagee", "supik", "sysupik");
     openBD(sol, "SOL", "solidworks", "supik", "sysupik");
     openBD(sup, "SUP", "supik", "supik", "sysupik");
+    openBD(tb, "TB", "tb", "supik", "sysupik");
     db["alt"]=alt;
     db["sup"]=sup;
     db["ent"]=ent;
@@ -82,6 +84,7 @@ void PublicClass::InitiatePublicClass()
     db["sol"]=sol;
     db["sch"]=sch;
     db["con"]=con;
+    db["tb"]=tb;
     symfind = "LIBREFERENCE=";
     footfind = "PATTERN=";
     idRecord = -1;

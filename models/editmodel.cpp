@@ -75,7 +75,6 @@ bool EditModel::setData(const QModelIndex &index, const QVariant &value, int rol
         {
             if (index.column() < Hdr.size())
             {
-
                 MainData.at(index.row())->SetData(index.column(), value.toString()); // пишем само значение
                 emit dataChanged(index,index);
                 return true;

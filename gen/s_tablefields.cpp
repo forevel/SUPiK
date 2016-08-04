@@ -335,6 +335,21 @@ QString s_tablefields::vtoid(PublicClass::ValueStruct vl)
     case FW_FLINK:
     case FW_ILINK:
     {
+        if (ff.delegate == FD_SPIN) // для спина отдельная обработка, ибо дурит как хочет
+        {
+            int tmpInt = ff.link.at(0).count("n", Qt::CaseSensitive);
+            int tmpInt2 = ff.link.at(0).count("d", Qt::CaseSensitive);
+            QStringList sl = vl.Value.split(".");
+            if (sl.size() > 0)
+            {
+                outs = sl.at(0).right(tmpInt);
+                for (int i=outs.size(); i<tmpInt; ++i)
+                    outs.insert(0, '0');
+            }
+            if ((sl.size() > 1) && (tmpInt2 > 0))
+                outs += "." + sl.at(1).left(tmpInt2);
+            break;
+        }
         outs = vl.Value;
         break;
     }

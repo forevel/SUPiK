@@ -47,12 +47,11 @@ void WaitWidget::Start()
         while (tme.elapsed() < 100)
             qApp->processEvents();
     }
-    this->close();
+    emit finished();
 }
 
 void WaitWidget::Stop()
 {
-    emit finished();
     Finished = true;
 }
 

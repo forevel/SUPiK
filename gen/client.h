@@ -128,7 +128,7 @@ private:
     QByteArray RcvData;
     Ethernet *MainEthernet, *FileEthernet;
     QTimer *TimeoutTimer, *GetComReplyTimer, *GetFileTimer;
-    bool FileBusy, Connected, FileConnected, CmdOk, LoginOk, FirstReplyPass, ComReplyTimeoutIsSet;
+    bool FileBusy, Connected, FileConnected, CmdOk, LoginOk, FirstReplyPass, ComReplyTimeoutIsSet, FieldsLeast;
     QTextStream *LogStream;
     QString FileHost;
     quint16 FilePort;
@@ -139,6 +139,7 @@ private:
     size_t filepos;
     int FieldsNum;
     int ResultType;
+    int FieldsLeastToAdd;
 
     QString RemoveSpaces(QString str);
     void WriteErrorAndBreakReceiving(QString ErMsg);

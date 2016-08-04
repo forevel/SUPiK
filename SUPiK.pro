@@ -94,7 +94,8 @@ SOURCES += main.cpp\
     widgets/s_tqwidget.cpp \
     widgets/treeview.cpp \
     widgets/waitwidget.cpp \
-    widgets/portactivity.cpp
+    widgets/portactivity.cpp \
+    dialogs/tb/tb_maindialog.cpp
 
 HEADERS  += startwindow.h \
     supik.h \
@@ -170,7 +171,8 @@ HEADERS  += startwindow.h \
     widgets/s_tqwidget.h \
     widgets/treeview.h \
     widgets/waitwidget.h \
-    widgets/portactivity.h
+    widgets/portactivity.h \
+    dialogs/tb/tb_maindialog.h
 
 RESOURCES += \
     pic.qrc

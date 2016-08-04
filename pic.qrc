@@ -23,7 +23,6 @@
         <file>res/SdwPB.png</file>
         <file>res/SgePB.png</file>
         <file>res/supik.png</file>
-        <file>res/TBWallpaper.jpg</file>
         <file>res/TN.png</file>
         <file>res/wh-in.png</file>
         <file>res/wh-out.png</file>
@@ -74,5 +73,6 @@
         <file>res/2on.png</file>
         <file>res/ErNo.png</file>
         <file>res/ErYes.png</file>
+        <file>res/TBWallpaper.png</file>
     </qresource>
 </RCC>

@@ -194,13 +194,21 @@ void dir_maindialog::ShowSlaveTree(QString str)
 
 QString dir_maindialog::getMainIndex(int column)
 {
+    QString tmpString;
     TreeView *MainTV = this->findChild<TreeView *>("MainTV");
     if (MainTV == 0)
     {
         DIRMDBG;
         return QString();
     }
-    QString tmpString = MainTV->model()->index(MainTV->currentIndex().row(), column, QModelIndex()).data(Qt::DisplayRole).toString();
+    if (column == 0)
+    {
+        QStringList tmpStringList = MainTV->model()->index(MainTV->currentIndex().row(), column, QModelIndex()).data(Qt::DisplayRole).toString().split(".");
+        if (tmpStringList.size() > 1)
+            tmpString = tmpStringList.at(1);
+    }
+    else
+        tmpString = MainTV->model()->index(MainTV->currentIndex().row(), column, QModelIndex()).data(Qt::DisplayRole).toString();
     if (!column) // в нулевом столбце всегда ИД элемента с нулями в начале, надо незначащие нули убрать
         tmpString = QString::number(tmpString.toInt(0));
     tmpString.remove(QChar(0xFFFF));
@@ -216,7 +224,14 @@ QString dir_maindialog::getSlaveIndex(int column)
         DIRMDBG;
         return QString();
     }
-    tmpString = SlaveTV->model()->index(SlaveTV->currentIndex().row(), column, QModelIndex()).data(Qt::DisplayRole).toString();
+    if (column == 0)
+    {
+        QStringList tmpStringList = SlaveTV->model()->index(SlaveTV->currentIndex().row(), column, QModelIndex()).data(Qt::DisplayRole).toString().split(".");
+        if (tmpStringList.size() > 1)
+            tmpString = tmpStringList.at(1);
+    }
+    else
+        tmpString = SlaveTV->model()->index(SlaveTV->currentIndex().row(), column, QModelIndex()).data(Qt::DisplayRole).toString();
     tmpString.remove(QChar(0xFFFF));
     return tmpString;
 }
@@ -326,7 +341,9 @@ void dir_maindialog::DeleteData()
     int res = msgBox.exec();
     if (res == QMessageBox::Cancel)
         return;
-    DeleteDataUnconditional(QString::number(getSlaveIndex(0).toLongLong(0,10)));
+    QString tmpString = getSlaveIndex(0);
+    long Num = tmpString.toLongLong(0, 10);
+    DeleteDataUnconditional(QString::number(Num));
 }
 
 void dir_maindialog::DeleteDataUnconditional(QString id)

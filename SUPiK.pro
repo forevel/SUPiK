@@ -44,6 +44,7 @@ SOURCES += main.cpp\
     dialogs/sys/sys_systemdialog.cpp \
     dialogs/sys/sysdireditor.cpp \
     dialogs/sys/sysmenueditor.cpp \
+    dialogs/tb/tb_maindialog.cpp \
     dialogs/wh/wh_dialog.cpp \
     dialogs/wh/wh_editor.cpp \
     gen/client.cpp \
@@ -72,6 +73,8 @@ SOURCES += main.cpp\
     threads/ethernet.cpp \
     threads/sys_importclass_t.cpp \
     threads/waitthread.cpp \
+    widgets/goodbadwidget.cpp \
+    widgets/portactivity.cpp \
     widgets/s_colortabbar.cpp \
     widgets/s_colortabwidget.cpp \
     widgets/s_maskedle.cpp \
@@ -84,6 +87,7 @@ SOURCES += main.cpp\
     widgets/s_tqlabel.cpp \
     widgets/s_tqlineedit.cpp \
     widgets/s_tqpushbutton.cpp \
+    widgets/s_tqradiobutton.cpp \
     widgets/s_tqspinbox.cpp \
     widgets/s_tqsplitter.cpp \
     widgets/s_tqstackedwidget.cpp \
@@ -93,9 +97,7 @@ SOURCES += main.cpp\
     widgets/s_tqtreewidget.cpp \
     widgets/s_tqwidget.cpp \
     widgets/treeview.cpp \
-    widgets/waitwidget.cpp \
-    widgets/portactivity.cpp \
-    dialogs/tb/tb_maindialog.cpp
+    widgets/waitwidget.cpp
 
 HEADERS  += startwindow.h \
     supik.h \
@@ -121,6 +123,7 @@ HEADERS  += startwindow.h \
     dialogs/sys/sys_systemdialog.h \
     dialogs/sys/sysdireditor.h \
     dialogs/sys/sysmenueditor.h \
+    dialogs/tb/tb_maindialog.h \
     dialogs/wh/wh_dialog.h \
     dialogs/wh/wh_editor.h \
     gen/client.h \
@@ -149,6 +152,8 @@ HEADERS  += startwindow.h \
     threads/ethernet.h \
     threads/sys_importclass_t.h \
     threads/waitthread.h \
+    widgets/goodbadwidget.h \
+    widgets/portactivity.h \
     widgets/s_colortabbar.h \
     widgets/s_colortabwidget.h \
     widgets/s_maskedle.h \
@@ -161,6 +166,7 @@ HEADERS  += startwindow.h \
     widgets/s_tqlabel.h \
     widgets/s_tqlineedit.h \
     widgets/s_tqpushbutton.h \
+    widgets/s_tqradiobutton.h \
     widgets/s_tqspinbox.h \
     widgets/s_tqsplitter.h \
     widgets/s_tqstackedwidget.h \
@@ -170,9 +176,7 @@ HEADERS  += startwindow.h \
     widgets/s_tqtreewidget.h \
     widgets/s_tqwidget.h \
     widgets/treeview.h \
-    widgets/waitwidget.h \
-    widgets/portactivity.h \
-    dialogs/tb/tb_maindialog.h
+    widgets/waitwidget.h
 
 RESOURCES += \
     pic.qrc

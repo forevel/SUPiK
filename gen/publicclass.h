@@ -39,13 +39,15 @@ QT_END_NAMESPACE
 // Максимальный размер буфера ошибок
 #define ER_BUFMAX   0x40 // 64 элемента
 
-#define DB_ALT      0x00
-#define DB_ENT      0x01
-#define DB_SUP      0x02
-#define DB_SOL      0x03
-#define DB_DEV      0x04
-#define DB_SCH      0x05
-#define DB_CON      0x06
+#define DB_ALT      0x0001
+#define DB_ENT      0x0002
+#define DB_SUP      0x0004
+#define DB_SOL      0x0008
+#define DB_DEV      0x0010
+#define DB_SCH      0x0020
+#define DB_CON      0x0040
+#define DB_TB       0x0080
+#define DB_SADM     0x0100
 
 #define ACC_SYS_RO      0x0001
 #define ACC_SYS_WR      0x0002
@@ -318,9 +320,10 @@ public:
     double timerperiod; //, ErWidgetPeriod;
 //    bool ErWidgetShowing;
     bool AutonomousMode; // если сервер СУПиК (становится) недоступен, признак автономного режима становится равен true
-    QString SQLUser, SQLPsw;
-    QSqlDatabase ent, alt, sup, con, sol, sch, dev, tb;
+    QString LastError;
+    QSqlDatabase ent, alt, sup, con, sol, sch, dev, tb, sadm;
     QMap<QString, QSqlDatabase> db;
+    quint16 DbNotOpened;
 //    QString Date; // Сегодняшняя дата
     QString DateTime; // Сегодняшнее время
     int idRecord; // номер (id) текущей редактируемой записи в справочнике
@@ -467,6 +470,7 @@ public:
 
     void AddErrMsg(ermsgtype msgtype, quint64 ernum, quint64 ersubnum, QString msg="");
     QString ConvertId (bool ColumnZero, QString Id); // преобразование <tble>.000<id> в нормальный id
+    bool OpenAndCheckDBs();
 
 private:
     void openBD(QSqlDatabase &db, QString dbid, QString dbname, QString login, QString psw);

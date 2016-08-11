@@ -37,7 +37,6 @@ private:
     void SetupUI();
     void LoadLanguage();
     void Startup();
-    bool OpenAndCheckDB(QSqlDatabase db);
 };
 
 #endif // STARTWINDOW_H

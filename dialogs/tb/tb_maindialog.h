@@ -21,6 +21,7 @@ signals:
 public slots:
 
 private slots:
+    void GroupChoosed();
 
 protected:
     void paintEvent(QPaintEvent *);

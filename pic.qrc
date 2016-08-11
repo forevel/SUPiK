@@ -74,5 +74,8 @@
         <file>res/ErNo.png</file>
         <file>res/ErYes.png</file>
         <file>res/TBWallpaper.png</file>
+        <file>res/ans_bad.gif</file>
+        <file>res/ans_good.gif</file>
+        <file>res/ans_neutral.gif</file>
     </qresource>
 </RCC>

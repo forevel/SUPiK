@@ -225,9 +225,9 @@ void StartWindow::OkPBClicked()
     {
         SupLog->warning("Server not found, entering autonomous mode...");
         StartWindowSplashScreen->showMessage("Сервер недоступен. Попытка подключения к локальной БД...", Qt::AlignRight, Qt::white);
-        if ((!OpenAndCheckDB(pc.ent)) || (!OpenAndCheckDB(pc.sup)))
+        if (!pc.OpenAndCheckDBs())
         {
-            MessageBox2::error(this,"error","Нет соединения с системной БД!");
+            MessageBox2::error(this,"error","Нет соединения с БД, ошибка № " + QString::number(pc.DbNotOpened, 16) + "\n" + pc.LastError);
             SupLog->error("Local database not found, exiting...");
             return;
         }
@@ -339,10 +339,3 @@ void StartWindow::OpenSettingsDialog()
     qssd->exec();
 }
 
-bool StartWindow::OpenAndCheckDB(QSqlDatabase db)
-{
-//    db.setConnectOptions("MYSQL_OPT_CONNECT_TIMEOUT=4");
-    if (!db.open())
-        return false;
-    return true;
-}

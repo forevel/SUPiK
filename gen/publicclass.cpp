@@ -67,16 +67,72 @@ void PublicClass::InitiatePublicClass()
     SupikServer = LandP->value("settings/Server","asu-vei.ru").toString();
     SupikPort = LandP->value("settings/Port","9687").toString();
 
-    // вставить проверку доступности БД и переключение при необходимости на локальную БД и работу в автономном режиме (если локальная БД имеется)
 
+    symfind = "LIBREFERENCE=";
+    footfind = "PATTERN=";
+    idRecord = -1;
+}
+
+// открытие БД
+
+bool PublicClass::OpenAndCheckDBs()
+{
+    // подключать только те базы, к которым есть доступ у пользователя
+    DbNotOpened = 0x0000;
     openBD(alt, "ALT", "altium", "supik", "sysupik");
+    if (!alt.open())
+    {
+        DbNotOpened |= DB_ALT;
+        LastError = alt.lastError().text();
+    }
     openBD(con, "CON", "constructives", "supik", "sysupik");
+    if (!con.open())
+    {
+        DbNotOpened |= DB_CON;
+        LastError = alt.lastError().text();
+    }
     openBD(dev, "DEV", "devices", "supik", "sysupik");
+    if (!dev.open())
+    {
+        DbNotOpened |= DB_DEV;
+        LastError = alt.lastError().text();
+    }
     openBD(ent, "ENT", "enterprise", "supik", "sysupik");
+    if (!ent.open())
+    {
+        DbNotOpened |= DB_ENT;
+        LastError = alt.lastError().text();
+    }
     openBD(sch, "SCH", "schemagee", "supik", "sysupik");
+    if (!sch.open())
+    {
+        DbNotOpened |= DB_SCH;
+        LastError = alt.lastError().text();
+    }
     openBD(sol, "SOL", "solidworks", "supik", "sysupik");
+    if (!sol.open())
+    {
+        DbNotOpened |= DB_SOL;
+        LastError = alt.lastError().text();
+    }
     openBD(sup, "SUP", "supik", "supik", "sysupik");
+    if (!sup.open())
+    {
+        DbNotOpened |= DB_SUP;
+        LastError = alt.lastError().text();
+    }
     openBD(tb, "TB", "tb", "supik", "sysupik");
+    if (!tb.open())
+    {
+        DbNotOpened |= DB_TB;
+        LastError = alt.lastError().text();
+    }
+    openBD(sadm, "SADM", "sysadm", "supik", "sysupik");
+    if (!sadm.open())
+    {
+        DbNotOpened |= DB_SADM;
+        LastError = alt.lastError().text();
+    }
     db["alt"]=alt;
     db["sup"]=sup;
     db["ent"]=ent;
@@ -85,12 +141,12 @@ void PublicClass::InitiatePublicClass()
     db["sch"]=sch;
     db["con"]=con;
     db["tb"]=tb;
-    symfind = "LIBREFERENCE=";
-    footfind = "PATTERN=";
-    idRecord = -1;
+    db["sadm"]=sadm;
+    //    db.setConnectOptions("MYSQL_OPT_CONNECT_TIMEOUT=4");
+    if (DbNotOpened != 0x0000)
+        return false;
+    return true;
 }
-
-// открытие БД
 
 void PublicClass::openBD(QSqlDatabase &db, QString dbid, QString dbname, QString login, QString psw)
 {
@@ -101,8 +157,8 @@ void PublicClass::openBD(QSqlDatabase &db, QString dbid, QString dbname, QString
         db.setDatabaseName(dbname);
         db.setUserName(login);
         db.setPassword(psw);
-//        db.setPort(3306);
-       db.setPort(3333); // временно для отладки с виртуальной машиной
+        db.setPort(3306);
+//       db.setPort(3333); // временно для отладки с виртуальной машиной
     }
 }
 

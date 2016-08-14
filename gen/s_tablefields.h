@@ -32,6 +32,7 @@ public:
     bool tableistree (QString tble);
     QStringList valuesbyfield(QString tble, QStringList fl, QString cmpfield, QString cmpvalue, bool Warn=true);
     QStringList valuesbyfields(QString tble, QStringList fl, QStringList cmpfields, QStringList cmpvalues, bool Warn=true);
+    QStringList HeaderByFields(QString &tble, QString &header, QStringList &cmpfl, QStringList &cmpvl);
     QStringList TableColumn(QString tble, QString field); // взять значения поля field, где tablename=tble
 
     int result;

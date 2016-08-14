@@ -56,7 +56,7 @@ QStringList s_tablefields::htovlc(QString tble, QString header, QString cheader,
     }
     QString db = sl.at(0).split(".").at(0);
     tble = sl.at(0).split(".").at(1);
-    QStringList tmpsl = sqlc.GetValuesFromTableByColumnAndField(db, tble, sl.at(1), cl.at(1), value);
+    QStringList tmpsl = sqlc.GetValuesFromTableByColumnAndFields(db, tble, sl.at(1), QStringList(cl.at(1)), QStringList(value));
     if (sqlc.result) // || tmpsl.isEmpty())
     {
         result = 1;
@@ -735,7 +735,7 @@ QStringList s_tablefields::valuesbyfields(QString tble, QStringList fl, QStringL
 
 QStringList s_tablefields::TableColumn(QString tble, QString field)
 {
-    QStringList sl = sqlc.GetValuesFromTableByColumnAndField("sup", "tablefields", field, "tablename", tble, "fieldsorder");
+    QStringList sl = sqlc.GetValuesFromTableByColumnAndFields("sup", "tablefields", field, QStringList("tablename"), QStringList(tble), "fieldsorder");
     if (sqlc.result)
     {
         TFWARN(sqlc.LastError);
@@ -764,7 +764,7 @@ QStringList s_tablefields::tablefields(QString tble, QString header)
 
 QStringList s_tablefields::tableheaders(QString tble)
 {
-    QStringList sl = sqlc.GetValuesFromTableByColumnAndField("sup", "tablefields", "header", "tablename", tble, "fieldsorder", true);
+    QStringList sl = sqlc.GetValuesFromTableByColumnAndFields("sup", "tablefields", "header", QStringList("tablename"), QStringList(tble), "fieldsorder", true);
     if ((sqlc.result) || (sl.isEmpty()))
     {
         TFWARN(sqlc.LastError);
@@ -777,7 +777,7 @@ QStringList s_tablefields::tableheaders(QString tble)
 
 QStringList s_tablefields::tablelinks(QString tble)
 {
-    QStringList sl = sqlc.GetValuesFromTableByColumnAndField("sup", "tablefields", "links", "tablename", tble, "fieldsorder", true);
+    QStringList sl = sqlc.GetValuesFromTableByColumnAndFields("sup", "tablefields", "links", QStringList("tablename"), QStringList(tble), "fieldsorder", true);
     if ((sqlc.result) || (sl.isEmpty()))
     {
         TFWARN(sqlc.LastError);
@@ -797,4 +797,44 @@ bool s_tablefields::tableistree(QString tble)
         return false;
     else
         return true;
+}
+
+QStringList s_tablefields::HeaderByFields(QString &tble, QString &header, QStringList &cmpfl, QStringList &cmpvl)
+{
+    if ((cmpfl.size() != cmpvl.size()) || (cmpfl.size() == 0))
+    {
+        result = 1;
+        TFDBG;
+        return QStringList();
+    }
+    QStringList realcmpfl, tmpsl;
+    // взяли все реальные названия полей сравнения
+    for (int i=0; i<cmpfl.size(); i++)
+    {
+        tmpsl = tablefields(tble,cmpfl.at(i));
+        if (result)
+        {
+            TFWARN("");
+            return QStringList();
+        }
+        realcmpfl << tmpsl.at(1);
+    }
+    QStringList tmpsl2 = tablefields(tble,header);
+    if (result)
+    {
+        TFWARN("");
+        return QStringList();
+    }
+    QString realheader = tmpsl2.at(1);
+    QString cmpdb = tmpsl.at(0).split(".").at(0); // реальное имя БД
+    QString cmptble = tmpsl.at(0).split(".").at(1); // реальное название таблицы
+    tmpsl = sqlc.GetValuesFromTableByColumnAndFields(cmpdb,cmptble,realheader,realcmpfl,cmpvl);
+    if (sqlc.result)
+    {
+        TFWARN(sqlc.LastError);
+        result = 1;
+        return QStringList();
+    }
+    result = 0;
+    return tmpsl;
 }

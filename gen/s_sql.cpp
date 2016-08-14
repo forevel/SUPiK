@@ -577,16 +577,32 @@ QList<QStringList> s_sql::GetValuesFromTableByColumns(QString db, QString tble, 
 
 // процедура берёт из таблицы только те значения по столбцу column, для которых поле str1 равно значению str2
 
-QStringList s_sql::GetValuesFromTableByColumnAndField(QString db, QString tble, QString column, QString cmpfield, QString cmpvalue,\
+QStringList s_sql::GetValuesFromTableByColumnAndFields(QString db, QString tble, QString column, QStringList cmpfl, QStringList cmpvl,\
                                                       QString orderby, bool asc)
 {
     QString tmpString;
     QStringList vl;
+    if (cmpfl.isEmpty())
+    {
+        result = 4;
+        WARNMSG(PublicClass::ER_SQL, __LINE__, "Переданный список сравнения пуст");
+        return QStringList();
+    }
+    if (cmpfl.size() != cmpvl.size())
+    {
+        result = 5;
+        WARNMSG(PublicClass::ER_SQL, __LINE__, "Длина списка полей сравнения не совпадает с длиной списка значений");
+        return QStringList();
+    }
     if (pc.AutonomousMode)
     {
         QSqlQuery exec_db (GetDB(db));
 
-        tmpString = "SELECT `" + column + "` FROM `" + tble + "` WHERE `deleted`=0 AND `" + cmpfield + "`=\"" + cmpvalue + "\"";
+        tmpString = "SELECT `" + column + "` FROM `" + tble + "` WHERE ";
+        for (int i = 0; i < cmpfl.size(); i++)
+            tmpString += "`" + cmpfl.at(i) + "`=\""+cmpvl.at(i)+"\" AND ";
+        tmpString = tmpString.left(tmpString.size()-5); // удаляем последний AND
+        tmpString +=  " AND `deleted`=0;";
         if (!orderby.isEmpty())
         {
             tmpString += " ORDER BY `"+orderby+"` ";
@@ -609,16 +625,22 @@ QStringList s_sql::GetValuesFromTableByColumnAndField(QString db, QString tble, 
     }
     else
     {
-        QStringList fl = QStringList() << db << tble << column << cmpfield << cmpvalue;
+        int pairs_num = cmpfl.size();
+        QStringList sl = QStringList() << QString::number(pairs_num) << db << tble << column;
+        for (int i=0; i<pairs_num; i++)
+        {
+            sl << AddQuotes(cmpfl.at(i));
+            sl << AddQuotes(cmpvl.at(i));
+        }
         if (!orderby.isEmpty())
         {
-            fl << orderby;
+            sl << orderby;
             if (asc)
-                fl << "ASC";
+                sl << "ASC";
             else
-                fl << "DESC";
+                sl << "DESC";
         }
-        Cli->SendCmd(Client::CMD_GVSBCF, fl);
+        Cli->SendCmd(Client::CMD_GVSBCF, sl);
         while (Cli->Busy)
         {
             QThread::msleep(10);
@@ -813,7 +835,7 @@ QString s_sql::GetLastValueFromTableByField (QString db, QString tble, QString f
     }
     else
     {
-        QStringList sl = GetValuesFromTableByColumnAndField(db,  tble, field, cmpfield, cmpvalue, "id"+tble, DESC);
+        QStringList sl = GetValuesFromTableByColumnAndFields(db,  tble, field, QStringList(cmpfield), QStringList(cmpvalue), "id"+tble, DESC);
         if (sl.isEmpty() || result != 0)
             return QString();
         result = 0;

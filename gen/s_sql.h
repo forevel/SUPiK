@@ -52,7 +52,7 @@ public:
                                             QString orderby="", bool asc=true);
     QStringList GetValuesFromTableByColumn (QString db, QString tble, QString column, QString orderby="", bool asc=true);
     QList<QStringList> GetValuesFromTableByColumns (QString db, QString tble, QStringList columns, QString orderby="", bool asc=true);
-    QStringList GetValuesFromTableByColumnAndField(QString db, QString tble, QString field, QString cmpfield, QString cmpvalue, \
+    QStringList GetValuesFromTableByColumnAndFields(QString db, QString tble, QString field, QStringList cmpfl, QStringList cmpvl, \
                                                    QString orderby="", bool asc=true);
     QList<QStringList> GetMoreValuesFromTableByFields (QString db, QString tble, QStringList fields, QStringList cmpfields, QStringList cmpvalues, \
                                                       QString orderby="", bool asc=true);

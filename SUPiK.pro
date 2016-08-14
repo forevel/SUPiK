@@ -97,7 +97,8 @@ SOURCES += main.cpp\
     widgets/s_tqtreewidget.cpp \
     widgets/s_tqwidget.cpp \
     widgets/treeview.cpp \
-    widgets/waitwidget.cpp
+    widgets/waitwidget.cpp \
+    widgets/s_tqtextedit.cpp
 
 HEADERS  += startwindow.h \
     supik.h \
@@ -176,7 +177,8 @@ HEADERS  += startwindow.h \
     widgets/s_tqtreewidget.h \
     widgets/s_tqwidget.h \
     widgets/treeview.h \
-    widgets/waitwidget.h
+    widgets/waitwidget.h \
+    widgets/s_tqtextedit.h
 
 RESOURCES += \
     pic.qrc

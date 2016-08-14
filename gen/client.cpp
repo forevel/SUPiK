@@ -186,14 +186,34 @@ void Client::SendCmd(int Command, QStringList &Args)
         ResultType = RESULT_VECTOR;
         break;
     }
+        // запрос всех значений по одному полю
+        // формат запроса: GVSBCF <pairs_num> db tble column <field1> <value1> ... <fieldn> <valuen> [order_header] [ASC|DESC]\n
+        // формат ответа: <value1> <value2> ... <valuen>\n
     case CMD_GVSBCF:
     {
         Result.clear(); // очищаем результаты
         FieldsLeast = false;
         FieldsLeastToAdd = 0;
-        if (Args.size() < 5)
+        if (Args.size() < 6)
         {
-            CliLog->error("CMD_GVSBCF: Number of arguments is less than 5");
+            CliLog->error("CMD_GVSBCF: Number of arguments is less than 6");
+            DetectedError = CLIER_WRARGS;
+            Busy = false;
+            return;
+        }
+        QString pairsnum = Args.takeAt(0);
+        bool ok;
+        int pnum = pairsnum.toInt(&ok);
+        if (!ok)
+        {
+            CliLog->error("CMD_GVSBCF: argument is not a number");
+            DetectedError = CLIER_WRARGS;
+            Busy = false;
+            return;
+        }
+        if (Args.size() < 2*pnum+3) // +3 - db, table, column
+        {
+            CliLog->error("CMD_GVSBCF: Number of fields is less than mentioned in header: "+QString::number(Args.size())+" "+QString::number(2*pnum+3));
             DetectedError = CLIER_WRARGS;
             Busy = false;
             return;

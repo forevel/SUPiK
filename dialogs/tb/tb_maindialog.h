@@ -28,6 +28,12 @@ class tb_maindialog : public QDialog
 {
     Q_OBJECT
     
+    enum ExTypes
+    {
+        EXTYPE_EX,
+        EXTYPE_TEST
+    };
+
 public:
     explicit tb_maindialog(QWidget *parent = 0);
     ~tb_maindialog();
@@ -37,6 +43,8 @@ signals:
 public slots:
 
 private slots:
+    void ExTypeTestChoosed();
+    void ExTypeExChoosed();
     void GroupChoosed();
     void NextQuestion();
     void AnswerChoosed();
@@ -59,7 +67,7 @@ private:
         bool Good;
     };
 
-    int TBGroup, AnswerCount, RightAnswerCount;
+    int TBGroup, AnswerCount, RightAnswerCount, ExType;
     QList<Questions_s> Questions;
     QList<Answers_s> Answers;
 

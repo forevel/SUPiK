@@ -3,6 +3,7 @@
 #include <QMenu>
 #include <QIcon>
 #include <QGridLayout>
+#include <QButtonGroup>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QHeaderView>
@@ -36,6 +37,7 @@ tb_maindialog::tb_maindialog(QWidget *parent) : QDialog(parent)
 {
     setAttribute(Qt::WA_DeleteOnClose);
     TBGroup = 0;
+    ExType = EXTYPE_TEST;
     SetupUI();
 }
 
@@ -81,27 +83,49 @@ void tb_maindialog::SetupUI()
     stw->setObjectName("groupstw");
     s_tqGroupBox *gb = new s_tqGroupBox;
     gb->setTitle("Выбор раздела");
+    QVBoxLayout *vlyout = new QVBoxLayout;
     hlyout = new QHBoxLayout;
+    hlyout->addStretch(100);
+    lbl = new s_tqLabel("Вы хотите пройти экзамен или пока потренироваться?");
+    hlyout->addWidget(lbl);
+    hlyout->addStretch(20);
+    QButtonGroup *gbg1 = new QButtonGroup;
+    s_tqRadioButton *rb = new s_tqRadioButton("Хочу экзамен");
+    connect(rb,SIGNAL(clicked(bool)),this,SLOT(ExTypeExChoosed()));
+    hlyout->addWidget(rb);
+    gbg1->addButton(rb);
+    rb = new s_tqRadioButton("Хочу потренироваться");
+    connect(rb,SIGNAL(clicked(bool)),this,SLOT(ExTypeTestChoosed()));
+    hlyout->addWidget(rb);
+    gbg1->addButton(rb);
+    hlyout->addStretch(100);
+    vlyout->addLayout(hlyout);
+    hlyout = new QHBoxLayout;
+    QButtonGroup *gbg2 = new QButtonGroup;
     hlyout->addStretch(150);
     lbl = new s_tqLabel("Выберите группу ТБ, по которой будете проходить тест:");
     hlyout->addWidget(lbl);
     hlyout->addStretch(20);
-    s_tqRadioButton *rb = new s_tqRadioButton("III");
+    rb = new s_tqRadioButton("III");
     rb->setObjectName("rb3");
     hlyout->addWidget(rb);
+    gbg2->addButton(rb);
     rb = new s_tqRadioButton("IV");
     rb->setObjectName("rb4");
     hlyout->addWidget(rb);
+    gbg2->addButton(rb);
     rb = new s_tqRadioButton("V");
     rb->setObjectName("rb5");
     rb->setEnabled(false);
     hlyout->addWidget(rb);
+    gbg2->addButton(rb);
     hlyout->addStretch(20);
     pb = new s_tqPushButton("Далее");
     connect(pb,SIGNAL(clicked(bool)),this,SLOT(GroupChoosed()));
     hlyout->addWidget(pb);
     hlyout->addStretch(150);
-    gb->setLayout(hlyout);
+    vlyout->addLayout(hlyout);
+    gb->setLayout(vlyout);
     stw->addWidget(gb);
     lyout->addWidget(stw);
 
@@ -120,7 +144,7 @@ void tb_maindialog::SetupUI()
     gb = new s_tqGroupBox;
     gb->setObjectName("goodbadgb");
     gb->setTitle("Результаты ответов");
-    QVBoxLayout *vlyout = new QVBoxLayout;
+    vlyout = new QVBoxLayout;
     GoodBadWidget *gbw = new GoodBadWidget;
     gbw->setObjectName("gbw");
     if (!gbw->SetItemsCount(TB_QUESTNUM))
@@ -129,9 +153,7 @@ void tb_maindialog::SetupUI()
         return;
     }
     vlyout->addWidget(gbw, 0);
-//    vlyout->setAlignment(gbw, Qt::AlignCenter);
     gb->setLayout(vlyout);
-//    gb->setVisible(false);
     lyout->addWidget(gb);
 
     gb = new s_tqGroupBox;
@@ -152,6 +174,16 @@ void tb_maindialog::SetupUI()
     QApplication::restoreOverrideCursor();
     gbw->SetItem(0, GoodBadTableModel::GBIT_NEUTRAL); // принудительный ресайз
 //    gbw->SetItem(0, GoodBadTableModel::GBIT_GOOD);
+}
+
+void tb_maindialog::ExTypeExChoosed()
+{
+    ExType = EXTYPE_EX;
+}
+
+void tb_maindialog::ExTypeTestChoosed()
+{
+    ExType = EXTYPE_TEST;
 }
 
 void tb_maindialog::GroupChoosed()
@@ -216,12 +248,6 @@ void tb_maindialog::GroupChoosed()
     }
     questiongb->setVisible(true);
     goodbadgb->setVisible(true);
-/*    GoodBadWidget *gbw = this->findChild<GoodBadWidget *>("gbw");
-    if (gbw == 0)
-    {
-        TBMDBG;
-        return;
-    } */
 }
 
 bool tb_maindialog::PrepareQuestions()
@@ -302,7 +328,6 @@ QList<s_tqWidget *> tb_maindialog::PrepareQuestionsByTheme(int theme, int questn
         lbl->setFont(font);
         lbl->setWordWrap(true);
         lyout->addWidget(lbl);
-//        lyout->setAlignment(te, Qt::AlignCenter);
         for (int j=1; j<7; ++j)
         {
             if (!mainvl.at(j).isEmpty())
@@ -318,9 +343,6 @@ QList<s_tqWidget *> tb_maindialog::PrepareQuestionsByTheme(int theme, int questn
         quest.Comment = mainvl.at(8);
         quest.Id = AnotherID.toInt();
         Questions.append(quest);
-/*        s_tqPushButton *pb = new s_tqPushButton("Следующий");
-        connect(pb,SIGNAL(clicked(bool)),this,SLOT(NextQuestion()));
-        lyout->addWidget(pb); */
         w->setLayout(lyout);
         wdgts.append(w);
     }
@@ -352,6 +374,7 @@ void tb_maindialog::AnswerChoosed()
         gbw->SetItem(AnswerCount, GoodBadTableModel::GBIT_GOOD);
         RightAnswerCount++;
         NextQuestion();
+        Answers.append(ans);
     }
     else
     {
@@ -375,8 +398,8 @@ void tb_maindialog::AnswerChoosed()
         w->setLayout(lyout);
         stw->addWidget(w);
         stw->setCurrentIndex(stw->count()-1); // устанавливаем последнедобавленный виджет в качестве текущего
+        Answers.append(ans);
     }
-    Answers.append(ans);
 }
 
 void tb_maindialog::NextQuestion()
@@ -405,27 +428,30 @@ void tb_maindialog::ProcessResultsAndExit()
     // сначала запишем в базу данных результаты
     // потом выдадим окно с результатами
     // потом закроем этот диалог
-    for (int i=0; i<TB_QUESTNUM; ++i)
+    if (ExType == EXTYPE_EX)
     {
-        QString newID = tfl.insert("Экзамен ТБ результаты_полн");
-        if (tfl.result)
+        for (int i=0; i<TB_QUESTNUM; ++i)
         {
-            TBMWARN;
-            return;
-        }
-        Answers_s ans;
-        if (Answers.size() != 0)
-            ans = Answers.takeFirst();
-        else
-            break;
-        QStringList fl = QStringList() << "ИД" << "ИД вопроса" << "Номер ответа" << "Правильный ответ";
-        QString tmps = (ans.Good) ? "1" : "0";
-        QStringList vl = QStringList() << newID << QString::number(ans.Id) << QString::number(ans.Answer) << tmps;
-        tfl.idtois("Экзамен ТБ результаты_полн", fl, vl);
-        if (tfl.result)
-        {
-            TBMWARN;
-            return;
+            QString newID = tfl.insert("Экзамен ТБ результаты_полн");
+            if (tfl.result)
+            {
+                TBMWARN;
+                return;
+            }
+            Answers_s ans;
+            if (Answers.size() != 0)
+                ans = Answers.takeFirst();
+            else
+                break;
+            QStringList fl = QStringList() << "ИД" << "ИД вопроса" << "Номер ответа" << "Правильный ответ";
+            QString tmps = (ans.Good) ? "1" : "0";
+            QStringList vl = QStringList() << newID << QString::number(ans.Id) << QString::number(ans.Answer) << tmps;
+            tfl.idtois("Экзамен ТБ результаты_полн", fl, vl);
+            if (tfl.result)
+            {
+                TBMWARN;
+                return;
+            }
         }
     }
     float Mark = static_cast<float>(RightAnswerCount) / TB_QUESTNUM * MAX_MARK;

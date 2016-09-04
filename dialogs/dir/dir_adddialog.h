@@ -6,9 +6,10 @@
 #include "../../widgets/s_tqpushbutton.h"
 #include "../../widgets/s_tqcombobox.h"
 #include "../../widgets/s_tqlineedit.h"
+#include "../../widgets/s_tqwidget.h"
 
-#define FSIZE 16
-#define FSIZE2 7
+#define FSIZE   32 // максимальное количество редактируемых полей справочника
+#define FSZPR   8 // максимальное количество полей на одну вкладку
 
 #define DADDDBG     DBGMSG(PublicClass::ER_DIRADD,__LINE__)
 #define DADDWARN    WARNMSG(PublicClass::ER_DIRADD,__LINE__)
@@ -36,8 +37,10 @@ private:
     QStringList sl1, sl2;
     QStringList FW_Links;
     QMap<QString, QString> dirBelongAliases;
-    void addLineToDlg(QList<QWidget *> wl, QGridLayout &lyt, int row);
+
+    void addLineToDlg(QVBoxLayout *lyt, QList<QWidget *> wl, int idx);
     void adjustFieldSize(QWidget *wdgt, int widthInChar);
+    s_tqWidget *SetWidget(int FType);
 
 private slots:
     void updateTWFields(double dfn);
@@ -45,14 +48,14 @@ private slots:
     void CancelAndClose();
     void setAccessRights();
     void acceptAccess(QString);
-    void FPBPressed(s_tqPushButton *ptr);
+    void FPBPressed();
     void fillFields();
     void transliteDirName();
 //    void transliteFieldName(QString str, s_tqLineEdit *ptr);
     void DTypeCBIndexChanged(int);
     void LTypeCBIndexChanged(QString str);
     void ConstructLink();
-    void TbleChoosed(QString, s_tqComboBox *);
+    void TbleChoosed();
     void TbleNameChanged(QString tblename);
     void WriteToTfl (QStringList fl, QStringList vl, QStringList cmpfl, QStringList cmpvl);
 };

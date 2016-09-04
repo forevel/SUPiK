@@ -201,7 +201,7 @@ void Client::SendCmd(int Command, QStringList &Args)
             Busy = false;
             return;
         }
-        QString pairsnum = Args.takeAt(0);
+        QString pairsnum = Args.at(0);
         bool ok;
         int pnum = pairsnum.toInt(&ok);
         if (!ok)
@@ -211,7 +211,7 @@ void Client::SendCmd(int Command, QStringList &Args)
             Busy = false;
             return;
         }
-        if (Args.size() < 2*pnum+3) // +3 - db, table, column
+        if (Args.size() < 2*pnum+4) // +3 - db, table, column, pairs_num
         {
             CliLog->error("CMD_GVSBCF: Number of fields is less than mentioned in header: "+QString::number(Args.size())+" "+QString::number(2*pnum+3));
             DetectedError = CLIER_WRARGS;

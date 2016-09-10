@@ -587,7 +587,7 @@ void dir_adddialog::TbleNameChanged(QString tblename)
     dirColumns.removeAt(dirColumns.indexOf("id"+tblename)); // убираем ИД, т.к. с ним разговор особый
     if (sqlc.result)
     {
-        DADDINFO("Не найдена таблица");
+//        DADDINFO("Не найдена таблица");
         return;
     }
     dirColumns.removeAll("date");
@@ -940,7 +940,7 @@ void dir_adddialog::FPBPressed()
     s_tqStackedWidget *sw = new s_tqStackedWidget;
     sw->setObjectName("linksconstrsw");
     for (int i=0; i<20; i++)
-        sw->addWidget(SetWidget(i+1));
+        sw->addWidget(SetWidget(i));
 
     lyout->addWidget(sw);
     lyout->setSizeConstraint(QLayout::SetFixedSize);
@@ -976,7 +976,7 @@ s_tqWidget *dir_adddialog::SetWidget(int FType)
     s_tqWidget *w = new s_tqWidget;
     s_tqComboBox *cb;
     s_tqLineEdit *le;
-    QStringListModel *slm;
+    QStringListModel *slm = new QStringListModel;
     QStringList vls = sqlc.GetValuesFromTableByColumn("sup", "tablefields", "tablename", "tablename");
     vls.removeDuplicates();
     switch (FType)
@@ -1006,7 +1006,7 @@ s_tqWidget *dir_adddialog::SetWidget(int FType)
         slm->setStringList(vls);
         cb->setModel(slm);
         cb->setObjectName("tcb."+QString::number(FW_LINK));
-        connect(cb,SIGNAL(textChanged(QString)),this,SLOT(TbleChoosed()));
+        connect(cb,SIGNAL(currentTextChanged(QString)),this,SLOT(TbleChoosed()));
         hlyout->addWidget(cb);
         vlyout->addLayout(hlyout);
         hlyout = new QHBoxLayout;
@@ -1034,7 +1034,7 @@ s_tqWidget *dir_adddialog::SetWidget(int FType)
             slm->setStringList(vls);
             cb->setModel(slm);
             cb->setObjectName("tble."+QString::number(FW_DLINK+FW_COUNT+i)); // +20 - чтобы точно перекрыть диапазон возможных вариантов полей
-            connect(cb,SIGNAL(textChanged(QString)),this,SLOT(TbleChoosed()));
+            connect(cb,SIGNAL(currentTextChanged(QString)),this,SLOT(TbleChoosed()));
             hlyout->addWidget(cb);
             vlyout->addLayout(hlyout);
             hlyout = new QHBoxLayout;
@@ -1059,7 +1059,7 @@ s_tqWidget *dir_adddialog::SetWidget(int FType)
         slm->setStringList(vls);
         cb->setModel(slm);
         cb->setObjectName("tcb."+QString::number(FW_ALLINK));
-        connect(cb,SIGNAL(textChanged(QString)),this,SLOT(TbleChoosed(QString)));
+        connect(cb,SIGNAL(currentTextChanged(QString)),this,SLOT(TbleChoosed(QString)));
         hlyout->addWidget(cb);
         vlyout->addLayout(hlyout);
         hlyout = new QHBoxLayout;
@@ -1083,7 +1083,7 @@ s_tqWidget *dir_adddialog::SetWidget(int FType)
         slm->setStringList(vls);
         cb->setModel(slm);
         cb->setObjectName("tcb."+QString::number(FW_MAXLINK));
-        connect(cb,SIGNAL(textChanged(QString)),this,SLOT(TbleChoosed(QString)));
+        connect(cb,SIGNAL(currentTextChanged(QString)),this,SLOT(TbleChoosed(QString)));
         hlyout->addWidget(cb);
         vlyout->addLayout(hlyout);
         hlyout = new QHBoxLayout;
@@ -1196,7 +1196,7 @@ s_tqWidget *dir_adddialog::SetWidget(int FType)
         slm->setStringList(vls);
         cb->setModel(slm);
         cb->setObjectName("tcb."+QString::number(FW_SPECIAL));
-        connect(cb,SIGNAL(textChanged(QString)),this,SLOT(TbleChoosed()));
+        connect(cb,SIGNAL(currentTextChanged(QString)),this,SLOT(TbleChoosed()));
         hlyout->addWidget(cb);
         vlyout->addLayout(hlyout);
         hlyout = new QHBoxLayout;
@@ -1300,7 +1300,7 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
         return;
     }
     sw->setCurrentIndex(wdgtsidx);
-    s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("value"+QString::number(idx)+"LE");
+    s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("value."+QString::number(idx));
     if (le == 0)
     {
         DADDDBG;

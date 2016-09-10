@@ -10,7 +10,7 @@ QMAKE_TARGET_PRODUCT = SUPiK
 RC_ICONS = res/SUPiK.ico
 VERSION = 1.0.0308
 
-QT       += core gui sql xlsx ftp
+QT       += core gui sql xlsx ftp printsupport
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -50,6 +50,7 @@ SOURCES += main.cpp\
     gen/client.cpp \
     gen/ftp.cpp \
     gen/log.cpp \
+    gen/pdfout.cpp \
     gen/publicclass.cpp \
     gen/publiclang.cpp \
     gen/s_sql.cpp \
@@ -130,6 +131,7 @@ HEADERS  += startwindow.h \
     gen/client.h \
     gen/ftp.h \
     gen/log.h \
+    gen/pdfout.h \
     gen/publicclass.h \
     gen/publiclang.h \
     gen/s_sql.h \
@@ -179,7 +181,6 @@ HEADERS  += startwindow.h \
     widgets/treeview.h \
     widgets/waitwidget.h \
     widgets/s_tqtextedit.h
-
 RESOURCES += \
     pic.qrc
 

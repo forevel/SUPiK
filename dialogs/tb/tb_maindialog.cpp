@@ -25,8 +25,10 @@
 #include "../../widgets/s_tqwidget.h"
 #include "../../widgets/s_tqstackedwidget.h"
 #include "../../widgets/goodbadwidget.h"
+#include "../../widgets/waitwidget.h"
 #include "../../gen/publicclass.h"
 #include "../../gen/s_tablefields.h"
+#include "../../gen/pdfout.h"
 #include "../messagebox.h"
 
 // --------------------------------------
@@ -188,10 +190,14 @@ void tb_maindialog::ExTypeTestChoosed()
 
 void tb_maindialog::GroupChoosed()
 {
+    WaitWidget *ww = new WaitWidget;
+    ww->Start();
     s_tqStackedWidget *stw = this->findChild<s_tqStackedWidget *>("groupstw");
     if (stw == 0)
     {
         TBMDBG;
+        ww->Stop();
+        delete ww;
         return;
     }
     s_tqRadioButton *rb3 = this->findChild<s_tqRadioButton *>("rb3");
@@ -200,6 +206,8 @@ void tb_maindialog::GroupChoosed()
     if ((rb3 == 0) || (rb4 == 0) || (rb5 == 0))
     {
         TBMDBG;
+        ww->Stop();
+        delete ww;
         return;
     }
     QString tmps;
@@ -237,6 +245,8 @@ void tb_maindialog::GroupChoosed()
     if (!PrepareQuestions())
     {
         TBMWARN;
+        ww->Stop();
+        delete ww;
         return;
     }
     s_tqGroupBox *questiongb = this->findChild<s_tqGroupBox *>("questiongb");
@@ -244,10 +254,13 @@ void tb_maindialog::GroupChoosed()
     if ((questiongb == 0) || (goodbadgb == 0))
     {
         TBMDBG;
+        ww->Stop();
+        delete ww;
         return;
     }
     questiongb->setVisible(true);
     goodbadgb->setVisible(true);
+    ww->Stop();
 }
 
 bool tb_maindialog::PrepareQuestions()
@@ -351,6 +364,14 @@ QList<s_tqWidget *> tb_maindialog::PrepareQuestionsByTheme(int theme, int questn
 
 void tb_maindialog::AnswerChoosed()
 {
+    s_tqStackedWidget *stw = this->findChild<s_tqStackedWidget *>("questionstw");
+    if (stw == 0)
+    {
+        TBMDBG;
+        return;
+    }
+    QWidget *curw = stw->currentWidget();
+    curw->setEnabled(false);
     GoodBadWidget *gbw = this->findChild<GoodBadWidget *>("gbw");
     if (gbw == 0)
     {
@@ -428,11 +449,14 @@ void tb_maindialog::ProcessResultsAndExit()
     // сначала запишем в базу данных результаты
     // потом выдадим окно с результатами
     // потом закроем этот диалог
+    float Mark = static_cast<float>(RightAnswerCount) / TB_QUESTNUM * MAX_MARK;
+    QList<QStringList> lsl;
+    QStringList sl;
     if (ExType == EXTYPE_EX)
     {
         for (int i=0; i<TB_QUESTNUM; ++i)
         {
-            QString newID = tfl.insert("Экзамен ТБ результаты_полн");
+            QString newID = tfl.insert("Экзамен ТБ ответы_полн");
             if (tfl.result)
             {
                 TBMWARN;
@@ -446,15 +470,42 @@ void tb_maindialog::ProcessResultsAndExit()
             QStringList fl = QStringList() << "ИД" << "ИД вопроса" << "Номер ответа" << "Правильный ответ";
             QString tmps = (ans.Good) ? "1" : "0";
             QStringList vl = QStringList() << newID << QString::number(ans.Id) << QString::number(ans.Answer) << tmps;
-            tfl.idtois("Экзамен ТБ результаты_полн", fl, vl);
+            tfl.idtois("Экзамен ТБ ответы_полн", fl, vl);
             if (tfl.result)
             {
                 TBMWARN;
                 return;
             }
+            lsl.append(vl);
         }
+        // сформируем протокол в pdf
+        sl = QStringList() << "ИД" << "ИД вопроса" << "Номер ответа" << "Правильный ответ";
+        lsl.insert(0, sl);
+        QString Filename = pc.HomeDir + pc.Pers+" " + pc.DateTime.replace(':','.') +".pdf";
+        PdfOut *PdfDoc = new PdfOut(Filename);
+        QFont font;
+        font.setPointSize(15);
+        PdfDoc->SetTextFont(font);
+        PdfDoc->InsertText("Результаты экзамена по ОТ и ТБ "+pc.Pers);
+        PdfDoc->InsertTable(lsl);
+        PdfDoc->WritePdf();
+        // запишем результаты в Экзам рез
+        QString newID = tfl.insert("Экзам рез_полн");
+        if (tfl.result)
+        {
+            TBMWARN;
+            return;
+        }
+        QStringList fl = QStringList() << "ИД" << "Результат" << "Раздел" << "Тип" << "Файл";
+        QStringList vl = QStringList() << newID << QString::number(Mark, 'g', 2) << QString::number(TBGroup) << QString::number(ExType) << Filename;
+        tfl.idtois("Экзам рез_полн", fl, vl);
+        if (tfl.result)
+        {
+            TBMWARN;
+            return;
+        }
+        // отправим протокол на сервер
     }
-    float Mark = static_cast<float>(RightAnswerCount) / TB_QUESTNUM * MAX_MARK;
     MessageBox2::information(this, "Информация", "По результатам экзамена Вы получаете оценку\n" + QString::number(Mark, 'f', 2) + " баллов из " + \
                              QString::number(MAX_MARK) + " возможных!");
     this->close();

@@ -45,7 +45,6 @@ void s_tqLineEdit::changetext(const QString &str)
     int w = fm.boundingRect(str).width();
     this->resize(w, this->height());
     this->updateGeometry();
-    emit textChanged(str, this);
 }
 
 void s_tqLineEdit::emiteditingfinished()

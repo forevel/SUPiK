@@ -40,18 +40,19 @@ void WaitWidget::Start()
     tmr->setInterval(10);
     connect(tmr,SIGNAL(timeout()),this,SLOT(Rotate()));
     tmr->start();
-    QTime tme;
+/*    QTime tme;
     while (!Finished)
     {
         tme.start();
         while (tme.elapsed() < 100)
             qApp->processEvents();
     }
-    emit finished();
+    emit finished(); */
 }
 
 void WaitWidget::Stop()
 {
+    hide();
     Finished = true;
 }
 

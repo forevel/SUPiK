@@ -19,7 +19,7 @@ public:
     QVariant getAData();
 
 signals:
-    void textChanged(const QString &, s_tqLineEdit *ptr);
+//    void textChanged(const QString &, s_tqLineEdit *ptr);
     void editingFinished(const QString &);
 
 public slots:

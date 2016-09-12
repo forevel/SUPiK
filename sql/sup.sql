@@ -508,27 +508,31 @@ INSERT INTO `personel` VALUES (2001,'Валуйских А.О.','vao','2001','20
 UNLOCK TABLES;
 
 --
--- Table structure for table `psw`
+-- Table structure for table `perspsw`
 --
 
-DROP TABLE IF EXISTS `psw`;
+DROP TABLE IF EXISTS `perspsw`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `psw` (
-  `idpsw` int(11) NOT NULL,
-  `psw` varchar(45) DEFAULT NULL,
-  `dept` varchar(2) DEFAULT NULL,
-  PRIMARY KEY (`idpsw`)
+CREATE TABLE `perspsw` (
+  `idperspsw` int(11) NOT NULL,
+  `perspsw` varchar(255) DEFAULT NULL,
+  `idpersonel` varchar(10) DEFAULT NULL,
+  `idpers` varchar(10) DEFAULT NULL,
+  `deleted` int(1) NOT NULL DEFAULT '0',
+  `date` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`idperspsw`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `psw`
+-- Dumping data for table `perspsw`
 --
 
-LOCK TABLES `psw` WRITE;
-/*!40000 ALTER TABLE `psw` DISABLE KEYS */;
-/*!40000 ALTER TABLE `psw` ENABLE KEYS */;
+LOCK TABLES `perspsw` WRITE;
+/*!40000 ALTER TABLE `perspsw` DISABLE KEYS */;
+INSERT INTO `perspsw` VALUES (1,'03015440485C6619090B1707034341440D550F','2001','2001',0,'2016-09-12 22:13:36');
+/*!40000 ALTER TABLE `perspsw` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -632,4 +636,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2016-09-12  0:03:25
+-- Dump completed on 2016-09-12 23:18:18

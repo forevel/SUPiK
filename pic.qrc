@@ -1,6 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>res/1.x.png</file>
         <file>res/2cWallPaper.png</file>
         <file>res/calend.png</file>
         <file>res/cross.png</file>
@@ -77,5 +76,6 @@
         <file>res/ans_bad.gif</file>
         <file>res/ans_good.gif</file>
         <file>res/ans_neutral.gif</file>
+        <file>res/2.x.png</file>
     </qresource>
 </RCC>

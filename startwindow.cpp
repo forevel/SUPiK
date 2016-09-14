@@ -19,7 +19,7 @@ StartWindow::StartWindow(QWidget *parent) : QMainWindow(parent)
     SupLog = new Log;
     SupLog->Init(pc.HomeDir+"/sup.log");
     SupLog->info("=== Log started ===");
-    QPixmap StartWindowSplashPixmap(":/res/1.x.png");
+    QPixmap StartWindowSplashPixmap(":/res/2.x.png");
     QSplashScreen *StartWindowSplashScreen = new QSplashScreen(StartWindowSplashPixmap);
     StartWindowSplashScreen->show();
 
@@ -172,7 +172,7 @@ void StartWindow::OkPBClicked()
     pc.PersLogin = UNameLE->text();
     pc.PersPsw = PasswdLE->text();
 
-    QPixmap StartWindowSplashPixmap(":/res/1.x.png");
+    QPixmap StartWindowSplashPixmap(":/res/2.x.png");
     QSplashScreen *StartWindowSplashScreen = new QSplashScreen(StartWindowSplashPixmap);
     StartWindowSplashScreen->show();
 

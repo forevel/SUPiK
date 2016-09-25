@@ -11,6 +11,7 @@
 #include "../../models/griddelegate.h"
 #include "../../widgets/s_tqstackedwidget.h"
 #include "../../widgets/s_tqwidget.h"
+#include "../messagebox.h"
 
 #include <QApplication>
 #include <QPainter>
@@ -183,7 +184,7 @@ void dir_maindialog::ShowSlaveTree(QString str)
             SlaveTVAccess = values.at(2).toLongLong(0, 16);
         }
         else
-            DIRMER("Недостаточно прав для работы со справочником!");
+            MessageBox2::error(this, "Ошибка", "Недостаточно прав для работы со справочником!");
     }
     else
         DIRMWARN;
@@ -259,6 +260,11 @@ void dir_maindialog::EditItem()
 
 void dir_maindialog::EditItem(QString str)
 {
+    if (!(pc.access & 0xAAAA)) // нет прав на запись
+    {
+        MessageBox2::error(this, "Ошибка", "Нет прав на изменение справочника");
+        return;
+    }
     QString tmps = getMainIndex(1);
     if (tmps.isEmpty())
     {

@@ -16,6 +16,7 @@
 #include "../../widgets/s_tqwidget.h"
 #include "sysmenueditor.h"
 #include "sysdireditor.h"
+#include "sys_persdialog.h"
 
 #include <QPainter>
 #include <QVBoxLayout>
@@ -41,6 +42,7 @@ sys_systemdialog::sys_systemdialog(QWidget *parent) :
     pf["sysdireditor"] = &sys_systemdialog::SystemDirEditor;
     pf["tableseditor"] = &sys_systemdialog::TablesEditor;
     pf["direditor"] = &sys_systemdialog::DirEditor;
+    pf["perseditor"] = &sys_systemdialog::PersEditor;
 }
 
 void sys_systemdialog::paintEvent(QPaintEvent *event)
@@ -491,6 +493,20 @@ void sys_systemdialog::DirEditor()
         return;
     }
     SysDirEditor *dlg = new SysDirEditor;
+    connect(this,SIGNAL(closeslvdlg()),dlg,SLOT(close()));
+    wdgt->addWidget(dlg);
+    wdgt->repaint();
+}
+
+void sys_systemdialog::PersEditor()
+{
+    s_tqStackedWidget *wdgt = this->findChild<s_tqStackedWidget *>("sw");
+    if (wdgt == 0)
+    {
+        SYSSDBG;
+        return;
+    }
+    sys_persdialog *dlg = new sys_persdialog;
     connect(this,SIGNAL(closeslvdlg()),dlg,SLOT(close()));
     wdgt->addWidget(dlg);
     wdgt->repaint();

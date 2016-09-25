@@ -96,6 +96,7 @@ void SysErDialog::NewProblemsDetected()
         AddRowToProt(pc.ermsgpool.at(i));
         i++;
     }
+    ErMsgLastNum = pc.ermsgpool.last().ErNum;
     emit ProblemsNumberUpdated();
 }
 

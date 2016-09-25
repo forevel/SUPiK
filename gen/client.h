@@ -13,7 +13,7 @@
 #define CLIINFO(a) INFOMSG(PublicClass::ER_CLI,__LINE__,a)
 
 #define SERVERRSTR  "ERROR"
-#define TIMERSOFF // если не закомментировано, таймауты отключены
+//#define TIMERSOFF // если не закомментировано, таймауты отключены
 #define SLNUMMAX    10 // максимальное число полей в запросе по столбцам
 #define TOKEN       0x7F // разделитель
 

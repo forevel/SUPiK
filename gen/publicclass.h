@@ -160,7 +160,8 @@ public:
         ER_LOG,      // Log
         ER_ETH,      // Ethernet
         ER_SIMP,     // sys_importclass
-        ER_TBM      // tb_maindialog
+        ER_TBM,      // tb_maindialog
+        ER_SYSPERS  // sys_persdialog
     };
 
     static QMap<int, QString> ermsgs()
@@ -203,6 +204,7 @@ public:
         map.insert(ER_ETH, QString::fromLocal8Bit("Ethernet"));
         map.insert(ER_SIMP, QString::fromLocal8Bit("Импорт"));
         map.insert(ER_TBM, QString::fromLocal8Bit("ТБ_гл"));
+        map.insert(ER_SYSPERS, QString::fromLocal8Bit("Система_персонал"));
         return map;
     }
 

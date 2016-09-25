@@ -37,6 +37,7 @@ private:
     void SystemDirEditor();
     void TablesEditor();
     void DirEditor();
+    void PersEditor();
 
 protected:
     void paintEvent(QPaintEvent *event);

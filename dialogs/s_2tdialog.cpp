@@ -210,7 +210,7 @@ void s_2tdialog::MainItemChoosed()
         D2TDLGWARN;
         return;
     }
-    if (SlaveModel->SetupRaw(MainDb, sltble))
+    if (SlaveModel->SetupRawComp(MainDb, sltble))
     {
         QApplication::restoreOverrideCursor();
         D2TDLGWARN;

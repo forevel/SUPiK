@@ -378,12 +378,21 @@ int TreeModel::Setup(QStringList Tables, int Type)
 
 // инициализация таблицы по реальным именам в БД
 
-int TreeModel::SetupRaw(QString db, QString tble)
+int TreeModel::SetupRawComp(QString db, QString tble)
 {
+    return SetupRaw(db, tble, "id", "PartNumber");
+}
+
+int TreeModel::SetupRaw(QString db, QString tble, QString id, QString mainfield)
+{
+    if (id.isEmpty())
+        id = "id" + tble;
+    if (mainfield.isEmpty())
+        mainfield = tble;
+    QStringList TableHeadersSl = QStringList() << id << mainfield;
+    QStringList TableLinksSl = QStringList() << "4.19..7" << "1.8";
     ClearModel();
     IsRaw = true;
-    QStringList TableHeadersSl = QStringList() << "id" << "PartNumber";
-    QStringList TableLinksSl = QStringList() << "4.19..7" << "1.8";
     TableHeaders.append(TableHeadersSl);
     TableLinks.append(TableLinksSl);
     TableIsTree.append(false);

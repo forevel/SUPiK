@@ -39,7 +39,8 @@ public:
     int Setup(QStringList Tables, int Type=TT_TYPE1);
     int Setup(QString Table);
     int SetupFile(QString Filename, QString StringToFind);
-    int SetupRaw(QString db, QString tble);
+    int SetupRawComp(QString db, QString tble);
+    int SetupRaw(QString db, QString tble, QString id="", QString mainfield="");
     void Refresh();
     bool HaveChildren(int row);
     void SetLastItem(QColor FColor, QColor BColor, QFont Font, QIcon Icon, QString AData="0");

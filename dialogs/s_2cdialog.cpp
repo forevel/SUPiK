@@ -59,6 +59,26 @@ void s_2cdialog::setup(QString tble, int Mode, QString id, bool isQuarantine)
     QApplication::restoreOverrideCursor();
 }
 
+void s_2cdialog::SetupRaw(QString db, QString tble, int Mode, QString id)
+{
+    QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
+    this->tble.clear();
+    this->tble.append(tble);
+    this->Mode = Mode;
+    this->Id = id;
+    this->Db = db;
+    setupUI();
+    if (MainModel->SetupRaw(db, tble, id))
+    {
+        QApplication::restoreOverrideCursor();
+        CD2WARN;
+        return;
+    }
+    FillHeaderData();
+    result = 0;
+    QApplication::restoreOverrideCursor();
+}
+
 void s_2cdialog::SetupFile(QString Filename, QString StringToFind, QString str)
 {
 }
@@ -104,7 +124,7 @@ void s_2cdialog::setupUI()
     mainTV->resizeColumnsToContents();
     mainTV->resizeRowsToContents();
     connect (mainTV,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(accepted(QModelIndex)));
-    if (Mode == MODE_CHOOSE)
+    if ((Mode == MODE_CHOOSE) || (Mode == MODE_CHOOSE_RAW))
     {
         QHBoxLayout *hlyout = new QHBoxLayout;
         s_tqPushButton *pb = new s_tqPushButton;
@@ -134,22 +154,57 @@ void s_2cdialog::setupUI()
 
 void s_2cdialog::AddItem()
 {
-    QString tmptble = tble.at(0);
-    tmptble.remove("_полн");
-    tmptble.remove("_сокращ");
-    QString Caption = tmptble;
-    tmptble.append("_полн");
-    QString newID = tfl.insert(tmptble);
-    if (tfl.result)
+    if (Mode == MODE_CHOOSE)
     {
-        CD2WARN;
-        return;
+        QString tmptble = tble.at(0);
+        tmptble.remove("_полн");
+        tmptble.remove("_сокращ");
+        QString Caption = tmptble;
+        tmptble.append("_полн");
+        QString newID = tfl.insert(tmptble);
+        if (tfl.result)
+        {
+            CD2WARN;
+            return;
+        }
+        tfl.idtois(tmptble,QStringList("ИД"),QStringList(newID)); // добавление полей idpers, deleted, date
+        if (!tfl.result)
+        {
+            s_2cdialog *newdialog = new s_2cdialog(Caption);
+            newdialog->setup(tmptble, MODE_EDITNEW, newID);
+            if (!newdialog->result)
+            {
+                newdialog->setModal(true);
+                newdialog->exec();
+                Update();
+            }
+            else
+            {
+                CD2WARN;
+                return;
+            }
+        }
+        else
+            CD2WARN;
     }
-    tfl.idtois(tmptble,QStringList("ИД"),QStringList(newID)); // добавление полей idpers, deleted, date
-    if (!tfl.result)
+    else if (Mode == MODE_CHOOSE_RAW)
     {
-        s_2cdialog *newdialog = new s_2cdialog(Caption);
-        newdialog->setup(tmptble, MODE_EDITNEW, newID);
+        QString newid = sqlc.InsertValuesToTable(Db, tble.at(0), QStringList(), QStringList()); // вставка новой пустой строки
+        if (sqlc.result)
+        {
+            CD2WARN;
+            return;
+        }
+        QStringList tmptablefields = QStringList() << "date" << "idpers";
+        QStringList tmpvalues = QStringList() << pc.DateTime << QString::number(pc.idPers);
+        sqlc.UpdateValuesInTable(Db, tble.at(0), tmptablefields, tmpvalues, "id"+tble.at(0), newid);
+        if (sqlc.result)
+        {
+            CD2WARN;
+            return;
+        }
+        s_2cdialog *newdialog = new s_2cdialog("");
+        newdialog->SetupRaw(Db, tble.at(0), MODE_EDITNEW_RAW, newid);
         if (!newdialog->result)
         {
             newdialog->setModal(true);
@@ -162,8 +217,6 @@ void s_2cdialog::AddItem()
             return;
         }
     }
-    else
-        CD2WARN;
 }
 
 void s_2cdialog::Update()
@@ -220,18 +273,18 @@ void s_2cdialog::paintEvent(QPaintEvent *e)
 void s_2cdialog::accepted(QModelIndex idx)
 {
     Q_UNUSED(idx);
-    if (Mode == MODE_CHOOSE)
+    if ((Mode == MODE_CHOOSE) || (Mode == MODE_CHOOSE_RAW))
         accepted();
 }
 
 void s_2cdialog::accepted()
 {
-    QString tmpString, oldtble, oldid, newid;
-    int tmph;
-/*    if ((Mode == MODE_EDIT) || (Mode == MODE_EDITNEW)) // для режима редактирования - запись в базу
-    { */
-        QStringList headers = MainModel->Headers();
-        QStringList values = MainModel->Values();
+    QStringList headers = MainModel->Headers();
+    QStringList values = MainModel->Values();
+    if ((Mode == MODE_EDIT) || (Mode == MODE_EDITNEW) || (Mode == MODE_CHOOSE))
+    {
+        QString oldtble, oldid, newid;
+        int tmph;
         if (IsQuarantine)
         {
             oldtble = tble.at(0);
@@ -260,18 +313,18 @@ void s_2cdialog::accepted()
                 return;
             }
         }
-/*    }
-    else // список выбора
+    }
+    else // MODE_EDIT_RAW & MODE_EDITNEW_RAW & MODE_CHOOSE_RAW
     {
-        s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
-        if (tv == 0)
+        sqlc.UpdateValuesInTable(Db, tble.at(0), headers, values, "id"+tble.at(0), Id);
+        if (sqlc.result)
         {
-            CD2DBG;
+            CD2WARN;
             return;
         }
-        tmpString = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole).toString();
-    } */
-    emit changeshasbeenMade(tmpString);
+        CD2INFO("Записано успешно!");
+    }
+    emit changeshasbeenMade(QString());
     this->close();
 }
 
@@ -290,6 +343,8 @@ void s_2cdialog::closeEvent(QCloseEvent *e)
 
 void s_2cdialog::FillHeaderData()
 {
+    if ((Mode == MODE_CHOOSE_RAW) || (Mode == MODE_EDITNEW_RAW) || (Mode == MODE_EDIT_RAW))
+        return;
     int i;
     int ftype;
     for (i=0;i<MainModel->rowCount();i++)

@@ -328,6 +328,47 @@ int EditModel::Setup(QString Table, QString Id)
     return 0;
 }
 
+// процедура заполнения модели значениями полей из таблицы db:tble по одному id
+// предназначена для диалога редактирования справочников (s_2cdialog)
+
+int EditModel::SetupRaw(QString Db, QString Tble, QString Id)
+{
+    ClearModel();
+    if (Db.isEmpty() || Tble.isEmpty())
+    {
+        EMODELWARN;
+        return 1;
+    }
+    int i;
+    // устанавливаем столбцы модели
+    AddColumn("Имя поля");
+    AddColumn("Значение поля");
+
+    QStringList TableHeadersSl = sqlc.GetColumnsFromTable(Db, Tble);
+    // заполняем модель
+    QStringList ValuesSl = sqlc.GetValuesFromTableByID(Db, Tble, TableHeadersSl, Id);
+    if (sqlc.result)
+    {
+        EMODELWARN;
+        return 1;
+    }
+    PublicClass::ValueStruct tmpvl;
+    tmpvl.Type = VS_STRING;
+    for (i = 0; i < TableHeadersSl.size(); ++i)
+    {
+        QList<PublicClass::ValueStruct> ValuesToAdd;
+        tmpvl.Value = TableHeadersSl.at(i);
+        ValuesToAdd.append(tmpvl);
+        if (i < ValuesSl.size())
+        {
+            tmpvl.Value = ValuesSl.at(i);
+            ValuesToAdd.append(tmpvl);
+        }
+        AddRow(ValuesToAdd);
+    }
+    return 0;
+}
+
 void EditModel::AddRow(QList<PublicClass::ValueStruct> ValuesSl)
 {
     int LastIndex = rowCount();

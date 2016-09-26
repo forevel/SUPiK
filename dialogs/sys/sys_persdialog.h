@@ -2,6 +2,7 @@
 #define SYS_PERSDIALOG_H
 
 #include <QDialog>
+#include <QModelIndex>
 
 #define SYSPDBG     DBGMSG(PublicClass::ER_SYSPERS, __LINE__)
 #define SYSPWARN    WARNMSG(PublicClass::ER_SYSPERS,__LINE__)
@@ -15,6 +16,9 @@ public:
 
 private:
     void SetupUI();
+
+private slots:
+    void ChangePers(QModelIndex);
 };
 
 #endif // SYS_PERSDIALOG_H

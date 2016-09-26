@@ -81,6 +81,7 @@ public:
     void ClearModel();
     QString Value(int Row, int Column); // взять значение по строке row и столбцу Column
     int Setup(QString Table, QString Id);
+    int SetupRaw(QString Db, QString Tble, QString Id); // заполнение модели из таблицы, которой нет в tablefields
     QStringList Headers();
     QStringList Values();
     PublicClass::ValueStruct CellValue(int row, int column);

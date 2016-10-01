@@ -339,14 +339,15 @@ int TreeModel::SetupFile(QString Filename, QString StringToFind)
 
 // процедура инициализации модели данными из таблицы table и построение дерева по полям <tble> и idalias
 
-int TreeModel::Setup(QString Table)
+int TreeModel::Setup(QString Table, bool Cond)
 {
     QStringList sl = QStringList() << Table;
-    return Setup(sl, TT_SIMPLE);
+    return Setup(sl, TT_SIMPLE, Cond);
 }
 
-int TreeModel::Setup(QStringList Tables, int Type)
+int TreeModel::Setup(QStringList Tables, int Type, bool Cond)
 {
+    IsConditional = Cond;
     TreeType = Type;
     ClearModel();
 
@@ -413,6 +414,7 @@ int TreeModel::SetupRaw(QString db, QString tble, QString id, QString mainfield)
 
 int TreeModel::PrepareTable(QString Table)
 {
+    RightsFieldNum = 0;
     if (Table.isEmpty())
     {
         TMODELDBG;
@@ -435,7 +437,7 @@ int TreeModel::PrepareTable(QString Table)
     QString PlainTable;
     if (tmpsl.size()>1)
         PlainTable = tmpsl.at(1);
-    // ищем ключевые поля - tble, <tble> и id<tble>
+    // ищем ключевые поля - tble, <tble> и id<tble>, а также "Права доступа"
     for (i = 0; i < vl.size(); i++)
     {
         QStringList sl = vl.at(i);
@@ -451,6 +453,8 @@ int TreeModel::PrepareTable(QString Table)
             idpos = i;
             continue;
         }
+        if (sl.at(2) == "Права доступа")
+            RightsFieldNum = i;
         if (sl.at(1) == PlainTable)
             IsAliasExist = true;
         TableHeadersSl.append(sl.at(1));
@@ -620,6 +624,12 @@ int TreeModel::SetTree(int Table, QString Id)
     }
     for (int i=0; i<vl.size(); i++)
     {
+        if (IsConditional)
+        {
+            QString Rights = vl.at(i).at(RightsFieldNum);
+            if (!(Rights.toUInt(0,16) & pc.access)) // пропускаем, если права не соответствуют
+                continue;
+        }
         tmpsl = vl.at(i);
         QString RootId = tmpsl.at(0);
         QString tmps = QString::number(Table)+"."+QString("%1").arg(RootId.toInt(0), 7, 10, QChar('0')); // добавка нулей
@@ -687,6 +697,12 @@ int TreeModel::SetTable(int Table, QString Id)
         bool NewTableExist = (NewTable < TablesNum);
         for (int i=0; i<vl.size(); i++)
         {
+            if (IsConditional)
+            {
+                QString Rights = vl.at(i).at(RightsFieldNum);
+                if (!(Rights.toUInt(0,16) & pc.access)) // пропускаем, если права не соответствуют
+                    continue;
+            }
             tmpsl = vl.at(i);
             QString RootId = tmpsl.at(0);
             QString tmps = QString::number(Table)+"."+QString("%1").arg(RootId.toInt(),7, 10, QChar('0')); // добавка нулей
@@ -744,6 +760,12 @@ int TreeModel::SetNextTree(int Table, QString Id)
     }
     for (int i=0; i<vl.size(); i++)
     {
+        if (IsConditional)
+        {
+            QString Rights = vl.at(i).at(RightsFieldNum);
+            if (!(Rights.toUInt(0,16) & pc.access)) // пропускаем, если права не соответствуют
+                continue;
+        }
         tmpsl = vl.at(i);
         QString RootId = tmpsl.at(0);
         QString tmps = QString::number(Table)+"."+QString("%1").arg(RootId.toInt(),7, 10, QChar('0')); // добавка нулей
@@ -811,6 +833,12 @@ int TreeModel::SetNextTable(int Table, QString Id)
         QStringList idsl;
         for (int i=0; i<vl.size(); i++)
         {
+            if (IsConditional)
+            {
+                QString Rights = vl.at(i).at(RightsFieldNum);
+                if (!(Rights.toUInt(0,16) & pc.access)) // пропускаем, если права не соответствуют
+                    continue;
+            }
             if (idsl.indexOf(vl.at(i).at(tmpidx)) == -1)
                 idsl << vl.at(i).at(tmpidx);
         }

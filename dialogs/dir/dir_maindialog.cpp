@@ -79,7 +79,7 @@ void dir_maindialog::SetupUI()
     QVBoxLayout *leftlyout = new QVBoxLayout;
 
     QApplication::setOverrideCursor(Qt::WaitCursor);
-    if (MainTableModel->Setup(MainTable+"_сокращ"))
+    if (MainTableModel->Setup(MainTable+"_сокращ", true))
     {
         DIRMER("Ошибка при построении таблицы "+MainTable);
         QApplication::restoreOverrideCursor();

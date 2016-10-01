@@ -36,8 +36,8 @@ public:
     bool insertColumns(int column, int count, const QModelIndex &parent);
     bool removeColumns(int column, int count, const QModelIndex &parent = QModelIndex());
     bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex());
-    int Setup(QStringList Tables, int Type=TT_TYPE1);
-    int Setup(QString Table);
+    int Setup(QStringList Tables, int Type=TT_TYPE1, bool Cond = false);
+    int Setup(QString Table, bool Cond = false);
     int SetupFile(QString Filename, QString StringToFind);
     int SetupRawComp(QString db, QString tble);
     int SetupRaw(QString db, QString tble, QString id="", QString mainfield="");
@@ -87,7 +87,8 @@ private:
     int TablesNum; // количество таблиц, участвующих в работе
     QStack<QString> RootIDs; // элементы записываются в виде: <номер_таблицы>.<ИД>
     int Indentation;
-    bool IsEditable, IsRaw;
+    bool IsEditable, IsRaw, IsConditional; // IsConditional - условное дерево/таблица, где видимость элементов зависит от поля "Права доступа"
+    int RightsFieldNum; // номер поля "Права доступа" в tablefields
 
     int BuildTree ();
     int SetFirstTreeElements();

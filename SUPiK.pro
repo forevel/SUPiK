@@ -8,9 +8,9 @@ QMAKE_TARGET_COMPANY = EvelSoft
 QMAKE_TARGET_COPYRIGHT = EvelSoft
 QMAKE_TARGET_PRODUCT = SUPiK
 RC_ICONS = res/SUPiK.ico
-VERSION = 1.0.0308
+VERSION = 2.0
 
-QT       += core gui sql xlsx ftp printsupport
+QT       += core gui sql xlsx network printsupport
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -39,6 +39,7 @@ SOURCES += main.cpp\
     dialogs/sys/sys_backuprestoredirdialog.cpp \
     dialogs/sys/sys_erdialog.cpp \
     dialogs/sys/sys_importclass.cpp \
+    dialogs/sys/sys_persdialog.cpp \
     dialogs/sys/sys_probsdialog.cpp \
     dialogs/sys/sys_settingsdialog.cpp \
     dialogs/sys/sys_systemdialog.cpp \
@@ -93,14 +94,13 @@ SOURCES += main.cpp\
     widgets/s_tqsplitter.cpp \
     widgets/s_tqstackedwidget.cpp \
     widgets/s_tqtableview.cpp \
+    widgets/s_tqtextedit.cpp \
     widgets/s_tqtoolbar.cpp \
     widgets/s_tqtreeview.cpp \
     widgets/s_tqtreewidget.cpp \
     widgets/s_tqwidget.cpp \
     widgets/treeview.cpp \
-    widgets/waitwidget.cpp \
-    widgets/s_tqtextedit.cpp \
-    dialogs/sys/sys_persdialog.cpp
+    widgets/waitwidget.cpp
 
 HEADERS  += startwindow.h \
     supik.h \
@@ -121,6 +121,7 @@ HEADERS  += startwindow.h \
     dialogs/sys/sys_backuprestoredirdialog.h \
     dialogs/sys/sys_erdialog.h \
     dialogs/sys/sys_importclass.h \
+    dialogs/sys/sys_persdialog.h \
     dialogs/sys/sys_probsdialog.h \
     dialogs/sys/sys_settingsdialog.h \
     dialogs/sys/sys_systemdialog.h \

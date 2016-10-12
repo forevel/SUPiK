@@ -17,6 +17,58 @@
 #define SLNUMMAX    10 // максимальное число полей в запросе по столбцам
 #define TOKEN       0x7F // разделитель
 
+// M-commands (main)
+#define M_QUIT		1001 // подтверждение завершения сеанса связи
+#define M_GROUP		1002 // группа доступа
+#define M_STATUS	1003
+#define M_STATS		1004
+#define M_LOGIN		1005 // запрос имени пользователя
+#define M_PSW		1006 // запрос пароля (зарез.)
+// M-statuses
+#define M_IDLE		1000
+#define M_RDY		1051
+#define M_ERROR		1052
+#define M_NEXT		1053 // подтверждение готовности приёма следующей порции данных
+#define M_ANSPSW	1094
+#define M_ANSLOGIN	1095
+#define M_BYE		1099
+
+// S-commands (sql)
+#define S_GVSBFS	1101 // simple sql-query by several fields
+#define S_GVSBC		1102 // field data query
+#define S_GVSBCF	1103 // field data query with additional condition
+#define S_GCS		1104 // GetColumnsFromTable - get fields from table
+#define S_GVBFS		1105 // simple sql-query for one field
+#define S_TC		1106 // create table
+#define S_TA		1107 // alter table
+#define S_TD		1108 // delete table
+#define S_INS		1109 // insert into table
+#define S_UPD		1110 // update fields in table
+#define S_DEL		1111 // "delete" from table (set deleted=1)
+#define S_RDEL		1112 // real delete from table
+#define S_SRCH		1113 // search in table like
+#define S_GID		1114 // get new id from table
+
+// TF-commands (tablefields)
+#define T_GVSBFS	1201 // ValuesByFields
+#define T_GVSBC		1202 // htovl
+#define T_GVSBCF	1203 // htovlc
+#define T_C		1204 // TFCheck
+#define T_DEL		1205
+#define T_RDEL		1206
+#define T_GFT		1207 // GetFullTable (tbvll)
+#define T_GID		1208
+#define T_IDTV		1209
+#define T_TV		1210
+#define T_IDTVL		1211
+#define T_TID		1212
+#define T_VTID		1213
+#define T_INS		1214
+#define T_UPD		1215
+
+// C-commands (components)
+#define C_CRALT		1301
+
 class Client : public QObject
 {
     Q_OBJECT
@@ -51,11 +103,6 @@ public:
 
     enum Messages
     {
-        // ServerToClient
-        CMD_LOGINREQ, // запрос имени пользователя
-        CMD_PSWREQ,	// запрос пароля (зарез.)
-        ANS_GROUP,    // группа доступа
-        ANS_SQLRESULT, // результат обработки sql-запроса
         ANS_MESSAGES, // текущие сообщения для пользователя
         ANS_CHATMSGS, // сообщения из чата для пользователя
         ANS_CHATSTATUS, // состояние чата в ответ на CMD_CHATREQ
@@ -64,40 +111,12 @@ public:
         ANS_OKTOXMT, // подтверждение готовности к отправке файла
         ANS_PUTFILE, // подтверждение отправки файла
         ANS_DIRLIST, // выдача содержимого каталога
-        ANS_QUIT, // подтверждение завершения сеанса связи
-        ANS_GVSBFS, // подтверждение приёма очередной порции sql-ответа
-        ANS_GVSBC, // GetValuesByColumn
-        ANS_GVSBCF, // GetValuesByColumnAndField
-        ANS_GCS, // GetColumnsFromTable
-        ANS_GVBFS, // GetValueByFields
-        ANS_SQLSRCH, // SearchInTableLike
-        ANS_NEXT,   // подтверждение готовности приёма следующей порции данных
-        // ClientToServer
-        ANS_LOGIN, // имя пользователя
-        ANS_PSW, // пароль
-        CMD_TF_GVSBFS, // запросы sql для tablefields
-        CMD_GVSBFS, // запрос sql простой: Get Values From Table By Fields - возвращаются все записи
-        CMD_GVBFS, // запрос sql простой: Get Value From Table By Fields - возвращается одна запись
-        CMD_GVSBC, // GetValuesByColumn - возвращаются все записи
-        CMD_GVSBCF, // GetValuesByColumnAndField
-        CMD_GCS, // GetColumnsFromTable - запрос полей таблицы
-        CMD_SQLTC, // Create Table - создание таблицы
-        CMD_SQLTA, // Alter Table - модификация таблицы
-        CMD_SQLTD, // Drop Table - удаление таблицы
-        CMD_SQLINS, // InsertValuesToTable - добавление записей в таблицу
-        CMD_SQLUPD, // UpdateValuesInTable - изменение записей в таблице
-        CMD_SQLDEL, // DeleteFromTable - удаление записей из таблицы
-        CMD_SQLRDEL, // RealDeleteFromTable - удаление записей из таблицы
-        CMD_SQLSRCH, // SearchInTableLike - поиск похожих записей в таблице
-        CMD_SQLGID, // GetNextFreeIndex - поиск первого свободного ИД
         CMD_MESSAGES, // запрос текущих сообщений для пользователя
         CMD_CHATMSGS, // запрос сообщений из чата
         CMD_CHATREQ, // запрос состояния чата (пользователи)
         CMD_GETFILE, // запрос файла из хранилища
         CMD_PUTFILE, // запрос на отсылку файла в хранилище
         CMD_DIRLIST, // запрос списка файлов в каталоге
-        CMD_QUIT, // завершение сеанса связи
-        CMD_IDLE, // состояние ожидания команды
         CMD_STATUS  // запрос статуса от сервера
     };
 
@@ -144,6 +163,7 @@ private:
     QString RemoveSpaces(QString str);
     void WriteErrorAndBreakReceiving(QString ErMsg);
     QStringList SeparateBuf(QByteArray &buf);
+    int CheckArgs(QString &cmd, QStringList &Args, int argsnum, bool fieldscheck=false, bool pairscheck=false);
 
 private slots:
     void ClientConnected();

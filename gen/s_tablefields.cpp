@@ -1,5 +1,6 @@
 #include <QVariant>
 #include "s_tablefields.h"
+#include "client.h"
 
 // класс s_tablefields предназначен для облегчения работы с таблицей tablefields БД supik и содержит в себе высокоуровневые процедуры работы с данной таблицей:
 // 1. htovl ([table:header] to value list) - взять все значения по ссылке table:tablefields из таблицы tablename для данного поля header
@@ -19,83 +20,157 @@ s_tablefields::s_tablefields()
 // процедура для данного поля header таблицы tble берёт все возможные значения
 // и передаёт их в QStringList tmpsl
 
-QStringList s_tablefields::htovl(QString tble, QString header)
+void s_tablefields::htovl(QString tble, QString header, QStringList &out)
 {
-    QStringList sl = tablefields(tble, header); // sl.at(0) = <table>, sl.at(1) = <tablefields>
-    if (result)
-        return QStringList();
-    QString db = sl.at(0).split(".").at(0); // table = <db>.<tble>
-    tble = sl.at(0).split(".").at(1);
-    QStringList tmpsl = sqlc.GetValuesFromTableByColumn(db, tble, sl.at(1),"id"+tble,true);
-    if (sqlc.result == 2) // ошибка
+    if (pc.AutonomousMode)
     {
-        result = 1;
-        TFWARN(sqlc.LastError);
-        return QStringList();
+        QStringList sl = tablefields(tble, header); // sl.at(0) = <table>, sl.at(1) = <tablefields>
+        if (result)
+        {
+            out.clear();
+            return;
+        }
+        QString db = sl.at(0).split(".").at(0); // table = <db>.<tble>
+        tble = sl.at(0).split(".").at(1);
+        out = sqlc.GetValuesFromTableByColumn(db, tble, sl.at(1),"id"+tble,true);
+        if (sqlc.result == 2) // ошибка
+        {
+            result = 1;
+            TFWARN(sqlc.LastError);
+            out.clear();
+            return;
+        }
+        result = 0;
     }
-    result = 0;
-    return tmpsl;
+    else
+    {
+        QStringList fl = QStringList() << tble << header;
+        Cli->SendCmd(T_GVSBC, fl);
+        while (Cli->Busy)
+        {
+            QThread::msleep(10);
+            qApp->processEvents(QEventLoop::AllEvents);
+        }
+        if ((Cli->DetectedError != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
+        {
+            result = 1;
+            out.clear();
+        }
+        else
+        {
+            out = Cli->Result.at(0);
+            result = 0;
+            return;
+        }
+    }
 }
 
 // htovlc - это процедура htovl с дополнительным условием
 // берёт все значения по полю header таблицы tble, где поле cheader этой же таблицы равно value
 
-QStringList s_tablefields::htovlc(QString tble, QString header, QString cheader, QString value)
+void s_tablefields::htovlc(QString tble, QString header, QString cheader, QString value, QStringList &out)
 {
-    QStringList sl = tablefields(tble, header); // sl.at(0) = <table>, sl.at(1) = <tablefields>
-    if (result)
+    if (pc.AutonomousMode)
     {
-        TFWARN("");
-        return QStringList();
+        QStringList sl = tablefields(tble, header); // sl.at(0) = <table>, sl.at(1) = <tablefields>
+        if (result)
+        {
+            TFWARN("");
+            out.clear();
+            return;
+        }
+        QStringList cl = tablefields(tble, cheader); // cl.at(1) = <tablefields>
+        if (out)
+        {
+            TFWARN("");
+            out.clear();
+            return;
+        }
+        QString db = sl.at(0).split(".").at(0);
+        tble = sl.at(0).split(".").at(1);
+        out = sqlc.GetValuesFromTableByColumnAndFields(db, tble, sl.at(1), QStringList(cl.at(1)), QStringList(value));
+        if (sqlc.result) // || tmpsl.isEmpty())
+        {
+            result = 1;
+            TFWARN(sqlc.LastError);
+            out.clear();
+            return;
+        }
+        result = 0;
     }
-    QStringList cl = tablefields(tble, cheader); // cl.at(1) = <tablefields>
-    if (result)
+    else
     {
-        TFWARN("");
-        return QStringList();
+        QStringList fl = QStringList() << tble << header << cheader << value;
+        Cli->SendCmd(T_GVSBCF, fl);
+        while (Cli->Busy)
+        {
+            QThread::msleep(10);
+            qApp->processEvents(QEventLoop::AllEvents);
+        }
+        if ((Cli->DetectedError != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
+        {
+            result = 1;
+            out.clear();
+        }
+        else
+        {
+            out = Cli->Result.at(0);
+            result = 0;
+            return;
+        }
     }
-    QString db = sl.at(0).split(".").at(0);
-    tble = sl.at(0).split(".").at(1);
-    QStringList tmpsl = sqlc.GetValuesFromTableByColumnAndFields(db, tble, sl.at(1), QStringList(cl.at(1)), QStringList(value));
-    if (sqlc.result) // || tmpsl.isEmpty())
-    {
-        result = 1;
-        TFWARN(sqlc.LastError);
-        return QStringList();
-    }
-    result = 0;
-    return tmpsl;
 }
 
 // процедура возвращает список из списков значений, взятых по полям для таблицы tble
 // нужна для организации списка выбора из таблиц а-ля "*_сокращ"
 
-QList<QStringList> s_tablefields::tbvll(QString tble)
+void s_tablefields::tbvll(QString tble, QList<QStringList> &out)
 {
-    QList<QStringList> lsl;
-    QStringList tmpsl;
-    QStringList sl = tablelinks(tble); // берём links
-    int i;
-    if (result)
+    if (pc.AutonomousMode)
     {
-        TFWARN("");
-        return QList<QStringList>();
+        QStringList tmpsl;
+        QStringList sl = tablelinks(tble); // берём links
+        int i;
+        if (result)
+        {
+            TFWARN("");
+            out.clear();
+            return;
+        }
+        out.append(sl);
+        sl = tableheaders(tble); // берём header
+        if (result)
+        {
+            TFWARN("");
+            out.clear();
+            return;
+        }
+        out.insert(0, sl); // на поз. 0 заголовки, на поз. 1 - links
+        for (i = 0; i < sl.size(); i++)
+        {
+            htovl(tble, sl.at(i), tmpsl);
+            out.append(tmpsl);
+        }
+        result = 0;
     }
-    lsl.append(sl);
-    sl = tableheaders(tble); // берём header
-    if (result)
+    else
     {
-        TFWARN("");
-        return QList<QStringList>();
+        QStringList sl = QStringList() << tble;
+        Cli->SendCmd(T_GFT, sl);
+        while (Cli->Busy)
+        {
+            QThread::msleep(10);
+            qApp->processEvents(QEventLoop::AllEvents);
+        }
+        if (Cli->DetectedError != Client::CLIER_NOERROR)
+        {
+            result = 1;
+            out.clear();
+            return;
+        }
+        out = Cli->Result;
+        result = 0;
     }
-    lsl.insert(0, sl); // на поз. 0 заголовки, на поз. 1 - links
-    for (i = 0; i < sl.size(); i++)
-    {
-        tmpsl = htovl(tble, sl.at(i));
-        lsl.append(tmpsl);
-    }
-    result = 0;
-    return lsl;
 }
 
 // процедура возвращает значение по ссылке tbleid из table.tablefields для заданной таблицы tble и поля header
@@ -690,47 +765,81 @@ QStringList s_tablefields::valuesbyfield(QString tble, QStringList fl, QString c
     return sl;
 }
 
-QStringList s_tablefields::valuesbyfields(QString tble, QStringList fl, QStringList cmpfields, QStringList cmpvalues, bool Warn)
+void s_tablefields::valuesbyfields(QString tble, QStringList fl, QStringList cmpfields, QStringList cmpvalues, QStringList &out, bool Warn)
 {
-    if ((cmpfields.size() != cmpvalues.size()) || (cmpfields.size() == 0) || (fl.size() == 0))
+    if (pc.AutonomousMode)
     {
-        result = 1;
-        TFDBG;
-        return QStringList();
-    }
-    QStringList cmpfl, tmpsl;
-    // взяли все реальные названия полей сравнения
-    for (int i=0; i<cmpfields.size(); i++)
-    {
-        tmpsl = tablefields(tble,cmpfields.at(i));
-        if (result)
+        if ((cmpfields.size() != cmpvalues.size()) || (cmpfields.size() == 0) || (fl.size() == 0))
         {
-            TFWARN("");
-            return QStringList();
+            result = 1;
+            TFDBG;
+            out.clear();
+            return;
         }
-        cmpfl << tmpsl.at(1);
-    }
-    for (int i = 0; i < fl.size(); i++)
-    {
-        QStringList sl = tablefields(tble,fl.at(i));
-        if (result)
+        QStringList cmpfl, tmpsl;
+        // взяли все реальные названия полей сравнения
+        for (int i=0; i<cmpfields.size(); i++)
         {
-            TFWARN("");
-            return QStringList();
+            tmpsl = tablefields(tble,cmpfields.at(i));
+            if (result)
+            {
+                TFWARN("");
+                out.clear();
+                return;
+            }
+            cmpfl << tmpsl.at(1);
         }
-        fl.replace(i, sl.at(1)); // заменяем русское наименование поля на его реальное название
+        for (int i = 0; i < fl.size(); i++)
+        {
+            QStringList sl = tablefields(tble,fl.at(i));
+            if (result)
+            {
+                TFWARN("");
+                out.clear();
+                return;
+            }
+            fl.replace(i, sl.at(1)); // заменяем русское наименование поля на его реальное название
+        }
+        QString cmpdb = tmpsl.at(0).split(".").at(0); // реальное имя БД
+        QString cmptble = tmpsl.at(0).split(".").at(1); // реальное название таблицы
+        out = sqlc.GetValuesFromTableByFields(cmpdb,cmptble,fl,cmpfl,cmpvalues);
+        if ((sqlc.result) && (Warn))
+        {
+            TFWARN(sqlc.LastError);
+            result = 1;
+            out.clear();
+            return;
+        }
+        result = 0;
     }
-    QString cmpdb = tmpsl.at(0).split(".").at(0); // реальное имя БД
-    QString cmptble = tmpsl.at(0).split(".").at(1); // реальное название таблицы
-    QStringList tmps = sqlc.GetValuesFromTableByFields(cmpdb,cmptble,fl,cmpfl,cmpvalues);
-    if ((sqlc.result) && (Warn))
+    else
     {
-        TFWARN(sqlc.LastError);
-        result = 1;
-        return QStringList();
+        int i;
+        int fields_num = fl.size();
+        int pairs_num = cmpfields.size();
+        QStringList sl = QStringList() << QString::number(fields_num) << QString::number(pairs_num) << tble;
+        for (i=0; i<fields_num; i++)
+            sl << AddQuotes(fl.at(i));
+        for (i=0; i<pairs_num; i++)
+        {
+            sl << AddQuotes(cmpfields.at(i));
+            sl << AddQuotes(cmpvalues.at(i));
+        }
+        Cli->SendCmd(T_GVSBFS, sl);
+        while (Cli->Busy)
+        {
+            QThread::msleep(10);
+            qApp->processEvents(QEventLoop::AllEvents);
+        }
+        if ((Cli->DetectedError != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
+        {
+            result = 1;
+            out.clear();
+            return;
+        }
+        out = Cli->Result.at(0);
+        result = 0;
     }
-    result = 0;
-    return tmps;
 }
 
 QStringList s_tablefields::TableColumn(QString tble, QString field)

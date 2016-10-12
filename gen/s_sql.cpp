@@ -125,7 +125,7 @@ QStringList s_sql::GetColumnsFromTable(QString db, QString tble)
     else
     {
         QStringList fl = QStringList() << db << tble;
-        Cli->SendCmd(Client::CMD_GCS, fl);
+        Cli->SendCmd(S_GCS, fl);
         while (Cli->Busy)
         {
             QThread::msleep(10);
@@ -178,7 +178,7 @@ void s_sql::CreateTable(QString db, QString tble, QStringList fl, bool Simple)
         tmpString = (Simple) ? "id" : "id"+tble;
         QStringList sl = QStringList() << db << tble << tmpString;
         sl << fl;
-        Cli->SendCmd(Client::CMD_SQLTC, sl);
+        Cli->SendCmd(S_TC, sl);
         while (Cli->Busy)
         {
             QThread::msleep(10);
@@ -254,7 +254,7 @@ void s_sql::AlterTable(QString db, QString tble, QStringList DeleteList, QString
     {
         QStringList sl;
         sl << QString::number(AddList.size()) << QString::number(DeleteList.size()) << db << tble << AddList << DeleteList;
-        Cli->SendCmd(Client::CMD_SQLTA, sl);
+        Cli->SendCmd(S_TA, sl);
         while (Cli->Busy)
         {
             QThread::msleep(10);
@@ -289,7 +289,7 @@ void s_sql::DropTable(QString db, QString tble)
     {
         QStringList sl;
         sl << db << tble;
-        Cli->SendCmd(Client::CMD_SQLTD, sl);
+        Cli->SendCmd(S_TD, sl);
         while (Cli->Busy)
         {
             QThread::msleep(10);
@@ -350,7 +350,7 @@ int s_sql::GetNextFreeIndex(QString db, QString tble)
     {
         QStringList sl;
         sl << db << tble;
-        Cli->SendCmd(Client::CMD_SQLGID, sl);
+        Cli->SendCmd(S_GID, sl);
         while (Cli->Busy)
         {
             QThread::msleep(10);
@@ -518,7 +518,7 @@ QStringList s_sql::GetValuesFromTableByColumn(QString db, QString tble, QString 
             else
                 fl << "DESC";
         }
-        Cli->SendCmd(Client::CMD_GVSBC, fl);
+        Cli->SendCmd(S_GVSBC, fl);
         while (Cli->Busy)
         {
             QThread::msleep(10);
@@ -640,7 +640,7 @@ QStringList s_sql::GetValuesFromTableByColumnAndFields(QString db, QString tble,
             else
                 sl << "DESC";
         }
-        Cli->SendCmd(Client::CMD_GVSBCF, sl);
+        Cli->SendCmd(S_GVSBCF, sl);
         while (Cli->Busy)
         {
             QThread::msleep(10);
@@ -697,7 +697,7 @@ QString s_sql::GetValueFromTableByField (QString db, QString tble, QString field
     else // server mode
     {
         QStringList sl = QStringList() << "1" << "1" << db << tble << field << cmpfield << AddQuotes(cmpvalue);
-        Cli->SendCmd(Client::CMD_GVBFS, sl);
+        Cli->SendCmd(S_GVBFS, sl);
         while (Cli->Busy)
         {
             QThread::msleep(10);
@@ -775,7 +775,7 @@ QString s_sql::GetValueFromTableByFields (QString db, QString tble, QString fiel
             sl << AddQuotes(cmpfields.at(i));
             sl << AddQuotes(cmpvalues.at(i));
         }
-        Cli->SendCmd(Client::CMD_GVBFS, sl);
+        Cli->SendCmd(S_GVBFS, sl);
         while (Cli->Busy)
         {
             QThread::msleep(10);
@@ -916,7 +916,7 @@ QString s_sql::InsertValuesToTable(QString db, QString tble, QStringList fl, QSt
             sl << AddQuotes(fl.at(i));
             sl << AddQuotes(vl.at(i));
         }
-        Cli->SendCmd(Client::CMD_SQLINS, sl);
+        Cli->SendCmd(S_INS, sl);
         while (Cli->Busy)
         {
             QThread::msleep(10);
@@ -965,7 +965,7 @@ int s_sql::UpdateValuesInTable(QString db, QString tble, QStringList fl, QString
             sl << AddQuotes(vl.at(i));
         }
         sl << field << AddQuotes(value);
-        Cli->SendCmd(Client::CMD_SQLUPD, sl);
+        Cli->SendCmd(S_UPD, sl);
         while (Cli->Busy)
         {
             QThread::msleep(10);
@@ -1055,7 +1055,7 @@ int s_sql::DeleteFromDB(QString db, QString tble, QString field, QString value)
     {
         QStringList sl;
         sl << db << tble << field << AddQuotes(value);
-        Cli->SendCmd(Client::CMD_SQLDEL, sl);
+        Cli->SendCmd(S_DEL, sl);
         while (Cli->Busy)
         {
             QThread::msleep(10);
@@ -1112,7 +1112,7 @@ int s_sql::RealDeleteFromDB(QString db, QString tble, QStringList fields, QStrin
             sl << AddQuotes(fields.at(i));
             sl << AddQuotes(values.at(i));
         }
-        Cli->SendCmd(Client::CMD_SQLRDEL, sl);
+        Cli->SendCmd(S_RDEL, sl);
         while (Cli->Busy)
         {
             QThread::msleep(10);
@@ -1190,6 +1190,7 @@ QList<QStringList> s_sql::SearchInTableLike(QString db, QString tble, QString fi
     }
     else
     {
+        QList<QStringList> QueryResult;
         QStringList sl;
         QStringList col = GetColumnsFromTable(db, tble);
         if (result)
@@ -1197,7 +1198,7 @@ QList<QStringList> s_sql::SearchInTableLike(QString db, QString tble, QString fi
         sl << QString::number(col.size()) << db << tble;
         sl.append(col);
         sl << regexpstr;
-        Cli->SendCmd(Client::CMD_SQLSRCH, sl);
+        Cli->SendCmd(S_SRCH, sl);
         while (Cli->Busy)
         {
             QThread::msleep(10);
@@ -1219,7 +1220,6 @@ QList<QStringList> s_sql::SearchInTableLike(QString db, QString tble, QString fi
 QList<QStringList> s_sql::GetMoreValuesFromTableByFields(QString db, QString tble, QStringList fields, QStringList cmpfields, QStringList cmpvalues, \
                                                         QString orderby, bool asc)
 {
-    QueryResult.clear();
     QString tmpString;
     QList<QStringList> lsl;
     QStringList vl;
@@ -1268,6 +1268,7 @@ QList<QStringList> s_sql::GetMoreValuesFromTableByFields(QString db, QString tbl
     }
     else
     {
+        QList<QStringList> QueryResult;
         int i;
         int fields_num = fields.size();
         int pairs_num = cmpfields.size();
@@ -1287,7 +1288,7 @@ QList<QStringList> s_sql::GetMoreValuesFromTableByFields(QString db, QString tbl
             else
                 sl << "DESC";
         }
-        Cli->SendCmd(Client::CMD_GVSBFS, sl);
+        Cli->SendCmd(S_GVSBFS, sl);
         while (Cli->Busy)
         {
             QThread::msleep(10);

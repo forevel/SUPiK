@@ -66,7 +66,6 @@ public:
 
     int result;
     QString LastError;
-    QList<QStringList> QueryResult;
 
 private:
     QString AddQuotes(const QString str);

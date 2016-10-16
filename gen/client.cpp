@@ -129,7 +129,6 @@ void Client::SendCmd(int Command, QStringList &Args)
     DetectedError = CLIER_NOERROR;
     CurrentCommand = Command;
     Busy = true;
-    ResultType = RESULT_NONE;
 #ifndef TIMERSOFF
     TimeoutTimer->start();
 #endif

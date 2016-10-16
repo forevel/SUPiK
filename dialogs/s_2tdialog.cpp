@@ -113,7 +113,8 @@ void s_2tdialog::SetupUI(QStringList links, QString hdr, QString MainSlaveItemId
         D2TDLGWARN;
         return;
     } */
-    tmpsl = tfl.tablefields(TableName, "Наименование"); // берём table, tablefields, links из tablefields таблицы links.at(0) с headers="Наименование"
+    QString tmps = "Наименование";
+    tfl.tablefields(TableName, tmps, tmpsl); // берём table, tablefields, links из tablefields таблицы links.at(0) с headers="Наименование"
     if (tfl.result)
     {
         QApplication::restoreOverrideCursor();

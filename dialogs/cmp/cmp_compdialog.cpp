@@ -174,7 +174,10 @@ void cmp_compdialog::MainItemChoosed(QModelIndex idx)
     QStringList fl = QStringList() << "Наименование";
     CompTble = tmps.toInt();
     tmps = QString::number(CompTble); // убираем старшие незначащие нули
-    QStringList sl = tfl.valuesbyfield(CompLetter+"Компоненты_описание_полн",fl,"ИД",tmps); // взяли имя таблицы в БД, описание которой выбрали в главной таблице
+    QStringList sl;
+    QString table = CompLetter+"Компоненты_описание_полн";
+    QString field = "ИД";
+    tfl.valuesbyfield(table,fl,field,tmps, sl); // взяли имя таблицы в БД, описание которой выбрали в главной таблице
     if (tfl.result)
     {
         COMPWARN;
@@ -250,7 +253,10 @@ void cmp_compdialog::AddNewItem()
     }
     QStringList fl = QStringList() << "Наименование";
     QString tmps = QString::number(CompTble); // убираем старшие незначащие нули
-    QStringList sl = tfl.valuesbyfield(CompLetter+"Компоненты_описание_полн",fl,"ИД",tmps); // взяли имя таблицы в БД, описание которой выбрали в главной таблице
+    QStringList sl;
+    QString table = CompLetter+"Компоненты_описание_полн";
+    QString field = "ИД";
+    tfl.valuesbyfield(table,fl,field,tmps, sl); // взяли имя таблицы в БД, описание которой выбрали в главной таблице
     if (tfl.result)
     {
         COMPWARN;
@@ -327,8 +333,14 @@ void cmp_compdialog::CheckNkAndAdd(int id)
     // теперь надо взять индекс производителя
     fl = QStringList() << "ИД";
     QStringList cmpvl;
+    QString table = "Производители_сокращ";
+    QString field = "Наименование";
+    QString value;
     if (vl.size()>1)
-        cmpvl = tfl.valuesbyfield("Производители_сокращ",fl,"Наименование",vl.at(1)); // в cmpvl один нулевой элемент - индекс производителя
+    {
+        value = vl.at(1);
+        tfl.valuesbyfield(table,fl,field,value, cmpvl); // в cmpvl один нулевой элемент - индекс производителя
+    }
     else
     {
         COMPWARN;
@@ -343,20 +355,28 @@ void cmp_compdialog::CheckNkAndAdd(int id)
     fl = QStringList() << "ИД" << ElementString;
     QStringList cmpfl = QStringList() << "Наименование" << "Производитель";
     cmpvl.insert(0, vl.at(0)); // вставка перед производителем наименования компонента
-    QStringList nkidsl = tfl.valuesbyfields("Номенклатура_полн",fl,cmpfl,cmpvl);
+    table = "Номенклатура_полн";
+    QStringList nkidsl;
+    tfl.valuesbyfields(table,fl,cmpfl,cmpvl, nkidsl);
     QString tmps;
     QString ManufId = cmpvl.at(1);
     if ((tfl.result) || (nkidsl.isEmpty())) // нет такого или ошибка
     {
-        nkidsl = tfl.valuesbyfields("Номенклатура карантин_полн",fl,cmpfl,cmpvl);
+        table = "Номенклатура карантин_полн";
+        tfl.valuesbyfields(table,fl,cmpfl,cmpvl, nkidsl);
         if (nkidsl.isEmpty())
         {
             // создаём новый элемент в БД карантинной номенклатуры
-            QString newID = tfl.insert("Номенклатура карантин_полн");
+            QString newID;
+            table = "Номенклатура карантин_полн";
+            tfl.insert(table, newID);
             // найдём сначала описание категории в таблице описания для данной БД
             fl = QStringList() << "Описание";
             tmps = QString::number(CompTble); // убираем старшие незначащие нули
-            QStringList sl = tfl.valuesbyfield(CompLetter+"Компоненты_описание_полн",fl,"ИД",tmps); // взяли имя таблицы в БД, описание которой выбрали в главной таблице
+            QStringList sl;
+            table = CompLetter+"Компоненты_описание_полн";
+            field = "ИД";
+            tfl.valuesbyfield(table,fl,field,tmps, sl); // взяли имя таблицы в БД, описание которой выбрали в главной таблице
             if (tfl.result)
             {
                 COMPWARN;
@@ -371,7 +391,9 @@ void cmp_compdialog::CheckNkAndAdd(int id)
                 COMPWARN;
                 return;
             }
-            sl = tfl.valuesbyfield("Категории_сокращ",fl,"Наименование",tmps);
+            table = "Категории_сокращ";
+            field = "Наименование";
+            tfl.valuesbyfield(table,fl,field,tmps, sl);
             if ((tfl.result) || (sl.isEmpty()))
             {
                 COMPWARN;
@@ -382,7 +404,8 @@ void cmp_compdialog::CheckNkAndAdd(int id)
             vl.append(QString::number(id)); // добавляем ИД компонента по его БД
             vl.insert(0, newID);
             vl.replace(3, ManufId); // меняем наименование производителя на его ИД
-            tfl.idtois("Номенклатура карантин_полн", fl, vl);
+            table = "Номенклатура карантин_полн";
+            tfl.idtois(table, fl, vl);
             if (tfl.result)
             {
                 COMPWARN;
@@ -410,7 +433,11 @@ void cmp_compdialog::CheckNkAndAdd(int id)
         ElementSl.removeFirst(); // убираем первый пустой элемент, т.к. он был создан только для корректных индексов и уже не нужен
         // 1. Взять все значения, где ИД = nkidsl.at(0)
         QStringList sl = QStringList() << "Наименование" << "Категория" << "Производитель" << ElementSl;
-        QStringList vl = tfl.valuesbyfield("Номенклатура_полн",sl,"ИД",nkidsl.at(0));
+        QStringList vl;
+        table = "Номенклатура_полн";
+        field = "ИД";
+        value = nkidsl.at(0);
+        tfl.valuesbyfield(table,sl,field,value,vl);
         if ((tfl.result) || (vl.size()<8))
         {
             COMPWARN;
@@ -421,7 +448,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
         // 3. Отправить все значения обратно в таблицу
         sl.insert(0, "ИД");
         vl.insert(0, nkidsl.at(0));
-        tfl.idtois("Номенклатура_полн",sl,vl);
+        tfl.idtois(table,sl,vl);
         if (tfl.result)
         {
             COMPWARN;

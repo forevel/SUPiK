@@ -231,7 +231,7 @@ QString EditModel::Value(int Row, int Column)
     }
     vs.Links = data(index(Row,Column,QModelIndex()),LinksRole).toString();
     vs.Value = vl;
-    vl = tfl.vtoid(vs);
+    tfl.vtoid(vs, vl);
     if (tfl.result)
     {
         EMODELWARN;
@@ -320,7 +320,7 @@ int EditModel::Setup(QString Table, QString Id)
         ValuesToAdd.append(tmpvl);
         if ((i < ValuesSl.size() && (i < TableLinksSl.size())))
         {
-            tmpvl = tfl.idtov(TableLinksSl.at(i), ValuesSl.at(i));
+            tfl.idtov(TableLinksSl.at(i), ValuesSl.at(i), tmpvl);
             ValuesToAdd.append(tmpvl);
         }
         AddRow(ValuesToAdd);

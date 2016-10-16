@@ -94,7 +94,7 @@ bool s_ncmodel::setData(const QModelIndex &index, const QVariant &value, int rol
             {
                 tmpString = maindata.at(index.row())->linksdata(index.column());
                 vl = value;
-                ff = pc.getFFfromLinks(tmpString);
+                pc.getFFfromLinks(tmpString, ff);
                 switch (ff.ftype)
                 {
                 case FW_AUTONUM:
@@ -353,6 +353,7 @@ void s_ncmodel::fillModel()
     int i;
     int j;
     QString vl;
+    PublicClass::ValueStruct vls;
     result = 0;
     if (DataToWrite.size()>hdr.size()) // в переданном списке больше колонок, чем в модели
     {
@@ -370,7 +371,8 @@ void s_ncmodel::fillModel()
             else
             {
                 // перевод из ИД элемента в его значение с использованием ссылки, заданной ранее процедурой setcolumnlinks или аналогичной
-                vl = tfl.idtov(data(index(rcount, j, QModelIndex()), Qt::UserRole).toString(), DataToWrite.at(j).at(i)).Value;
+                tfl.idtov(data(index(rcount, j, QModelIndex()), Qt::UserRole).toString(), DataToWrite.at(j).at(i), vls);
+                vl = vls.Value;
                 if (vl.isEmpty())
                     continue;
                 if (vl.at(0) == '_') // идентификатор составного значения - номер таблицы и само значение
@@ -428,7 +430,7 @@ QString s_ncmodel::value(int row, int column)
         vl.insert(0,'_');
     }
     vs.Value = vl;
-    vl = tfl.vtoid(vs);
+    tfl.vtoid(vs, vl);
     if (tfl.result)
     {
         result=1;
@@ -588,7 +590,7 @@ void s_ncmodel::setup(QString tble)
     DataToWrite.clear();
     ClearModel();
     QStringList headers, links;
-    DataToWrite = tfl.tbvll(tble);
+    tfl.tbvll(tble, DataToWrite);
     if (tfl.result)
     {
         result=1;
@@ -617,7 +619,7 @@ void s_ncmodel::Add(QString tble)
     result = 0;
     QStringList headers, links;
     DataToWrite.clear();
-    DataToWrite = tfl.tbvll(tble);
+    tfl.tbvll(tble, DataToWrite);
     if (tfl.result)
     {
         result=1;
@@ -643,14 +645,16 @@ void s_ncmodel::setup(QString tble, QString id)
     int i;
     ClearModel();
     DataToWrite.clear();
-    QStringList headers = tfl.tableheaders(tble);
+    QStringList headers;
+    tfl.tableheaders(tble, headers);
     if (tfl.result)
     {
         result=1;
         NCMWARN;
         return;
     }
-    QStringList links = tfl.tablelinks(tble);
+    QStringList links;
+    tfl.tablelinks(tble, links);
     if (tfl.result)
     {
         result=1;
@@ -662,7 +666,8 @@ void s_ncmodel::setup(QString tble, QString id)
     QStringList tmpsl;
     for (i = 0; i < headers.size(); i++)
     {
-        tmpString = tfl.tov(tble,headers.at(i),id);
+        QString header = headers.at(i);
+        tfl.tov(tble,header,id, tmpString);
         if (!tfl.result)
             tmpsl << tmpString;
         else
@@ -683,7 +688,8 @@ void s_ncmodel::setupcolumn(QString tble, QString header)
 {
     ClearModel();
     DataToWrite.clear();
-    QStringList tmpsl = tfl.htovl(tble, header);
+    QStringList tmpsl;
+    tfl.htovl(tble, header, tmpsl);
     if (tfl.result)
     {
         NCMWARN;

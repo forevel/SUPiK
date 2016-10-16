@@ -446,8 +446,8 @@ public:
         QStringList link;
     } FieldFormat;
 
-    PublicClass::FieldFormat getFFfromLinks (QString links) const;
-    QString getlinksfromFF (PublicClass::FieldFormat ff);
+    void getFFfromLinks(QString &links, FieldFormat &ff) const;
+    void getlinksfromFF(FieldFormat &ff, QString &out);
     void InitiatePublicClass();
     QString getTranslit(QString);
 
@@ -472,7 +472,7 @@ public:
     int ErNum;
 
     void AddErrMsg(ermsgtype msgtype, quint64 ernum, quint64 ersubnum, QString msg="");
-    QString ConvertId (bool ColumnZero, QString Id); // преобразование <tble>.000<id> в нормальный id
+    void ConvertId(bool ColumnZero, QString &Id); // преобразование <tble>.000<id> в нормальный id
     bool OpenAndCheckDBs();
 
 private:

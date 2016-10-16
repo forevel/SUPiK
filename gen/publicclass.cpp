@@ -187,48 +187,45 @@ QString PublicClass::getTranslit(QString str)
     return newstr;
 }
 
-PublicClass::FieldFormat PublicClass::getFFfromLinks(QString links) const
+void PublicClass::getFFfromLinks(QString &links, FieldFormat &ff) const
 {
     QStringList tmpsl = links.split(".");
-    FieldFormat ff;
     ff.ftype = 8;
     ff.delegate = FD_SIMGRID;
     ff.dependson = -1;
     ff.link.clear();
     if (!tmpsl.size())
-        return ff;
+        return;
     ff.delegate = tmpsl.at(0).toInt();
     tmpsl.removeAt(0);
     if (!tmpsl.size())
-        return ff;
+        return;
     ff.ftype = tmpsl.at(0).toInt();
     tmpsl.removeAt(0);
     if (!tmpsl.size())
-        return ff;
+        return;
     bool ok;
     ff.dependson = tmpsl.at(0).toInt(&ok, 10);
     if (!ok)
         ff.dependson = -1;
     tmpsl.removeAt(0);
     if (!tmpsl.size())
-        return ff;
+        return;
     for (int i = 0; i < tmpsl.size(); i++)
         ff.link << tmpsl.at(i);
-    return ff;
 }
 
-QString PublicClass::getlinksfromFF(PublicClass::FieldFormat ff)
+void PublicClass::getlinksfromFF(PublicClass::FieldFormat &ff, QString &out)
 {
-    QString tmpString = QString::number(ff.delegate,10)+"."+QString::number(ff.ftype,10)+".";
+    out = QString::number(ff.delegate,10)+"."+QString::number(ff.ftype,10)+".";
     if (ff.dependson != -1)
-        tmpString += QString::number(ff.dependson,10);
+        out += QString::number(ff.dependson,10);
     int i = 0;
     while (i < ff.link.size())
     {
-        tmpString += "."+ff.link.at(i);
+        out += "."+ff.link.at(i);
         ff.link.removeAt(0);
     }
-    return tmpString;
 }
 
 void PublicClass::AddErrMsg(ermsgtype msgtype, quint64 ernum, quint64 ersubnum, QString msg)
@@ -266,7 +263,9 @@ void PublicClass::AddErrMsg(ermsgtype msgtype, quint64 ernum, quint64 ersubnum, 
     ermsgpool.append(tmpm);
 }
 
-QString PublicClass::ConvertId(bool ColumnZero, QString Id)
+// remove leading zeros from id (if ColumnZero=0) and leading 0xFFFF's (tree indent)
+
+void PublicClass::ConvertId(bool ColumnZero, QString &Id)
 {
     while (Id.at(0) == 0xFFFF)
         Id.remove(0, 1);
@@ -277,5 +276,4 @@ QString PublicClass::ConvertId(bool ColumnZero, QString Id)
             Id = tmpsl.at(1);
         Id = QString::number(Id.toInt(0));
     }
-    return Id;
 }

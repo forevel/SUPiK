@@ -354,14 +354,17 @@ int s_ntmodel::Setup(QString maintble, QString slvtble)
 
     // 1
     int i;
-    QStringList tmpsl = tfl.tablefields(maintble, "ИД_а"); // взять table,tablefields,links из tablefields, где таблица maintble и заголовок ИД_а
+    QStringList tmpsl;
+    QString field = "ИД_а";
+    tfl.tablefields(maintble, field, tmpsl); // взять table,tablefields,links из tablefields, где таблица maintble и заголовок ИД_а
     if (tfl.result) // нет поля idalias в таблице - это не дерево!
     {
         SNTMWARN;
         return 1;
     }
     catlist = tmpsl.at(0).split("."); // catlist - таблица, из которой брать категории
-    QStringList headers = tfl.tableheaders(slvtble);
+    QStringList headers;
+    tfl.tableheaders(slvtble, headers);
     if (tfl.result)
     {
         SNTMWARN;
@@ -377,7 +380,8 @@ int s_ntmodel::Setup(QString maintble, QString slvtble)
     for (i = 0; i < headers.size(); i++)
     {
         setHeaderData(i, Qt::Horizontal, headers.at(i), Qt::EditRole);
-        tmpsl = tfl.tablefields(slvtble, headers.at(i)); // взяли table,tablefields,links из tablefields для подчинённой таблицы и данного заголовка
+        QString header = headers.at(i);
+        tfl.tablefields(slvtble, header, tmpsl); // взяли table,tablefields,links из tablefields для подчинённой таблицы и данного заголовка
         if (tfl.result) // что-то не так с подчинённой таблицей нет такого заголовка
         {
             SNTMWARN;
@@ -493,7 +497,11 @@ int s_ntmodel::addTreeSlvItem(int position, QString id)
         HaveChildren = true;
         tmpStringlist.clear();
         for (i = 0; i < slvtblefields.size(); i++)
-            tmpStringlist << tfl.idtov(slvtblelinks.at(i), get_child_from_db2.value(i).toString()).Value; // установка элемента дерева в соответствии с links
+        {
+            PublicClass::ValueStruct vls;
+            tfl.idtov(slvtblelinks.at(i), get_child_from_db2.value(i).toString(), vls);
+            tmpStringlist << vls.Value; // установка элемента дерева в соответствии с links
+        }
         tmpStringlist.replace(0,QString("%1").arg(tmpStringlist.value(0).toInt(0), 7, 10, QChar('0')));
         additemtotree(position, tmpStringlist, 0);
     }

@@ -11,7 +11,7 @@ QWidget* s_duniversal::createEditor(QWidget *parent, const QStyleOptionViewItem 
 {
     Q_UNUSED(option);
     QString links = index.data(TreeModel::LinksRole).toString();
-    ff = pc.getFFfromLinks(links);
+    pc.getFFfromLinks(links, ff);
     if ((ff.delegate == FD_DISABLED) || (ff.delegate == FD_SIMPLE) || (ff.delegate == FD_SIMGRID))
     {
         return 0;
@@ -62,7 +62,8 @@ void s_duniversal::paint(QPainter *painter, const QStyleOptionViewItem &option, 
     if (index.isValid())
     {
         QRect rct = option.rect;
-        PublicClass::FieldFormat tmpff = pc.getFFfromLinks(index.data(Qt::UserRole).toString());
+        PublicClass::FieldFormat tmpff;
+        pc.getFFfromLinks(index.data(Qt::UserRole).toString(), tmpff);
         if (option.state & QStyle::State_Selected)
         {
             painter->setPen(Qt::SolidLine);

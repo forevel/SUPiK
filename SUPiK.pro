@@ -200,3 +200,4 @@ INCLUDEPATH += $$PWD/../xlsxwriter/src/xlsx
 DEPENDPATH += $$PWD/../xlsxwriter/src/xlsx
 
 LIBS += -llibeay32 -lssleay32
+LIBS += -lliblzma

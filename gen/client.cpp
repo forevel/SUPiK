@@ -21,7 +21,36 @@ Client::Client(QObject *parent) : QObject(parent)
     FirstReplyPass = true;
     ComReplyTimeoutIsSet = false;
     fp = 0;
-    ResultType = RESULT_MATRIX;
+    ResultType = RESULT_NONE;
+    CmdMap.insert(S_GVBFS, {"S_GVBFS", 7, "S5", RESULT_VECTOR, true, true});
+    CmdMap.insert(S_GVSBFS, {"S_GVSBFS", 7, "S1", RESULT_MATRIX, true, true});
+    CmdMap.insert(S_GVSBC, {"S_GVSBC", 3, "S2", RESULT_VECTOR, false, false});
+    CmdMap.insert(S_GVSBCF, {"S_GVSBCF", 6, "S3", RESULT_VECTOR, false, true});
+    CmdMap.insert(S_GCS, {"S_GCS", 2, "S4", RESULT_VECTOR, false, false});
+    CmdMap.insert(S_TC, {"S_TC", 3, "S6", RESULT_NONE, false, false});
+    CmdMap.insert(S_TA, {"S_TA", 5, "S7", RESULT_NONE, false, false});
+    CmdMap.insert(S_TD, {"S_TD", 2, "S8", RESULT_NONE, false, false});
+    CmdMap.insert(S_INS, {"S_INS", 2, "S9", RESULT_STRING, false, false});
+    CmdMap.insert(S_UPD, {"S_UPD", 6, "S:", RESULT_NONE, false, false});
+    CmdMap.insert(S_DEL, {"S_DEL", 4, "S;", RESULT_NONE, false, false});
+    CmdMap.insert(S_RDEL, {"S_RDEL", 4, "S<", RESULT_NONE, false, false});
+    CmdMap.insert(S_SRCH, {"S_SRCH", 6, "S=", RESULT_MATRIX, true, false});
+    CmdMap.insert(S_GID, {"S_GID", 2, "S>", RESULT_STRING, false, false});
+    CmdMap.insert(T_GVSBFS, {"T_GVSBFS", 6, "T1", RESULT_MATRIX, true, true});
+    CmdMap.insert(T_GVSBC, {"T_GVSBC", 2, "T2", RESULT_VECTOR, false, false});
+    CmdMap.insert(T_GVSBCF, {"T_GVSBCF", 4, "T3", RESULT_VECTOR, false, false});
+    CmdMap.insert(T_GFT, {"T_GFT", 1, "T7", RESULT_MATRIX, false, false});
+    CmdMap.insert(T_TV, {"T_TV", 3, "T:", RESULT_STRING, false, false});
+    CmdMap.insert(T_IDTV, {"T_IDTV", 2, "T9", RESULT_STRING, false, false});
+    CmdMap.insert(T_INS, {"T_INS", 1, "T>", RESULT_STRING, false, false});
+    CmdMap.insert(T_UPD, {"T_UPD", 3, "T?", RESULT_NONE, false, false});
+    CmdMap.insert(T_DEL, {"T_DEL", 2, "T5", RESULT_NONE, false, false});
+    CmdMap.insert(T_RDEL, {"T_RDEL", 2, "T6", RESULT_NONE, false, false});
+    CmdMap.insert(T_IDTVL, {"T_IDTVL", 1, "T;", RESULT_VECTOR, false, false});
+    CmdMap.insert(T_GID, {"T_GID", 1, "T8", RESULT_STRING, false, false});
+    CmdMap.insert(T_VTID, {"T_VTID", 3, "T=", RESULT_STRING, false, false});
+    CmdMap.insert(T_TID, {"T_TID", 3, "T<", RESULT_STRING, false, false});
+    CmdMap.insert(T_C, {"T_C", 3, "T4", RESULT_STRING, false, false});
 }
 
 Client::~Client()
@@ -100,254 +129,29 @@ void Client::SendCmd(int Command, QStringList &Args)
     DetectedError = CLIER_NOERROR;
     CurrentCommand = Command;
     Busy = true;
+    ResultType = RESULT_NONE;
 #ifndef TIMERSOFF
     TimeoutTimer->start();
 #endif
     QString CommandString;
+
+    if ((Command >= S_GVSBFS) && (Command <= T_TL))
+    {
+        CmdStruct st = CmdMap[Command];
+        FieldsNum = 0;
+        if (CheckArgs(st.CmdString, Args, st.ArgsNum, st.CheckForFieldsNum, st.CheckForPairsNum) != 0)
+            return;
+        if (FieldsNum = 0)
+            FieldsNum = 1; // если не выставлено значение поля в функции CheckArgs, выставить его принудительно в 1 (одно поле на запись)
+        QStringList sl;
+        sl << st.Prefix;
+        sl.append(Args);
+        QString tmps = Join(sl);
+        CommandString = tmps + "\n";
+        ResultType = st.ResultType;
+    }
     switch (Command)
     {
-        // запросы выдачи данных из БД SQL напрямую. В Args находится:
-        // 0 - количество запрашиваемых полей n;
-        // 1 - количество пар сравнения m;
-        // 2 - имя БД
-        // 3 - имя таблицы
-        // 4...Args(0)+3 - наименования полей запроса
-        // Args(0)+4...Args(0)+Args(1)*2+3 - пары сравнения, сначала поле сравнения, затем значение
-        // Args(0)+Args(1)*2+4 - поле, по которому проводить сортировку
-        // Args(0)+Args(1)*2+5 - "ASC" или "DESC" - в каком порядке проводить сортировку
-        // Формат: GVSBFS n m db table headers_0 headers_1 ... headers_n cond_header_0 value_0 cond_header_1 value_1 ... cond_header_m value_m [order_header] [ASC|DESC]
-    case S_GVSBFS:
-    case S_GVBFS:
-    {
-        if (CheckArgs("S_GV(S)BFS", Args, 7, true, true) != 0)
-            return;
-        QStringList sl;
-        if (Command == S_GVBFS)
-            sl << "S5";
-        else
-            sl << "S1";
-        sl.append(Args);
-        QString tmps = Join(sl);
-        CommandString = tmps + "\n";
-        ResultType = RESULT_MATRIX;
-        break;
-    }
-        // запрос всех значений по одному полю
-        // формат запроса: GVSBC db tble column [order_header] [ASC|DESC]\n
-        // формат ответа: <value1> <value2> ... <valuen>\n
-    case S_GVSBC:
-    {
-        if (CheckArgs("S_GVSBC", Args, 3) != 0)
-            return;
-        FieldsNum = 1; // одна колонка - одно поле в каждой записи
-        QStringList sl;
-        sl << "S2";
-        sl.append(Args);
-        QString tmps = Join(sl);
-        CommandString = tmps + "\n";
-        ResultType = RESULT_VECTOR;
-        break;
-    }
-        // запрос всех значений по одному полю
-        // формат запроса: GVSBCF <pairs_num> db tble column <field1> <value1> ... <fieldn> <valuen> [order_header] [ASC|DESC]\n
-        // формат ответа: <value1> <value2> ... <valuen>\n
-    case S_GVSBCF:
-    {
-        if (CheckArgs("S_GVSBCF", Args, 6, false, true) != 0)
-            return;
-        FieldsNum = 1; // одна колонка - одно поле в каждой записи
-        QStringList sl;
-        sl << "S3";
-        sl.append(Args);
-        QString tmps = Join(sl);
-        CommandString = tmps + "\n";
-        ResultType = RESULT_VECTOR;
-        break;
-    }
-        // запрос колонок (полей) из таблицы
-        // формат запроса: GCS db tble\n
-        // формат ответа: <column1> <column2> ... <columnn>\n
-    case S_GCS:
-    {
-        if (CheckArgs("S_GCS", Args, 2) != 0)
-            return;
-        FieldsNum = 1; // одно поле в каждой записи
-        QStringList sl;
-        sl << "S4";
-        sl.append(Args);
-        QString tmps = Join(sl);
-        CommandString = tmps + "\n";
-        ResultType = RESULT_VECTOR;
-        break;
-    }
-        // поиск записей, в которых поле field похоже на выражение value
-        // формат запроса: SQLSRCH db tble field value\n
-        // формат ответа: SQLSRCH <num>\n
-        // <value1> <value2> ... <valuenum>
-    case S_SRCH:
-    {
-        if (CheckArgs("S_SRCH", Args, 5, true) != 0)
-            return;
-        QStringList sl;
-        sl << "S=" << fieldsnum;
-        sl.append(Args);
-        QString tmps = Join(sl);
-        CommandString = tmps + "\n";
-        ResultType = RESULT_MATRIX;
-        break;
-    }
-        // создание таблицы
-        // формат запроса: SQLTC db tble <column1> <column2> ... <columnn>\n
-        // формат ответа: OK или ERROR
-    case S_TC:
-    {
-        if (CheckArgs("S_TC", Args, 3) != 0)
-            return;
-        QStringList sl;
-        sl << "S6";
-        sl.append(Args);
-        QString tmps = Join(sl);
-        CommandString = tmps + "\n";
-        break;
-    }
-        // удаление таблицы
-        // формат запроса: SQLTD db tble\n
-        // формат ответа: OK или ERROR
-    case S_TD:
-    {
-        if (CheckArgs("S_TD", Args, 2) != 0)
-            return;
-        QStringList sl;
-        sl << "S8";
-        sl.append(Args);
-        QString tmps = Join(sl);
-        CommandString = tmps + "\n";
-        break;
-    }
-        // изменение таблицы
-        // формат запроса: SQLTA n m db tble <add_column1> <add_column2> ... <add_columnn> <del_column1> <del_column2> ... <del_columnm>\n
-        // формат ответа: OK или ERROR
-    case S_TA:
-    {
-        if (CheckArgs("S_TA", Args, 5, true) != 0)
-            return;
-        QStringList sl;
-        sl << "S7";
-        sl.append(Args);
-        QString tmps = Join(sl);
-        CommandString = tmps + "\n";
-        break;
-    }
-        // получение первого свободного ИД из таблицы
-        // формат запроса: SQLGID db tble\n
-        // формат ответа: SQLGID <id> или ERROR
-    case S_GID:
-    {
-        if (CheckArgs("S_GID", Args, 2) != 0)
-            return;
-        QStringList sl;
-        sl << "S>";
-        sl.append(Args);
-        QString tmps = Join(sl);
-        CommandString = tmps + "\n";
-        break;
-    }
-        // вставка записи в таблицу
-        // формат запроса: SQLINS db tble [<field1> <value1>] [<field2> <value2>] ... [<fieldn> <valuen>]\n
-        // формат ответа: SQLGID <id> или ERROR
-    case S_INS:
-    {
-        if (CheckArgs("S_INS", Args, 2) != 0)
-            return;
-        QStringList sl;
-        sl << "S9";
-        sl.append(Args);
-        QString tmps = Join(sl);
-        CommandString = tmps + "\n";
-        break;
-    }
-        // обновление записей в таблице
-        // формат запроса: SQLUPD db tble <field1> <value1> <field2> <value2> ... <fieldn> <valuen> <field> <value>\n
-        // формат ответа: OK или ERROR
-    case S_UPD:
-    {
-        if (CheckArgs("S_UPD", Args, 6) != 0)
-            return;
-        QStringList sl;
-        sl << "S:";
-        sl.append(Args);
-        QString tmps = Join(sl);
-        CommandString = tmps + "\n";
-        break;
-    }
-        // удаление записей из таблицы
-        // формат запроса: SQLDEL db tble <field> <value>\n
-        // формат ответа: OK или ERROR
-    case S_DEL:
-    {
-        if (CheckArgs("S_DEL", Args, 4) != 0)
-            return;
-        QStringList sl;
-        sl << "S;";
-        sl.append(Args);
-        QString tmps = Join(sl);
-        CommandString = tmps + "\n";
-        break;
-    }
-        // реальное удаление записей из таблицы
-        // формат запроса: SQLRDEL db tble <field1> <value1> <field2> <value2> ... <fieldn> <valuen>\n
-        // формат ответа: OK или ERROR
-    case S_RDEL:
-    {
-        if (CheckArgs("S_RDEL", Args, 4) != 0)
-            return;
-        QStringList sl;
-        sl << "S<";
-        sl.append(Args);
-        QString tmps = Join(sl);
-        CommandString = tmps + "\n";
-        break;
-    }
-    case T_GVSBC:
-    {
-        FieldsNum = 1; // одна колонка - одно поле в каждой записи
-        if (CheckArgs("T_GVSBC", Args, 2) != 0)
-            return;
-        QStringList sl = QStringList() << "T2";
-        sl.append(Args);
-        QString tmps = Join(sl);
-        CommandString = tmps + "\n";
-        ResultType = RESULT_VECTOR;
-        break;
-    }
-    case T_GVSBCF:
-    {
-        FieldsNum = 1; // одна колонка - одно поле в каждой записи
-        if (CheckArgs("T_GVSBCF", Args, 4) != 0)
-            return;
-        QStringList sl = QStringList() << "T3";
-        sl.append(Args);
-        QString tmps = Join(sl);
-        CommandString = tmps + "\n";
-        ResultType = RESULT_VECTOR;
-        break;
-    }
-    case T_GVSBFS:
-    {
-        if (CheckArgs("T_GVSBFS", Args, 6, true, true) != 0)
-            return;
-        QStringList sl;
-        sl << "T1";
-        sl.append(Args);
-        QString tmps = Join(sl);
-        CommandString = tmps + "\n";
-        ResultType = RESULT_MATRIX;
-        break;
-    }
-    case T_C:
-    {
-        break;
-    }
 /*    case CMD_MESSAGES:
     {
         break;
@@ -417,6 +221,8 @@ void Client::SendCmd(int Command, QStringList &Args)
         CommandString = pc.PersPsw+"\n";
         break;
     }
+    default:
+        break;
     }
 /*    if (Command == ANS_PSW)
         CliLog->info(">********");
@@ -859,7 +665,7 @@ QString Client::Join(QStringList &sl)
 
 // проверка аргументов
 
-int Client::CheckArgs(QString &cmd, QStringList &Args, int argsnum, bool fieldscheck, bool pairscheck)
+int Client::CheckArgs(QString cmd, QStringList &Args, int argsnum, bool fieldscheck, bool pairscheck)
 {
     int pnum;
     if (Args.size() < argsnum)
@@ -896,6 +702,7 @@ int Client::CheckArgs(QString &cmd, QStringList &Args, int argsnum, bool fieldsc
             return 5;
         }
         QString pairsnum = Args.at(pidx);
+        bool ok;
         pnum = pairsnum.toInt(&ok);
         if (!ok)
         {

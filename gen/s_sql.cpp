@@ -629,8 +629,8 @@ QStringList s_sql::GetValuesFromTableByColumnAndFields(QString db, QString tble,
         QStringList sl = QStringList() << QString::number(pairs_num) << db << tble << column;
         for (int i=0; i<pairs_num; i++)
         {
-            sl << AddQuotes(cmpfl.at(i));
-            sl << AddQuotes(cmpvl.at(i));
+            sl << cmpfl.at(i);
+            sl << cmpvl.at(i);
         }
         if (!orderby.isEmpty())
         {
@@ -696,7 +696,7 @@ QString s_sql::GetValueFromTableByField (QString db, QString tble, QString field
     }
     else // server mode
     {
-        QStringList sl = QStringList() << "1" << "1" << db << tble << field << cmpfield << AddQuotes(cmpvalue);
+        QStringList sl = QStringList() << "1" << "1" << db << tble << field << cmpfield << cmpvalue;
         Cli->SendCmd(S_GVBFS, sl);
         while (Cli->Busy)
         {
@@ -772,8 +772,8 @@ QString s_sql::GetValueFromTableByFields (QString db, QString tble, QString fiel
         QStringList sl = QStringList() << "1" << QString::number(pairs_num) << db << tble << field;
         for (i=0; i<pairs_num; i++)
         {
-            sl << AddQuotes(cmpfields.at(i));
-            sl << AddQuotes(cmpvalues.at(i));
+            sl << cmpfields.at(i);
+            sl << cmpvalues.at(i);
         }
         Cli->SendCmd(S_GVBFS, sl);
         while (Cli->Busy)
@@ -913,8 +913,8 @@ QString s_sql::InsertValuesToTable(QString db, QString tble, QStringList fl, QSt
         sl << db << tble;
         for (i=0; i<fl.size(); i++)
         {
-            sl << AddQuotes(fl.at(i));
-            sl << AddQuotes(vl.at(i));
+            sl << fl.at(i);
+            sl << vl.at(i);
         }
         Cli->SendCmd(S_INS, sl);
         while (Cli->Busy)
@@ -961,10 +961,10 @@ int s_sql::UpdateValuesInTable(QString db, QString tble, QStringList fl, QString
         sl << db << tble;
         for (i=0; i<fl.size(); i++)
         {
-            sl << AddQuotes(fl.at(i));
-            sl << AddQuotes(vl.at(i));
+            sl << fl.at(i);
+            sl << vl.at(i);
         }
-        sl << field << AddQuotes(value);
+        sl << field << value;
         Cli->SendCmd(S_UPD, sl);
         while (Cli->Busy)
         {
@@ -1054,7 +1054,7 @@ int s_sql::DeleteFromDB(QString db, QString tble, QString field, QString value)
     else
     {
         QStringList sl;
-        sl << db << tble << field << AddQuotes(value);
+        sl << db << tble << field << value;
         Cli->SendCmd(S_DEL, sl);
         while (Cli->Busy)
         {
@@ -1109,8 +1109,8 @@ int s_sql::RealDeleteFromDB(QString db, QString tble, QStringList fields, QStrin
         sl << db << tble;
         for (i=0; i<fields.size(); i++)
         {
-            sl << AddQuotes(fields.at(i));
-            sl << AddQuotes(values.at(i));
+            sl << fields.at(i);
+            sl << values.at(i);
         }
         Cli->SendCmd(S_RDEL, sl);
         while (Cli->Busy)
@@ -1148,7 +1148,7 @@ int s_sql::RealDeleteFromDB(QString db, QString tble, QStringList fields, QStrin
 
 // вернуть список из записей, для которых field похож на regexpstr
 
-QList<QStringList> s_sql::SearchInTableLike(QString db, QString tble, QString field, QString regexpstr)
+QList<QStringList> s_sql::SearchInTableLike(QString &db, QString &tble, QStringList &fields, QString &cmpfield, QString &cmpvalue)
 {
     if (pc.AutonomousMode)
     {
@@ -1157,14 +1157,14 @@ QList<QStringList> s_sql::SearchInTableLike(QString db, QString tble, QString fi
         QSqlQuery exec_db(GetDB(db));
         int i;
         sl.clear();
-        QStringList col = GetColumnsFromTable(db, tble);
-        if (result)
-            return QList<QStringList>();
+//        QStringList col = GetColumnsFromTable(db, tble);
+//        if (result)
+//            return QList<QStringList>();
         QString tmpString = "SELECT ";
-        for (i = 0; i < col.size(); i++)
-            tmpString += "`"+col.at(i)+"`,";
+        for (i = 0; i < fields.size(); i++)
+            tmpString += "`"+fields.at(i)+"`,";
         tmpString.chop(1);
-        tmpString +=  "FROM `"+tble+"` WHERE `"+field+"` RLIKE '"+regexpstr+"' AND `deleted`=0;";
+        tmpString +=  "FROM `"+tble+"` WHERE `"+cmpfield+"` RLIKE '"+cmpvalue+"' AND `deleted`=0;";
         exec_db.exec(tmpString);
         if (!exec_db.isActive())
         {
@@ -1175,7 +1175,7 @@ QList<QStringList> s_sql::SearchInTableLike(QString db, QString tble, QString fi
         while (exec_db.next())
         {
             tmpsl.clear();
-            for (i=0; i<col.size(); i++)
+            for (i=0; i<fields.size(); i++)
                 tmpsl.append(exec_db.value(i).toString());
             sl.append(tmpsl);
         }
@@ -1195,9 +1195,9 @@ QList<QStringList> s_sql::SearchInTableLike(QString db, QString tble, QString fi
         QStringList col = GetColumnsFromTable(db, tble);
         if (result)
             return QList<QStringList>();
-        sl << QString::number(col.size()) << db << tble;
-        sl.append(col);
-        sl << regexpstr;
+        sl << QString::number(fields.size()) << db << tble;
+        sl.append(fields);
+        sl << cmpfield << cmpvalue;
         Cli->SendCmd(S_SRCH, sl);
         while (Cli->Busy)
         {
@@ -1274,11 +1274,11 @@ QList<QStringList> s_sql::GetMoreValuesFromTableByFields(QString db, QString tbl
         int pairs_num = cmpfields.size();
         QStringList sl = QStringList() << QString::number(fields_num) << QString::number(pairs_num) << db << tble;
         for (i=0; i<fields_num; i++)
-            sl << AddQuotes(fields.at(i));
+            sl << fields.at(i);
         for (i=0; i<pairs_num; i++)
         {
-            sl << AddQuotes(cmpfields.at(i));
-            sl << AddQuotes(cmpvalues.at(i));
+            sl << cmpfields.at(i);
+            sl << cmpvalues.at(i);
         }
         if (!orderby.isEmpty())
         {
@@ -1298,16 +1298,4 @@ QList<QStringList> s_sql::GetMoreValuesFromTableByFields(QString db, QString tbl
         result = 0;
         return QueryResult;
     }
-}
-
-QString s_sql::AddQuotes(const QString str)
-{
-/*    QString tmps = str;
-    if (tmps.contains(" "))
-    {
-        tmps.insert(0, 0x7F);
-        tmps.append(0x7F);
-    }
-    return tmps; */
-    return str;
 }

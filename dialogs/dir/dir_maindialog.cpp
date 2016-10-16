@@ -157,7 +157,9 @@ void dir_maindialog::ShowSlaveTree(QString str)
         IsQuarantine = false;
     QApplication::setOverrideCursor(Qt::WaitCursor);
     fields << "Наименование" << "Родительский справочник" << "Права доступа";
-    values = tfl.valuesbyfield(MainTable+"_полн",fields,"Наименование",str);
+    QString table = MainTable+"_полн";
+    QString cmpfield = "Наименование";
+    tfl.valuesbyfield(table,fields,cmpfield,str, values);
     if (!tfl.result)
     {
         if (values.size() < 3)
@@ -307,7 +309,9 @@ void dir_maindialog::EditItem(QString str)
 void dir_maindialog::AddNew()
 {
     isNewID = true;
-    QString newID = tfl.insert(Tables.last()+"_полн"); // добавление элементов разрешается только в крайнюю таблицу
+    QString newID;
+    QString table = Tables.last()+"_полн";
+    tfl.insert(table, newID); // добавление элементов разрешается только в крайнюю таблицу
     if (tfl.result)
     {
         DIRMDBG;
@@ -333,7 +337,7 @@ void dir_maindialog::AddNew()
         vl << newID;
         break;
     }
-    tfl.idtois(Tables.last()+"_полн",fl,vl);
+    tfl.idtois(table,fl,vl);
     EditItem(newID);
     isNewID = false;
 }
@@ -354,7 +358,8 @@ void dir_maindialog::DeleteData()
 
 void dir_maindialog::DeleteDataUnconditional(QString id)
 {
-    tfl.remove(Tables.last()+"_полн", id);
+    QString table = Tables.last()+"_полн";
+    tfl.remove(table, id);
     if (tfl.result)
     {
         DIRMWARN;

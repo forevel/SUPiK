@@ -260,7 +260,8 @@ void s_2ctdialog::AddItem()
     tmptble.remove("_сокращ");
     QString Caption = tmptble;
     tmptble.append("_полн");
-    QString newID = tfl.insert(tmptble);
+    QString newID;
+    tfl.insert(tmptble, newID);
     if (tfl.result)
     {
         CT2WARN;

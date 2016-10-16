@@ -317,7 +317,11 @@ void DevMainDialog::SetDecimalByManuf(QVariant Manuf)
     }
     QString tmps = le->text();
     QStringList tmpsl = tmps.split(".");
-    QStringList ManufDecimals = tfl.htovlc("Производители_полн","Код предприятия","Наименование",Manuf.toString());
+    QStringList ManufDecimals;
+    QString table = "Производители_полн";
+    QString field = "Код предприятия";
+    QString cmpfield = "Наименование";
+    tfl.htovlc(table,field,cmpfield,Manuf.toString(), ManufDecimals);
     if (ManufDecimals.isEmpty())
     {
         DEVMAINWARN;

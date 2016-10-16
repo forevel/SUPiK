@@ -22,10 +22,13 @@
 #define LOG_H
 
 #include <QObject>
+#include <QFile>
 
 #define LOGER(a)   ERMSG(PublicClass::ER_LOG,__LINE__,a)
 #define LOGWARN    WARNMSG(PublicClass::ER_LOG,__LINE__)
 #define LOGINFO(a) INFOMSG(PublicClass::ER_LOG,__LINE__,a)
+
+#define LOG_MAX_SIZE    1048576
 
 class Log : public QObject
 {
@@ -44,6 +47,9 @@ public:
 private:
     QString LogFile;
     bool CanLog;
+    QFile *fp;
+
+    void CheckAndGz();
 };
 
 #endif // LOG_H

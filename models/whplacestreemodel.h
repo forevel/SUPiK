@@ -5,7 +5,7 @@
 
 #define WHITEMSIZE  8
 
-#define WHPLACES    "Склады размещение_полн"
+//#define WHPLACES    "Склады размещение_полн"
 
 #define WHP_CREATENEW   3
 #define WHP_UPDATENEW   2

@@ -118,7 +118,11 @@ void cmp_maindialog::SetupUI(int CompType, int CompTable, int CompID)
     QStringList sectsl = QStringList() << "" << "Altium" << "Schemagee" << "Solidworks" << "Конструктивы,материалы" << "Устройства";
     this->CompDb = dbsl.at(CompType);
     QStringList fl = QStringList() << "Наименование" << "Описание" << "Путь к файлам";
-    QStringList tblesl = tfl.valuesbyfield(sl.at(CompType)+"Компоненты_описание_полн",fl,"ИД",QString::number(CompTable));
+    QStringList tblesl;
+    QString table, idfield;
+    table = sl.at(CompType)+"Компоненты_описание_полн";
+    idfield = "ИД";
+    tfl.valuesbyfield(table,fl,idfield,QString::number(CompTable), tblesl);
     if ((tfl.result) || (tblesl.size() < 3))
     {
         CMPWARN;
@@ -596,7 +600,12 @@ void cmp_maindialog::SetUnitsAndPars()
                     return;
                 lbl->setText(vl.at(i*2));
                 QStringListModel *cbmdl = new QStringListModel;
-                QStringList cbfl = tfl.htovlc("Единицы измерения_сокращ", "Наименование", "ИД_а", vl.at(i*2+1));
+                QStringList cbfl;
+                QString table = "Единицы измерения_сокращ";
+                QString field = "Наименование";
+                QString ida = "ИД_а";
+                QString idavalue = vl.at(i*2+1);
+                tfl.htovlc(table, field, ida, idavalue, cbfl);
                 cbmdl->setStringList(cbfl);
                 s_tqComboBox *cb = this->findChild<s_tqComboBox *>("par"+QString::number(i)+"cb");
                 if (cb == 0)
@@ -728,7 +737,11 @@ QStringList cmp_maindialog::GetAltData()
     vl.append(""); // Prefix = 25
     vl.append(ChBData("issmdchb"));
     vl.append(LEData("par0le")); // Nominal = 27
-    QStringList sl = tfl.valuesbyfield("Единицы измерения_полн",QStringList("ИД"),"Наименование",CBData("par0le"));
+    QStringList sl;
+    QString table = "Единицы измерения_полн";
+    QStringList idf = QStringList("ИД");
+    QString cmpfield = "Наименование";
+    tfl.valuesbyfield(table,idf,cmpfield,CBData("par0le"), sl);
     if (sl.size() > 0)
         vl.append(sl.at(0)); // Unit = 28
     else
@@ -821,7 +834,9 @@ QString cmp_maindialog::CBData(QString cbname)
 
 void cmp_maindialog::AddManuf()
 {
-    QString newID = tfl.insert("Производители_полн");
+    QString newID, tmps;
+    tmps = "Производители_полн";
+    tfl.insert(tmps, newID);
     s_2cdialog *newdialog = new s_2cdialog("Производители:добавить");
     newdialog->setup("Производители_полн",MODE_EDITNEW,newID);
     if (newdialog->result)

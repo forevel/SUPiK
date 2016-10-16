@@ -176,7 +176,7 @@ void cmp_newsubsection::Ok()
     if (sqlc.result) // нет такой записи
     {
         // создаём запись
-        newID = tfl.insert(TableName);
+        tfl.insert(TableName, newID);
         if (tfl.result)
         {
             CMPNSINFO("Ошибка добавления записи в таблицу description");
@@ -197,9 +197,10 @@ void cmp_newsubsection::Ok()
 
     // 3. Создать категорию, если её ещё нет
     TableName = "Категории_полн";
-    if (!(tfl.Check(TableName,"Наименование",descfull))) // нет такой категории, пишем в БД
+    QString tmps = "Наименование";
+    if (!(tfl.Check(TableName,tmps,descfull))) // нет такой категории, пишем в БД
     {
-        newID = tfl.insert(TableName);
+        tfl.insert(TableName, newID);
         if (tfl.result)
         {
             CMPNSWARN;

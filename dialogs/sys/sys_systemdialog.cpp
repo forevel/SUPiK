@@ -149,7 +149,11 @@ void sys_systemdialog::SetSlave(QModelIndex idx)
     else
     {
         QString tmpString = getMainIndex(1);
-        QStringList tmpsl = tfl.htovlc("Системное меню_полн","Вызываемая функция","Наименование",tmpString); // получить имя вызываемой функции
+        QStringList tmpsl;
+        QString table = "Системное меню_полн";
+        QString field = "Вызываемая функция";
+        QString cmpfield = "Наименование";
+        tfl.htovlc(table,field,cmpfield,tmpString, tmpsl); // получить имя вызываемой функции
         if (tfl.result)
         {
             SYSSWARN;
@@ -287,7 +291,7 @@ QString sys_systemdialog::getMainIndex(int column)
         return QString();
     }
     QString tmpString = MainTV->model()->index(MainTV->currentIndex().row(), column, QModelIndex()).data(Qt::DisplayRole).toString();
-    tmpString = pc.ConvertId(!column, tmpString);
+    pc.ConvertId(!column, tmpString);
     return tmpString;
 }
 
@@ -464,7 +468,8 @@ void sys_systemdialog::DeleteTable()
         return;
     }
     QString tblename = tv->model()->data(tv->model()->index(tv->currentIndex().row(),1,QModelIndex()),Qt::DisplayRole).toString();
-    QStringList TableHeaders = tfl.tableheaders(tblename);
+    QStringList TableHeaders;
+    tfl.tableheaders(tblename, TableHeaders);
     if (tfl.result)
         return;
     if (!(MessageBox2::question(this, "Уверены?", "Вы уверены, что хотите удалить все сведения о таблице?")))

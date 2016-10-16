@@ -231,7 +231,9 @@ void sys_ImportClass::TableChoosed(QString tble)
 {
     // 1. Прочитать структуру таблицы
     // 2. Заполнить структурой комбобокс tablecb
-    QStringList sl = tfl.TableColumn(tble, "header");
+    QStringList sl;
+    QString field = "header";
+    tfl.TableColumn(tble, field, sl);
     if (tfl.result)
     {
         SIMPWARN;

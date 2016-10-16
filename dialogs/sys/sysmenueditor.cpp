@@ -126,7 +126,10 @@ void SysmenuEditor::ChangeFields(QString str)
 void SysmenuEditor::Delete()
 {
     QString tmpString = GetMainIndex(0);
-    QStringList sl = tfl.tablefields(tble+"_полн", "ИД"); // возьмём реальное имя таблицы из tablefields. sl(0) - <table>, sl(1) - <tablefields>, sl(2) - <links>
+    QStringList sl;
+    QString table = tble+"_полн";
+    QString idfield = "ИД";
+    tfl.tablefields(table, idfield, sl); // возьмём реальное имя таблицы из tablefields. sl(0) - <table>, sl(1) - <tablefields>, sl(2) - <links>
     if (tfl.result)
     {
         SYSMWARN;
@@ -140,7 +143,7 @@ void SysmenuEditor::Delete()
     {
         if (MessageBox2::question(this, "Вы уверены?", "Категория содержит подкатегории.\nВы уверены, что хотите удалить её?"))
         {
-            tfl.remove(tble+"_полн", tmpString);
+            tfl.remove(table, tmpString);
             if (tfl.result)
             {
                 SYSMWARN;
@@ -159,7 +162,7 @@ void SysmenuEditor::Delete()
     {
         if (MessageBox2::question(this, "Вы уверены?", "Вы уверены?"))
         {
-            tfl.remove(tble+"_полн", tmpString);
+            tfl.remove(table, tmpString);
             if (tfl.result)
             {
                 SYSMWARN;
@@ -185,6 +188,7 @@ void SysmenuEditor::AddRoot()
 
 void SysmenuEditor::AddToTree(QString str)
 {
+    QString table = tble + "_полн";
     QString NewClass = QInputDialog::getText(this, "СУПиК :: новый элемент", \
                                                "Введите имя нового элемента", \
                                                QLineEdit::Normal, "", 0, 0, 0);
@@ -194,7 +198,8 @@ void SysmenuEditor::AddToTree(QString str)
     QStringList fields, values;
     fields << "Наименование" << "ИД_а" << "Права доступа";
     values << NewClass << str << "0007";
-    QString newID = tfl.insert(tble+"_полн");
+    QString newID;
+    tfl.insert(table, newID);
     if (tfl.result)
     {
         SYSMWARN;
@@ -202,7 +207,7 @@ void SysmenuEditor::AddToTree(QString str)
     }
     fields.insert(0,"ИД");
     values.insert(0,newID);
-    tfl.idtois(tble+"_полн",fields,values);
+    tfl.idtois(table,fields,values);
     if (!tfl.result)
         ChangeFields(newID);
     else
@@ -252,7 +257,7 @@ QString SysmenuEditor::GetMainIndex(int column)
     QModelIndex index = tv->model()->index(tv->currentIndex().row(), column, tv->model()->parent(tv->currentIndex()));
 
     QString tmpString = index.data(Qt::DisplayRole).toString();
-    tmpString = pc.ConvertId(!column, tmpString);
+    pc.ConvertId(!column, tmpString);
     return tmpString;
 }
 

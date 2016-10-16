@@ -36,7 +36,7 @@ s_tqChooseWidget::s_tqChooseWidget(bool Transparent, QWidget *parent) :
 void s_tqChooseWidget::Setup(QString links, QString hdr)
 {
     this->links = links;
-    ff = pc.getFFfromLinks(links);
+    pc.getFFfromLinks(links, ff);
     this->hdr = hdr;
 
     QVBoxLayout *ml = new QVBoxLayout;
@@ -74,7 +74,7 @@ void s_tqChooseWidget::Setup(QString links, QString hdr)
         cb->setObjectName("fdccb");
         QStringListModel *tmpModel = new QStringListModel;
         QStringList tmpsl;
-        tmpsl = tfl.idtovl(links);
+        tfl.idtovl(links, tmpsl);
         if (tfl.result)
             tmpsl.clear();
         tmpModel->setStringList(tmpsl);
@@ -245,7 +245,10 @@ void s_tqChooseWidget::accepted(QString str)
     s_tqLineEdit *le = this->findChild<s_tqLineEdit*>("fdcle");
     if (le == 0)
         return;
-    PublicClass::ValueStruct vs = tfl.idtov(pc.getlinksfromFF(ff),str);
+    PublicClass::ValueStruct vs;
+    QString tmps;
+    pc.getlinksfromFF(ff, tmps);
+    tfl.idtov(tmps,str, vs);
 /*    QStringList tmpsl = vs.Value.split(".");
     if (tmpsl.size()>1) // ИД с индексом таблицы
         le->setText(QString::number(tmpsl.at(1).toInt()));
@@ -257,7 +260,10 @@ void s_tqChooseWidget::accepted(QString str)
 
 void s_tqChooseWidget::SetValue(QVariant data)
 {
-    SetData(tfl.idtov(links, data.toString()));
+    PublicClass::ValueStruct vls;
+    QString datastring = data.toString();
+    tfl.idtov(links, datastring, vls);
+    SetData(vls);
 }
 
 void s_tqChooseWidget::SetData(PublicClass::ValueStruct data)
@@ -326,7 +332,9 @@ void s_tqChooseWidget::SetData(PublicClass::ValueStruct data)
 
 QString s_tqChooseWidget::Value()
 {
-    return tfl.vtoid(Data());
+    QString tmps;
+    tfl.vtoid(Data(), tmps);
+    return tmps;
 }
 
 PublicClass::ValueStruct s_tqChooseWidget::Data()

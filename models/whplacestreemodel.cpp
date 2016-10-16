@@ -49,7 +49,8 @@ void WhPlacesTreeModel::Update(int Index, WhPlacesTreeItem *Value)
 int WhPlacesTreeModel::Insert(WhPlacesTreeItem *Value)
 {
     // сначала ищем первый свободный ИД в таблице Склады размещение
-    QString NewID = tfl.insert(WHPLACES);
+    QString NewID;
+    tfl.insert("Склады размещение_полн", NewID);
     if (tfl.result)
         return -1;
     // затем добавляем элемент
@@ -60,18 +61,22 @@ int WhPlacesTreeModel::Insert(WhPlacesTreeItem *Value)
 
 int WhPlacesTreeModel::DeleteNew()
 {
+    QString field;
+    QString table = "Склады размещение_полн";
     WhPlacesTreeItem *item;
     Find(0x80, QStringList(QString::number(WHP_CREATENEW)));
     while ((item = Next()) != NULL)
     {
-        tfl.Delete(WHPLACES, QString::number(item->Id));
+        field = QString::number(item->Id);
+        tfl.Delete(table, field);
         if (tfl.result)
             return 1;
     }
     Find(0x80, QStringList(QString::number(WHP_UPDATENEW)));
     while ((item = Next()) != NULL)
     {
-        tfl.Delete(WHPLACES, QString::number(item->Id));
+        field = QString::number(item->Id);
+        tfl.Delete(table, field);
         if (tfl.result)
             return 1;
     }
@@ -86,7 +91,7 @@ int WhPlacesTreeModel::Load(int Index)
     ClearModel();
     RootIndexID = Index;
     QStringList fl = QStringList() << "table" << "tablefields";
-    vl = sqlc.GetMoreValuesFromTableByFields("sup", "tablefields", fl, QStringList("tablename"), QStringList(WHPLACES), "fieldsorder", true);
+    vl = sqlc.GetMoreValuesFromTableByFields("sup", "tablefields", fl, QStringList("tablename"), QStringList("Склады размещение_полн"), "fieldsorder", true);
     if (sqlc.result)
         return 1;
     if (vl.at(2).at(1) != "idalias")
@@ -169,7 +174,9 @@ void WhPlacesTreeModel::ClearModel()
 int WhPlacesTreeModel::Save()
 {
     // получить список заголовков по таблице WHPLACES
-    QStringList fl = tfl.tableheaders(WHPLACES);
+    QString table = "Склады размещение_полн";
+    QStringList fl;
+    tfl.tableheaders(table, fl);
     if (tfl.result)
         return 1;
     // для каждого элемента из Items
@@ -183,7 +190,7 @@ int WhPlacesTreeModel::Save()
             QStringList vl = QStringList() << QString::number(item->Id) << item->Alias << QString::number(item->IdAlias) << \
                                               item->Description << item->Name << QString::number(item->WhID) << QString::number(item->WhNum) << \
                                               QString::number(item->WhPlaceTypeID);
-            tfl.idtois(WHPLACES, fl, vl);
+            tfl.idtois(table, fl, vl);
             if (tfl.result)
                 return 1;
         }

@@ -102,12 +102,14 @@ void Wh_Editor::SetupUI()
 
 void Wh_Editor::AddNewWh()
 {
-    QString newID = tfl.insert(WHPLACES);
+    QString newID;
+    QString table = "Склады размещение_полн";
+    tfl.insert(table, newID);
     QStringList fl = QStringList() << "ИД" << "ИД_а" << "Склад" << "Тип размещения";
     QStringList vl = QStringList() << newID << "0" << newID << "4";
-    tfl.idtois(WHPLACES, fl, vl);
+    tfl.idtois(table, fl, vl);
     s_2cdialog *dlg = new s_2cdialog("Склады::Добавить");
-    dlg->setup(WHPLACES, MODE_EDITNEW, newID);
+    dlg->setup(table, MODE_EDITNEW, newID);
     if (dlg->result)
         WHEDWARN;
     else
@@ -124,7 +126,12 @@ void Wh_Editor::UpdateWhComboBox()
         return;
     }
     QStringListModel *mdl = qobject_cast<QStringListModel *>(cb->model());
-    QStringList vl = tfl.htovlc(WHPLACES, "Наименование", "ИД_а", "0");
+    QStringList vl;
+    QString table = "Склады размещение_полн";
+    QString field = "Наименование";
+    QString cmpfield = "ИД_а";
+    QString cmpvalue = "0";
+    tfl.htovlc(table, field, cmpfield, cmpvalue, vl);
     mdl->setStringList(vl);
 }
 
@@ -151,7 +158,9 @@ void Wh_Editor::CancelAndClose()
 
 void Wh_Editor::AddNewPlace()
 {
-    QString newID = tfl.insert("Склады типы размещения_полн");
+    QString newID;
+    QString table = "Склады типы размещения_полн";
+    tfl.insert(table, newID);
     s_2cdialog *dlg = new s_2cdialog("Склады::Размещения::Добавить");
     dlg->setup("Склады типы размещения_полн", MODE_EDITNEW, newID);
     if (dlg->result)
@@ -163,7 +172,11 @@ void Wh_Editor::AddNewPlace()
 void Wh_Editor::ChangeWh(QString str)
 {
     // достанем индекс склада по имени str из whplaces
-    QStringList PlaceID = tfl.valuesbyfield(WHPLACES, QStringList("ИД"), "Наименование", str, false);
+    QStringList PlaceID;
+    QString table = "Склады размещение_полн";
+    QStringList fields = QStringList("ИД");
+    QString field = "Наименование";
+    tfl.valuesbyfield(table, fields, field, str, PlaceID, false);
     if (tfl.result)
     {
         WHEDWARN;
@@ -291,7 +304,11 @@ void Wh_Editor::UpdatePlace()
     if (item->UpdIns == WHP_CREATENEW) // новый элемент, его ещё нет в базе данных и по нему не заполнена модель
         return;
     QStringList fl = QStringList() << "Тип размещения" << "Наименование" << "Кол-во рядов" << "Кол-во этажей";
-    QStringList vl = tfl.valuesbyfield("Склады типы размещения_полн", fl, "ИД", QString::number(item->WhPlaceTypeID));
+    QStringList vl;
+    QString table = "Склады типы размещения_полн";
+    QString field = "ИД";
+    QString value = QString::number(item->WhPlaceTypeID);
+    tfl.valuesbyfield(table, fl, field, value, vl);
     if ((tfl.result) || (vl.size() < 4)) // нет размещения в БД
         return;
     CurIDProperties.PlaceType = vl.at(0).toInt();
@@ -308,7 +325,9 @@ void Wh_Editor::UpdatePlace()
     else
     {
         fl = QStringList() << "Наименование" << "Картинка";
-        vl = tfl.valuesbyfield("Склады ёмкости размещения_полн", fl, "ИД", QString::number(CurIDProperties.PlaceType));
+        table = "Склады ёмкости размещения_полн";
+        value = QString::number(CurIDProperties.PlaceType);
+        tfl.valuesbyfield(table, fl, field, value, vl);
         if ((tfl.result) || (vl.size() < 2))
         {
             WHEDWARN;
@@ -462,7 +481,12 @@ void Wh_Editor::ChangePlace(QVariant PlaceName)
     }
     QStringList vl;
     // проверяем, нет ли размещения в БД
-    QStringList PlaceType = tfl.valuesbyfield("Склады размещение_полн", QStringList("Наименование"), "ИД", QString::number(item->Id), false);
+    QStringList PlaceType;
+    QString table = "Склады размещение_полн";
+    QStringList fields = QStringList("Наименование");
+    QString field = "ИД";
+    QString value = QString::number(item->Id);
+    tfl.valuesbyfield(table, fields, field, value, PlaceType, false);
     if (!PlaceType.isEmpty()) // есть такое размещение
     {
         if (PlaceType.at(0).toInt() != 0) // непустое размещение
@@ -487,7 +511,11 @@ void Wh_Editor::ChangePlace(QVariant PlaceName)
         item->UpdIns = WHP_UPDATENEW;
     if (item->UpdIns == WHP_UNCHANGED)
         item->UpdIns = WHP_UPDATE;
-    vl = tfl.valuesbyfield("Склады типы размещения_полн", QStringList("ИД"), "Наименование", PlaceName.toString());
+    table = "Склады типы размещения_полн";
+    fields = QStringList("ИД");
+    field = "Наименование";
+    value = PlaceName.toString();
+    tfl.valuesbyfield(table, fields, field, value, vl);
     if (tfl.result)
     {
         WHEDWARN;
@@ -504,13 +532,21 @@ void Wh_Editor::ChangePlace(QVariant PlaceName)
 bool Wh_Editor::CheckPriorities(QString PlaceName)
 {
     // вытаскиваем по PlaceName приоритет размещения PrNew
-    QStringList vl = tfl.valuesbyfield("Склады типы размещения_полн", QStringList("Тип размещения"), "Наименование", PlaceName);
+    QStringList vl;
+    QString table = "Склады типы размещения_полн";
+    QStringList fields = QStringList("Тип размещения");
+    QString field = "Наименование";
+    tfl.valuesbyfield(table, fields, field, PlaceName, vl);
     if ((tfl.result) || (vl.size() < 1))
     {
         WHEDWARN;
         return false;
     }
-    vl = tfl.valuesbyfield("Склады ёмкости размещения_полн", QStringList("Приоритет вложенности"), "ИД", vl.at(0));
+    table = "Склады ёмкости размещения_полн";
+    fields = QStringList("Приоритет вложенности");
+    field = "ИД";
+    QString value = vl.at(0);
+    tfl.valuesbyfield(table, fields, field, value, vl);
     if ((tfl.result) || (vl.size() < 1))
     {
         WHEDWARN;
@@ -520,19 +556,27 @@ bool Wh_Editor::CheckPriorities(QString PlaceName)
     // вытаскиваем по CurID->idalias приоритет размещения PrParent
     WhPlacesTreeModel::WhPlacesTreeItem *item = WhModel->Data(CurID);
     int IdAlias = item->IdAlias;
-    vl = tfl.valuesbyfield(WHPLACES,QStringList("Тип размещения"),"ИД",QString::number(IdAlias));
+    table = "Склады размещение_полн";
+    fields = QStringList("Тип размещения");
+    value = QString::number(IdAlias);
+    tfl.valuesbyfield(table,fields,field,value, vl);
     if ((tfl.result) || (vl.size() < 1))
     {
         WHEDWARN;
         return false;
     }
-    vl = tfl.valuesbyfield("Склады типы размещения_полн", QStringList("Тип размещения"), "ИД", vl.at(0));
+    table = "Склады типы размещения_полн";
+    value = vl.at(0);
+    tfl.valuesbyfield(table, fields, field, value, vl);
     if ((tfl.result) || (vl.size() < 1))
     {
         WHEDWARN;
         return false;
     }
-    vl = tfl.valuesbyfield("Склады ёмкости размещения_полн", QStringList("Приоритет вложенности"), "ИД", vl.at(0));
+    table = "Склады ёмкости размещения_полн";
+    fields = QStringList("Приоритет вложенности");
+    value = vl.at(0);
+    tfl.valuesbyfield(table, fields, field, value, vl);
     if ((tfl.result) || (vl.size() < 1))
     {
         WHEDWARN;
@@ -575,13 +619,22 @@ QStringList Wh_Editor::NameAndPicture(int ID)
     sl << tmps;
 //    fl = QStringList() << "Тип размещения";
 //    QStringList PlaceTank = tfl.valuesbyfield("Склады типы размещения_полн", fl, "ИД", PlaceProp.at(2));
-    QStringList PlaceTank = tfl.valuesbyfield("Склады типы размещения_полн", QStringList("Тип размещения"), "ИД", QString::number(item->WhPlaceTypeID));
+    QStringList PlaceTank;
+    QString table = "Склады типы размещения_полн";
+    QStringList fields = QStringList("Тип размещения");
+    QString field = "ИД";
+    QString value = QString::number(item->WhPlaceTypeID);
+    tfl.valuesbyfield(table, fields, field, value, PlaceTank);
     if ((tfl.result) || (PlaceTank.size() < 1))
     {
 //        WHEDWARN;
         return QStringList(); // размещение ещё пустое (нет ссылки на элемент размещения)
     }
-    QStringList PlacePicture = tfl.valuesbyfield("Склады ёмкости размещения_полн", QStringList("Картинка"), "ИД", PlaceTank.at(0));
+    table = "Склады ёмкости размещения_полн";
+    fields = QStringList("Картинка");
+    value = PlaceTank.at(0);
+    QStringList PlacePicture;
+    tfl.valuesbyfield(table, fields, field, value, PlacePicture);
     if (tfl.result)
     {
         WHEDWARN;

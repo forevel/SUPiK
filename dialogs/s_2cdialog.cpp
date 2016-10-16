@@ -161,7 +161,8 @@ void s_2cdialog::AddItem()
         tmptble.remove("_сокращ");
         QString Caption = tmptble;
         tmptble.append("_полн");
-        QString newID = tfl.insert(tmptble);
+        QString newID;
+        tfl.insert(tmptble, newID);
         if (tfl.result)
         {
             CD2WARN;
@@ -283,7 +284,7 @@ void s_2cdialog::accepted()
     QStringList values = MainModel->Values();
     if ((Mode == MODE_EDIT) || (Mode == MODE_EDITNEW) || (Mode == MODE_CHOOSE))
     {
-        QString oldtble, oldid, newid;
+        QString oldtble, oldid, newid, tmps;
         int tmph;
         if (IsQuarantine)
         {
@@ -293,11 +294,12 @@ void s_2cdialog::accepted()
             if (tmph != -1)
             oldid = values.at(tmph);
             newtble.remove(" карантин"); // убираем " карантин", т.к. пишем в некарантинную таблицу
-            newid = tfl.insert(newtble);
+            tfl.insert(newtble, newid);
             values.replace(tmph, newid); // создаём новую запись в некарантинной таблице
             tble.replace(0, newtble); // подготовка к следующему оператору
         }
-        tfl.idtois(tble.at(0), headers, values);
+        tmps = tble.at(0);
+        tfl.idtois(tmps, headers, values);
         if (tfl.result)
         {
             CD2WARN;
@@ -337,7 +339,10 @@ void s_2cdialog::cancelled()
 void s_2cdialog::closeEvent(QCloseEvent *e)
 {
     if (Cancelled && (Mode == MODE_EDITNEW)) // для ввода нового при нажатии отмены - удалить из БД текущую запись
-        tfl.Delete(tble.at(0), Id);
+    {
+        QString tmps = tble.at(0);
+        tfl.Delete(tmps, Id);
+    }
     e->accept();
 }
 

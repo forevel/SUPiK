@@ -143,7 +143,9 @@ void dev_devdialog::Unfilter()
 
 void dev_devdialog::AddNewDev()
 {
-    QString newID = tfl.insert("Изделия_полн");
+    QString newID;
+    QString table = "Изделия_полн";
+    tfl.insert(table, newID);
     if (tfl.result)
     {
         DEVDOCWARN;
@@ -164,7 +166,8 @@ void dev_devdialog::DeleteDev()
     int res = msgBox.exec();
     if (res == QMessageBox::Cancel)
         return;
-    tfl.remove("Изделия_полн", GetIndex(0));
+    QString table = "Изделия_полн";
+    tfl.remove(table, GetIndex(0));
     if (tfl.result)
     {
         DEVDOCWARN;
@@ -184,7 +187,7 @@ QString dev_devdialog::GetIndex(int column)
         return QString();
     }
     QString tmpString = MainTV->model()->index(MainTV->currentIndex().row(), column, QModelIndex()).data(Qt::DisplayRole).toString();
-    tmpString = pc.ConvertId(!column, tmpString);
+    pc.ConvertId(!column, tmpString);
     return tmpString;
 }
 

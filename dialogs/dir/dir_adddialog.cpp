@@ -341,8 +341,10 @@ void dir_adddialog::WriteAndClose()
     QStringList fl, vl;
     QStringList cmpfl, cmpvl;
     // соберём данные по столбцам tablefields для таблиц FullTbleName и ShortTbleName
-    QStringList FullTbleDeleteList = tfl.TableColumn(FullTblename,"tablefields");
-    QStringList ShortTbleDeleteList = tfl.TableColumn(ShortTblename, "tablefields");
+    QStringList FullTbleDeleteList, ShortTbleDeleteList;
+    QString table = "tablefields";
+    tfl.TableColumn(FullTblename,table, FullTbleDeleteList);
+    tfl.TableColumn(ShortTblename, table, ShortTbleDeleteList);
     FullTbleDeleteList.removeAll("id"+tble);
     ShortTbleDeleteList.removeAll("id"+tble);
     // теперь для каждого значения в полях levalue, cbfield сравним значения cbfield со значениями в соответствующих списках
@@ -693,7 +695,7 @@ void dir_adddialog::TbleChoosed()
         DADDDBG;
         return;
     }
-    sl = tfl.tableheaders(cb->currentText());
+    tfl.tableheaders(cb->currentText(), sl);
     if (tfl.result)
     {
         DADDWARN;
@@ -773,7 +775,10 @@ void dir_adddialog::fillFields()
             tmpdir.chop(5);
         dirAliasLE->setText(tmpdir);
         QStringList fields = QStringList() << "Права доступа";
-        QStringList values = tfl.valuesbyfield(dirtype+"_полн",fields,"Наименование",tmpdir);
+        QStringList values;
+        QString table = dirtype+"_полн";
+        QString field = "Наименование";
+        tfl.valuesbyfield(table,fields,field,tmpdir, values);
         if (tfl.result)
         {
             DADDWARN;

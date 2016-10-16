@@ -309,7 +309,8 @@ QList<s_tqWidget *> tb_maindialog::PrepareQuestionsByTheme(int theme, int questn
     QStringList cmpvl = QStringList() << QString::number(TBGroup) << QString::number(theme);
     QString tble = "Экзамен ТБ_полн";
     QString field = "ИД";
-    QStringList idvl = tfl.HeaderByFields(tble, field, cmpfl, cmpvl);
+    QStringList idvl;
+    tfl.HeaderByFields(tble, field, cmpfl, cmpvl, idvl);
     if (tfl.result)
     {
         TBMWARN;
@@ -328,7 +329,10 @@ QList<s_tqWidget *> tb_maindialog::PrepareQuestionsByTheme(int theme, int questn
              AnotherID = idvl.takeAt(index);
         else
             continue;
-        QStringList mainvl = tfl.valuesbyfield("Экзамен ТБ_полн", mainfl, "ИД", AnotherID);
+        QStringList mainvl;
+        QString table = "Экзамен ТБ_полн";
+        QString field = "ИД";
+        tfl.valuesbyfield(table, mainfl, field, AnotherID, mainvl);
         if ((tfl.result) || (mainvl.size() < 9))
         {
             TBMWARN;
@@ -454,9 +458,11 @@ void tb_maindialog::ProcessResultsAndExit()
     QStringList sl;
     if (ExType == EXTYPE_EX)
     {
+        QString table = "Экзамен ТБ ответы_полн";
         for (int i=0; i<TB_QUESTNUM; ++i)
         {
-            QString newID = tfl.insert("Экзамен ТБ ответы_полн");
+            QString newID;
+            tfl.insert(table, newID);
             if (tfl.result)
             {
                 TBMWARN;
@@ -470,7 +476,7 @@ void tb_maindialog::ProcessResultsAndExit()
             QStringList fl = QStringList() << "ИД" << "ИД вопроса" << "Номер ответа" << "Правильный ответ";
             QString tmps = (ans.Good) ? "1" : "0";
             QStringList vl = QStringList() << newID << QString::number(ans.Id) << QString::number(ans.Answer) << tmps;
-            tfl.idtois("Экзамен ТБ ответы_полн", fl, vl);
+            tfl.idtois(table, fl, vl);
             if (tfl.result)
             {
                 TBMWARN;
@@ -490,7 +496,9 @@ void tb_maindialog::ProcessResultsAndExit()
         PdfDoc->InsertTable(lsl);
         PdfDoc->WritePdf();
         // запишем результаты в Экзам рез
-        QString newID = tfl.insert("Экзам рез_полн");
+        table = "Экзам рез_полн";
+        QString newID;
+        tfl.insert(table, newID);
         if (tfl.result)
         {
             TBMWARN;
@@ -498,7 +506,7 @@ void tb_maindialog::ProcessResultsAndExit()
         }
         QStringList fl = QStringList() << "ИД" << "Результат" << "Раздел" << "Тип" << "Файл";
         QStringList vl = QStringList() << newID << QString::number(Mark, 'g', 2) << QString::number(TBGroup) << QString::number(ExType) << Filename;
-        tfl.idtois("Экзам рез_полн", fl, vl);
+        tfl.idtois(table, fl, vl);
         if (tfl.result)
         {
             TBMWARN;

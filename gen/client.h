@@ -5,6 +5,7 @@
 #include <QTimer>
 #include <QFile>
 #include <QTextStream>
+#include <QMap>
 #include "../threads/ethernet.h"
 #include "publicclass.h"
 
@@ -53,7 +54,7 @@
 #define T_GVSBFS	1201 // ValuesByFields
 #define T_GVSBC		1202 // htovl
 #define T_GVSBCF	1203 // htovlc
-#define T_C		1204 // TFCheck
+#define T_C         1204 // TFCheck
 #define T_DEL		1205
 #define T_RDEL		1206
 #define T_GFT		1207 // GetFullTable (tbvll)
@@ -65,6 +66,9 @@
 #define T_VTID		1213
 #define T_INS		1214
 #define T_UPD		1215
+#define T_TF        1216
+#define T_TH        1217
+#define T_TL        1218
 
 // C-commands (components)
 #define C_CRALT		1301
@@ -80,7 +84,8 @@ public:
     {
         RESULT_MATRIX,  // результат - таблица строк
         RESULT_VECTOR,  // результат - вектор значений
-        RESULT_STRING   // результат - одна строка
+        RESULT_STRING,  // результат - одна строка
+        RESULT_NONE     // без результата
     };
 
     enum ClientErrors
@@ -120,6 +125,17 @@ public:
         CMD_STATUS  // запрос статуса от сервера
     };
 
+    struct CmdStruct
+    {
+        QString CmdString;
+        int ArgsNum;
+        QString Prefix;
+        int ResultType;
+        bool CheckForFieldsNum;
+        bool CheckForPairsNum;
+    };
+
+    QMap<int, CmdStruct> CmdMap;
     bool Busy;
     QList<QStringList> Result;
     QString ResultStr;
@@ -163,7 +179,7 @@ private:
     QString RemoveSpaces(QString str);
     void WriteErrorAndBreakReceiving(QString ErMsg);
     QStringList SeparateBuf(QByteArray &buf);
-    int CheckArgs(QString &cmd, QStringList &Args, int argsnum, bool fieldscheck=false, bool pairscheck=false);
+    int CheckArgs(QString cmd, QStringList &Args, int argsnum, bool fieldscheck=false, bool pairscheck=false);
 
 private slots:
     void ClientConnected();

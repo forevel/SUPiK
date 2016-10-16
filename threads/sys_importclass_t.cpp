@@ -22,7 +22,9 @@ void sys_ImportClass_T::Run()
     tmr->start();
     QXlsx::Document TableDoc(ImpInitial.filename.toUtf8());
     RowNum = 1;
-    QStringList sl = tfl.tablefields(ImpInitial.tablename, "ИД");
+    QStringList sl;
+    QString field = "ИД";
+    tfl.tablefields(ImpInitial.tablename, field, sl);
     if (tfl.result)
     {
         SYSICTER("Проблема получения данных из таблицы "+ImpInitial.tablename);
@@ -43,7 +45,9 @@ void sys_ImportClass_T::Run()
     QMap<QString, QString>::const_iterator i;
     for (i=ImpInitial.map->constBegin(); i!=ImpInitial.map->constEnd(); i++)
     {
-        QStringList tmpsl = tfl.tablefields(ImpInitial.tablename, i.key());
+        QStringList tmpsl;
+        QString Key = i.key();
+        tfl.tablefields(ImpInitial.tablename, Key, tmpsl);
         if (tmpsl.size()>1)
             TableFields.append(tmpsl.at(1));
         else

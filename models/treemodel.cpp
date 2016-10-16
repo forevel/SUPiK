@@ -598,7 +598,8 @@ int TreeModel::SetFirstTreeElements()
         vl.append(tmpvl);
         for (int j=0; j<tmpsl.size(); j++)
         {
-            PublicClass::ValueStruct tmpvl = tfl.idtov(TableLinks.at(Table).at(j), tmpsl.at(j));
+            PublicClass::ValueStruct tmpvl;
+            tfl.idtov(TableLinks.at(Table).at(j), tmpsl.at(j), tmpvl);
             tmpvl.Value.insert(0, IndentSpaces);
             vl.append(tmpvl);
         }
@@ -641,7 +642,8 @@ int TreeModel::SetTree(int Table, QString Id)
         vsl.append(tmpvl);
         for (int j=1; j<tmpsl.size(); j++)
         {
-            PublicClass::ValueStruct tmpvl = tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j));
+            PublicClass::ValueStruct tmpvl;
+            tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j), tmpvl);
             tmpvl.Value.insert(0, IndentSpaces);
             vsl.append(tmpvl);
         }
@@ -714,7 +716,8 @@ int TreeModel::SetTable(int Table, QString Id)
             vl.append(tmpvl);
             for (int j=1; j<tmpsl.size(); j++)
             {
-                PublicClass::ValueStruct tmpvl = tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j));
+                PublicClass::ValueStruct tmpvl;
+                tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j), tmpvl);
                 tmpvl.Value.insert(0, IndentSpaces);
                 vl.append(tmpvl);
             }
@@ -777,7 +780,8 @@ int TreeModel::SetNextTree(int Table, QString Id)
         vl.append(tmpvl);
         for (int j=1; j<tmpsl.size(); j++)
         {
-            PublicClass::ValueStruct tmpvl = tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j));
+            PublicClass::ValueStruct tmpvl;
+            tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j), tmpvl);
             tmpvl.Value.insert(0, IndentSpaces);
             vl.append(tmpvl);
         }
@@ -861,7 +865,8 @@ int TreeModel::SetNextTable(int Table, QString Id)
                 vl.append(tmpvl);
                 for (int j=1; j<tmpsl.size(); j++)
                 {
-                    PublicClass::ValueStruct tmpvl = tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j));
+                    PublicClass::ValueStruct tmpvl;
+                    tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j), tmpvl);
                     tmpvl.Value.insert(0, IndentSpaces);
                     vl.append(tmpvl);
                 }
@@ -897,7 +902,8 @@ int TreeModel::SetNextTable(int Table, QString Id)
             vl.append(tmpvl);
             for (int j=1; j<tmpsl.size(); j++)
             {
-                PublicClass::ValueStruct tmpvl = tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j));
+                PublicClass::ValueStruct tmpvl;
+                tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j), tmpvl);
                 tmpvl.Value.insert(0, IndentSpaces);
                 vl.append(tmpvl);
             }

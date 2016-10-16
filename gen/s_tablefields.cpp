@@ -1,4 +1,6 @@
 #include <QVariant>
+#include <QThread>
+#include <QCoreApplication>
 #include "s_tablefields.h"
 #include "client.h"
 
@@ -20,11 +22,12 @@ s_tablefields::s_tablefields()
 // процедура для данного поля header таблицы tble берёт все возможные значения
 // и передаёт их в QStringList tmpsl
 
-void s_tablefields::htovl(QString tble, QString header, QStringList &out)
+void s_tablefields::htovl(QString &tble, QString &header, QStringList &out)
 {
+    QStringList sl;
     if (pc.AutonomousMode)
     {
-        QStringList sl = tablefields(tble, header); // sl.at(0) = <table>, sl.at(1) = <tablefields>
+        tablefields(tble, header, sl); // sl.at(0) = <table>, sl.at(1) = <tablefields>
         if (result)
         {
             out.clear();
@@ -44,8 +47,8 @@ void s_tablefields::htovl(QString tble, QString header, QStringList &out)
     }
     else
     {
-        QStringList fl = QStringList() << tble << header;
-        Cli->SendCmd(T_GVSBC, fl);
+        sl << tble << header;
+        Cli->SendCmd(T_GVSBC, sl);
         while (Cli->Busy)
         {
             QThread::msleep(10);
@@ -68,19 +71,20 @@ void s_tablefields::htovl(QString tble, QString header, QStringList &out)
 // htovlc - это процедура htovl с дополнительным условием
 // берёт все значения по полю header таблицы tble, где поле cheader этой же таблицы равно value
 
-void s_tablefields::htovlc(QString tble, QString header, QString cheader, QString value, QStringList &out)
+void s_tablefields::htovlc(QString &tble, QString &header, QString &cheader, QString &value, QStringList &out)
 {
+    QStringList sl, cl;
     if (pc.AutonomousMode)
     {
-        QStringList sl = tablefields(tble, header); // sl.at(0) = <table>, sl.at(1) = <tablefields>
+        tablefields(tble, header, sl); // sl.at(0) = <table>, sl.at(1) = <tablefields>
         if (result)
         {
             TFWARN("");
             out.clear();
             return;
         }
-        QStringList cl = tablefields(tble, cheader); // cl.at(1) = <tablefields>
-        if (out)
+        tablefields(tble, cheader, cl); // cl.at(1) = <tablefields>
+        if (result)
         {
             TFWARN("");
             out.clear();
@@ -100,8 +104,8 @@ void s_tablefields::htovlc(QString tble, QString header, QString cheader, QStrin
     }
     else
     {
-        QStringList fl = QStringList() << tble << header << cheader << value;
-        Cli->SendCmd(T_GVSBCF, fl);
+        sl << tble << header << cheader << value;
+        Cli->SendCmd(T_GVSBCF, sl);
         while (Cli->Busy)
         {
             QThread::msleep(10);
@@ -124,12 +128,12 @@ void s_tablefields::htovlc(QString tble, QString header, QString cheader, QStrin
 // процедура возвращает список из списков значений, взятых по полям для таблицы tble
 // нужна для организации списка выбора из таблиц а-ля "*_сокращ"
 
-void s_tablefields::tbvll(QString tble, QList<QStringList> &out)
+void s_tablefields::tbvll(QString &tble, QList<QStringList> &out)
 {
+    QStringList tmpsl, sl;
     if (pc.AutonomousMode)
     {
-        QStringList tmpsl;
-        QStringList sl = tablelinks(tble); // берём links
+        tablelinks(tble, sl); // берём links
         int i;
         if (result)
         {
@@ -138,7 +142,7 @@ void s_tablefields::tbvll(QString tble, QList<QStringList> &out)
             return;
         }
         out.append(sl);
-        sl = tableheaders(tble); // берём header
+        tableheaders(tble, sl); // берём header
         if (result)
         {
             TFWARN("");
@@ -148,14 +152,15 @@ void s_tablefields::tbvll(QString tble, QList<QStringList> &out)
         out.insert(0, sl); // на поз. 0 заголовки, на поз. 1 - links
         for (i = 0; i < sl.size(); i++)
         {
-            htovl(tble, sl.at(i), tmpsl);
+            QString field = sl.at(i);
+            htovl(tble, field, tmpsl);
             out.append(tmpsl);
         }
         result = 0;
     }
     else
     {
-        QStringList sl = QStringList() << tble;
+        sl << tble;
         Cli->SendCmd(T_GFT, sl);
         while (Cli->Busy)
         {
@@ -175,368 +180,530 @@ void s_tablefields::tbvll(QString tble, QList<QStringList> &out)
 
 // процедура возвращает значение по ссылке tbleid из table.tablefields для заданной таблицы tble и поля header
 
-QString s_tablefields::tov(QString tble, QString header, QString tbleid)
+void s_tablefields::tov(QString &tble, QString &header, QString &tbleid, QString &out)
 {
-    QString tmpString;
-    QStringList sl = tablefields(tble, header); // sl.at(0) = <table>, sl.at(1) = <tablefields>
-    if (result)
+    QStringList sl;
+    if (pc.AutonomousMode)
     {
-        TFWARN("");
-        return QString();
+        tablefields(tble, header, sl); // sl.at(0) = <table>, sl.at(1) = <tablefields>
+        if (result)
+        {
+            TFWARN("");
+            out.clear();
+            return;
+        }
+        QString db = sl.at(0).split(".").at(0);
+        tble = sl.at(0).split(".").at(1);
+        out = sqlc.GetValueFromTableByID(db, tble, sl.at(1), tbleid);
+        if (sqlc.result == 2) // если ошибка в запросе SQL
+        {
+            result = 1;
+            TFWARN(sqlc.LastError);
+            out.clear();
+            return;
+        }
+        result = 0;
     }
-    QString db = sl.at(0).split(".").at(0);
-    tble = sl.at(0).split(".").at(1);
-    tmpString = sqlc.GetValueFromTableByID(db, tble, sl.at(1), tbleid);
-    if (sqlc.result == 2) // если ошибка в запросе SQL
+    else
     {
-        result = 1;
-        TFWARN(sqlc.LastError);
-        return QString();
+        sl << tble << header << tbleid;
+        Cli->SendCmd(T_TV, sl);
+        while (Cli->Busy)
+        {
+            QThread::msleep(10);
+            qApp->processEvents(QEventLoop::AllEvents);
+        }
+        if ((Cli->DetectedError != Client::CLIER_NOERROR) || Cli->Result.isEmpty())
+        {
+            result = 1;
+            out.clear();
+            return;
+        }
+        if (Cli->Result.at(0).isEmpty())
+        {
+            result = 1;
+            out.clear();
+            return;
+        }
+        out = Cli->Result.at(0).at(0);
+        result = 0;
     }
-    result = 0;
-    return tmpString;
 }
 
 // перевод ИД через строку links в таблице tablefields в имя
 // id - ИД элемента в таблице tablefields:table/tablefields
 // links - строка из поля tablefields:links
 
-PublicClass::ValueStruct s_tablefields::idtov(QString links, QString id)
+void s_tablefields::idtov(QString links, QString id, PublicClass::ValueStruct &out)
 {
-    PublicClass::ValueStruct vl;
-    vl.Type = VS_STRING; // тип по умолчанию - простая строка
-    vl.Value = ""; // значение по умолчанию - пустая строка
-    vl.Links = links;
-    PublicClass::FieldFormat ff = pc.getFFfromLinks(links);
-    switch (ff.ftype)
+    QStringList sl;
+    PublicClass::FieldFormat ff;
+    if (pc.AutonomousMode)
     {
-    case FW_ALLINK:
-    {
-        if (!id.toInt()) // корневой элемент
+        QString table, header;
+        out.Type = VS_STRING; // тип по умолчанию - простая строка
+        out.Value = ""; // значение по умолчанию - пустая строка
+        out.Links = links;
+        pc.getFFfromLinks(links, ff);
+        switch (ff.ftype)
         {
-            vl.Value = "<Корневой элемент>";
-            return vl;
+        case FW_ALLINK:
+        {
+            if (!id.toInt()) // корневой элемент
+            {
+                out.Value = "<Корневой элемент>";
+            }
+            sl = id.split(".");
+            if (sl.size() > 1)
+                id = sl.at(1);
+            table = ff.link.at(0);
+            header = "Наименование";
+            tov(table, header, id, out.Value);
+            if (result)
+                TFWARN("");
+            break;
         }
-        QStringList tmpsl = id.split(".");
-        if (tmpsl.size() > 1)
-            id = tmpsl.at(1);
-        vl.Value = tov(ff.link.at(0), "Наименование", id);
-        if (result)
-            TFWARN("");
-        break;
+        case FW_LINK:
+        case FW_MAXLINK:
+        {
+            sl = id.split(".");
+            if (sl.size() > 1)
+                id = sl.at(1);
+            table = ff.link.at(0);
+            header = ff.link.at(1);
+            tov(table, header, id, out.Value);
+            if (result)
+                TFWARN("");
+            break;
+        }
+        case FW_AUTONUM:
+        case FW_NUMBER:
+        case FW_FNUMBER:
+        case FW_PLAIN:
+        case FW_MASKED:
+        case FW_EQUAT:
+        case FW_ID:
+        {
+            out.Value = id;
+            break;
+        }
+        case FW_DLINK:
+        {
+            sl = id.split("."); // номер таблицы до точки (нумерация с нуля), id - после точки
+            int tmpi = sl.at(0).toInt();
+            if (tmpi*2+1 > ff.link.size()) // нет в перечислении links таблицы с таким номером
+            {
+                result = 1;
+                TFWARN("");
+                return;
+            }
+            table = ff.link.at(tmpi*2);
+            header = ff.link.at(tmpi*2+1);
+            QString value = sl.at(1);
+            tov(table, header, value, out.Value);
+            QString tmps = "_"+sl.at(0); // _ - признак того, что в ячейку надо сохранить доп. информацию о номере таблицы
+            out.Value.insert(0, tmps);
+            if (result)
+                TFWARN("");
+            break;
+        }
+        case FW_RIGHTS:
+        {
+            bool ok;
+            quint32 tmpui = id.toUInt(&ok, 16); // перевод прав в шестнадцатиричную систему
+            if (!ok)
+            {
+                result = 1;
+                TFDBG;
+                return;
+            }
+            QString outs;
+            int j = 0;
+            while ((tmpui) && (j < ACC_NUM))
+            {
+                switch (j%2)
+                {
+                case 0:
+                {
+                    outs.insert(0, (tmpui & 0x0001) ? "ч" : ".");
+                    break;
+                }
+                case 1:
+                {
+                    outs.insert(0, (tmpui & 0x0001) ? "з" : ".");
+                    break;
+                }
+                default:
+                    break;
+                }
+                j++;
+                tmpui >>= 1;
+            }
+            out.Value = outs;
+            break;
+        }
+        case FW_BOOL:
+        {
+            bool ok;
+            int tmpb = id.toInt(&ok);
+            if (!ok)
+            {
+                result = 1;
+                TFDBG;
+                return;
+            }
+            out.Type = VS_ICON;
+            if (tmpb == 0)
+                out.Value = ":/res/cross.png";
+            else
+                out.Value = ":/res/ok.png";
+        }
+        default:
+        {
+            out.Value = id;
+            break;
+        }
+        }
     }
-    case FW_LINK:
-    case FW_MAXLINK:
+    else
     {
-        QStringList tmpsl = id.split(".");
-        if (tmpsl.size() > 1)
-            id = tmpsl.at(1);
-        vl.Value = tov(ff.link.at(0), ff.link.at(1), id);
-        if (result)
-            TFWARN("");
-        break;
-    }
-    case FW_AUTONUM:
-    case FW_NUMBER:
-    case FW_FNUMBER:
-    case FW_PLAIN:
-    case FW_MASKED:
-    case FW_EQUAT:
-    case FW_ID:
-    {
-        vl.Value = id;
-        break;
-    }
-    case FW_DLINK:
-    {
-        QStringList sl = id.split("."); // номер таблицы до точки (нумерация с нуля), id - после точки
-        int tmpi = sl.at(0).toInt();
-        if (tmpi*2+1 > ff.link.size()) // нет в перечислении links таблицы с таким номером
+        sl << links << id;
+        Cli->SendCmd(T_IDTV, sl);
+        while (Cli->Busy)
+        {
+            QThread::msleep(10);
+            qApp->processEvents(QEventLoop::AllEvents);
+        }
+        if ((Cli->DetectedError != Client::CLIER_NOERROR) || Cli->Result.isEmpty())
         {
             result = 1;
-            TFWARN("");
-            return vl;
+            return;
         }
-        vl.Value = "_"+sl.at(0)+tov(ff.link.at(tmpi*2), ff.link.at(tmpi*2+1), sl.at(1)); // _ - признак того, что в ячейку надо сохранить доп. информацию о номере таблицы
-        if (result)
-            TFWARN("");
-        break;
-    }
-    case FW_RIGHTS:
-    {
-        bool ok;
-        quint32 tmpui = id.toUInt(&ok, 16); // перевод прав в шестнадцатиричную систему
-        if (!ok)
+        if (Cli->Result.at(0).size() < 3)
         {
             result = 1;
-            TFDBG;
-            return vl;
+            return;
         }
-        QString outs;
-        int j = 0;
-        while ((tmpui) && (j < ACC_NUM))
-        {
-            switch (j%2)
-            {
-            case 0:
-            {
-                outs.insert(0, (tmpui & 0x0001) ? "ч" : ".");
-                break;
-            }
-            case 1:
-            {
-                outs.insert(0, (tmpui & 0x0001) ? "з" : ".");
-                break;
-            }
-            default:
-                break;
-            }
-            j++;
-            tmpui >>= 1;
-        }
-        vl.Value = outs;
-        break;
+        sl = Cli->Result.at(0);
+        out.Links = sl.at(2);
+        out.Type = sl.at(0).toInt();
+        out.Value = sl.at(1);
+        result = 0;
     }
-    case FW_BOOL:
-    {
-        bool ok;
-        int tmpb = id.toInt(&ok);
-        if (!ok)
-        {
-            result = 1;
-            TFDBG;
-            return vl;
-        }
-        vl.Type = VS_ICON;
-        if (tmpb == 0)
-            vl.Value = ":/res/cross.png";
-        else
-            vl.Value = ":/res/ok.png";
-    }
-    default:
-    {
-        vl.Value = id;
-        break;
-    }
-    }
-    return vl;
 }
 
 // взять все значения по ссылке links в зависимости от типа ссылки
 
-QStringList s_tablefields::idtovl(QString links)
+void s_tablefields::idtovl(QString &links, QStringList &out)
 {
-    QStringList tmpsl;
-    PublicClass::FieldFormat ff = pc.getFFfromLinks(links);
-    switch (ff.ftype)
+    if (pc.AutonomousMode)
     {
-    case FW_ALLINK:
-    {
-        QString id = toid(ff.link.at(0), "Наименование", ff.link.at(1)); // взять ИД элемента, по ИД_а которого отбирать список элементов
-        if (result)
+        QString table, header, value;
+        PublicClass::FieldFormat ff;
+        pc.getFFfromLinks(links, ff);
+        switch (ff.ftype)
         {
-            TFWARN("");
-            return QStringList();
-        }
-        tmpsl = htovlc(ff.link.at(0), "Наименование", "ИД_а", id);
-        if (result)
+        case FW_ALLINK:
         {
-            TFWARN("");
-            return QStringList();
+            QString id;
+            table = ff.link.at(0);
+            header = "Наименование";
+            value = ff.link.at(1);
+            toid(table, header, value, id); // взять ИД элемента, по ИД_а которого отбирать список элементов
+            if (result)
+            {
+                TFWARN("");
+                out.clear();
+                return;
+            }
+            value = "ИД_а";
+            htovlc(table, header, value, id, out);
+            if (result)
+            {
+                TFWARN("");
+                out.clear();
+                return;
+            }
+            break;
         }
-        break;
+        case FW_MAXLINK:
+        case FW_LINK:
+        {
+            table = ff.link.at(0);
+            header = ff.link.at(1);
+            htovl(table, header, out);
+            if (result)
+            {
+                TFWARN("");
+                out.clear();
+                return;
+            }
+            break;
+        }
+        default:
+            break;
+        }
     }
-    case FW_MAXLINK:
-    case FW_LINK:
+    else
     {
-        tmpsl = htovl(ff.link.at(0), ff.link.at(1));
-        if (result)
+        QStringList sl;
+        sl << links;
+        Cli->SendCmd(T_IDTVL, sl);
+        while (Cli->Busy)
         {
-            TFWARN("");
-            return QStringList();
+            QThread::msleep(10);
+            qApp->processEvents(QEventLoop::AllEvents);
         }
-        break;
-    }
-    default:
-        break;
+        if ((Cli->DetectedError != Client::CLIER_NOERROR) || Cli->Result.isEmpty())
+        {
+            result = 1;
+            return;
+        }
+        out = Cli->Result.at(0);
     }
     result = 0;
-    return tmpsl;
 }
 
 // перевод имени в его ИД через строку links в таблице tablefields (поиск в таблице по имени его ИД)
 // links = 2.9, value = "ч..ч..чузчузч"
 
-QString s_tablefields::vtoid(PublicClass::ValueStruct vl)
+void s_tablefields::vtoid(PublicClass::ValueStruct &vl, QString &out)
 {
-    QString outs;
-    result = 0;
-    if ((vl.Type == VS_STRING) && (vl.Value == "")) // пустая строка вполне имеет право на запись
-        return QString();
-    PublicClass::FieldFormat ff = pc.getFFfromLinks(vl.Links);
-    switch (ff.ftype)
+    if (pc.AutonomousMode)
     {
-    case FW_ALLINK:
-    {
-        if (vl.Type == VS_STRING)
+        QString table, header;
+        result = 0;
+        if ((vl.Type == VS_STRING) && (vl.Value == "")) // пустая строка вполне имеет право на запись
         {
-            if (vl.Value == "<Корневой элемент>")
-                outs = "0";
-            else
-                outs = toid(ff.link.at(0), "Наименование", vl.Value);
-            if (result)
-                TFWARN("");
+            out.clear();
+            return;
         }
-        else
-            TFWARN("");
-        break;
-    }
-    case FW_LINK:
-    case FW_MAXLINK:
-    {
-        outs = toid(ff.link.at(0), ff.link.at(1), vl.Value);
-        if (result)
-            TFWARN("");
-        break;
-    }
-    case FW_AUTONUM:
-    case FW_NUMBER:
-    case FW_FNUMBER:
-    case FW_PLAIN:
-    case FW_MASKED:
-    case FW_EQUAT:
-    case FW_ID:
-    case FW_SPECIAL:
-    case FW_FLINK:
-    case FW_ILINK:
-    {
-        if (ff.delegate == FD_SPIN) // для спина отдельная обработка, ибо дурит как хочет
+        PublicClass::FieldFormat ff;
+        pc.getFFfromLinks(vl.Links, ff);
+        switch (ff.ftype)
         {
-            int tmpInt = ff.link.at(0).count("n", Qt::CaseSensitive);
-            int tmpInt2 = ff.link.at(0).count("d", Qt::CaseSensitive);
-            QStringList sl = vl.Value.split(".");
-            if (sl.size() > 0)
+        case FW_ALLINK:
+        {
+            if (vl.Type == VS_STRING)
             {
-                outs = sl.at(0).right(tmpInt);
-                for (int i=outs.size(); i<tmpInt; ++i)
-                    outs.insert(0, '0');
+                if (vl.Value == "<Корневой элемент>")
+                    out = "0";
+                else
+                {
+                    table = ff.link.at(0);
+                    header = "Наименование";
+                    toid(table, header, vl.Value, out);
+                }
+                if (result)
+                    TFWARN("");
             }
-            if ((sl.size() > 1) && (tmpInt2 > 0))
-                outs += "." + sl.at(1).left(tmpInt2);
+            else
+                TFWARN("");
             break;
         }
-        outs = vl.Value;
-        break;
-    }
-    case FW_DLINK:
-    {
-        QString tmps = vl.Value;
-        int tmpi;
-        if (tmps.at(0) == '_') // символ подчёркивания в первой позиции ИД означает, что номер таблицы надо брать из второго символа
+        case FW_LINK:
+        case FW_MAXLINK:
         {
-            tmpi = tmps.at(1).digitValue();
-            if (tmpi*2+1 > ff.link.size()) // нет в перечислении links таблицы с таким номером
-            {
-                result = 1;
+            table = ff.link.at(0);
+            header = ff.link.at(1);
+            toid(table, header, vl.Value, out);
+            if (result)
                 TFWARN("");
-                return QString();
-            }
-            tmps.remove(0, 2);
+            break;
         }
-        else
-            tmpi = 0;
-        outs = toid(ff.link.at(tmpi*2), ff.link.at(tmpi*2+1), tmps);
-        if (result)
-            TFWARN("");
-        break;
-    }
-    case FW_RIGHTS:
-    {
-        QString tmps = vl.Value;
-        quint32 outui=0, tmpui = 0x0001;
-        int j = 0;
-        while ((!tmps.isEmpty()) && (j < ACC_NUM)) // пока в строке есть что-нибудь и находимся в пределах битовой ширины прав
+        case FW_AUTONUM:
+        case FW_NUMBER:
+        case FW_FNUMBER:
+        case FW_PLAIN:
+        case FW_MASKED:
+        case FW_EQUAT:
+        case FW_ID:
+        case FW_SPECIAL:
+        case FW_FLINK:
+        case FW_ILINK:
         {
-            switch (j%2)
+            if (ff.delegate == FD_SPIN) // для спина отдельная обработка, ибо дурит как хочет
             {
-            case 0:
-            {
-                int tmpi = tmps.size()-1;
-                QChar tmpc = tmps.at(tmpi);
-                if (tmpc == QChar(1095)) // "ч"
-                    outui |= tmpui;
+                int tmpInt = ff.link.at(0).count("n", Qt::CaseSensitive);
+                int tmpInt2 = ff.link.at(0).count("d", Qt::CaseSensitive);
+                QStringList sl = vl.Value.split(".");
+                if (sl.size() > 0)
+                {
+                    out = sl.at(0).right(tmpInt);
+                    for (int i=out.size(); i<tmpInt; ++i)
+                        out.insert(0, '0');
+                }
+                if ((sl.size() > 1) && (tmpInt2 > 0))
+                    out += "." + sl.at(1).left(tmpInt2);
                 break;
             }
-            case 1:
-            {
-                int tmpi = tmps.size()-1;
-                QChar tmpc = tmps.at(tmpi);
-                if (tmpc == QChar(1079)) // "з"
-                    outui |= tmpui;
-                break;
-            }
-            default:
-                break;
-            }
-            tmps.chop(1);
-            j++;
-            tmpui <<= 1;
+            out = vl.Value;
+            break;
         }
-        outs = QString::number(outui, 16).toUpper();
-        break;
-    }
-    case FW_BOOL:
-    {
-        if (vl.Type == VS_ICON)
+        case FW_DLINK:
         {
-            if (vl.Value == ":/res/ok.png")
-                outs = "1";
-            else if (vl.Value == ":/res/cross.png")
-                outs = "0";
+            QString tmps = vl.Value;
+            int tmpi;
+            if (tmps.at(0) == '_') // символ подчёркивания в первой позиции ИД означает, что номер таблицы надо брать из второго символа
+            {
+                tmpi = tmps.at(1).digitValue();
+                if (tmpi*2+1 > ff.link.size()) // нет в перечислении links таблицы с таким номером
+                {
+                    result = 1;
+                    TFWARN("");
+                    out.clear();
+                    return;
+                }
+                tmps.remove(0, 2);
+            }
+            else
+                tmpi = 0;
+            table = ff.link.at(tmpi*2);
+            header = ff.link.at(tmpi*2+1);
+            toid(table, header, tmps, out);
+            if (result)
+                TFWARN("");
+            break;
+        }
+        case FW_RIGHTS:
+        {
+            QString tmps = vl.Value;
+            quint32 outui=0, tmpui = 0x0001;
+            int j = 0;
+            while ((!tmps.isEmpty()) && (j < ACC_NUM)) // пока в строке есть что-нибудь и находимся в пределах битовой ширины прав
+            {
+                switch (j%2)
+                {
+                case 0:
+                {
+                    int tmpi = tmps.size()-1;
+                    QChar tmpc = tmps.at(tmpi);
+                    if (tmpc == QChar(1095)) // "ч"
+                        outui |= tmpui;
+                    break;
+                }
+                case 1:
+                {
+                    int tmpi = tmps.size()-1;
+                    QChar tmpc = tmps.at(tmpi);
+                    if (tmpc == QChar(1079)) // "з"
+                        outui |= tmpui;
+                    break;
+                }
+                default:
+                    break;
+                }
+                tmps.chop(1);
+                j++;
+                tmpui <<= 1;
+            }
+            out = QString::number(outui, 16).toUpper();
+            break;
+        }
+        case FW_BOOL:
+        {
+            if (vl.Type == VS_ICON)
+            {
+                if (vl.Value == ":/res/ok.png")
+                    out = "1";
+                else if (vl.Value == ":/res/cross.png")
+                    out = "0";
+                else
+                    TFWARN("");
+            }
             else
                 TFWARN("");
+            break;
         }
-        else
+        default:
+        {
             TFWARN("");
-        break;
+            break;
+        }
+        }
     }
-    default:
+    else
     {
-        TFWARN("");
-        break;
+        QStringList sl;
+        sl << QString::number(vl.Type) << vl.Value << vl.Links;
+        Cli->SendCmd(T_VTID, sl);
+        while (Cli->Busy)
+        {
+            QThread::msleep(10);
+            qApp->processEvents(QEventLoop::AllEvents);
+        }
+        if ((Cli->DetectedError != Client::CLIER_NOERROR) || Cli->Result.isEmpty())
+        {
+            result = 1;
+            out.clear();
+            return;
+        }
+        if (Cli->Result.at(0).isEmpty())
+        {
+            result = 1;
+            out.clear();
+            return;
+        }
+        out = Cli->Result.at(0).at(0);
+        result = 0;
     }
-    }
-    return outs;
 }
 
 // вспомогательная процедура возвращает ИД по значению value для заданной таблицы tble и поля header
 
-QString s_tablefields::toid(QString tble, QString header, QString value)
+void s_tablefields::toid(QString &tble, QString &header, QString &value, QString &out)
 {
-    QString tmpString;
-    QStringList sl = tablefields(tble, header); // sl.at(0) = <table>, sl.at(1) = <tablefields>
-    if (result)
+    QStringList sl;
+    if (pc.AutonomousMode)
     {
-        TFWARN("");
-        return QString();
+        tablefields(tble, header, sl); // sl.at(0) = <table>, sl.at(1) = <tablefields>
+        if (result)
+        {
+            TFWARN("");
+            out.clear();
+            return;
+        }
+        QString db = sl.at(0).split(".").at(0);
+        tble = sl.at(0).split(".").at(1);
+        out = sqlc.GetLastValueFromTableByField(db, tble, "id"+tble, sl.at(1), value);
+        if (sqlc.result)
+        {
+            result = 1;
+            TFWARN(sqlc.LastError);
+            out.clear();
+            return;
+        }
     }
-    QString db = sl.at(0).split(".").at(0);
-    tble = sl.at(0).split(".").at(1);
-    tmpString = sqlc.GetLastValueFromTableByField(db, tble, "id"+tble, sl.at(1), value);
-    if (sqlc.result)
+    else
     {
-        result = 1;
-        TFWARN(sqlc.LastError);
-        return QString();
+        sl << tble << header << value;
+        Cli->SendCmd(T_TID, sl);
+        while (Cli->Busy)
+        {
+            QThread::msleep(10);
+            qApp->processEvents(QEventLoop::AllEvents);
+        }
+        if ((Cli->DetectedError != Client::CLIER_NOERROR) || Cli->Result.isEmpty())
+        {
+            result = 1;
+            out.clear();
+            return;
+        }
+        if (Cli->Result.at(0).isEmpty())
+        {
+            result = 1;
+            out.clear();
+            return;
+        }
+        out = Cli->Result.at(0).at(0);
     }
     result = 0;
-    return tmpString;
 }
 
 // idtois - процедура обновления записи values по адресу table:tablefields для таблицы tble
 // ИД записи, по которой обновляются значения, хранятся в values.at(headers.indexof("ИД"))
 
-void s_tablefields::idtois(QString tble, QStringList headers, QStringList values)
+void s_tablefields::idtois(QString &tble, QStringList &headers, QStringList &values)
 {
     if (headers.size() != values.size())
     {
@@ -544,254 +711,365 @@ void s_tablefields::idtois(QString tble, QStringList headers, QStringList values
         TFDBG;
         return;
     }
-    // Сначала найдём для данной таблицы ключевое поле ("v") и по нему вытащим реальную БД, таблицу и наименование поля
-    QStringList fl = QStringList() << "table" << "tablefields" << "header";
-    QStringList cmpfl = QStringList() << "tablename" << "keyfield";
-    QStringList cmpvl = QStringList() << tble << "v";
-    QStringList keydbtble = sqlc.GetValuesFromTableByFields("sup", "tablefields", fl, cmpfl, cmpvl);
-    if (sqlc.result)
+    if (pc.AutonomousMode)
     {
-        result = 1;
-        TFWARN(sqlc.LastError);
-        return;
-    }
-    QStringList tmpsl = keydbtble.at(0).split(".");
-    keydbtble.insert(1, tmpsl.at(1)); // в первом элементе будет tble
-    keydbtble.replace(0, tmpsl.at(0)); // в нулевом элементе оставляем только db
-    int ididx = headers.indexOf(keydbtble.at(3)); // вытаскиваем индекс ключевого поля
-    if (ididx == -1)
-    {
-        TFWARN("Не найдено ключевое поле "+keydbtble.at(3)+" в таблице "+keydbtble.at(1));
-        result = 1;
-        return;
-    }
-    QString keyid;
-    if (ididx < values.size())
-        keyid = values.at(ididx); // id - ИД элемента в ключевом поле, используется при записи всех остальных полей
-    else
-    {
-        result = 1;
-        TFWARN("Не найдено ключевое поле "+keydbtble.at(3)+" в таблице "+keydbtble.at(1));
-        return;
-    }
-    keyid = QString::number(keyid.toInt()); // убираем незначащие нули
-    QStringList tmptablefields, tmpvalues;
-    QString tmpdb, tmptble, tmpdbtble;
-    int i;
-    while (headers.size() > 0)
-    {
-        QStringList dbtble = tablefields(tble, headers.at(0));
-        if (dbtble.at(0) != "-") // если знак дефиса, поле не пишется в базу
+        // Сначала найдём для данной таблицы ключевое поле ("v") и по нему вытащим реальную БД, таблицу и наименование поля
+        QStringList fl = QStringList() << "table" << "tablefields" << "header";
+        QStringList cmpfl = QStringList() << "tablename" << "keyfield";
+        QStringList cmpvl = QStringList() << tble << "v";
+        QStringList keydbtble = sqlc.GetValuesFromTableByFields("sup", "tablefields", fl, cmpfl, cmpvl);
+        if (sqlc.result)
         {
-            tmpdbtble = dbtble.at(0);
-            tmpvalues = QStringList() << values.at(0); // кладём первое значение в выходной буфер значений
-            tmptablefields = QStringList() << dbtble.at(1);
-            headers.removeAt(0);
-            values.removeAt(0);
-            i = 0;
-            while (i < headers.size())
+            result = 1;
+            TFWARN(sqlc.LastError);
+            return;
+        }
+        QStringList tmpsl = keydbtble.at(0).split(".");
+        keydbtble.insert(1, tmpsl.at(1)); // в первом элементе будет tble
+        keydbtble.replace(0, tmpsl.at(0)); // в нулевом элементе оставляем только db
+        int ididx = headers.indexOf(keydbtble.at(3)); // вытаскиваем индекс ключевого поля
+        if (ididx == -1)
+        {
+            TFWARN("Не найдено ключевое поле "+keydbtble.at(3)+" в таблице "+keydbtble.at(1));
+            result = 1;
+            return;
+        }
+        QString keyid;
+        if (ididx < values.size())
+            keyid = values.at(ididx); // id - ИД элемента в ключевом поле, используется при записи всех остальных полей
+        else
+        {
+            result = 1;
+            TFWARN("Не найдено ключевое поле "+keydbtble.at(3)+" в таблице "+keydbtble.at(1));
+            return;
+        }
+        keyid = QString::number(keyid.toInt()); // убираем незначащие нули
+        QStringList tmptablefields, tmpvalues;
+        QString tmpdb, tmptble, tmpdbtble;
+        int i;
+        while (headers.size() > 0)
+        {
+            QStringList dbtble;
+            QString header = headers.at(0);
+            tablefields(tble, header, dbtble);
+            if (dbtble.at(0) != "-") // если знак дефиса, поле не пишется в базу
             {
-                dbtble = tablefields(tble, headers.at(i));
-                if (dbtble.size() == 0)
+                tmpdbtble = dbtble.at(0);
+                tmpvalues = QStringList() << values.at(0); // кладём первое значение в выходной буфер значений
+                tmptablefields = QStringList() << dbtble.at(1);
+                headers.removeAt(0);
+                values.removeAt(0);
+                i = 0;
+                while (i < headers.size())
                 {
-                    TFWARN("");
-                    return;
+                    header = headers.at(i);
+                    tablefields(tble, header, dbtble);
+                    if (dbtble.size() == 0)
+                    {
+                        TFWARN("");
+                        return;
+                    }
+                    if (dbtble.at(0) == tmpdbtble) // здесь проверка на дефис не нужна, т.к. сравнение ведётся с tmpdbtble, который уже проверен ранее
+                    {
+                        tmptablefields << dbtble.at(1);
+                        tmpvalues << values.at(i);
+                        headers.removeAt(i);
+                        values.removeAt(i);
+                    }
+                    else
+                        i++;
                 }
-                if (dbtble.at(0) == tmpdbtble) // здесь проверка на дефис не нужна, т.к. сравнение ведётся с tmpdbtble, который уже проверен ранее
-                {
-                    tmptablefields << dbtble.at(1);
-                    tmpvalues << values.at(i);
-                    headers.removeAt(i);
-                    values.removeAt(i);
-                }
-                else
-                    i++;
+                tmpdb = tmpdbtble.split(".").at(0);
+                tmptble = tmpdbtble.split(".").at(1);
+                tmptablefields << "date" << "idpers";
+                tmpvalues << pc.DateTime << QString::number(pc.idPers);
+                result = sqlc.UpdateValuesInTable(tmpdb, tmptble, tmptablefields, tmpvalues, keydbtble.at(2), keyid);
+                if (result)
+                    TFWARN(sqlc.LastError);
             }
-            tmpdb = tmpdbtble.split(".").at(0);
-            tmptble = tmpdbtble.split(".").at(1);
-            tmptablefields << "date" << "idpers";
-            tmpvalues << pc.DateTime << QString::number(pc.idPers);
-            result = sqlc.UpdateValuesInTable(tmpdb, tmptble, tmptablefields, tmpvalues, keydbtble.at(2), keyid);
-            if (result)
-                TFWARN(sqlc.LastError);
         }
     }
-    return;
+    else
+    {
+        QStringList sl;
+        sl << tble;
+        for (int i=0; i<headers.size(); ++i)
+        {
+            sl << headers.at(i);
+            if (i < values.size())
+                sl << values.at(i);
+        }
+        Cli->SendCmd(T_UPD, sl);
+        while (Cli->Busy)
+        {
+            QThread::msleep(10);
+            qApp->processEvents(QEventLoop::AllEvents);
+        }
+        if ((Cli->DetectedError != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
+        {
+            result = 1;
+            return;
+        }
+        result = 0;
+    }
 }
 
 // insert - вставка новой записи в таблицу tble
 // возвращает индекс новой строки
 
-QString s_tablefields::insert(QString tble)
+void s_tablefields::insert(QString tble, QString &out)
 {
-    QStringList cmpfl = QStringList() << "tablename" << "keyfield";
-    QStringList cmpvl = QStringList() << tble << "v";
-    QString keydbtble = sqlc.GetValueFromTableByFields("sup", "tablefields", "table", cmpfl, cmpvl);
-    if (sqlc.result)
+    if (pc.AutonomousMode)
     {
-        result = 1;
-        TFWARN(sqlc.LastError);
-        return QString();
+        QStringList cmpfl = QStringList() << "tablename" << "keyfield";
+        QStringList cmpvl = QStringList() << tble << "v";
+        QString keydbtble = sqlc.GetValueFromTableByFields("sup", "tablefields", "table", cmpfl, cmpvl);
+        if (sqlc.result)
+        {
+            result = 1;
+            TFWARN(sqlc.LastError);
+            out.clear();
+            return;
+        }
+        out = sqlc.InsertValuesToTable(keydbtble.split(".").at(0), keydbtble.split(".").at(1), QStringList(), QStringList()); // вставка новой пустой строки
+        if (sqlc.result)
+        {
+            result = 1;
+            TFWARN(sqlc.LastError);
+            out.clear();
+            return;
+        }
     }
-    QString newid = sqlc.InsertValuesToTable(keydbtble.split(".").at(0), keydbtble.split(".").at(1), QStringList(), QStringList()); // вставка новой пустой строки
-    if (sqlc.result)
+    else
     {
-        result = 1;
-        TFWARN(sqlc.LastError);
-        return QString();
+        QStringList sl;
+        sl << tble;
+        Cli->SendCmd(T_INS, sl);
+        while (Cli->Busy)
+        {
+            QThread::msleep(10);
+            qApp->processEvents(QEventLoop::AllEvents);
+        }
+        if ((Cli->DetectedError != Client::CLIER_NOERROR) || Cli->Result.isEmpty())
+        {
+            result = 1;
+            out.clear();
+            return;
+        }
+        if (Cli->Result.at(0).isEmpty())
+        {
+            result = 1;
+            out.clear();
+            return;
+        }
+        out = Cli->Result.at(0).at(0);
     }
     result = 0;
-    return newid;
 }
 
 // newid - найти первый свободный ИД в таблице
 // возвращает индекс новой строки
 
-QString s_tablefields::NewID(QString tble)
+void s_tablefields::NewID(QString &tble, QString &out)
 {
-    QStringList cmpfl = QStringList() << "tablename" << "keyfield";
-    QStringList cmpvl = QStringList() << tble << "v";
-    QString keydbtble = sqlc.GetValueFromTableByFields("sup", "tablefields", "table", cmpfl, cmpvl);
-    if (sqlc.result)
+    if (pc.AutonomousMode)
     {
-        result = 1;
-        TFWARN(sqlc.LastError);
-        return QString();
+        QStringList cmpfl = QStringList() << "tablename" << "keyfield";
+        QStringList cmpvl = QStringList() << tble << "v";
+        QString keydbtble = sqlc.GetValueFromTableByFields("sup", "tablefields", "table", cmpfl, cmpvl);
+        if (sqlc.result)
+        {
+            result = 1;
+            TFWARN(sqlc.LastError);
+            out.clear();
+            return;
+        }
+        int newid = sqlc.GetNextFreeIndex(keydbtble.split(".").at(0), keydbtble.split(".").at(1));
+        if (sqlc.result)
+        {
+            result = 1;
+            TFWARN(sqlc.LastError);
+            out.clear();
+            return;
+        }
+        out = QString::number(newid);
     }
-    int newid = sqlc.GetNextFreeIndex(keydbtble.split(".").at(0), keydbtble.split(".").at(1));
-    if (sqlc.result)
+    else
     {
-        result = 1;
-        TFWARN(sqlc.LastError);
-        return QString();
+        QStringList sl;
+        sl << tble;
+        Cli->SendCmd(T_GID, sl);
+        while (Cli->Busy)
+        {
+            QThread::msleep(10);
+            qApp->processEvents(QEventLoop::AllEvents);
+        }
+        if ((Cli->DetectedError != Client::CLIER_NOERROR) || Cli->Result.isEmpty())
+        {
+            result = 1;
+            out.clear();
+            return;
+        }
+        if (Cli->Result.at(0).isEmpty())
+        {
+            result = 1;
+            out.clear();
+            return;
+        }
+        out = Cli->Result.at(0).at(0);
     }
     result = 0;
-    return QString::number(newid);
 }
 
 // remove - "удаление" записи с индексом id из таблицы tble
 // важно: здесь не удаляются ссылки на данную запись, которая будет удалена, проверку "дохлых" ссылок на записи, у которых deleted=1, необходимо
 // проводить и исправлять при старте СУПиКа или при "обновлении проблем"
 
-void s_tablefields::remove(QString tble, QString id)
+void s_tablefields::remove(QString &tble, QString &id)
 {
-    QStringList fl = QStringList() << "table" << "tablefields";
-    QStringList cmpfl = QStringList() << "tablename" << "keyfield";
-    QStringList cmpvl = QStringList() << tble << "v";
-    QStringList keydbtble = sqlc.GetValuesFromTableByFields("sup", "tablefields", fl, cmpfl, cmpvl);
-    if (sqlc.result)
+    if (pc.AutonomousMode)
     {
-        TFWARN(sqlc.LastError);
-        result = 1;
-        return;
+        QStringList fl = QStringList() << "table" << "tablefields";
+        QStringList cmpfl = QStringList() << "tablename" << "keyfield";
+        QStringList cmpvl = QStringList() << tble << "v";
+        QStringList keydbtble = sqlc.GetValuesFromTableByFields("sup", "tablefields", fl, cmpfl, cmpvl);
+        if (sqlc.result)
+        {
+            TFWARN(sqlc.LastError);
+            result = 1;
+            return;
+        }
+        result = sqlc.DeleteFromDB(keydbtble.at(0).split(".").at(0), keydbtble.at(0).split(".").at(1), keydbtble.at(1), id);
+        if (result)
+            TFWARN(sqlc.LastError);
     }
-    result = sqlc.DeleteFromDB(keydbtble.at(0).split(".").at(0), keydbtble.at(0).split(".").at(1), keydbtble.at(1), id);
-    if (result)
-        TFWARN(sqlc.LastError);
+    else
+    {
+        QStringList sl;
+        sl << tble << id;
+        Cli->SendCmd(T_DEL, sl);
+        while (Cli->Busy)
+        {
+            QThread::msleep(10);
+            qApp->processEvents(QEventLoop::AllEvents);
+        }
+        if ((Cli->DetectedError != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
+            result = 1;
+        else
+            result = 0;
+    }
 }
 
 // remove - реальное удаление записи с индексом id из таблицы tble
 // важно: здесь не удаляются ссылки на данную запись, которая будет удалена, проверку "дохлых" ссылок на отсутствующие записи необходимо
 // проводить и исправлять при старте СУПиКа или при "обновлении проблем"
 
-void s_tablefields::Delete(QString tble, QString id)
-{
-    QStringList fl = QStringList() << "table" << "tablefields";
-    QStringList cmpfl = QStringList() << "tablename" << "keyfield";
-    QStringList cmpvl = QStringList() << tble << "v";
-    QStringList keydbtble = sqlc.GetValuesFromTableByFields("sup", "tablefields", fl, cmpfl, cmpvl);
-    if (sqlc.result)
-    {
-        TFWARN(sqlc.LastError);
-        result = 1;
-        return;
-    }
-    result = sqlc.RealDeleteFromDB(keydbtble.at(0).split(".").at(0), keydbtble.at(0).split(".").at(1), QStringList(keydbtble.at(1)), QStringList(id));
-    if (result)
-        TFWARN(sqlc.LastError);
-}
-
-bool s_tablefields::Check(QString tble, QString cmpfield, QString cmpvalue)
-{
-    QStringList sl = tfl.tablefields(tble,cmpfield);
-    if (result)
-    {
-        TFWARN("");
-        return false;
-    }
-    QString cmpdb = sl.at(0).split(".").at(0); // реальное имя БД
-    QString cmptble = sl.at(0).split(".").at(1); // реальное название таблицы
-    cmpfield = sl.at(1); // реальное название поля сравнения
-    sl = sqlc.GetColumnsFromTable(cmpdb,cmptble);
-    sl = sqlc.GetValuesFromTableByField(cmpdb,cmptble,sl,cmpfield,cmpvalue);
-    if (sqlc.result)
-    {
-        result = 1;
-        return false;
-    }
-    result = 0;
-    return true;
-}
-
-QStringList s_tablefields::valuesbyfield(QString tble, QStringList fl, QString cmpfield, QString cmpvalue, bool Warn)
-{
-    QStringList sl = tfl.tablefields(tble,cmpfield);
-    if (result)
-    {
-        TFWARN("");
-        return QStringList();
-    }
-    QString cmpdb = sl.at(0).split(".").at(0); // реальное имя БД
-    QString cmptble = sl.at(0).split(".").at(1); // реальное название таблицы
-    cmpfield = sl.at(1); // реальное название поля сравнения
-    for (int i = 0; i < fl.size(); i++)
-    {
-        sl = tablefields(tble,fl.at(i));
-        if (result)
-        {
-            TFWARN("");
-            return QStringList();
-        }
-        fl.replace(i, sl.at(1)); // заменяем русское наименование поля на его реальное название
-    }
-    sl = sqlc.GetValuesFromTableByField(cmpdb,cmptble,fl,cmpfield,cmpvalue);
-    if ((sqlc.result) && (Warn))
-    {
-        TFWARN(sqlc.LastError);
-        result = 1;
-        return QStringList();
-    }
-    result = 0;
-    return sl;
-}
-
-void s_tablefields::valuesbyfields(QString tble, QStringList fl, QStringList cmpfields, QStringList cmpvalues, QStringList &out, bool Warn)
+void s_tablefields::Delete(QString &tble, QString &id)
 {
     if (pc.AutonomousMode)
     {
-        if ((cmpfields.size() != cmpvalues.size()) || (cmpfields.size() == 0) || (fl.size() == 0))
+        QStringList fl = QStringList() << "table" << "tablefields";
+        QStringList cmpfl = QStringList() << "tablename" << "keyfield";
+        QStringList cmpvl = QStringList() << tble << "v";
+        QStringList keydbtble = sqlc.GetValuesFromTableByFields("sup", "tablefields", fl, cmpfl, cmpvl);
+        if (sqlc.result)
+        {
+            TFWARN(sqlc.LastError);
+            result = 1;
+            return;
+        }
+        result = sqlc.RealDeleteFromDB(keydbtble.at(0).split(".").at(0), keydbtble.at(0).split(".").at(1), QStringList(keydbtble.at(1)), QStringList(id));
+        if (result)
+            TFWARN(sqlc.LastError);
+    }
+    else
+    {
+        QStringList sl;
+        sl << tble << id;
+        Cli->SendCmd(T_RDEL, sl);
+        while (Cli->Busy)
+        {
+            QThread::msleep(10);
+            qApp->processEvents(QEventLoop::AllEvents);
+        }
+        if ((Cli->DetectedError != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
+            result = 1;
+        else
+            result = 0;
+    }
+}
+
+bool s_tablefields::Check(QString &tble, QString &cmpfield, QString &cmpvalue)
+{
+    QStringList sl;
+    if (pc.AutonomousMode)
+    {
+        tfl.tablefields(tble,cmpfield, sl);
+        if (result)
+        {
+            TFWARN("");
+            return false;
+        }
+        QString cmpdb = sl.at(0).split(".").at(0); // реальное имя БД
+        QString cmptble = sl.at(0).split(".").at(1); // реальное название таблицы
+        cmpfield = sl.at(1); // реальное название поля сравнения
+        sl = sqlc.GetColumnsFromTable(cmpdb,cmptble);
+        sl = sqlc.GetValuesFromTableByField(cmpdb,cmptble,sl,cmpfield,cmpvalue);
+        if (sqlc.result)
         {
             result = 1;
-            TFDBG;
+            return false;
+        }
+        result = 0;
+        return true;
+    }
+    else
+    {
+        QStringList sl;
+        sl << tble << cmpfield << cmpvalue;
+        Cli->SendCmd(T_C, sl);
+        while (Cli->Busy)
+        {
+            QThread::msleep(10);
+            qApp->processEvents(QEventLoop::AllEvents);
+        }
+        if ((Cli->DetectedError != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
+        {
+            result = 1;
+            return false;
+        }
+        if (Cli->Result.at(0).isEmpty())
+        {
+            result = 1;
+            return false;
+        }
+        result = 0;
+        if (Cli->Result.at(0).at(0) == "0")
+            return false;
+        else
+            return true;
+    }
+}
+
+void s_tablefields::valuesbyfield(QString &tble, QStringList &fl, QString &cmpfield, QString &cmpvalue, QStringList &out, bool Warn)
+{
+    QStringList sl;
+    if (pc.AutonomousMode)
+    {
+        tfl.tablefields(tble,cmpfield, sl);
+        if (result)
+        {
+            TFWARN("");
             out.clear();
             return;
         }
-        QStringList cmpfl, tmpsl;
-        // взяли все реальные названия полей сравнения
-        for (int i=0; i<cmpfields.size(); i++)
-        {
-            tmpsl = tablefields(tble,cmpfields.at(i));
-            if (result)
-            {
-                TFWARN("");
-                out.clear();
-                return;
-            }
-            cmpfl << tmpsl.at(1);
-        }
+        QString cmpdb = sl.at(0).split(".").at(0); // реальное имя БД
+        QString cmptble = sl.at(0).split(".").at(1); // реальное название таблицы
+        cmpfield = sl.at(1); // реальное название поля сравнения
         for (int i = 0; i < fl.size(); i++)
         {
-            QStringList sl = tablefields(tble,fl.at(i));
+            QString field = fl.at(i);
+            tablefields(tble,field, sl);
             if (result)
             {
                 TFWARN("");
@@ -800,8 +1078,73 @@ void s_tablefields::valuesbyfields(QString tble, QStringList fl, QStringList cmp
             }
             fl.replace(i, sl.at(1)); // заменяем русское наименование поля на его реальное название
         }
-        QString cmpdb = tmpsl.at(0).split(".").at(0); // реальное имя БД
-        QString cmptble = tmpsl.at(0).split(".").at(1); // реальное название таблицы
+        out = sqlc.GetValuesFromTableByField(cmpdb,cmptble,fl,cmpfield,cmpvalue);
+        if ((sqlc.result) && (Warn))
+        {
+            TFWARN(sqlc.LastError);
+            result = 1;
+            out.clear();
+            return;
+        }
+    }
+    else
+    {
+        sl << QString::number(fl.size()) << "1" << tble << fl << cmpfield << cmpvalue;
+        Cli->SendCmd(T_GVSBFS, sl);
+        while (Cli->Busy)
+        {
+            QThread::msleep(10);
+            qApp->processEvents(QEventLoop::AllEvents);
+        }
+        if ((Cli->DetectedError != Client::CLIER_NOERROR) || Cli->Result.isEmpty())
+        {
+            result = 1;
+            return;
+        }
+        out = Cli->Result.at(0);
+    }
+    result = 0;
+}
+
+void s_tablefields::valuesbyfields(QString &tble, QStringList &fl, QStringList &cmpfields, QStringList &cmpvalues, QStringList &out, bool Warn)
+{
+    QStringList cmpfl, sl;
+    if ((cmpfields.size() != cmpvalues.size()) || (cmpfields.size() == 0) || (fl.size() == 0))
+    {
+        result = 1;
+        TFDBG;
+        out.clear();
+        return;
+    }
+    if (pc.AutonomousMode)
+    {
+        // взяли все реальные названия полей сравнения
+        for (int i=0; i<cmpfields.size(); i++)
+        {
+            QString cmpfield = cmpfields.at(i);
+            tablefields(tble,cmpfield, sl);
+            if (result)
+            {
+                TFWARN("");
+                out.clear();
+                return;
+            }
+            cmpfl << sl.at(1);
+        }
+        for (int i = 0; i < fl.size(); i++)
+        {
+            QString field = fl.at(i);
+            tablefields(tble,field, sl);
+            if (result)
+            {
+                TFWARN("");
+                out.clear();
+                return;
+            }
+            fl.replace(i, sl.at(1)); // заменяем русское наименование поля на его реальное название
+        }
+        QString cmpdb = sl.at(0).split(".").at(0); // реальное имя БД
+        QString cmptble = sl.at(0).split(".").at(1); // реальное название таблицы
         out = sqlc.GetValuesFromTableByFields(cmpdb,cmptble,fl,cmpfl,cmpvalues);
         if ((sqlc.result) && (Warn))
         {
@@ -817,13 +1160,13 @@ void s_tablefields::valuesbyfields(QString tble, QStringList fl, QStringList cmp
         int i;
         int fields_num = fl.size();
         int pairs_num = cmpfields.size();
-        QStringList sl = QStringList() << QString::number(fields_num) << QString::number(pairs_num) << tble;
+        sl << QString::number(fields_num) << QString::number(pairs_num) << tble;
         for (i=0; i<fields_num; i++)
-            sl << AddQuotes(fl.at(i));
+            sl << fl.at(i);
         for (i=0; i<pairs_num; i++)
         {
-            sl << AddQuotes(cmpfields.at(i));
-            sl << AddQuotes(cmpvalues.at(i));
+            sl << cmpfields.at(i);
+            sl << cmpvalues.at(i);
         }
         Cli->SendCmd(T_GVSBFS, sl);
         while (Cli->Busy)
@@ -842,62 +1185,62 @@ void s_tablefields::valuesbyfields(QString tble, QStringList fl, QStringList cmp
     }
 }
 
-QStringList s_tablefields::TableColumn(QString tble, QString field)
+void s_tablefields::TableColumn(QString &tble, QString &field, QStringList &out)
 {
-    QStringList sl = sqlc.GetValuesFromTableByColumnAndFields("sup", "tablefields", field, QStringList("tablename"), QStringList(tble), "fieldsorder");
+    out = sqlc.GetValuesFromTableByColumnAndFields("sup", "tablefields", field, QStringList("tablename"), QStringList(tble), "fieldsorder");
     if (sqlc.result)
     {
         TFWARN(sqlc.LastError);
         result = 1;
-        return QStringList();
+        out.clear();
+        return;
     }
     result = 0;
-    return sl;
 }
 
-QStringList s_tablefields::tablefields(QString tble, QString header)
+void s_tablefields::tablefields(QString &tble, QString &header, QStringList &out)
 {
     QStringList fl = QStringList() << "table" << "tablefields" << "links";
     QStringList cmpfl = QStringList() << "tablename" << "header";
     QStringList cmpvl = QStringList() << tble << header;
-    QStringList sl = sqlc.GetValuesFromTableByFields("sup", "tablefields", fl, cmpfl, cmpvl);
-    if ((sqlc.result) || (sl.isEmpty()))
+    out = sqlc.GetValuesFromTableByFields("sup", "tablefields", fl, cmpfl, cmpvl);
+    if ((sqlc.result) || (out.isEmpty()))
     {
         TFWARN(sqlc.LastError);
         result = 1;
-        return QStringList();
+        out.clear();
+        return;
     }
     result = 0;
-    return sl;
 }
 
-QStringList s_tablefields::tableheaders(QString tble)
+void s_tablefields::tableheaders(QString &tble, QStringList &out)
 {
-    QStringList sl = sqlc.GetValuesFromTableByColumnAndFields("sup", "tablefields", "header", QStringList("tablename"), QStringList(tble), "fieldsorder", true);
-    if ((sqlc.result) || (sl.isEmpty()))
+    out = sqlc.GetValuesFromTableByColumnAndFields("sup", "tablefields", "header", QStringList("tablename"), QStringList(tble), "fieldsorder", true);
+    if ((sqlc.result) || (out.isEmpty()))
     {
         TFWARN(sqlc.LastError);
         result = 1;
-        return QStringList();
+        out.clear();
+        return;
     }
     result = 0;
-    return sl;
 }
 
-QStringList s_tablefields::tablelinks(QString tble)
+void s_tablefields::tablelinks(QString &tble, QStringList &out)
 {
-    QStringList sl = sqlc.GetValuesFromTableByColumnAndFields("sup", "tablefields", "links", QStringList("tablename"), QStringList(tble), "fieldsorder", true);
-    if ((sqlc.result) || (sl.isEmpty()))
+    out = sqlc.GetValuesFromTableByColumnAndFields("sup", "tablefields", "links", QStringList("tablename"), QStringList(tble), "fieldsorder", true);
+    if ((sqlc.result) || (out.isEmpty()))
     {
         TFWARN(sqlc.LastError);
         result = 1;
-        return QStringList();
+        out.clear();
+        return;
     }
     result = 0;
-    return sl;
 }
 
-bool s_tablefields::tableistree(QString tble)
+bool s_tablefields::tableistree(QString &tble)
 {
     QStringList tmpfl = QStringList() << "tablefields" << "tablename";
     QStringList tmpvl = QStringList() << "alias" << tble;
@@ -908,42 +1251,47 @@ bool s_tablefields::tableistree(QString tble)
         return true;
 }
 
-QStringList s_tablefields::HeaderByFields(QString &tble, QString &header, QStringList &cmpfl, QStringList &cmpvl)
+void s_tablefields::HeaderByFields(QString &tble, QString &header, QStringList &cmpfl, QStringList &cmpvl, QStringList &out)
 {
     if ((cmpfl.size() != cmpvl.size()) || (cmpfl.size() == 0))
     {
         result = 1;
         TFDBG;
-        return QStringList();
+        out.clear();
+        return;
     }
     QStringList realcmpfl, tmpsl;
     // взяли все реальные названия полей сравнения
     for (int i=0; i<cmpfl.size(); i++)
     {
-        tmpsl = tablefields(tble,cmpfl.at(i));
+        QString field = cmpfl.at(i);
+        tablefields(tble, field, tmpsl);
         if (result)
         {
             TFWARN("");
-            return QStringList();
+            out.clear();
+            return;
         }
         realcmpfl << tmpsl.at(1);
     }
-    QStringList tmpsl2 = tablefields(tble,header);
+    QStringList tmpsl2;
+    tablefields(tble,header,tmpsl2);
     if (result)
     {
         TFWARN("");
-        return QStringList();
+        out.clear();
+        return;
     }
     QString realheader = tmpsl2.at(1);
     QString cmpdb = tmpsl.at(0).split(".").at(0); // реальное имя БД
     QString cmptble = tmpsl.at(0).split(".").at(1); // реальное название таблицы
-    tmpsl = sqlc.GetValuesFromTableByColumnAndFields(cmpdb,cmptble,realheader,realcmpfl,cmpvl);
+    out = sqlc.GetValuesFromTableByColumnAndFields(cmpdb,cmptble,realheader,realcmpfl,cmpvl);
     if (sqlc.result)
     {
         TFWARN(sqlc.LastError);
         result = 1;
-        return QStringList();
+        out.clear();
+        return;
     }
     result = 0;
-    return tmpsl;
 }

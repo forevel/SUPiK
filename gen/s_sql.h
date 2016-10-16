@@ -38,7 +38,7 @@ public:
     QString InsertValuesSimple (QString db, QString tble, QStringList fl, QStringList vl); // добавление новой пустой записи и возврат нового ИД
     int UpdateValuesInTable (QString db, QString tble, QStringList fl, QStringList vl, QString field, QString value); // обновить данные в полях fl значениями vl, где field = value
     int DeleteFromDB (QString db, QString tble, QString field, QString value); // "удалить" (поставить "deleted"=1) запись, где field=value
-    QList<QStringList> SearchInTableLike (QString db, QString tble, QString field, QString regexpstr); // вернуть список из записей, для которых field похож на regexpstr
+    QList<QStringList> SearchInTableLike (QString &db, QString &tble, QStringList &fields, QString &cmpfield, QString &cmpvalue); // вернуть список из записей, для которых field похож на regexpstr
 
     // условные запросы
     QString GetValueFromTableByID (QString db, QString tble, QString field, QString id); // взять значение по полю field для записи с ИД=id
@@ -68,7 +68,6 @@ public:
     QString LastError;
 
 private:
-    QString AddQuotes(const QString str);
 };
 
 extern s_sql sqlc;

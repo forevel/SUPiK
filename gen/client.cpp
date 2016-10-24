@@ -41,7 +41,7 @@ Client::Client(QObject *parent) : QObject(parent)
     CmdMap.insert(T_GVSBCF, {"T_GVSBCF", 4, "T3", RESULT_VECTOR, false, false});
     CmdMap.insert(T_GFT, {"T_GFT", 1, "T7", RESULT_MATRIX, false, false});
     CmdMap.insert(T_TV, {"T_TV", 3, "T:", RESULT_STRING, false, false});
-    CmdMap.insert(T_IDTV, {"T_IDTV", 2, "T9", RESULT_STRING, false, false});
+    CmdMap.insert(T_IDTV, {"T_IDTV", 2, "T9", RESULT_VECTOR, false, false});
     CmdMap.insert(T_INS, {"T_INS", 1, "T>", RESULT_STRING, false, false});
     CmdMap.insert(T_UPD, {"T_UPD", 3, "T?", RESULT_NONE, false, false});
     CmdMap.insert(T_DEL, {"T_DEL", 2, "T5", RESULT_NONE, false, false});
@@ -140,7 +140,7 @@ void Client::SendCmd(int Command, QStringList &Args)
         FieldsNum = 0;
         if (CheckArgs(st.CmdString, Args, st.ArgsNum, st.CheckForFieldsNum, st.CheckForPairsNum) != 0)
             return;
-        if (FieldsNum = 0)
+        if (FieldsNum == 0)
             FieldsNum = 1; // если не выставлено значение поля в функции CheckArgs, выставить его принудительно в 1 (одно поле на запись)
         QStringList sl;
         sl << st.Prefix;
@@ -352,6 +352,9 @@ void Client::ParseReply(QByteArray *ba)
     case S_UPD:
     case S_DEL:
     case S_RDEL:
+    case T_DEL:
+    case T_RDEL:
+    case T_UPD:
         if (ServerResponse == "OK")
             CmdOk = true;
         else
@@ -362,6 +365,8 @@ void Client::ParseReply(QByteArray *ba)
         break;
     case S_GID:
     case S_INS:
+    case T_GID:
+    case T_INS:
     {
         bool ok;
         ResultInt = ArgList.at(0).toInt(&ok);
@@ -383,6 +388,16 @@ void Client::ParseReply(QByteArray *ba)
     case T_GVSBC:
     case T_GVSBCF:
     case T_GVSBFS:
+    case T_C:
+    case T_IDTV:
+    case T_TV:
+    case T_IDTVL:
+    case T_GFT:
+    case T_TID:
+    case T_VTID:
+    case T_TF:
+    case T_TH:
+    case T_TL:
     {
         // Формат ответа на запрос:
         //      <number_of_records>\n

@@ -146,7 +146,7 @@ void dev_devdialog::AddNewDev()
     QString newID;
     QString table = "Изделия_полн";
     tfl.insert(table, newID);
-    if (tfl.result)
+    if (tfl.result == TFRESULT_ERROR)
     {
         DEVDOCWARN;
         return;
@@ -168,7 +168,7 @@ void dev_devdialog::DeleteDev()
         return;
     QString table = "Изделия_полн";
     tfl.remove(table, GetIndex(0));
-    if (tfl.result)
+    if (tfl.result == TFRESULT_ERROR)
     {
         DEVDOCWARN;
         return;

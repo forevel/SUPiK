@@ -213,13 +213,13 @@ void ChooseItemDialog::AddItem()
     tmptble.append("_полн");
     QString newID;
     tfl.insert(tmptble, newID);
-    if (tfl.result)
+    if (tfl.result == TFRESULT_ERROR)
     {
         CHIDLGWARN;
         return;
     }
     tfl.idtois(tmptble,QStringList("ИД"),QStringList(newID)); // добавление полей idpers, deleted, date
-    if (!tfl.result)
+    if (tfl.result != TFRESULT_ERROR)
     {
         s_2cdialog *newdialog = new s_2cdialog(Caption);
         newdialog->setup(tmptble, MODE_EDITNEW, newID);

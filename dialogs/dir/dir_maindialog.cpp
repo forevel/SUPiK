@@ -160,7 +160,7 @@ void dir_maindialog::ShowSlaveTree(QString str)
     QString table = MainTable+"_полн";
     QString cmpfield = "Наименование";
     tfl.valuesbyfield(table,fields,cmpfield,str, values);
-    if (!tfl.result)
+    if (tfl.result != TFRESULT_ERROR)
     {
         if (values.size() < 3)
         {
@@ -312,7 +312,7 @@ void dir_maindialog::AddNew()
     QString newID;
     QString table = Tables.last()+"_полн";
     tfl.insert(table, newID); // добавление элементов разрешается только в крайнюю таблицу
-    if (tfl.result)
+    if (tfl.result == TFRESULT_ERROR)
     {
         DIRMDBG;
         return;
@@ -360,7 +360,7 @@ void dir_maindialog::DeleteDataUnconditional(QString id)
 {
     QString table = Tables.last()+"_полн";
     tfl.remove(table, id);
-    if (tfl.result)
+    if (tfl.result == TFRESULT_ERROR)
     {
         DIRMWARN;
         return;

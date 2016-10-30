@@ -154,7 +154,7 @@ void sys_systemdialog::SetSlave(QModelIndex idx)
         QString field = "Вызываемая функция";
         QString cmpfield = "Наименование";
         tfl.htovlc(table,field,cmpfield,tmpString, tmpsl); // получить имя вызываемой функции
-        if (tfl.result)
+        if (tfl.result == TFRESULT_ERROR)
         {
             SYSSWARN;
             return;
@@ -470,7 +470,7 @@ void sys_systemdialog::DeleteTable()
     QString tblename = tv->model()->data(tv->model()->index(tv->currentIndex().row(),1,QModelIndex()),Qt::DisplayRole).toString();
     QStringList TableHeaders;
     tfl.tableheaders(tblename, TableHeaders);
-    if (tfl.result)
+    if (tfl.result == TFRESULT_ERROR)
         return;
     if (!(MessageBox2::question(this, "Уверены?", "Вы уверены, что хотите удалить все сведения о таблице?")))
         return;

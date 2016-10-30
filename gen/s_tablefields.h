@@ -7,6 +7,13 @@
 #include "s_sql.h"
 #include "publicclass.h"
 
+enum Results
+{
+    TFRESULT_NOERROR,
+    TFRESULT_EMPTY,
+    TFRESULT_ERROR
+};
+
 class s_tablefields
 {
 public:

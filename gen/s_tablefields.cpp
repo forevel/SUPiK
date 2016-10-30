@@ -25,12 +25,14 @@ s_tablefields::s_tablefields()
 void s_tablefields::htovl(QString &tble, QString &header, QStringList &out)
 {
     QStringList sl;
+    out.clear();
+    result = TFRESULT_NOERROR;
     if (pc.AutonomousMode)
     {
         tablefields(tble, header, sl); // sl.at(0) = <table>, sl.at(1) = <tablefields>
         if (result)
         {
-            out.clear();
+            TFWARN("");
             return;
         }
         QString db = sl.at(0).split(".").at(0); // table = <db>.<tble>
@@ -38,12 +40,10 @@ void s_tablefields::htovl(QString &tble, QString &header, QStringList &out)
         out = sqlc.GetValuesFromTableByColumn(db, tble, sl.at(1),"id"+tble,true);
         if (sqlc.result == 2) // ошибка
         {
-            result = 1;
+            result = TFRESULT_ERROR;
             TFWARN(sqlc.LastError);
-            out.clear();
             return;
         }
-        result = 0;
     }
     else
     {
@@ -54,17 +54,12 @@ void s_tablefields::htovl(QString &tble, QString &header, QStringList &out)
             QThread::msleep(10);
             qApp->processEvents(QEventLoop::AllEvents);
         }
-        if ((Cli->DetectedError != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
-        {
-            result = 1;
-            out.clear();
-        }
+        if (Cli->DetectedError == Client::CLIER_EMPTY)
+            result = TFRESULT_EMPTY;
+        else if ((Cli->DetectedError != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
+            result = TFRESULT_ERROR;
         else
-        {
             out = Cli->Result.at(0);
-            result = 0;
-            return;
-        }
     }
 }
 
@@ -74,20 +69,20 @@ void s_tablefields::htovl(QString &tble, QString &header, QStringList &out)
 void s_tablefields::htovlc(QString &tble, QString &header, QString &cheader, QString &value, QStringList &out)
 {
     QStringList sl, cl;
+    out.clear();
+    result = TFRESULT_NOERROR;
     if (pc.AutonomousMode)
     {
         tablefields(tble, header, sl); // sl.at(0) = <table>, sl.at(1) = <tablefields>
         if (result)
         {
             TFWARN("");
-            out.clear();
             return;
         }
         tablefields(tble, cheader, cl); // cl.at(1) = <tablefields>
         if (result)
         {
             TFWARN("");
-            out.clear();
             return;
         }
         QString db = sl.at(0).split(".").at(0);
@@ -95,12 +90,10 @@ void s_tablefields::htovlc(QString &tble, QString &header, QString &cheader, QSt
         out = sqlc.GetValuesFromTableByColumnAndFields(db, tble, sl.at(1), QStringList(cl.at(1)), QStringList(value));
         if (sqlc.result) // || tmpsl.isEmpty())
         {
-            result = 1;
+            result = TFRESULT_ERROR;
             TFWARN(sqlc.LastError);
-            out.clear();
             return;
         }
-        result = 0;
     }
     else
     {
@@ -111,17 +104,12 @@ void s_tablefields::htovlc(QString &tble, QString &header, QString &cheader, QSt
             QThread::msleep(10);
             qApp->processEvents(QEventLoop::AllEvents);
         }
-        if ((Cli->DetectedError != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
-        {
-            result = 1;
-            out.clear();
-        }
+        if (Cli->DetectedError == Client::CLIER_EMPTY)
+            result = TFRESULT_EMPTY;
+        else if ((Cli->DetectedError != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
+            result = TFRESULT_ERROR;
         else
-        {
             out = Cli->Result.at(0);
-            result = 0;
-            return;
-        }
     }
 }
 
@@ -131,6 +119,8 @@ void s_tablefields::htovlc(QString &tble, QString &header, QString &cheader, QSt
 void s_tablefields::tbvll(QString &tble, QList<QStringList> &out)
 {
     QStringList tmpsl, sl;
+    out.clear();
+    result = TFRESULT_NOERROR;
     if (pc.AutonomousMode)
     {
         tablelinks(tble, sl); // берём links
@@ -138,7 +128,6 @@ void s_tablefields::tbvll(QString &tble, QList<QStringList> &out)
         if (result)
         {
             TFWARN("");
-            out.clear();
             return;
         }
         out.append(sl);
@@ -146,7 +135,6 @@ void s_tablefields::tbvll(QString &tble, QList<QStringList> &out)
         if (result)
         {
             TFWARN("");
-            out.clear();
             return;
         }
         out.insert(0, sl); // на поз. 0 заголовки, на поз. 1 - links
@@ -156,7 +144,6 @@ void s_tablefields::tbvll(QString &tble, QList<QStringList> &out)
             htovl(tble, field, tmpsl);
             out.append(tmpsl);
         }
-        result = 0;
     }
     else
     {
@@ -167,14 +154,12 @@ void s_tablefields::tbvll(QString &tble, QList<QStringList> &out)
             QThread::msleep(10);
             qApp->processEvents(QEventLoop::AllEvents);
         }
-        if (Cli->DetectedError != Client::CLIER_NOERROR)
-        {
-            result = 1;
-            out.clear();
-            return;
-        }
-        out = Cli->Result;
-        result = 0;
+        if (Cli->DetectedError == Client::CLIER_EMPTY)
+            result = TFRESULT_EMPTY;
+        else if ((Cli->DetectedError != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
+            result = TFRESULT_ERROR;
+        else
+            out = Cli->Result;
     }
 }
 
@@ -183,13 +168,14 @@ void s_tablefields::tbvll(QString &tble, QList<QStringList> &out)
 void s_tablefields::tov(QString &tble, QString &header, QString &tbleid, QString &out)
 {
     QStringList sl;
+    result = TFRESULT_NOERROR;
+    out.clear();
     if (pc.AutonomousMode)
     {
         tablefields(tble, header, sl); // sl.at(0) = <table>, sl.at(1) = <tablefields>
         if (result)
         {
             TFWARN("");
-            out.clear();
             return;
         }
         QString db = sl.at(0).split(".").at(0);
@@ -197,12 +183,10 @@ void s_tablefields::tov(QString &tble, QString &header, QString &tbleid, QString
         out = sqlc.GetValueFromTableByID(db, tble, sl.at(1), tbleid);
         if (sqlc.result == 2) // если ошибка в запросе SQL
         {
-            result = 1;
+            result = TFRESULT_ERROR;
             TFWARN(sqlc.LastError);
-            out.clear();
             return;
         }
-        result = 0;
     }
     else
     {
@@ -213,20 +197,12 @@ void s_tablefields::tov(QString &tble, QString &header, QString &tbleid, QString
             QThread::msleep(10);
             qApp->processEvents(QEventLoop::AllEvents);
         }
-        if ((Cli->DetectedError != Client::CLIER_NOERROR) || Cli->Result.isEmpty())
-        {
-            result = 1;
-            out.clear();
-            return;
-        }
-        if (Cli->Result.at(0).isEmpty())
-        {
-            result = 1;
-            out.clear();
-            return;
-        }
-        out = Cli->Result.at(0).at(0);
-        result = 0;
+        if (Cli->DetectedError == Client::CLIER_EMPTY)
+            result = TFRESULT_EMPTY;
+        else if (Cli->DetectedError != Client::CLIER_NOERROR)
+            result = TFRESULT_ERROR;
+        else
+            out = Cli->ResultStr;
     }
 }
 
@@ -238,8 +214,8 @@ void s_tablefields::idtov(QString links, QString id, PublicClass::ValueStruct &o
 {
     QStringList sl;
     PublicClass::FieldFormat ff;
-    if (pc.AutonomousMode)
-    {
+//    if (pc.AutonomousMode)
+//    {
         QString table, header;
         out.Type = VS_STRING; // тип по умолчанию - простая строка
         out.Value = ""; // значение по умолчанию - пустая строка
@@ -293,7 +269,7 @@ void s_tablefields::idtov(QString links, QString id, PublicClass::ValueStruct &o
             int tmpi = sl.at(0).toInt();
             if (tmpi*2+1 > ff.link.size()) // нет в перечислении links таблицы с таким номером
             {
-                result = 1;
+                result = TFRESULT_ERROR;
                 TFWARN("");
                 return;
             }
@@ -313,7 +289,7 @@ void s_tablefields::idtov(QString links, QString id, PublicClass::ValueStruct &o
             quint32 tmpui = id.toUInt(&ok, 16); // перевод прав в шестнадцатиричную систему
             if (!ok)
             {
-                result = 1;
+                result = TFRESULT_ERROR;
                 TFDBG;
                 return;
             }
@@ -348,7 +324,7 @@ void s_tablefields::idtov(QString links, QString id, PublicClass::ValueStruct &o
             int tmpb = id.toInt(&ok);
             if (!ok)
             {
-                result = 1;
+                result = TFRESULT_ERROR;
                 TFDBG;
                 return;
             }
@@ -364,7 +340,7 @@ void s_tablefields::idtov(QString links, QString id, PublicClass::ValueStruct &o
             break;
         }
         }
-    }
+/*    }
     else
     {
         sl << links << id;
@@ -389,17 +365,19 @@ void s_tablefields::idtov(QString links, QString id, PublicClass::ValueStruct &o
         out.Type = sl.at(0).toInt();
         out.Value = sl.at(1);
         result = 0;
-    }
+    } */
 }
 
 // взять все значения по ссылке links в зависимости от типа ссылки
 
 void s_tablefields::idtovl(QString &links, QStringList &out)
 {
-    if (pc.AutonomousMode)
-    {
+//    if (pc.AutonomousMode)
+//    {
         QString table, header, value;
         PublicClass::FieldFormat ff;
+        out.clear();
+        result = TFRESULT_NOERROR;
         pc.getFFfromLinks(links, ff);
         switch (ff.ftype)
         {
@@ -413,7 +391,6 @@ void s_tablefields::idtovl(QString &links, QStringList &out)
             if (result)
             {
                 TFWARN("");
-                out.clear();
                 return;
             }
             value = "ИД_а";
@@ -421,7 +398,6 @@ void s_tablefields::idtovl(QString &links, QStringList &out)
             if (result)
             {
                 TFWARN("");
-                out.clear();
                 return;
             }
             break;
@@ -435,7 +411,6 @@ void s_tablefields::idtovl(QString &links, QStringList &out)
             if (result)
             {
                 TFWARN("");
-                out.clear();
                 return;
             }
             break;
@@ -443,7 +418,7 @@ void s_tablefields::idtovl(QString &links, QStringList &out)
         default:
             break;
         }
-    }
+/*    }
     else
     {
         QStringList sl;
@@ -460,8 +435,7 @@ void s_tablefields::idtovl(QString &links, QStringList &out)
             return;
         }
         out = Cli->Result.at(0);
-    }
-    result = 0;
+    }*/
 }
 
 // перевод имени в его ИД через строку links в таблице tablefields (поиск в таблице по имени его ИД)
@@ -469,15 +443,13 @@ void s_tablefields::idtovl(QString &links, QStringList &out)
 
 void s_tablefields::vtoid(PublicClass::ValueStruct &vl, QString &out)
 {
-    if (pc.AutonomousMode)
-    {
+//    if (pc.AutonomousMode)
+//    {
         QString table, header;
-        result = 0;
+        result = TFRESULT_NOERROR;
+        out.clear();
         if ((vl.Type == VS_STRING) && (vl.Value == "")) // пустая строка вполне имеет право на запись
-        {
-            out.clear();
             return;
-        }
         PublicClass::FieldFormat ff;
         pc.getFFfromLinks(vl.Links, ff);
         switch (ff.ftype)
@@ -549,9 +521,8 @@ void s_tablefields::vtoid(PublicClass::ValueStruct &vl, QString &out)
                 tmpi = tmps.at(1).digitValue();
                 if (tmpi*2+1 > ff.link.size()) // нет в перечислении links таблицы с таким номером
                 {
-                    result = 1;
+                    result = TFRESULT_ERROR;
                     TFWARN("");
-                    out.clear();
                     return;
                 }
                 tmps.remove(0, 2);
@@ -621,7 +592,7 @@ void s_tablefields::vtoid(PublicClass::ValueStruct &vl, QString &out)
             break;
         }
         }
-    }
+/*    }
     else
     {
         QStringList sl;
@@ -646,7 +617,7 @@ void s_tablefields::vtoid(PublicClass::ValueStruct &vl, QString &out)
         }
         out = Cli->Result.at(0).at(0);
         result = 0;
-    }
+    }*/
 }
 
 // вспомогательная процедура возвращает ИД по значению value для заданной таблицы tble и поля header
@@ -654,13 +625,14 @@ void s_tablefields::vtoid(PublicClass::ValueStruct &vl, QString &out)
 void s_tablefields::toid(QString &tble, QString &header, QString &value, QString &out)
 {
     QStringList sl;
+    result = TFRESULT_NOERROR;
+    out.clear();
     if (pc.AutonomousMode)
     {
         tablefields(tble, header, sl); // sl.at(0) = <table>, sl.at(1) = <tablefields>
         if (result)
         {
             TFWARN("");
-            out.clear();
             return;
         }
         QString db = sl.at(0).split(".").at(0);
@@ -670,7 +642,6 @@ void s_tablefields::toid(QString &tble, QString &header, QString &value, QString
         {
             result = 1;
             TFWARN(sqlc.LastError);
-            out.clear();
             return;
         }
     }
@@ -683,21 +654,13 @@ void s_tablefields::toid(QString &tble, QString &header, QString &value, QString
             QThread::msleep(10);
             qApp->processEvents(QEventLoop::AllEvents);
         }
-        if ((Cli->DetectedError != Client::CLIER_NOERROR) || Cli->Result.isEmpty())
-        {
-            result = 1;
-            out.clear();
-            return;
-        }
-        if (Cli->Result.at(0).isEmpty())
-        {
-            result = 1;
-            out.clear();
-            return;
-        }
-        out = Cli->Result.at(0).at(0);
+        if (Cli->DetectedError == Client::CLIER_EMPTY)
+            result = TFRESULT_EMPTY;
+        else if (Cli->DetectedError != Client::CLIER_NOERROR)
+            result = TFRESULT_ERROR;
+        else
+            out = Cli->ResultStr;
     }
-    result = 0;
 }
 
 // idtois - процедура обновления записи values по адресу table:tablefields для таблицы tble
@@ -705,9 +668,10 @@ void s_tablefields::toid(QString &tble, QString &header, QString &value, QString
 
 void s_tablefields::idtois(QString &tble, QStringList &headers, QStringList &values)
 {
+    result = TFRESULT_NOERROR;
     if (headers.size() != values.size())
     {
-        result = 1;
+        result = TFRESULT_ERROR;
         TFDBG;
         return;
     }
@@ -720,7 +684,7 @@ void s_tablefields::idtois(QString &tble, QStringList &headers, QStringList &val
         QStringList keydbtble = sqlc.GetValuesFromTableByFields("sup", "tablefields", fl, cmpfl, cmpvl);
         if (sqlc.result)
         {
-            result = 1;
+            result = TFRESULT_ERROR;
             TFWARN(sqlc.LastError);
             return;
         }
@@ -731,7 +695,7 @@ void s_tablefields::idtois(QString &tble, QStringList &headers, QStringList &val
         if (ididx == -1)
         {
             TFWARN("Не найдено ключевое поле "+keydbtble.at(3)+" в таблице "+keydbtble.at(1));
-            result = 1;
+            result = TFRESULT_ERROR;
             return;
         }
         QString keyid;
@@ -739,7 +703,7 @@ void s_tablefields::idtois(QString &tble, QStringList &headers, QStringList &val
             keyid = values.at(ididx); // id - ИД элемента в ключевом поле, используется при записи всех остальных полей
         else
         {
-            result = 1;
+            result = TFRESULT_ERROR;
             TFWARN("Не найдено ключевое поле "+keydbtble.at(3)+" в таблице "+keydbtble.at(1));
             return;
         }
@@ -767,6 +731,7 @@ void s_tablefields::idtois(QString &tble, QStringList &headers, QStringList &val
                     if (dbtble.size() == 0)
                     {
                         TFWARN("");
+                        result = TFRESULT_ERROR;
                         return;
                     }
                     if (dbtble.at(0) == tmpdbtble) // здесь проверка на дефис не нужна, т.к. сравнение ведётся с tmpdbtble, который уже проверен ранее
@@ -805,12 +770,8 @@ void s_tablefields::idtois(QString &tble, QStringList &headers, QStringList &val
             QThread::msleep(10);
             qApp->processEvents(QEventLoop::AllEvents);
         }
-        if ((Cli->DetectedError != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
-        {
-            result = 1;
-            return;
-        }
-        result = 0;
+        if (Cli->DetectedError != Client::CLIER_NOERROR)
+            result = TFRESULT_ERROR;
     }
 }
 
@@ -819,6 +780,8 @@ void s_tablefields::idtois(QString &tble, QStringList &headers, QStringList &val
 
 void s_tablefields::insert(QString tble, QString &out)
 {
+    out.clear();
+    result = TFRESULT_NOERROR;
     if (pc.AutonomousMode)
     {
         QStringList cmpfl = QStringList() << "tablename" << "keyfield";
@@ -826,17 +789,15 @@ void s_tablefields::insert(QString tble, QString &out)
         QString keydbtble = sqlc.GetValueFromTableByFields("sup", "tablefields", "table", cmpfl, cmpvl);
         if (sqlc.result)
         {
-            result = 1;
+            result = TFRESULT_ERROR;
             TFWARN(sqlc.LastError);
-            out.clear();
             return;
         }
         out = sqlc.InsertValuesToTable(keydbtble.split(".").at(0), keydbtble.split(".").at(1), QStringList(), QStringList()); // вставка новой пустой строки
         if (sqlc.result)
         {
-            result = 1;
+            result = TFRESULT_ERROR;
             TFWARN(sqlc.LastError);
-            out.clear();
             return;
         }
     }
@@ -850,21 +811,20 @@ void s_tablefields::insert(QString tble, QString &out)
             QThread::msleep(10);
             qApp->processEvents(QEventLoop::AllEvents);
         }
-        if ((Cli->DetectedError != Client::CLIER_NOERROR) || Cli->Result.isEmpty())
+        if (Cli->DetectedError == Client::CLIER_EMPTY)
+            result = TFRESULT_EMPTY;
+        else if ((Cli->DetectedError != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
+            result = TFRESULT_ERROR;
+        else
         {
-            result = 1;
-            out.clear();
-            return;
+            if (Cli->Result.at(0).isEmpty())
+            {
+                result = TFRESULT_ERROR;
+                return;
+            }
+            out = Cli->Result.at(0).at(0);
         }
-        if (Cli->Result.at(0).isEmpty())
-        {
-            result = 1;
-            out.clear();
-            return;
-        }
-        out = Cli->Result.at(0).at(0);
     }
-    result = 0;
 }
 
 // newid - найти первый свободный ИД в таблице
@@ -872,6 +832,8 @@ void s_tablefields::insert(QString tble, QString &out)
 
 void s_tablefields::NewID(QString &tble, QString &out)
 {
+    out.clear();
+    result = TFRESULT_NOERROR;
     if (pc.AutonomousMode)
     {
         QStringList cmpfl = QStringList() << "tablename" << "keyfield";
@@ -879,17 +841,15 @@ void s_tablefields::NewID(QString &tble, QString &out)
         QString keydbtble = sqlc.GetValueFromTableByFields("sup", "tablefields", "table", cmpfl, cmpvl);
         if (sqlc.result)
         {
-            result = 1;
+            result = TFRESULT_ERROR;
             TFWARN(sqlc.LastError);
-            out.clear();
             return;
         }
         int newid = sqlc.GetNextFreeIndex(keydbtble.split(".").at(0), keydbtble.split(".").at(1));
         if (sqlc.result)
         {
-            result = 1;
+            result = TFRESULT_ERROR;
             TFWARN(sqlc.LastError);
-            out.clear();
             return;
         }
         out = QString::number(newid);
@@ -904,21 +864,20 @@ void s_tablefields::NewID(QString &tble, QString &out)
             QThread::msleep(10);
             qApp->processEvents(QEventLoop::AllEvents);
         }
-        if ((Cli->DetectedError != Client::CLIER_NOERROR) || Cli->Result.isEmpty())
+        if (Cli->DetectedError == Client::CLIER_EMPTY)
+            result = TFRESULT_EMPTY;
+        else if ((Cli->DetectedError != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
+            result = TFRESULT_ERROR;
+        else
         {
-            result = 1;
-            out.clear();
-            return;
+            if (Cli->Result.at(0).isEmpty())
+            {
+                result = TFRESULT_ERROR;
+                return;
+            }
+            out = Cli->Result.at(0).at(0);
         }
-        if (Cli->Result.at(0).isEmpty())
-        {
-            result = 1;
-            out.clear();
-            return;
-        }
-        out = Cli->Result.at(0).at(0);
     }
-    result = 0;
 }
 
 // remove - "удаление" записи с индексом id из таблицы tble
@@ -927,6 +886,7 @@ void s_tablefields::NewID(QString &tble, QString &out)
 
 void s_tablefields::remove(QString &tble, QString &id)
 {
+    result = TFRESULT_NOERROR;
     if (pc.AutonomousMode)
     {
         QStringList fl = QStringList() << "table" << "tablefields";
@@ -936,12 +896,15 @@ void s_tablefields::remove(QString &tble, QString &id)
         if (sqlc.result)
         {
             TFWARN(sqlc.LastError);
-            result = 1;
+            result = TFRESULT_ERROR;
             return;
         }
-        result = sqlc.DeleteFromDB(keydbtble.at(0).split(".").at(0), keydbtble.at(0).split(".").at(1), keydbtble.at(1), id);
-        if (result)
+        sqlc.DeleteFromDB(keydbtble.at(0).split(".").at(0), keydbtble.at(0).split(".").at(1), keydbtble.at(1), id);
+        if (sqlc.result)
+        {
+            result = TFRESULT_ERROR;
             TFWARN(sqlc.LastError);
+        }
     }
     else
     {
@@ -953,10 +916,8 @@ void s_tablefields::remove(QString &tble, QString &id)
             QThread::msleep(10);
             qApp->processEvents(QEventLoop::AllEvents);
         }
-        if ((Cli->DetectedError != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
-            result = 1;
-        else
-            result = 0;
+        if (Cli->DetectedError != Client::CLIER_NOERROR)
+            result = TFRESULT_ERROR;
     }
 }
 
@@ -966,6 +927,7 @@ void s_tablefields::remove(QString &tble, QString &id)
 
 void s_tablefields::Delete(QString &tble, QString &id)
 {
+    result = TFRESULT_NOERROR;
     if (pc.AutonomousMode)
     {
         QStringList fl = QStringList() << "table" << "tablefields";
@@ -975,12 +937,15 @@ void s_tablefields::Delete(QString &tble, QString &id)
         if (sqlc.result)
         {
             TFWARN(sqlc.LastError);
-            result = 1;
+            result = TFRESULT_ERROR;
             return;
         }
-        result = sqlc.RealDeleteFromDB(keydbtble.at(0).split(".").at(0), keydbtble.at(0).split(".").at(1), QStringList(keydbtble.at(1)), QStringList(id));
-        if (result)
+        sqlc.RealDeleteFromDB(keydbtble.at(0).split(".").at(0), keydbtble.at(0).split(".").at(1), QStringList(keydbtble.at(1)), QStringList(id));
+        if (sqlc.result)
+        {
+            result = TFRESULT_ERROR;
             TFWARN(sqlc.LastError);
+        }
     }
     else
     {
@@ -992,15 +957,17 @@ void s_tablefields::Delete(QString &tble, QString &id)
             QThread::msleep(10);
             qApp->processEvents(QEventLoop::AllEvents);
         }
-        if ((Cli->DetectedError != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
-            result = 1;
-        else
-            result = 0;
+        if (Cli->DetectedError != Client::CLIER_NOERROR)
+        {
+            result = TFRESULT_ERROR;
+            return;
+        }
     }
 }
 
 bool s_tablefields::Check(QString &tble, QString &cmpfield, QString &cmpvalue)
 {
+    result = TFRESULT_NOERROR;
     QStringList sl;
     if (pc.AutonomousMode)
     {
@@ -1017,10 +984,9 @@ bool s_tablefields::Check(QString &tble, QString &cmpfield, QString &cmpvalue)
         sl = sqlc.GetValuesFromTableByField(cmpdb,cmptble,sl,cmpfield,cmpvalue);
         if (sqlc.result)
         {
-            result = 1;
+            result = TFRESULT_ERROR;
             return false;
         }
-        result = 0;
         return true;
     }
     else
@@ -1033,34 +999,32 @@ bool s_tablefields::Check(QString &tble, QString &cmpfield, QString &cmpvalue)
             QThread::msleep(10);
             qApp->processEvents(QEventLoop::AllEvents);
         }
-        if ((Cli->DetectedError != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
-        {
-            result = 1;
-            return false;
-        }
-        if (Cli->Result.at(0).isEmpty())
-        {
-            result = 1;
-            return false;
-        }
-        result = 0;
-        if (Cli->Result.at(0).at(0) == "0")
-            return false;
+        if (Cli->DetectedError == Client::CLIER_EMPTY)
+            result = TFRESULT_EMPTY;
+        else if (Cli->DetectedError != Client::CLIER_NOERROR)
+            result = TFRESULT_ERROR;
         else
-            return true;
+        {
+            if (Cli->ResultStr == "0")
+                return false;
+            else
+                return true;
+        }
+        return false;
     }
 }
 
 void s_tablefields::valuesbyfield(QString &tble, QStringList &fl, QString &cmpfield, QString &cmpvalue, QStringList &out, bool Warn)
 {
     QStringList sl;
+    out.clear();
+    result = TFRESULT_NOERROR;
     if (pc.AutonomousMode)
     {
         tfl.tablefields(tble,cmpfield, sl);
         if (result)
         {
             TFWARN("");
-            out.clear();
             return;
         }
         QString cmpdb = sl.at(0).split(".").at(0); // реальное имя БД
@@ -1073,7 +1037,6 @@ void s_tablefields::valuesbyfield(QString &tble, QStringList &fl, QString &cmpfi
             if (result)
             {
                 TFWARN("");
-                out.clear();
                 return;
             }
             fl.replace(i, sl.at(1)); // заменяем русское наименование поля на его реальное название
@@ -1082,8 +1045,7 @@ void s_tablefields::valuesbyfield(QString &tble, QStringList &fl, QString &cmpfi
         if ((sqlc.result) && (Warn))
         {
             TFWARN(sqlc.LastError);
-            result = 1;
-            out.clear();
+            result = TFRESULT_ERROR;
             return;
         }
     }
@@ -1096,24 +1058,24 @@ void s_tablefields::valuesbyfield(QString &tble, QStringList &fl, QString &cmpfi
             QThread::msleep(10);
             qApp->processEvents(QEventLoop::AllEvents);
         }
-        if ((Cli->DetectedError != Client::CLIER_NOERROR) || Cli->Result.isEmpty())
-        {
-            result = 1;
-            return;
-        }
-        out = Cli->Result.at(0);
+        if (Cli->DetectedError == Client::CLIER_EMPTY)
+            result = TFRESULT_EMPTY;
+        else if ((Cli->DetectedError != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
+            result = TFRESULT_ERROR;
+        else
+            out = Cli->Result.at(0);
     }
-    result = 0;
 }
 
 void s_tablefields::valuesbyfields(QString &tble, QStringList &fl, QStringList &cmpfields, QStringList &cmpvalues, QStringList &out, bool Warn)
 {
     QStringList cmpfl, sl;
+    out.clear();
+    result = TFRESULT_NOERROR;
     if ((cmpfields.size() != cmpvalues.size()) || (cmpfields.size() == 0) || (fl.size() == 0))
     {
         result = 1;
         TFDBG;
-        out.clear();
         return;
     }
     if (pc.AutonomousMode)
@@ -1126,7 +1088,6 @@ void s_tablefields::valuesbyfields(QString &tble, QStringList &fl, QStringList &
             if (result)
             {
                 TFWARN("");
-                out.clear();
                 return;
             }
             cmpfl << sl.at(1);
@@ -1138,7 +1099,6 @@ void s_tablefields::valuesbyfields(QString &tble, QStringList &fl, QStringList &
             if (result)
             {
                 TFWARN("");
-                out.clear();
                 return;
             }
             fl.replace(i, sl.at(1)); // заменяем русское наименование поля на его реальное название
@@ -1149,11 +1109,9 @@ void s_tablefields::valuesbyfields(QString &tble, QStringList &fl, QStringList &
         if ((sqlc.result) && (Warn))
         {
             TFWARN(sqlc.LastError);
-            result = 1;
-            out.clear();
+            result = TFRESULT_ERROR;
             return;
         }
-        result = 0;
     }
     else
     {
@@ -1174,14 +1132,12 @@ void s_tablefields::valuesbyfields(QString &tble, QStringList &fl, QStringList &
             QThread::msleep(10);
             qApp->processEvents(QEventLoop::AllEvents);
         }
-        if ((Cli->DetectedError != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
-        {
-            result = 1;
-            out.clear();
-            return;
-        }
-        out = Cli->Result.at(0);
-        result = 0;
+        if (Cli->DetectedError == Client::CLIER_EMPTY)
+            result = TFRESULT_EMPTY;
+        else if ((Cli->DetectedError != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
+            result = TFRESULT_ERROR;
+        else
+            out = Cli->Result.at(0);
     }
 }
 
@@ -1191,11 +1147,11 @@ void s_tablefields::TableColumn(QString &tble, QString &field, QStringList &out)
     if (sqlc.result)
     {
         TFWARN(sqlc.LastError);
-        result = 1;
+        result = TFRESULT_ERROR;
         out.clear();
         return;
     }
-    result = 0;
+    result = TFRESULT_NOERROR;
 }
 
 void s_tablefields::tablefields(QString &tble, QString &header, QStringList &out)
@@ -1207,11 +1163,11 @@ void s_tablefields::tablefields(QString &tble, QString &header, QStringList &out
     if ((sqlc.result) || (out.isEmpty()))
     {
         TFWARN(sqlc.LastError);
-        result = 1;
+        result = TFRESULT_ERROR;
         out.clear();
         return;
     }
-    result = 0;
+    result = TFRESULT_NOERROR;
 }
 
 void s_tablefields::tableheaders(QString &tble, QStringList &out)
@@ -1220,11 +1176,11 @@ void s_tablefields::tableheaders(QString &tble, QStringList &out)
     if ((sqlc.result) || (out.isEmpty()))
     {
         TFWARN(sqlc.LastError);
-        result = 1;
+        result = TFRESULT_ERROR;
         out.clear();
         return;
     }
-    result = 0;
+    result = TFRESULT_NOERROR;
 }
 
 void s_tablefields::tablelinks(QString &tble, QStringList &out)
@@ -1233,11 +1189,11 @@ void s_tablefields::tablelinks(QString &tble, QStringList &out)
     if ((sqlc.result) || (out.isEmpty()))
     {
         TFWARN(sqlc.LastError);
-        result = 1;
+        result = TFRESULT_ERROR;
         out.clear();
         return;
     }
-    result = 0;
+    result = TFRESULT_NOERROR;
 }
 
 bool s_tablefields::tableistree(QString &tble)
@@ -1253,11 +1209,12 @@ bool s_tablefields::tableistree(QString &tble)
 
 void s_tablefields::HeaderByFields(QString &tble, QString &header, QStringList &cmpfl, QStringList &cmpvl, QStringList &out)
 {
+    result = TFRESULT_NOERROR;
+    out.clear();
     if ((cmpfl.size() != cmpvl.size()) || (cmpfl.size() == 0))
     {
-        result = 1;
+        result = TFRESULT_ERROR;
         TFDBG;
-        out.clear();
         return;
     }
     QStringList realcmpfl, tmpsl;
@@ -1269,7 +1226,6 @@ void s_tablefields::HeaderByFields(QString &tble, QString &header, QStringList &
         if (result)
         {
             TFWARN("");
-            out.clear();
             return;
         }
         realcmpfl << tmpsl.at(1);
@@ -1279,7 +1235,6 @@ void s_tablefields::HeaderByFields(QString &tble, QString &header, QStringList &
     if (result)
     {
         TFWARN("");
-        out.clear();
         return;
     }
     QString realheader = tmpsl2.at(1);
@@ -1289,9 +1244,7 @@ void s_tablefields::HeaderByFields(QString &tble, QString &header, QStringList &
     if (sqlc.result)
     {
         TFWARN(sqlc.LastError);
-        result = 1;
-        out.clear();
+        result = TFRESULT_ERROR;
         return;
     }
-    result = 0;
 }

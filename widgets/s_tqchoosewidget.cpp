@@ -75,7 +75,7 @@ void s_tqChooseWidget::Setup(QString links, QString hdr)
         QStringListModel *tmpModel = new QStringListModel;
         QStringList tmpsl;
         tfl.idtovl(links, tmpsl);
-        if (tfl.result)
+        if (tfl.result == TFRESULT_ERROR)
             tmpsl.clear();
         tmpModel->setStringList(tmpsl);
         cb->setModel(tmpModel);

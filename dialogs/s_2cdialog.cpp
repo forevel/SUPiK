@@ -163,13 +163,13 @@ void s_2cdialog::AddItem()
         tmptble.append("_полн");
         QString newID;
         tfl.insert(tmptble, newID);
-        if (tfl.result)
+        if (tfl.result == TFRESULT_ERROR)
         {
             CD2WARN;
             return;
         }
         tfl.idtois(tmptble,QStringList("ИД"),QStringList(newID)); // добавление полей idpers, deleted, date
-        if (!tfl.result)
+        if (tfl.result != TFRESULT_ERROR)
         {
             s_2cdialog *newdialog = new s_2cdialog(Caption);
             newdialog->setup(tmptble, MODE_EDITNEW, newID);
@@ -300,7 +300,7 @@ void s_2cdialog::accepted()
         }
         tmps = tble.at(0);
         tfl.idtois(tmps, headers, values);
-        if (tfl.result)
+        if (tfl.result == TFRESULT_ERROR)
         {
             CD2WARN;
             return;
@@ -309,7 +309,7 @@ void s_2cdialog::accepted()
         if (IsQuarantine)
         {
             tfl.remove(oldtble, oldid); // при успешной записи в некарантин, из карантина старую надо удалить
-            if (tfl.result)
+            if (tfl.result == TFRESULT_ERROR)
             {
                 CD2WARN;
                 return;

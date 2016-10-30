@@ -232,7 +232,7 @@ QString EditModel::Value(int Row, int Column)
     vs.Links = data(index(Row,Column,QModelIndex()),LinksRole).toString();
     vs.Value = vl;
     tfl.vtoid(vs, vl);
-    if (tfl.result)
+    if (tfl.result == TFRESULT_ERROR)
     {
         EMODELWARN;
         return QString(); // если произошла ошибка при получении ИД по значению, добавляем пустую строку

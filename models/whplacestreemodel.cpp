@@ -51,7 +51,7 @@ int WhPlacesTreeModel::Insert(WhPlacesTreeItem *Value)
     // сначала ищем первый свободный ИД в таблице Склады размещение
     QString NewID;
     tfl.insert("Склады размещение_полн", NewID);
-    if (tfl.result)
+    if (tfl.result == TFRESULT_ERROR)
         return -1;
     // затем добавляем элемент
     int tmpi = NewID.toInt();
@@ -69,7 +69,7 @@ int WhPlacesTreeModel::DeleteNew()
     {
         field = QString::number(item->Id);
         tfl.Delete(table, field);
-        if (tfl.result)
+        if (tfl.result == TFRESULT_ERROR)
             return 1;
     }
     Find(0x80, QStringList(QString::number(WHP_UPDATENEW)));
@@ -77,7 +77,7 @@ int WhPlacesTreeModel::DeleteNew()
     {
         field = QString::number(item->Id);
         tfl.Delete(table, field);
-        if (tfl.result)
+        if (tfl.result == TFRESULT_ERROR)
             return 1;
     }
     return 0;
@@ -177,7 +177,7 @@ int WhPlacesTreeModel::Save()
     QString table = "Склады размещение_полн";
     QStringList fl;
     tfl.tableheaders(table, fl);
-    if (tfl.result)
+    if (tfl.result == TFRESULT_ERROR)
         return 1;
     // для каждого элемента из Items
     for (int i=0; i<Items.keys().size(); i++)
@@ -191,7 +191,7 @@ int WhPlacesTreeModel::Save()
                                               item->Description << item->Name << QString::number(item->WhID) << QString::number(item->WhNum) << \
                                               QString::number(item->WhPlaceTypeID);
             tfl.idtois(table, fl, vl);
-            if (tfl.result)
+            if (tfl.result == TFRESULT_ERROR)
                 return 1;
         }
     }

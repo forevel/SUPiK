@@ -696,7 +696,7 @@ void dir_adddialog::TbleChoosed()
         return;
     }
     tfl.tableheaders(cb->currentText(), sl);
-    if (tfl.result)
+    if (tfl.result == TFRESULT_ERROR)
     {
         DADDWARN;
         return;
@@ -779,7 +779,7 @@ void dir_adddialog::fillFields()
         QString table = dirtype+"_полн";
         QString field = "Наименование";
         tfl.valuesbyfield(table,fields,field,tmpdir, values);
-        if (tfl.result)
+        if (tfl.result == TFRESULT_ERROR)
         {
             DADDWARN;
             return;

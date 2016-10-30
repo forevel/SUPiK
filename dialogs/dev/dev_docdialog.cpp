@@ -174,7 +174,7 @@ void dev_docdialog::MainItemChoosed(QModelIndex idx)
     CompTble = tmps.toInt();
     tmps = QString::number(CompTble); // убираем старшие незначащие нули
     QStringList sl = tfl.valuesbyfield(CompLetter+"Компоненты_описание_полн",fl,"ИД",tmps); // взяли имя таблицы в БД, описание которой выбрали в главной таблице
-    if (tfl.result)
+    if (tfl.result == TFRESULT_ERROR)
     {
         COMPWARN;
         return;

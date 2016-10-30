@@ -357,7 +357,7 @@ int s_ntmodel::Setup(QString maintble, QString slvtble)
     QStringList tmpsl;
     QString field = "ИД_а";
     tfl.tablefields(maintble, field, tmpsl); // взять table,tablefields,links из tablefields, где таблица maintble и заголовок ИД_а
-    if (tfl.result) // нет поля idalias в таблице - это не дерево!
+    if (tfl.result == TFRESULT_ERROR) // нет поля idalias в таблице - это не дерево!
     {
         SNTMWARN;
         return 1;
@@ -365,7 +365,7 @@ int s_ntmodel::Setup(QString maintble, QString slvtble)
     catlist = tmpsl.at(0).split("."); // catlist - таблица, из которой брать категории
     QStringList headers;
     tfl.tableheaders(slvtble, headers);
-    if (tfl.result)
+    if (tfl.result == TFRESULT_ERROR)
     {
         SNTMWARN;
         return 1;
@@ -382,7 +382,7 @@ int s_ntmodel::Setup(QString maintble, QString slvtble)
         setHeaderData(i, Qt::Horizontal, headers.at(i), Qt::EditRole);
         QString header = headers.at(i);
         tfl.tablefields(slvtble, header, tmpsl); // взяли table,tablefields,links из tablefields для подчинённой таблицы и данного заголовка
-        if (tfl.result) // что-то не так с подчинённой таблицей нет такого заголовка
+        if (tfl.result == TFRESULT_ERROR) // что-то не так с подчинённой таблицей нет такого заголовка
         {
             SNTMWARN;
             return 1;

@@ -123,7 +123,7 @@ void cmp_maindialog::SetupUI(int CompType, int CompTable, int CompID)
     table = sl.at(CompType)+"Компоненты_описание_полн";
     idfield = "ИД";
     tfl.valuesbyfield(table,fl,idfield,QString::number(CompTable), tblesl);
-    if ((tfl.result) || (tblesl.size() < 3))
+    if ((tfl.result == TFRESULT_ERROR) || (tblesl.size() < 3))
     {
         CMPWARN;
         return;

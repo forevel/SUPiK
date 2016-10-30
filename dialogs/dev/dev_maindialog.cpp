@@ -289,7 +289,7 @@ void DevMainDialog::SetClassByManuf(QVariant Class)
         return;
     }
     QString ClassDecimal = ClassDecimals.at(0);
-    if (tfl.result)
+    if (tfl.result == TFRESULT_ERROR)
     {
         DEVMAINWARN;
         return;
@@ -328,7 +328,7 @@ void DevMainDialog::SetDecimalByManuf(QVariant Manuf)
         return;
     }
     QString ManufDecimal = ManufDecimals.at(0);
-    if (tfl.result)
+    if (tfl.result == TFRESULT_ERROR)
     {
         DEVMAINWARN;
         return;

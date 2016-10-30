@@ -311,7 +311,7 @@ QList<s_tqWidget *> tb_maindialog::PrepareQuestionsByTheme(int theme, int questn
     QString field = "ИД";
     QStringList idvl;
     tfl.HeaderByFields(tble, field, cmpfl, cmpvl, idvl);
-    if (tfl.result)
+    if (tfl.result == TFRESULT_ERROR)
     {
         TBMWARN;
         return wdgts;
@@ -333,7 +333,7 @@ QList<s_tqWidget *> tb_maindialog::PrepareQuestionsByTheme(int theme, int questn
         QString table = "Экзамен ТБ_полн";
         QString field = "ИД";
         tfl.valuesbyfield(table, mainfl, field, AnotherID, mainvl);
-        if ((tfl.result) || (mainvl.size() < 9))
+        if ((tfl.result == TFRESULT_ERROR) || (mainvl.size() < 9))
         {
             TBMWARN;
             return wdgts;
@@ -463,7 +463,7 @@ void tb_maindialog::ProcessResultsAndExit()
         {
             QString newID;
             tfl.insert(table, newID);
-            if (tfl.result)
+            if (tfl.result == TFRESULT_ERROR)
             {
                 TBMWARN;
                 return;
@@ -477,7 +477,7 @@ void tb_maindialog::ProcessResultsAndExit()
             QString tmps = (ans.Good) ? "1" : "0";
             QStringList vl = QStringList() << newID << QString::number(ans.Id) << QString::number(ans.Answer) << tmps;
             tfl.idtois(table, fl, vl);
-            if (tfl.result)
+            if (tfl.result == TFRESULT_ERROR)
             {
                 TBMWARN;
                 return;
@@ -499,7 +499,7 @@ void tb_maindialog::ProcessResultsAndExit()
         table = "Экзам рез_полн";
         QString newID;
         tfl.insert(table, newID);
-        if (tfl.result)
+        if (tfl.result == TFRESULT_ERROR)
         {
             TBMWARN;
             return;
@@ -507,7 +507,7 @@ void tb_maindialog::ProcessResultsAndExit()
         QStringList fl = QStringList() << "ИД" << "Результат" << "Раздел" << "Тип" << "Файл";
         QStringList vl = QStringList() << newID << QString::number(Mark, 'g', 2) << QString::number(TBGroup) << QString::number(ExType) << Filename;
         tfl.idtois(table, fl, vl);
-        if (tfl.result)
+        if (tfl.result == TFRESULT_ERROR)
         {
             TBMWARN;
             return;

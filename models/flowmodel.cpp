@@ -434,7 +434,7 @@ QString FlowModel::value(int row, int column)
     vs.Value = vl;
     vs.Links = links;
     tfl.vtoid(vs, vl);
-    if (tfl.result)
+    if (tfl.result == TFRESULT_ERROR)
     {
         result=1;
         NCMWARN;
@@ -594,7 +594,7 @@ void FlowModel::setup(QString tble)
     ClearModel();
     QStringList headers, links;
     tfl.tbvll(tble, DataToWrite);
-    if (tfl.result)
+    if (tfl.result == TFRESULT_ERROR)
     {
         result=1;
         NCMWARN;
@@ -623,7 +623,7 @@ void FlowModel::Add(QString tble)
     QStringList headers, links;
     DataToWrite.clear();
     tfl.tbvll(tble, DataToWrite);
-    if (tfl.result)
+    if (tfl.result == TFRESULT_ERROR)
     {
         result=1;
         NCMWARN;
@@ -650,7 +650,7 @@ void FlowModel::setup(QString tble, QString id)
     DataToWrite.clear();
     QStringList headers;
     tfl.tableheaders(tble, headers);
-    if (tfl.result)
+    if (tfl.result == TFRESULT_ERROR)
     {
         result=1;
         NCMWARN;
@@ -658,7 +658,7 @@ void FlowModel::setup(QString tble, QString id)
     }
     QStringList links;
     tfl.tablelinks(tble, links);
-    if (tfl.result)
+    if (tfl.result == TFRESULT_ERROR)
     {
         result=1;
         NCMWARN;
@@ -671,7 +671,7 @@ void FlowModel::setup(QString tble, QString id)
     {
         QString header = headers.at(i);
         tfl.tov(tble,header,id, tmpString);
-        if (!tfl.result)
+        if (tfl.result != TFRESULT_ERROR)
             tmpsl << tmpString;
         else
             tmpsl << "";
@@ -693,7 +693,7 @@ void FlowModel::setupcolumn(QString tble, QString header)
     DataToWrite.clear();
     QStringList tmpsl;
     tfl.htovl(tble, header, tmpsl);
-    if (tfl.result)
+    if (tfl.result == TFRESULT_ERROR)
     {
         NCMWARN;
         return;

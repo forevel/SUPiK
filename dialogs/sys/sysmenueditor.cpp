@@ -130,7 +130,7 @@ void SysmenuEditor::Delete()
     QString table = tble+"_полн";
     QString idfield = "ИД";
     tfl.tablefields(table, idfield, sl); // возьмём реальное имя таблицы из tablefields. sl(0) - <table>, sl(1) - <tablefields>, sl(2) - <links>
-    if (tfl.result)
+    if (tfl.result == TFRESULT_ERROR)
     {
         SYSMWARN;
         return;
@@ -144,7 +144,7 @@ void SysmenuEditor::Delete()
         if (MessageBox2::question(this, "Вы уверены?", "Категория содержит подкатегории.\nВы уверены, что хотите удалить её?"))
         {
             tfl.remove(table, tmpString);
-            if (tfl.result)
+            if (tfl.result == TFRESULT_ERROR)
             {
                 SYSMWARN;
                 return;
@@ -163,7 +163,7 @@ void SysmenuEditor::Delete()
         if (MessageBox2::question(this, "Вы уверены?", "Вы уверены?"))
         {
             tfl.remove(table, tmpString);
-            if (tfl.result)
+            if (tfl.result == TFRESULT_ERROR)
             {
                 SYSMWARN;
                 return;
@@ -200,7 +200,7 @@ void SysmenuEditor::AddToTree(QString str)
     values << NewClass << str << "0007";
     QString newID;
     tfl.insert(table, newID);
-    if (tfl.result)
+    if (tfl.result == TFRESULT_ERROR)
     {
         SYSMWARN;
         return;
@@ -208,7 +208,7 @@ void SysmenuEditor::AddToTree(QString str)
     fields.insert(0,"ИД");
     values.insert(0,newID);
     tfl.idtois(table,fields,values);
-    if (!tfl.result)
+    if (tfl.result != TFRESULT_ERROR)
         ChangeFields(newID);
     else
         SYSMWARN;
@@ -228,7 +228,7 @@ void SysmenuEditor::ChangeName()
     if (ok && !tmpValue.isEmpty())
     {
         tmpString = tfl.toid(tble, "Наименование", tmpString);
-        if (tfl.result)
+        if (tfl.result == TFRESULT_ERROR)
         {
             SYSMWARN;
             return;
@@ -236,7 +236,7 @@ void SysmenuEditor::ChangeName()
         QStringList fl = QStringList() << "Наименование" << "ИД";
         QStringList vl = QStringList() << tmpValue << tmpString;
         tfl.idtois(tble,fl,vl);
-        if (tfl.result)
+        if (tfl.result == TFRESULT_ERROR)
         {
             SYSMWARN;
             return;

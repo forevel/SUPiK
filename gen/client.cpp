@@ -290,6 +290,14 @@ void Client::ParseReply(QByteArray *ba)
             TimeoutTimer->stop();
             return;
         }
+        if (ServerResponse == SERVEMPSTR)
+        {
+            CliLog->info("Server empty response");
+            DetectedError = CLIER_EMPTY;
+            Busy = false;
+            TimeoutTimer->stop();
+            return;
+        }
         if (ServerResponse == "IDLE")
             CurrentCommand = M_IDLE;
     }
@@ -346,6 +354,7 @@ void Client::ParseReply(QByteArray *ba)
             CmdOk = true;
         break;
     }
+    // commands without any reply
     case S_TC:
     case S_TA:
     case S_TD:
@@ -363,12 +372,19 @@ void Client::ParseReply(QByteArray *ba)
             return;
         }
         break;
+    // commands with int reply
     case S_GID:
     case S_INS:
     case T_GID:
     case T_INS:
     {
         bool ok;
+        if (ArgList.size()<1) // нет количества записей
+        {
+            WriteErrorAndBreakReceiving("Некорректное количество аргументов");
+            DetectedError = CLIER_WRANSW;
+            return;
+        }
         ResultInt = ArgList.at(0).toInt(&ok);
         if (!ok)
         {
@@ -379,6 +395,7 @@ void Client::ParseReply(QByteArray *ba)
         CmdOk = true;
         break;
     }
+    // commands with vector reply
     case S_GVSBC:
     case S_GVSBCF:
     case S_GVSBFS:
@@ -388,13 +405,9 @@ void Client::ParseReply(QByteArray *ba)
     case T_GVSBC:
     case T_GVSBCF:
     case T_GVSBFS:
-    case T_C:
-    case T_IDTV:
-    case T_TV:
-    case T_IDTVL:
+//    case T_IDTV:
+//    case T_IDTVL:
     case T_GFT:
-    case T_TID:
-    case T_VTID:
     case T_TF:
     case T_TH:
     case T_TL:
@@ -429,6 +442,22 @@ void Client::ParseReply(QByteArray *ba)
 #endif
         SendCmd(M_NEXT);
         return;
+        break;
+    }
+    // commands with string reply
+    case T_TV:
+    case T_TID:
+//    case T_VTID:
+    case T_C:
+    {
+        if (ArgList.size()<1) // нет количества записей
+        {
+            WriteErrorAndBreakReceiving("Некорректное количество аргументов");
+            DetectedError = CLIER_WRANSW;
+            return;
+        }
+        ResultStr = ArgList.at(0);
+        CmdOk = true;
         break;
     }
     case M_NEXT:

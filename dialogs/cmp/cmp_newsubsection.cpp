@@ -177,7 +177,7 @@ void cmp_newsubsection::Ok()
     {
         // создаём запись
         tfl.insert(TableName, newID);
-        if (tfl.result)
+        if (tfl.result == TFRESULT_ERROR)
         {
             CMPNSINFO("Ошибка добавления записи в таблицу description");
             w->Stop();
@@ -187,7 +187,7 @@ void cmp_newsubsection::Ok()
     QStringList fl = QStringList() << "ИД" << "Наименование" << "Описание";
     QStringList vl = QStringList() << newID << desc << descfull;
     tfl.idtois(TableName,fl,vl);
-    if (tfl.result)
+    if (tfl.result == TFRESULT_ERROR)
     {
         tfl.Delete(TableName, newID);
         CMPNSINFO("Ошибка обновления записи в таблице description");
@@ -201,7 +201,7 @@ void cmp_newsubsection::Ok()
     if (!(tfl.Check(TableName,tmps,descfull))) // нет такой категории, пишем в БД
     {
         tfl.insert(TableName, newID);
-        if (tfl.result)
+        if (tfl.result == TFRESULT_ERROR)
         {
             CMPNSWARN;
             w->Stop();
@@ -210,7 +210,7 @@ void cmp_newsubsection::Ok()
         QStringList fl = QStringList() << "ИД" << "Наименование" << "ИД_а" << "Параметры";
         QStringList vl = QStringList() << newID << descfull << "0" << cw->Value();
         tfl.idtois(TableName,fl,vl);
-        if (tfl.result)
+        if (tfl.result == TFRESULT_ERROR)
         {
             tfl.Delete(TableName, newID);
             CMPNSWARN;

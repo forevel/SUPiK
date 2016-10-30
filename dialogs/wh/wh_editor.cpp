@@ -177,7 +177,7 @@ void Wh_Editor::ChangeWh(QString str)
     QStringList fields = QStringList("ИД");
     QString field = "Наименование";
     tfl.valuesbyfield(table, fields, field, str, PlaceID, false);
-    if (tfl.result)
+    if (tfl.result == TFRESULT_ERROR)
     {
         WHEDWARN;
         return;
@@ -309,7 +309,7 @@ void Wh_Editor::UpdatePlace()
     QString field = "ИД";
     QString value = QString::number(item->WhPlaceTypeID);
     tfl.valuesbyfield(table, fl, field, value, vl);
-    if ((tfl.result) || (vl.size() < 4)) // нет размещения в БД
+    if ((tfl.result == TFRESULT_ERROR) || (vl.size() < 4)) // нет размещения в БД
         return;
     CurIDProperties.PlaceType = vl.at(0).toInt();
     CurIDProperties.ChoosePlaceString = vl.at(1);
@@ -328,7 +328,7 @@ void Wh_Editor::UpdatePlace()
         table = "Склады ёмкости размещения_полн";
         value = QString::number(CurIDProperties.PlaceType);
         tfl.valuesbyfield(table, fl, field, value, vl);
-        if ((tfl.result) || (vl.size() < 2))
+        if ((tfl.result == TFRESULT_ERROR) || (vl.size() < 2))
         {
             WHEDWARN;
             return;
@@ -516,7 +516,7 @@ void Wh_Editor::ChangePlace(QVariant PlaceName)
     field = "Наименование";
     value = PlaceName.toString();
     tfl.valuesbyfield(table, fields, field, value, vl);
-    if (tfl.result)
+    if (tfl.result == TFRESULT_ERROR)
     {
         WHEDWARN;
         return;
@@ -537,7 +537,7 @@ bool Wh_Editor::CheckPriorities(QString PlaceName)
     QStringList fields = QStringList("Тип размещения");
     QString field = "Наименование";
     tfl.valuesbyfield(table, fields, field, PlaceName, vl);
-    if ((tfl.result) || (vl.size() < 1))
+    if ((tfl.result == TFRESULT_ERROR) || (vl.size() < 1))
     {
         WHEDWARN;
         return false;
@@ -547,7 +547,7 @@ bool Wh_Editor::CheckPriorities(QString PlaceName)
     field = "ИД";
     QString value = vl.at(0);
     tfl.valuesbyfield(table, fields, field, value, vl);
-    if ((tfl.result) || (vl.size() < 1))
+    if ((tfl.result == TFRESULT_ERROR) || (vl.size() < 1))
     {
         WHEDWARN;
         return false;
@@ -560,7 +560,7 @@ bool Wh_Editor::CheckPriorities(QString PlaceName)
     fields = QStringList("Тип размещения");
     value = QString::number(IdAlias);
     tfl.valuesbyfield(table,fields,field,value, vl);
-    if ((tfl.result) || (vl.size() < 1))
+    if ((tfl.result == TFRESULT_ERROR) || (vl.size() < 1))
     {
         WHEDWARN;
         return false;
@@ -568,7 +568,7 @@ bool Wh_Editor::CheckPriorities(QString PlaceName)
     table = "Склады типы размещения_полн";
     value = vl.at(0);
     tfl.valuesbyfield(table, fields, field, value, vl);
-    if ((tfl.result) || (vl.size() < 1))
+    if ((tfl.result == TFRESULT_ERROR) || (vl.size() < 1))
     {
         WHEDWARN;
         return false;
@@ -577,7 +577,7 @@ bool Wh_Editor::CheckPriorities(QString PlaceName)
     fields = QStringList("Приоритет вложенности");
     value = vl.at(0);
     tfl.valuesbyfield(table, fields, field, value, vl);
-    if ((tfl.result) || (vl.size() < 1))
+    if ((tfl.result == TFRESULT_ERROR) || (vl.size() < 1))
     {
         WHEDWARN;
         return false;
@@ -611,7 +611,7 @@ QStringList Wh_Editor::NameAndPicture(int ID)
         return QStringList();
 //    QStringList fl = QStringList() << "Наименование" << "Обозначение" << "Тип размещения";
 //    QStringList PlaceProp = tfl.valuesbyfield("Склады размещение_полн", fl, "ИД", QString::number(ID), false);
-//    if ((tfl.result) || (PlaceProp.size()<3))
+//    if ((tfl.result == TFRESULT_ERROR) || (PlaceProp.size()<3))
 //        return QStringList(); // пустое размещение
 //    QString tmps = PlaceProp.at(0) + " " + PlaceProp.at(1);
     QString tmps = item->Alias + " " + item->Name;
@@ -625,7 +625,7 @@ QStringList Wh_Editor::NameAndPicture(int ID)
     QString field = "ИД";
     QString value = QString::number(item->WhPlaceTypeID);
     tfl.valuesbyfield(table, fields, field, value, PlaceTank);
-    if ((tfl.result) || (PlaceTank.size() < 1))
+    if ((tfl.result == TFRESULT_ERROR) || (PlaceTank.size() < 1))
     {
 //        WHEDWARN;
         return QStringList(); // размещение ещё пустое (нет ссылки на элемент размещения)
@@ -635,7 +635,7 @@ QStringList Wh_Editor::NameAndPicture(int ID)
     value = PlaceTank.at(0);
     QStringList PlacePicture;
     tfl.valuesbyfield(table, fields, field, value, PlacePicture);
-    if (tfl.result)
+    if (tfl.result == TFRESULT_ERROR)
     {
         WHEDWARN;
         return QStringList();

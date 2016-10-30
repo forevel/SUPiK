@@ -178,7 +178,7 @@ void cmp_compdialog::MainItemChoosed(QModelIndex idx)
     QString table = CompLetter+"Компоненты_описание_полн";
     QString field = "ИД";
     tfl.valuesbyfield(table,fl,field,tmps, sl); // взяли имя таблицы в БД, описание которой выбрали в главной таблице
-    if (tfl.result)
+    if (tfl.result != TFRESULT_ERROR)
     {
         COMPWARN;
         return;
@@ -257,7 +257,7 @@ void cmp_compdialog::AddNewItem()
     QString table = CompLetter+"Компоненты_описание_полн";
     QString field = "ИД";
     tfl.valuesbyfield(table,fl,field,tmps, sl); // взяли имя таблицы в БД, описание которой выбрали в главной таблице
-    if (tfl.result)
+    if (tfl.result == TFRESULT_ERROR)
     {
         COMPWARN;
         return;
@@ -346,7 +346,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
         COMPWARN;
         return;
     }
-    if (tfl.result)
+    if (tfl.result == TFRESULT_ERROR)
     {
         COMPWARN;
         return;
@@ -360,7 +360,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
     tfl.valuesbyfields(table,fl,cmpfl,cmpvl, nkidsl);
     QString tmps;
     QString ManufId = cmpvl.at(1);
-    if ((tfl.result) || (nkidsl.isEmpty())) // нет такого или ошибка
+    if ((tfl.result == TFRESULT_ERROR) || (nkidsl.isEmpty())) // нет такого или ошибка
     {
         table = "Номенклатура карантин_полн";
         tfl.valuesbyfields(table,fl,cmpfl,cmpvl, nkidsl);
@@ -377,7 +377,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
             table = CompLetter+"Компоненты_описание_полн";
             field = "ИД";
             tfl.valuesbyfield(table,fl,field,tmps, sl); // взяли имя таблицы в БД, описание которой выбрали в главной таблице
-            if (tfl.result)
+            if (tfl.result == TFRESULT_ERROR)
             {
                 COMPWARN;
                 return;
@@ -394,7 +394,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
             table = "Категории_сокращ";
             field = "Наименование";
             tfl.valuesbyfield(table,fl,field,tmps, sl);
-            if ((tfl.result) || (sl.isEmpty()))
+            if ((tfl.result == TFRESULT_ERROR) || (sl.isEmpty()))
             {
                 COMPWARN;
                 return;
@@ -406,7 +406,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
             vl.replace(3, ManufId); // меняем наименование производителя на его ИД
             table = "Номенклатура карантин_полн";
             tfl.idtois(table, fl, vl);
-            if (tfl.result)
+            if (tfl.result == TFRESULT_ERROR)
             {
                 COMPWARN;
                 return;
@@ -438,7 +438,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
         field = "ИД";
         value = nkidsl.at(0);
         tfl.valuesbyfield(table,sl,field,value,vl);
-        if ((tfl.result) || (vl.size()<8))
+        if ((tfl.result == TFRESULT_ERROR) || (vl.size()<8))
         {
             COMPWARN;
             return;
@@ -449,7 +449,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
         sl.insert(0, "ИД");
         vl.insert(0, nkidsl.at(0));
         tfl.idtois(table,sl,vl);
-        if (tfl.result)
+        if (tfl.result == TFRESULT_ERROR)
         {
             COMPWARN;
             return;

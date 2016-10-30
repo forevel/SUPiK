@@ -234,7 +234,7 @@ void sys_ImportClass::TableChoosed(QString tble)
     QStringList sl;
     QString field = "header";
     tfl.TableColumn(tble, field, sl);
-    if (tfl.result)
+    if (tfl.result == TFRESULT_ERROR)
     {
         SIMPWARN;
         return;

@@ -25,7 +25,7 @@ void sys_ImportClass_T::Run()
     QStringList sl;
     QString field = "ИД";
     tfl.tablefields(ImpInitial.tablename, field, sl);
-    if (tfl.result)
+    if (tfl.result == TFRESULT_ERROR)
     {
         SYSICTER("Проблема получения данных из таблицы "+ImpInitial.tablename);
         emit ProcessFinished();

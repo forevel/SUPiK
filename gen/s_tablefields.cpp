@@ -813,17 +813,10 @@ void s_tablefields::insert(QString tble, QString &out)
         }
         if (Cli->DetectedError == Client::CLIER_EMPTY)
             result = TFRESULT_EMPTY;
-        else if ((Cli->DetectedError != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
+        else if (Cli->DetectedError != Client::CLIER_NOERROR)
             result = TFRESULT_ERROR;
         else
-        {
-            if (Cli->Result.at(0).isEmpty())
-            {
-                result = TFRESULT_ERROR;
-                return;
-            }
-            out = Cli->Result.at(0).at(0);
-        }
+            out = QString::number(Cli->ResultInt);
     }
 }
 
@@ -866,17 +859,10 @@ void s_tablefields::NewID(QString &tble, QString &out)
         }
         if (Cli->DetectedError == Client::CLIER_EMPTY)
             result = TFRESULT_EMPTY;
-        else if ((Cli->DetectedError != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
+        else if (Cli->DetectedError != Client::CLIER_NOERROR)
             result = TFRESULT_ERROR;
         else
-        {
-            if (Cli->Result.at(0).isEmpty())
-            {
-                result = TFRESULT_ERROR;
-                return;
-            }
-            out = Cli->Result.at(0).at(0);
-        }
+            out = QString::number(Cli->ResultInt);
     }
 }
 

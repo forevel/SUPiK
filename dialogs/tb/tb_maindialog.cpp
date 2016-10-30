@@ -502,6 +502,7 @@ void tb_maindialog::ProcessResultsAndExit()
         if (tfl.result == TFRESULT_ERROR)
         {
             TBMWARN;
+            this->close();
             return;
         }
         QStringList fl = QStringList() << "ИД" << "Результат" << "Раздел" << "Тип" << "Файл";
@@ -510,6 +511,7 @@ void tb_maindialog::ProcessResultsAndExit()
         if (tfl.result == TFRESULT_ERROR)
         {
             TBMWARN;
+            this->close();
             return;
         }
         // отправим протокол на сервер

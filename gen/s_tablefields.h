@@ -28,6 +28,7 @@ public:
     void idtov(QString links, QString id, PublicClass::ValueStruct &out); // взять одно значение по ссылке и ид
     void idtovl(QString &links, QStringList &out); // взять все значения по ссылке в зависимости от типа
     void idtois (QString &tble, QStringList &header, QStringList &values);
+    void idtoisv (QString &tble, QStringList &headers, QStringList &values); // update headers in the tble with values
     void insert(QString tble, QString &out);
     void NewID(QString &tble, QString &out);
     void remove(QString &tble, QString &id); // "удаление" элемента из таблицы

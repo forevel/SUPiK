@@ -299,7 +299,7 @@ void s_2cdialog::accepted()
             tble.replace(0, newtble); // подготовка к следующему оператору
         }
         tmps = tble.at(0);
-        tfl.idtois(tmps, headers, values);
+        tfl.idtoisv(tmps, headers, values);
         if (tfl.result == TFRESULT_ERROR)
         {
             CD2WARN;

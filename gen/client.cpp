@@ -51,6 +51,7 @@ Client::Client(QObject *parent) : QObject(parent)
     CmdMap.insert(T_VTID, {"T_VTID", 3, "T=", RESULT_STRING, false, false});
     CmdMap.insert(T_TID, {"T_TID", 3, "T<", RESULT_STRING, false, false});
     CmdMap.insert(T_C, {"T_C", 3, "T4", RESULT_STRING, false, false});
+    CmdMap.insert(T_UPDV, {"T_UPDV", 3, "TC", RESULT_NONE, false, false});
 }
 
 Client::~Client()
@@ -134,7 +135,7 @@ void Client::SendCmd(int Command, QStringList &Args)
 #endif
     QString CommandString;
 
-    if ((Command >= S_GVSBFS) && (Command <= T_TL))
+    if ((Command >= S_GVSBFS) && (Command <= T_END))
     {
         CmdStruct st = CmdMap[Command];
         FieldsNum = 0;
@@ -364,6 +365,7 @@ void Client::ParseReply(QByteArray *ba)
     case T_DEL:
     case T_RDEL:
     case T_UPD:
+    case T_UPDV:
         if (ServerResponse == "OK")
             CmdOk = true;
         else
@@ -405,7 +407,7 @@ void Client::ParseReply(QByteArray *ba)
     case T_GVSBC:
     case T_GVSBCF:
     case T_GVSBFS:
-//    case T_IDTV:
+    case T_IDTV:
 //    case T_IDTVL:
     case T_GFT:
     case T_TF:
@@ -447,7 +449,7 @@ void Client::ParseReply(QByteArray *ba)
     // commands with string reply
     case T_TV:
     case T_TID:
-//    case T_VTID:
+    case T_VTID:
     case T_C:
     {
         if (ArgList.size()<1) // нет количества записей

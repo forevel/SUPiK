@@ -112,7 +112,11 @@ bool EditModel::setData(const QModelIndex &index, const QVariant &value, int rol
         }
         else if (role == Qt::DecorationRole)
         {
-            MainData.at(index.row())->SetIcon(index.column(), value.value<QIcon>());
+            if (value.toString() == "1")
+                MainData.at(index.row())->SetIcon(index.column(), QIcon(":/res/ok.png"));
+            else
+                MainData.at(index.row())->SetIcon(index.column(), QIcon(":/res/cross.png"));
+            MainData.at(index.row())->SetData(index.column(), value.toString());
             return true;
         }
     }
@@ -210,33 +214,41 @@ void EditModel::AddColumn(const QString Hdrtext)
 
 QString EditModel::Value(int Row, int Column)
 {
-    PublicClass::ValueStruct vs;
-    QIcon ic = data(index(Row,Column,QModelIndex()),Qt::DecorationRole).value<QIcon>();
+//    PublicClass::ValueStruct vs;
+//    QIcon ic = data(index(Row,Column,QModelIndex()),Qt::DecorationRole).value<QIcon>();
     QString vl;
-    if (ic.isNull())
+/*    if (ic.isNull())
+    { */
+//        vs.Type = VS_STRING;
+    vl = data(index(Row, Column, QModelIndex()), Qt::DisplayRole).toString();
+    QString tablenum = data(index(Row,Column,QModelIndex()),TableNumberRole).toString();
+    if (tablenum != "") // если значение относится к полю типа DLINK, то добавляем в начало номер таблицы и спецсимвол
     {
-        vs.Type = VS_STRING;
-        vl = data(index(Row, Column, QModelIndex()), Qt::DisplayRole).toString();
-        QString tablenum = data(index(Row,Column,QModelIndex()),TableNumberRole).toString();
-        if (tablenum != "") // если значение относится к полю типа DLINK, то добавляем в начало номер таблицы и спецсимвол
-        {
-            vl.insert(0,tablenum);
-            vl.insert(0,'_');
-        }
+        vl.insert(0,tablenum);
+        vl.insert(0,'_');
     }
+    QString Links = data(index(Row,Column,QModelIndex()),LinksRole).toString();
+    PublicClass::FieldFormat ff;
+    pc.getFFfromLinks(Links, ff);
+    if (ff.ftype == FW_CRYPT)
+    {
+        vl.insert(0, ".");
+        vl.insert(0, ff.link.last());
+    }
+/*    }
     else
     {
         vs.Type = VS_ICON;
         vl = data(index(Row, Column, QModelIndex()), CellInfoRole).toString();
-    }
-    vs.Links = data(index(Row,Column,QModelIndex()),LinksRole).toString();
-    vs.Value = vl;
-    tfl.vtoid(vs, vl);
+    } */
+//    vs.Links = data(index(Row,Column,QModelIndex()),LinksRole).toString();
+//    vs.Value = vl;
+/*    tfl.vtoid(vs, vl);
     if (tfl.result == TFRESULT_ERROR)
     {
         EMODELWARN;
         return QString(); // если произошла ошибка при получении ИД по значению, добавляем пустую строку
-    }
+    } */
     return vl;
 }
 
@@ -253,7 +265,7 @@ int EditModel::Setup(QString Table, QString Id)
     }
     QStringList fl = QStringList() << "table" << "tablefields" << "header" << "links";
     QList<QStringList> vl = sqlc.GetMoreValuesFromTableByFields("sup", "tablefields", fl, QStringList("tablename"), QStringList(Table), "fieldsorder", true);
-    if (sqlc.result)
+    if ((sqlc.result) || (vl.isEmpty()))
     {
         EMODELWARN;
         return 1;
@@ -369,15 +381,18 @@ int EditModel::SetupRaw(QString Db, QString Tble, QString Id)
     return 0;
 }
 
-void EditModel::AddRow(QList<PublicClass::ValueStruct> ValuesSl)
+void EditModel::AddRow(QList<PublicClass::ValueStruct> &ValuesSl)
 {
     int LastIndex = rowCount();
     insertRows(LastIndex, 1);
     for (int column = 0; column < ValuesSl.size(); ++column)
     {
-        if (ValuesSl.at(column).Type == VS_ICON)
+        PublicClass::FieldFormat ff;
+        QString Links = ValuesSl.at(column).Links;
+        pc.getFFfromLinks(Links, ff);
+        if (ff.ftype == FW_BOOL)
         {
-            setData(index(LastIndex, column, QModelIndex()), QIcon(ValuesSl.at(column).Value), Qt::DecorationRole);
+            setData(index(LastIndex, column, QModelIndex()), ValuesSl.at(column).Value, Qt::DecorationRole);
             setData(index(LastIndex, column, QModelIndex()), QVariant("i."+ValuesSl.at(column).Value), CellInfoRole);
         }
         else
@@ -391,6 +406,14 @@ QStringList EditModel::Values()
     QStringList sl;
     for (int i=0; i<rowCount(); i++)
         sl.append(Value(i, 1)); // данные хранятся в 1-м столбце
+    return sl;
+}
+
+QStringList EditModel::Links()
+{
+    QStringList sl;
+    for (int i=0; i<rowCount(); i++)
+        sl.append(data(index(i,1,QModelIndex()),LinksRole).toString()); // данные хранятся в 1-м столбце
     return sl;
 }
 

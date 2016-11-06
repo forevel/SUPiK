@@ -84,6 +84,7 @@ public:
     int SetupRaw(QString Db, QString Tble, QString Id); // заполнение модели из таблицы, которой нет в tablefields
     QStringList Headers();
     QStringList Values();
+    QStringList Links();
     PublicClass::ValueStruct CellValue(int row, int column);
 
 signals:
@@ -97,7 +98,7 @@ private:
     QFont Fonts[6]; // определение набора шрифтов
     QIcon Icons[6]; // определение набора иконок
 
-    void AddRow(QList<PublicClass::ValueStruct> ValuesSl);
+    void AddRow(QList<PublicClass::ValueStruct> &ValuesSl);
 };
 
 #endif // EDITMODEL_H

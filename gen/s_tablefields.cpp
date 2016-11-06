@@ -334,6 +334,39 @@ void s_tablefields::idtov(QString links, QString id, PublicClass::ValueStruct &o
             else
                 out.Value = ":/res/ok.png";
         }
+        case FW_CRYPT:
+        {
+            if (pc.AutonomousMode)
+            {
+
+            }
+            else
+            {
+                sl << links << id;
+                Cli->SendCmd(T_IDTV, sl);
+                while (Cli->Busy)
+                {
+                    QThread::msleep(10);
+                    qApp->processEvents(QEventLoop::AllEvents);
+                }
+                if ((Cli->DetectedError != Client::CLIER_NOERROR) || Cli->Result.isEmpty())
+                {
+                    result = 1;
+                    return;
+                }
+                if (Cli->Result.at(0).size() < 2)
+                {
+                    result = 1;
+                    return;
+                }
+                sl = Cli->Result.at(0); // sl[0] - <id>, sl[1] - <value>
+                out.Links = links + "." + sl.at(1); // id to the end
+                out.Type = VS_STRING;
+                out.Value = sl.at(0);
+                result = 0;
+            }
+            break;
+        }
         default:
         {
             out.Value = id;
@@ -571,6 +604,31 @@ void s_tablefields::vtoid(PublicClass::ValueStruct &vl, QString &out)
             out = QString::number(outui, 16).toUpper();
             break;
         }
+        case FW_CRYPT:
+        {
+            if (pc.AutonomousMode)
+            {
+
+            }
+            else
+            {
+                QStringList sl;
+                sl << QString::number(vl.Type) << vl.Value << vl.Links;
+                Cli->SendCmd(T_VTID, sl);
+                while (Cli->Busy)
+                {
+                    QThread::msleep(10);
+                    qApp->processEvents(QEventLoop::AllEvents);
+                }
+                if (Cli->DetectedError == Client::CLIER_EMPTY)
+                    result = TFRESULT_EMPTY;
+                else if (Cli->DetectedError != Client::CLIER_NOERROR)
+                    result = TFRESULT_ERROR;
+                else
+                    out = Cli->ResultStr;
+            }
+            break;
+        }
         case FW_BOOL:
         {
             if (vl.Type == VS_ICON)
@@ -773,6 +831,118 @@ void s_tablefields::idtois(QString &tble, QStringList &headers, QStringList &val
         if (Cli->DetectedError != Client::CLIER_NOERROR)
             result = TFRESULT_ERROR;
     }
+}
+
+// idtoisv - процедура обновления записей headers для таблицы tble значениями values
+// ИД записи, по которой обновляются значения, хранятся в values.at(headers.indexof("ИД"))
+
+void s_tablefields::idtoisv(QString &tble, QStringList &headers, QStringList &values)
+{
+    result = TFRESULT_NOERROR;
+    if (headers.size() != values.size())
+    {
+        result = TFRESULT_ERROR;
+        TFDBG;
+        return;
+    }
+/*    if (pc.AutonomousMode)
+    {
+        // Сначала найдём для данной таблицы ключевое поле ("v") и по нему вытащим реальную БД, таблицу и наименование поля
+        QStringList fl = QStringList() << "table" << "tablefields" << "header";
+        QStringList cmpfl = QStringList() << "tablename" << "keyfield";
+        QStringList cmpvl = QStringList() << tble << "v";
+        QStringList keydbtble = sqlc.GetValuesFromTableByFields("sup", "tablefields", fl, cmpfl, cmpvl);
+        if (sqlc.result)
+        {
+            result = TFRESULT_ERROR;
+            TFWARN(sqlc.LastError);
+            return;
+        }
+        QStringList tmpsl = keydbtble.at(0).split(".");
+        keydbtble.insert(1, tmpsl.at(1)); // в первом элементе будет tble
+        keydbtble.replace(0, tmpsl.at(0)); // в нулевом элементе оставляем только db
+        int ididx = headers.indexOf(keydbtble.at(3)); // вытаскиваем индекс ключевого поля
+        if (ididx == -1)
+        {
+            TFWARN("Не найдено ключевое поле "+keydbtble.at(3)+" в таблице "+keydbtble.at(1));
+            result = TFRESULT_ERROR;
+            return;
+        }
+        QString keyid;
+        if (ididx < values.size())
+            keyid = values.at(ididx); // id - ИД элемента в ключевом поле, используется при записи всех остальных полей
+        else
+        {
+            result = TFRESULT_ERROR;
+            TFWARN("Не найдено ключевое поле "+keydbtble.at(3)+" в таблице "+keydbtble.at(1));
+            return;
+        }
+        keyid = QString::number(keyid.toInt()); // убираем незначащие нули
+        QStringList tmptablefields, tmpvalues;
+        QString tmpdb, tmptble, tmpdbtble;
+        int i;
+        while (headers.size() > 0)
+        {
+            QStringList dbtble;
+            QString header = headers.at(0);
+            tablefields(tble, header, dbtble);
+            if (dbtble.at(0) != "-") // если знак дефиса, поле не пишется в базу
+            {
+                tmpdbtble = dbtble.at(0);
+                tmpvalues = QStringList() << values.at(0); // кладём первое значение в выходной буфер значений
+                tmptablefields = QStringList() << dbtble.at(1);
+                headers.removeAt(0);
+                values.removeAt(0);
+                i = 0;
+                while (i < headers.size())
+                {
+                    header = headers.at(i);
+                    tablefields(tble, header, dbtble);
+                    if (dbtble.size() == 0)
+                    {
+                        TFWARN("");
+                        result = TFRESULT_ERROR;
+                        return;
+                    }
+                    if (dbtble.at(0) == tmpdbtble) // здесь проверка на дефис не нужна, т.к. сравнение ведётся с tmpdbtble, который уже проверен ранее
+                    {
+                        tmptablefields << dbtble.at(1);
+                        tmpvalues << values.at(i);
+                        headers.removeAt(i);
+                        values.removeAt(i);
+                    }
+                    else
+                        i++;
+                }
+                tmpdb = tmpdbtble.split(".").at(0);
+                tmptble = tmpdbtble.split(".").at(1);
+                tmptablefields << "date" << "idpers";
+                tmpvalues << pc.DateTime << QString::number(pc.idPers);
+                result = sqlc.UpdateValuesInTable(tmpdb, tmptble, tmptablefields, tmpvalues, keydbtble.at(2), keyid);
+                if (result)
+                    TFWARN(sqlc.LastError);
+            }
+        }
+    }
+    else
+    { */
+        QStringList sl;
+        sl << tble;
+        for (int i=0; i<headers.size(); ++i)
+        {
+            sl << headers.at(i);
+            if (i < values.size())
+                sl << values.at(i);
+        }
+        Cli->SendCmd(T_UPDV, sl);
+        while (Cli->Busy)
+        {
+            QThread::msleep(10);
+            qApp->processEvents(QEventLoop::AllEvents);
+        }
+        if (Cli->DetectedError != Client::CLIER_NOERROR)
+            result = TFRESULT_ERROR;
+//    }
 }
 
 // insert - вставка новой записи в таблицу tble

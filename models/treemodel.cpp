@@ -709,19 +709,18 @@ int TreeModel::SetTable(int Table, QString Id)
             QString RootId = tmpsl.at(0);
             QString tmps = QString::number(Table)+"."+QString("%1").arg(RootId.toInt(),7, 10, QChar('0')); // добавка нулей
             tmps.insert(0, IndentSpaces);
-            QList<PublicClass::ValueStruct> vl;
+            QList<PublicClass::ValueStruct> vlsl;
             PublicClass::ValueStruct tmpvl;
             tmpvl.Type = VS_STRING;
             tmpvl.Value = tmps;
-            vl.append(tmpvl);
+            vlsl.append(tmpvl);
             for (int j=1; j<tmpsl.size(); j++)
             {
-                PublicClass::ValueStruct tmpvl;
                 tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j), tmpvl);
                 tmpvl.Value.insert(0, IndentSpaces);
-                vl.append(tmpvl);
+                vlsl.append(tmpvl);
             }
-            AddItemToTree(vl);
+            AddItemToTree(vlsl);
             // проверка наличия потомков у элемента
             if (NewTableExist) // если дальше ещё есть таблицы
             {

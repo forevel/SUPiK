@@ -66,11 +66,13 @@
 #define T_TID		1212
 #define T_VTID		1213
 #define T_INS		1214
-#define T_UPD		1215
-#define T_TF        1216
+#define T_UPD		1215 // "?"
+#define T_TF        1216 // "@"
 #define T_TH        1217
 #define T_TL        1218
+#define T_UPDV      1219 // "C"
 
+#define T_END       1299
 // C-commands (components)
 #define C_CRALT		1301
 

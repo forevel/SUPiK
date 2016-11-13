@@ -146,14 +146,10 @@ void supik::SetSupikMenuBar()
     QStringList cmpfl = QStringList() << "idalias";
     QStringList cmpvl = QStringList() << "0";
     QList<QStringList> vl = sqlc.GetMoreValuesFromTableByFields("sup","mainmenu",fl,cmpfl,cmpvl,"order",true);
-/*    tmpString="SELECT `idmainmenu`,`mainmenu`,`access`,`tooltip`,`method` FROM `mainmenu` WHERE " \
-                      "`idalias`=0 AND `deleted`=0 ORDER BY `order` ASC;";
-    get_mainmenu.exec(tmpString);
-    while (get_mainmenu.next())
-    { */
     for (int i=0; i<vl.size(); i++)
     {
-        if (vl.at(i).at(2).toLong(0, 16) & pc.access)
+        quint32 tmpu = vl.at(i).at(2).toLong(0, 16);
+        if (tmpu & pc.access)
         {
             tmpInt = vl.at(i).at(0).toInt(0);
             tmpMenu = AddChildToMenu (tmpInt);

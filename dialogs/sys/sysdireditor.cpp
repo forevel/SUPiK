@@ -3,7 +3,7 @@
 #include "../../gen/s_sql.h"
 #include "../../gen/publicclass.h"
 #include "../../models/s_duniversal.h"
-#include "../../models/s_ncmodel.h"
+#include "../../models/treemodel.h"
 #include "../s_2cdialog.h"
 #include "../messagebox.h"
 
@@ -23,7 +23,7 @@ SysDirEditor::SysDirEditor(QWidget *parent) :
 void SysDirEditor::SetupUI()
 {
     s_tqTableView *tv = new s_tqTableView;
-    s_ncmodel *mdl = new s_ncmodel;
+    TreeModel *mdl = new TreeModel;
     tv->setModel(mdl);
     tv->setObjectName("tv");
     tv->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -45,14 +45,14 @@ void SysDirEditor::FillTable()
         SYSDDBG;
         return;
     }
-    s_ncmodel *mdl = static_cast<s_ncmodel *>(tv->model());
+    TreeModel *mdl = static_cast<TreeModel *>(tv->model());
     if (mdl == 0)
     {
         SYSDDBG;
         return;
     }
-    mdl->setup("Справочники_сокращ");
-    if (mdl->result)
+
+    if (mdl->Setup("Справочники_сокращ"))
     {
         SYSDWARN;
         return;
@@ -88,7 +88,12 @@ void SysDirEditor::EditDir()
         SYSDWARN;
         return;
     }
-    QString tmpString = tv->model()->index(tv->currentIndex().row(), 0, QModelIndex()).data(Qt::DisplayRole).toString();
+    QString tmpString;
+    QStringList tmpStringList = tv->model()->index(tv->currentIndex().row(), 0, QModelIndex()).data(Qt::DisplayRole).toString().split(".");
+    if (tmpStringList.size() > 1)
+        tmpString = tmpStringList.at(1);
+    else
+        tmpString = tv->model()->index(tv->currentIndex().row(), 0, QModelIndex()).data(Qt::DisplayRole).toString();
     tmpString = QString::number(tmpString.toInt(0));
     if (tmpString.isEmpty())
     {

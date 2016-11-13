@@ -228,6 +228,7 @@ void s_tablefields::idtov(QString links, QString id, PublicClass::ValueStruct &o
             if (!id.toInt()) // корневой элемент
             {
                 out.Value = "<Корневой элемент>";
+                break;
             }
             sl = id.split(".");
             if (sl.size() > 1)

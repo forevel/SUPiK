@@ -4,7 +4,7 @@
 #include <QDialog>
 #include <QByteArray>
 #include <QSortFilterProxyModel>
-#include "../models/s_ncmodel.h"
+//#include "../models/s_ncmodel.h"
 #include "../models/editmodel.h"
 
 #define CD_ERROR    0x0200

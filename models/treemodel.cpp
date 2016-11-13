@@ -414,7 +414,7 @@ int TreeModel::SetupRaw(QString db, QString tble, QString id, QString mainfield)
 
 int TreeModel::PrepareTable(QString Table)
 {
-    RightsFieldNum = 0;
+    RightsFieldNum = -1;
     if (Table.isEmpty())
     {
         TMODELDBG;
@@ -625,7 +625,7 @@ int TreeModel::SetTree(int Table, QString Id)
     }
     for (int i=0; i<vl.size(); i++)
     {
-        if (IsConditional)
+        if ((IsConditional) && (RightsFieldNum != -1))
         {
             QString Rights = vl.at(i).at(RightsFieldNum);
             if (!(Rights.toUInt(0,16) & pc.access)) // пропускаем, если права не соответствуют
@@ -699,7 +699,7 @@ int TreeModel::SetTable(int Table, QString Id)
         bool NewTableExist = (NewTable < TablesNum);
         for (int i=0; i<vl.size(); i++)
         {
-            if (IsConditional)
+            if ((IsConditional) && (RightsFieldNum != -1))
             {
                 QString Rights = vl.at(i).at(RightsFieldNum);
                 if (!(Rights.toUInt(0,16) & pc.access)) // пропускаем, если права не соответствуют
@@ -762,7 +762,7 @@ int TreeModel::SetNextTree(int Table, QString Id)
     }
     for (int i=0; i<vl.size(); i++)
     {
-        if (IsConditional)
+        if ((IsConditional) && (RightsFieldNum != -1))
         {
             QString Rights = vl.at(i).at(RightsFieldNum);
             if (!(Rights.toUInt(0,16) & pc.access)) // пропускаем, если права не соответствуют
@@ -836,7 +836,7 @@ int TreeModel::SetNextTable(int Table, QString Id)
         QStringList idsl;
         for (int i=0; i<vl.size(); i++)
         {
-            if (IsConditional)
+            if ((IsConditional) && (RightsFieldNum != -1))
             {
                 QString Rights = vl.at(i).at(RightsFieldNum);
                 if (!(Rights.toUInt(0,16) & pc.access)) // пропускаем, если права не соответствуют

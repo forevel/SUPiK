@@ -20,7 +20,6 @@ Client::Client(QObject *parent) : QObject(parent)
     Connected = false;
     FirstReplyPass = true;
     ComReplyTimeoutIsSet = false;
-    fp = 0;
     ResultType = RESULT_NONE;
     CmdMap.insert(S_GVBFS, {"S_GVBFS", 7, "S5", RESULT_VECTOR, true, true});
     CmdMap.insert(S_GVSBFS, {"S_GVSBFS", 7, "S1", RESULT_MATRIX, true, true});
@@ -52,6 +51,8 @@ Client::Client(QObject *parent) : QObject(parent)
     CmdMap.insert(T_TID, {"T_TID", 3, "T<", RESULT_STRING, false, false});
     CmdMap.insert(T_C, {"T_C", 3, "T4", RESULT_STRING, false, false});
     CmdMap.insert(T_UPDV, {"T_UPDV", 3, "TC", RESULT_NONE, false, false});
+    CmdMap.insert(M_PUTFILE, {"M_PUTFILE", 3, "M7", RESULT_NONE, false, false}); // 0 - type, 1 - subtype, 2 - filename, [3] - filesize, added in SendCmd
+    CmdMap.insert(M_GETFILE, {"M_GETFILE", 3, "M8", RESULT_NONE, false, false}); // 0 - type, 1 - subtype, 2 - filename
 }
 
 Client::~Client()
@@ -127,6 +128,7 @@ void Client::SendCmd(int Command, QStringList &Args)
     Result.clear(); // очищаем результаты
     FieldsLeast = false;
     FieldsLeastToAdd = 0;
+    ReadBytes = 0;
     DetectedError = CLIER_NOERROR;
     CurrentCommand = Command;
     Busy = true;
@@ -135,7 +137,7 @@ void Client::SendCmd(int Command, QStringList &Args)
 #endif
     QString CommandString;
 
-    if ((Command >= S_GVSBFS) && (Command <= T_END))
+    if (CmdMap.keys().contains(Command))
     {
         CmdStruct st = CmdMap[Command];
         FieldsNum = 0;
@@ -159,51 +161,53 @@ void Client::SendCmd(int Command, QStringList &Args)
     case CMD_CHATMSGS:
     {
         break;
-    }
-        // GETF получить файл с сервера
-        // 0 - относительный корневой папки .supik путь на сервере
-        // 1 - имя файла
-        // Формат: GETF <путь> <имя_файла>\n
-        // далее ожидание прихода "RDY <длина_в_байтах>\n", затем приём содержимого файла блоками по 16384 байт, после каждого отсылка RDY\n
-        // по окончании контроль прихода IDLE\n
-    case CMD_GETFILE:
+    } */
+    // GETF получить файл с сервера
+    // 0 - тип файла
+    // 1 - подтип файла
+    // 2 - имя файла
+    // Формат: M8 <тип> <подтип> <имя_файла>\n
+    // далее ожидание прихода "<длина_в_байтах>\n", затем приём содержимого файла блоками по 16384 байт, после каждого отсылка RDY\n
+    case M_GETFILE:
     {
-        if (Args.size() < 2)
+        fp.setFileName(pc.HomeDir+"Incoming/"+Args.at(2));
+        if (!fp.open(QIODevice::WriteOnly))
         {
-            CliLog->error("CMD_GETF: Number of arguments is less than 3");
-            DetectedError = CLIER_WRARGS;
-            Busy = false;
+            CLIER("Невозможно создать файл" + Args.at(2));
+            DetectedError = CLIER_GETFER;
             return;
         }
-        QString path = Args.takeAt(0);
-        QString filename = Args.takeAt(0);
-        QStringList sl;
-        sl << "GETF" << path << filename;
-        sl.append(Args);
-        QString tmps = Join(sl);
-        CommandString = tmps + "\n";
-        QString fullfilename = pc.HomeDir+"Incoming/"+filename;
-        fp = fopen(fullfilename.toStdString().c_str(), "wb");
+        ReadBytes = 0;
+        RcvDataSize = 0;
         break;
     }
+    case M_PUTFILE:
+    {
+        fp.setFileName(Args.at(2));
+        if (!fp.open(QIODevice::ReadOnly))
+        {
+            CLIER("Невозможно открыть файл "+Args.at(2));
+            DetectedError = CLIER_PUTFER;
+            return;
+        }
+        WrittenBytes = 0;
+        XmitDataSize = fp.size();
+        emit BytesOverall(XmitDataSize);
+        break;
+    }
+    case M_APUTFILE:
+    {
+        CliLog->info("> ...binary data...");
+        emit ClientSend(&WrData);
+        return;
+    }
         // ANS_GETFILE - второй и последующие ответы на принятую информацию (с записью блока в файл)
-    case ANS_GETFILE: */
+    case M_AGETFILE:
     case M_NEXT:
     {
         CommandString = "RDY\n";
         break;
     }
-        // PUTF отправить файл на сервер
-        // 0 - относительный корневой папки .supik путь на сервере
-        // 1 - имя файла
-        // 2 - длина файла
-        // Формат: PUTF <путь> <имя_файла> <длина_в_байтах>\n
-        // далее ожидание прихода RDY\n, затем отсылка содержимого файла блоками по 16384 байт, после каждого контроль приёма RDY\n
-        // по окончании контроль прихода IDLE\n
-/*    case CMD_PUTFILE:
-    {
-        break;
-    } */
     case M_QUIT:
     {
         CommandString = "M1\n";
@@ -540,47 +544,75 @@ void Client::ParseReply(QByteArray *ba)
         return;
         break;
     }
-    // первый приём после команды
-    case CMD_GETFILE:
+    case M_PUTFILE:
     {
-        if (ServerResponse == "RDY")
+        if (ServerResponse == "OK")
         {
-            if (ArgList.size()>1)
+            qint64 BytesLeast = XmitDataSize - WrittenBytes;
+            emit BytesWritten(WrittenBytes);
+            CliLog->info(QString::number(WrittenBytes)+" bytes written to file");
+            if (BytesLeast > 0)
             {
-                CmdOk = true;
-                bool ok;
-                filesize = ArgList.at(1).toLong(&ok,10);
-                filepos = 0;
-                if (!ok)
+                if (fp.isOpen())
                 {
-                    CliLog->warning("Not a decimal value detected");
-                    DetectedError = CLIER_GETFER;
+                    WrData = fp.read(BytesLeast);
+                    if (WrData.isEmpty())
+                    {
+                        DetectedError = CLIER_PUTFER;
+                        return;
+                    }
+                    WrittenBytes += WrData.size();
+                    SendCmd(M_APUTFILE);
                     return;
                 }
-                emit BytesOverall(filesize);
-                SendCmd(ANS_GETFILE);
-                return;
+                else
+                {
+                    DetectedError = CLIER_PUTFER;
+                    return;
+                }
             }
             else
             {
-                CliLog->warning("File size not detected");
-                DetectedError = CLIER_GETFER;
-                return;
+                if (fp.isOpen())
+                    fp.close();
+                emit TransferComplete();
+                CmdOk = true;
+                break;
             }
         }
         else
-            DetectedError = CLIER_LOGIN;
+        {
+            DetectedError = CLIER_PUTFER;
+            return;
+        }
         break;
     }
-        // последующие приёмы файла
-    case ANS_GETFILE:
+        // первый приём после команды
+    case M_GETFILE:
     {
-        if (fp == 0)
+        CmdOk = true;
+        bool ok;
+        RcvDataSize = ServerResponse.toLong(&ok,10);
+        ReadBytes = 0;
+        if (!ok)
+        {
+            CliLog->warning("Not a decimal value detected");
+            DetectedError = CLIER_GETFER;
+            return;
+        }
+        emit BytesOverall(RcvDataSize);
+        SendCmd(M_AGETFILE);
+        return;
+    }
+    // последующие приёмы файла
+    case M_AGETFILE:
+    {
+        if (fp.isOpen())
         {
             CliLog->error("File error");
             CurrentCommand = M_IDLE;
             DetectedError = CLIER_GETFER;
-            break;
+            return;
         }
 /*        if (ComReplyTimeoutIsSet)
         {
@@ -593,7 +625,7 @@ void Client::ParseReply(QByteArray *ba)
         }*/
 //        QString IncomeData = QString::fromLocal8Bit(*ba);
         CliLog->info("< ...binary data "+QString::number(ba->size())+" size...");
-/*        if (IncomeData == SERVERRSTR)
+        if (ba->data() == SERVERRSTR)
         {
             CliLog->error("Server error response");
             DetectedError = CLIER_SERVER;
@@ -601,29 +633,26 @@ void Client::ParseReply(QByteArray *ba)
             TimeoutTimer->stop();
             return;
         }
-        if (IncomeData == "IDLE\n") // закончили передачу
+        if (ba->data() == "IDLE\n") // закончили передачу
         {
-            fclose(fp);
-            fp = 0;
-            emit TransferComplete();
-            CmdOk = true;
-            break;
-        }  */
-        size_t WrittenBytes = fwrite(ba->data(),1,ba->size(),fp);
-        emit BytesRead(WrittenBytes);
-        CliLog->info(QString::number(WrittenBytes)+" bytes written to file");
-        filepos += WrittenBytes;
-        if (filepos >= filesize)
-        {
-            if (fp)
-                fclose(fp);
-            fp = 0;
+            fp.close();
             emit TransferComplete();
             CmdOk = true;
             break;
         }
-        SendCmd(ANS_GETFILE);
-        break;
+        ReadBytes += fp.write(*ba);
+        emit BytesRead(ReadBytes);
+        CliLog->info(QString::number(ReadBytes)+" bytes written to file");
+        if (ReadBytes >= RcvDataSize)
+        {
+            if (fp.isOpen())
+                fp.close();
+            emit TransferComplete();
+            CmdOk = true;
+            break;
+        }
+        SendCmd(M_AGETFILE);
+        return;
     }
     default:
         break;
@@ -641,13 +670,6 @@ void Client::WriteErrorAndBreakReceiving(QString ErMsg)
     Busy = false;
     CurrentCommand = M_IDLE;
 }
-
-void Client::SetBytesWritten(qint64 bytes)
-{
-    WrittenBytes += bytes;
-    emit BytesWritten(WrittenBytes);
-}
-
 
 void Client::GetFileTimerTimeout()
 {

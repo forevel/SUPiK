@@ -4,7 +4,6 @@
 #include <QObject>
 #include <QTimer>
 #include <QFile>
-#include <QTextStream>
 #include <QMap>
 #include "../threads/ethernet.h"
 #include "publicclass.h"
@@ -20,22 +19,28 @@
 #define TOKEN       0x7F // разделитель
 
 // M-commands (main)
+#define M_COMMAND   1000
 #define M_QUIT		1001 // подтверждение завершения сеанса связи
 #define M_GROUP		1002 // группа доступа
 #define M_STATUS	1003
 #define M_STATS		1004
 #define M_LOGIN		1005 // запрос имени пользователя
 #define M_PSW		1006 // запрос пароля (зарез.)
+#define M_PUTFILE   1007 // отправка файла на сервер
+#define M_GETFILE   1008 // прием файла с сервера
 // M-statuses
 #define M_IDLE		1000
 #define M_RDY		1051
 #define M_ERROR		1052
 #define M_NEXT		1053 // подтверждение готовности приёма следующей порции данных
+#define M_AGETFILE  1092
+#define M_APUTFILE  1093
 #define M_ANSPSW	1094
 #define M_ANSLOGIN	1095
 #define M_BYE		1099
 
 // S-commands (sql)
+#define S_COMMAND   1100
 #define S_GVSBFS	1101 // simple sql-query by several fields
 #define S_GVSBC		1102 // field data query
 #define S_GVSBCF	1103 // field data query with additional condition
@@ -52,6 +57,7 @@
 #define S_GID		1114 // get new id from table
 
 // TF-commands (tablefields)
+#define T_COMMAND   1200
 #define T_GVSBFS	1201 // ValuesByFields
 #define T_GVSBC		1202 // htovl
 #define T_GVSBCF	1203 // htovlc
@@ -75,6 +81,18 @@
 #define T_END       1299
 // C-commands (components)
 #define C_CRALT		1301
+
+// описания типов файлов
+#define FL_TB       "1"
+#define FL_DOC      "2"
+#define FL_ALT      "3"
+
+// описания подтипов файлов
+#define FL_PROT     "1" // протоколы
+#define FL_TECHDOC  "2" // техдокументация
+#define FL_LIBS     "3" // библиотеки
+#define FL_LIBSYM   "4" // библиотеки Altium - SchLib
+#define FL_LIBFOOT  "5" // библиотеки Altium - PcbLib
 
 class Client : public QObject
 {
@@ -104,6 +122,7 @@ public:
         CLIER_WRARGS,    // неправильные аргументы
         CLIER_GETFTOUT,  // таймаут во время приёма файла
         CLIER_GETFER,    // ошибка во время приёма файла
+        CLIER_PUTFER,    // ошибка отправки файла
         CLIER_WRANSW,    // кривой ответ от сервера
         CLIER_CMDER,     // ошибка обработки команды
         CLIER_EMPTY     // пустой ответ
@@ -123,7 +142,6 @@ public:
         CMD_CHATMSGS, // запрос сообщений из чата
         CMD_CHATREQ, // запрос состояния чата (пользователи)
         CMD_GETFILE, // запрос файла из хранилища
-        CMD_PUTFILE, // запрос на отсылку файла в хранилище
         CMD_DIRLIST, // запрос списка файлов в каталоге
         CMD_STATUS  // запрос статуса от сервера
     };
@@ -163,18 +181,15 @@ signals:
 
 private:
 
-    QByteArray RcvData;
+    QByteArray RcvData, WrData;
     Ethernet *MainEthernet, *FileEthernet;
     QTimer *TimeoutTimer, *GetComReplyTimer, *GetFileTimer;
     bool FileBusy, Connected, FileConnected, CmdOk, LoginOk, FirstReplyPass, ComReplyTimeoutIsSet, FieldsLeast;
-    QTextStream *LogStream;
     QString FileHost;
     quint16 FilePort;
-    qint64 WrittenBytes, ReadBytes, MsgNum;
-    int CurrentCommand, RcvDataSize, XmitDataSize;
-    FILE *fp;
-    size_t filesize;
-    size_t filepos;
+    quint64 WrittenBytes, ReadBytes, RcvDataSize, XmitDataSize, MsgNum;
+    int CurrentCommand;
+    QFile fp;
     int FieldsNum;
     int ResultType;
     int FieldsLeastToAdd;
@@ -189,7 +204,6 @@ private slots:
     void ClientDisconnected();
     void Timeout();
     void ClientErr(int error);
-    void SetBytesWritten(qint64 bytes);
     void ParseReply(QByteArray *ba);
     void GetFileTimerTimeout();
     void ComReplyTimeout();

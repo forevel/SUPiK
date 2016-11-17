@@ -10,6 +10,7 @@
 #include <QPainter>
 #include <QPaintEvent>
 #include <QApplication>
+#include <QThread>
 #include <stdlib.h>
 #include "../../models/proxymodel.h"
 #include "../../models/s_duniversal.h"
@@ -30,6 +31,7 @@
 #include "../../gen/s_tablefields.h"
 #include "../../gen/pdfout.h"
 #include "../messagebox.h"
+#include "../../gen/client.h"
 
 // --------------------------------------
 // Конструктор
@@ -505,6 +507,7 @@ void tb_maindialog::ProcessResultsAndExit()
             this->close();
             return;
         }
+        Filename = pc.Pers+" " + pc.DateTime.replace(':','.') +".pdf";
         QStringList fl = QStringList() << "ИД" << "Результат" << "Раздел" << "Тип" << "Файл";
         QStringList vl = QStringList() << newID << QString::number(Mark, 'g', 2) << QString::number(TBGroup) << QString::number(ExType) << Filename;
         tfl.idtois(table, fl, vl);
@@ -515,6 +518,19 @@ void tb_maindialog::ProcessResultsAndExit()
             return;
         }
         // отправим протокол на сервер
+        sl.clear();
+        sl << FL_TB << FL_PROT << Filename;
+        Cli->SendCmd(M_PUTFILE, sl);
+        while (Cli->Busy)
+        {
+            QThread::msleep(10);
+            qApp->processEvents(QEventLoop::AllEvents);
+        }
+        if (Cli->DetectedError != Client::CLIER_NOERROR)
+        {
+            TBMWARN;
+            return;
+        }
     }
     MessageBox2::information(this, "Информация", "По результатам экзамена Вы получаете оценку\n" + QString::number(Mark, 'f', 2) + " баллов из " + \
                              QString::number(MAX_MARK) + " возможных!");

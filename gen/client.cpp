@@ -10,8 +10,6 @@
 #include "client.h"
 #include "log.h"
 
-#define _CRT_SECURE_NO_WARNINGS
-
 Client *Cli = 0;
 Log *CliLog;
 
@@ -51,7 +49,7 @@ Client::Client(QObject *parent) : QObject(parent)
     CmdMap.insert(T_TID, {"T_TID", 3, "T<", RESULT_STRING, false, false});
     CmdMap.insert(T_C, {"T_C", 3, "T4", RESULT_STRING, false, false});
     CmdMap.insert(T_UPDV, {"T_UPDV", 3, "TC", RESULT_NONE, false, false});
-    CmdMap.insert(M_PUTFILE, {"M_PUTFILE", 3, "M7", RESULT_NONE, false, false}); // 0 - type, 1 - subtype, 2 - filename, [3] - filesize, added in SendCmd
+    CmdMap.insert(M_PUTFILE, {"M_PUTFILE", 4, "M7", RESULT_NONE, false, false}); // 0 - local filename, 1 - type, 2 - subtype, 3 - filename, [4] - filesize, added in SendCmd
     CmdMap.insert(M_GETFILE, {"M_GETFILE", 3, "M8", RESULT_NONE, false, false}); // 0 - type, 1 - subtype, 2 - filename
 }
 
@@ -181,18 +179,26 @@ void Client::SendCmd(int Command, QStringList &Args)
         RcvDataSize = 0;
         break;
     }
+    // PUTFILE - отправить файл на сервер
+    // 0 - имя файла для отправки на клиенте (на сервере игнорируется)
+    // 1 - тип файла
+    // 2 - подтип файла
+    // 3 - имя файла на сервере
     case M_PUTFILE:
     {
-        fp.setFileName(Args.at(2));
+        fp.setFileName(Args.at(0));
         if (!fp.open(QIODevice::ReadOnly))
         {
-            CLIER("Невозможно открыть файл "+Args.at(2));
+            CLIER("Невозможно открыть файл "+Args.at(0));
             DetectedError = CLIER_PUTFER;
             return;
         }
         WrittenBytes = 0;
         XmitDataSize = fp.size();
         emit BytesOverall(XmitDataSize);
+        CommandString.chop(1); // deletes CRLF character
+        CommandString.push_back(TOKEN);
+        CommandString += QString::number(XmitDataSize) + "\n"; // file length added
         break;
     }
     case M_APUTFILE:

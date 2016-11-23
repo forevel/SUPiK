@@ -178,6 +178,22 @@ void tb_maindialog::SetupUI()
     QApplication::restoreOverrideCursor();
     gbw->SetItem(0, GoodBadTableModel::GBIT_NEUTRAL); // принудительный ресайз
 //    gbw->SetItem(0, GoodBadTableModel::GBIT_GOOD);
+// !!!
+    QStringList sl;
+    sl.clear();
+    sl << "c:\\Users\\anton\\.supik\\Валуйских А. О. 2016-10-30 18.43.59.pdf" << FL_TB << FL_PROT << "Валуйских А. О. 2016-10-30 18.43.59.pdf";
+    Cli->SendCmd(M_PUTFILE, sl);
+    while (Cli->Busy)
+    {
+        QThread::msleep(10);
+        qApp->processEvents(QEventLoop::AllEvents);
+    }
+    if (Cli->DetectedError != Client::CLIER_NOERROR)
+    {
+        TBMWARN;
+        return;
+    }
+// !!!
 }
 
 void tb_maindialog::ExTypeExChoosed()

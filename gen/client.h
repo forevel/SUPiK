@@ -83,16 +83,16 @@
 #define C_CRALT		1301
 
 // описания типов файлов
-#define FL_TB       "1"
-#define FL_DOC      "2"
-#define FL_ALT      "3"
+#define FL_TB       "0"
+#define FL_DOC      "1"
+#define FL_ALT      "2"
 
 // описания подтипов файлов
-#define FL_PROT     "1" // протоколы
-#define FL_TECHDOC  "2" // техдокументация
-#define FL_LIBS     "3" // библиотеки
-#define FL_LIBSYM   "4" // библиотеки Altium - SchLib
-#define FL_LIBFOOT  "5" // библиотеки Altium - PcbLib
+#define FL_PROT     "0" // протоколы
+#define FL_TECHDOC  "1" // техдокументация
+#define FL_LIBS     "2" // библиотеки
+#define FL_LIBSYM   "3" // библиотеки Altium - SchLib
+#define FL_LIBFOOT  "4" // библиотеки Altium - PcbLib
 
 class Client : public QObject
 {

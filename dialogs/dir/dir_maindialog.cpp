@@ -81,7 +81,7 @@ void dir_maindialog::SetupUI()
     QApplication::setOverrideCursor(Qt::WaitCursor);
     if (MainTableModel->Setup(MainTable+"_сокращ", true))
     {
-        DIRMER("Ошибка при построении таблицы "+MainTable);
+        ERMSG("Ошибка при построении таблицы "+MainTable);
         QApplication::restoreOverrideCursor();
         return;
     }
@@ -146,7 +146,7 @@ void dir_maindialog::ShowSlaveTree(QString str)
     TreeView *SlaveTV = this->findChild<TreeView *>("SlaveTV");
     if (SlaveTV == 0)
     {
-        DIRMDBG;
+        DBGMSG;
         return;
     }
     QStringList fields, values;
@@ -164,7 +164,7 @@ void dir_maindialog::ShowSlaveTree(QString str)
     {
         if (values.size() < 3)
         {
-            DIRMWARN;
+            WARNMSG("");
             return;
         }
         if (values.at(2).toUInt(0,16) & pc.access)
@@ -189,7 +189,7 @@ void dir_maindialog::ShowSlaveTree(QString str)
             MessageBox2::error(this, "Ошибка", "Недостаточно прав для работы со справочником!");
     }
     else
-        DIRMWARN;
+        WARNMSG("");
     SlaveTV->resizeRowsToContents();
 //     SlaveProxyModel->sort(1, Qt::AscendingOrder);
     QApplication::restoreOverrideCursor();
@@ -201,7 +201,7 @@ QString dir_maindialog::getMainIndex(int column)
     TreeView *MainTV = this->findChild<TreeView *>("MainTV");
     if (MainTV == 0)
     {
-        DIRMDBG;
+        DBGMSG;
         return QString();
     }
     if (column == 0)
@@ -224,7 +224,7 @@ QString dir_maindialog::getSlaveIndex(int column)
     TreeView *SlaveTV = this->findChild<TreeView *>("SlaveTV");
     if (SlaveTV == 0)
     {
-        DIRMDBG;
+        DBGMSG;
         return QString();
     }
     if (column == 0)
@@ -257,7 +257,7 @@ void dir_maindialog::EditItem()
     if (!tmpString.isEmpty())
         EditItem(tmpString);
     else
-        DIRMWARN;
+        WARNMSG("");
 }
 
 void dir_maindialog::EditItem(QString str)
@@ -270,7 +270,7 @@ void dir_maindialog::EditItem(QString str)
     QString tmps = getMainIndex(1);
     if (tmps.isEmpty())
     {
-        DIRMWARN;
+        WARNMSG("");
         return;
     }
     QStringList sl = str.split(".");
@@ -289,7 +289,7 @@ void dir_maindialog::EditItem(QString str)
     s_tqStackedWidget *cw = this->findChild<s_tqStackedWidget *>("cw");
     if (cw == 0)
     {
-        DIRMWARN;
+        WARNMSG("");
         return;
     }
     s_2cdialog *newdialog = new s_2cdialog(tmps+":"+SecondPart);
@@ -297,7 +297,7 @@ void dir_maindialog::EditItem(QString str)
     newdialog->setup(Table+"_полн",Mode,Id,IsQuarantine);
     if (newdialog->result)
     {
-        DIRMWARN;
+        WARNMSG("");
         return;
     }
     cw->addWidget(newdialog);
@@ -314,7 +314,7 @@ void dir_maindialog::AddNew()
     tfl.insert(table, newID); // добавление элементов разрешается только в крайнюю таблицу
     if (tfl.result == TFRESULT_ERROR)
     {
-        DIRMDBG;
+        DBGMSG;
         return;
     }
     QString tmpString = getSlaveIndex(0);
@@ -322,7 +322,7 @@ void dir_maindialog::AddNew()
     TreeView *SlaveTV = this->findChild<TreeView *>("SlaveTV");
     if (SlaveTV == 0)
     {
-        DIRMDBG;
+        DBGMSG;
         return;
     }
     TreeModel *mdl = static_cast<TreeModel *>(SlaveTV->model());
@@ -362,12 +362,12 @@ void dir_maindialog::DeleteDataUnconditional(QString id)
     tfl.remove(table, id);
     if (tfl.result == TFRESULT_ERROR)
     {
-        DIRMWARN;
+        WARNMSG("");
         return;
     }
     else
     {
-        DIRMINFO("Удалено успешно!");
+        MessageBox2::information(this, "Успешно", "Удалено успешно!");
         RefreshSlaveTV();
     }
 }

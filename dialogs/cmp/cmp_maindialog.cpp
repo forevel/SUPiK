@@ -125,7 +125,7 @@ void cmp_maindialog::SetupUI(int CompType, int CompTable, int CompID)
     tfl.valuesbyfield(table,fl,idfield,QString::number(CompTable), tblesl);
     if ((tfl.result == TFRESULT_ERROR) || (tblesl.size() < 3))
     {
-        CMPWARN;
+        WARNMSG("");
         return;
     }
     this->CompTble = tblesl.at(0);
@@ -135,21 +135,21 @@ void cmp_maindialog::SetupUI(int CompType, int CompTable, int CompID)
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("section");
     if (le == 0)
     {
-        CMPDBG;
+        DBGMSG;
         return;
     }
     le->setText(sectsl.at(CompType));
     le = this->findChild<s_tqLineEdit *>("subsection");
     if (le == 0)
     {
-        CMPDBG;
+        DBGMSG;
         return;
     }
     le->setText(tblesl.at(1));
     le = this->findChild<s_tqLineEdit *>("id");
     if (le == 0)
     {
-        CMPDBG;
+        DBGMSG;
         return;
     }
     le->setText(CompId);
@@ -198,13 +198,13 @@ void cmp_maindialog::SetAltDialog()
     s_tqWidget *cp = this->findChild<s_tqWidget *>("cp1");
     if (cp == 0)
     {
-        CMPDBG;
+        DBGMSG;
         return;
     }
     s_tqWidget *cp2 = this->findChild<s_tqWidget *>("cp2");
     if (cp2 == 0)
     {
-        CMPDBG;
+        DBGMSG;
         return;
     }
     s_tqGroupBox *gb = new s_tqGroupBox;
@@ -463,7 +463,7 @@ void cmp_maindialog::EnablePartNumberCreator(QVariant Manufacturer)
             s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("prefixle");
             if (le == 0)
             {
-                CMPDBG;
+                DBGMSG;
                 return;
             }
             le->setText(tmps);
@@ -493,7 +493,7 @@ void cmp_maindialog::ConnectPartNumberCreatorLE(QString lename)
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>(lename);
     if (le == 0)
     {
-        CMPDBG;
+        DBGMSG;
         return;
     }
     QMetaObject::Connection *handle = new QMetaObject::Connection;
@@ -506,7 +506,7 @@ void cmp_maindialog::ConnectPartNumberCreatorCB(QString cbname)
     s_tqComboBox *cb = this->findChild<s_tqComboBox *>(cbname);
     if (cb == 0)
     {
-        CMPDBG;
+        DBGMSG;
         return;
     }
     QMetaObject::Connection *handle = new QMetaObject::Connection;
@@ -521,14 +521,14 @@ void cmp_maindialog::SetPrefixesVisible(bool isVisible)
     s_tqLabel *lbl = this->findChild<s_tqLabel *>("prefixl");
     if (lbl == 0)
     {
-        CMPDBG;
+        DBGMSG;
         return;
     }
     lbl->setVisible(isVisible);
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("prefixle");
     if (le == 0)
     {
-        CMPDBG;
+        DBGMSG;
         return;
     }
     le->setVisible(isVisible);
@@ -577,7 +577,7 @@ void cmp_maindialog::SetUnitsAndPars()
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("subsection");
     if (le == 0)
     {
-        CMPDBG;
+        DBGMSG;
         return;
     }
     QString SubSection = le->text(); // взяли описание подраздела ("Конденсаторы")
@@ -637,13 +637,13 @@ void cmp_maindialog::SetID()
     CompId = QString::number(sqlc.GetNextFreeIndexSimple(CompDb, CompTble)); // ищем первый свободный ИД
     if (sqlc.result)
     {
-        CMPWARN;
+        WARNMSG("");
         return;
     }
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("id");
     if (le == 0)
     {
-        CMPDBG;
+        DBGMSG;
         return;
     }
     le->setText(CompId);
@@ -840,7 +840,7 @@ void cmp_maindialog::AddManuf()
     s_2cdialog *newdialog = new s_2cdialog("Производители:добавить");
     newdialog->setup("Производители_полн",MODE_EDITNEW,newID);
     if (newdialog->result)
-        CMPWARN;
+        WARNMSG("");
     else
         newdialog->exec();
 }
@@ -902,10 +902,10 @@ void cmp_maindialog::WriteAndClose()
         sqlc.InsertValuesSimple("alt",CompTble,fl,vl);
     if (sqlc.result)
     {
-        CMPWARN;
+        WARNMSG("");
         return;
     }
-    CMPINFO("Записано успешно!");
+    MessageBox2::information(this, "Успешно", "Записано успешно!");
     this->close();
 }
 

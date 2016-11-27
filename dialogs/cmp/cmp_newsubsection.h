@@ -3,10 +3,6 @@
 
 #include <QDialog>
 
-#define CMPNSWARN WARNMSG(PublicClass::ER_CMPNS, __LINE__)
-#define CMPNSDBG  DBGMSG(PublicClass::ER_CMPNS, __LINE__)
-#define CMPNSINFO(a)  INFOMSG(PublicClass::ER_CMPNS, __LINE__, a)
-
 class cmp_newsubsection : public QDialog
 {
     Q_OBJECT

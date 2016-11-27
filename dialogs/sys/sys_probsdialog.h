@@ -9,11 +9,6 @@
 #include "../../models/treemodel.h"
 #include "../../gen/publicclass.h"
 
-#define PROBSER(a)   ERMSG(PublicClass::ER_PROBS,__LINE__,a)
-#define PROBSWARN    WARNMSG(PublicClass::ER_PROBS,__LINE__)
-#define PROBSINFO(a) INFOMSG(PublicClass::ER_PROBS,__LINE__,a)
-#define PROBSDBG     DBGMSG(PublicClass::ER_PROBS,__LINE__)
-
 class SysProblemsDialog : public QDialog
 {
     Q_OBJECT

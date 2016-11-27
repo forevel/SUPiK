@@ -24,7 +24,7 @@ void sys_persdialog::SetupUI()
     if (res)
     {
         QApplication::restoreOverrideCursor();
-        SYSPWARN;
+        WARNMSG("");
         return;
     }
     tv->setModel(treemodel);
@@ -45,7 +45,7 @@ void sys_persdialog::ChangePers(QModelIndex idx)
     TreeView *tv = this->findChild<TreeView *>("tv");
     if (tv == 0)
     {
-        SYSPDBG;
+        DBGMSG;
         return;
     }
     QModelIndex index = tv->model()->index(tv->currentIndex().row(), 0, tv->model()->parent(tv->currentIndex()));
@@ -62,7 +62,7 @@ void sys_persdialog::ChangePers(QModelIndex idx)
     }
     else
     {
-        SYSPWARN;
+        WARNMSG("");
         return;
     }
 }

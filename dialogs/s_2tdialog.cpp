@@ -30,7 +30,7 @@ s_2tdialog::s_2tdialog(QStringList links, QString MainSlaveItemId, QString hdr, 
     FirstRun = true;
     if (links.size()<2)
     {
-        D2TDLGWARN;
+        WARNMSG("");
         return;
     }
     SetupUI(links, hdr, MainSlaveItemId);
@@ -110,7 +110,7 @@ void s_2tdialog::SetupUI(QStringList links, QString hdr, QString MainSlaveItemId
     else
     {
         QApplication::restoreOverrideCursor();
-        D2TDLGWARN;
+        WARNMSG("");
         return;
     } */
     QString tmps = "Наименование";
@@ -118,7 +118,7 @@ void s_2tdialog::SetupUI(QStringList links, QString hdr, QString MainSlaveItemId
     if (tfl.result == TFRESULT_ERROR)
     {
         QApplication::restoreOverrideCursor();
-        D2TDLGWARN;
+        WARNMSG("");
         return;
     }
     MainTableField = tmpsl.at(1); // сохраняем имя колонки для последующего использования (descriptionfull)
@@ -164,7 +164,7 @@ void s_2tdialog::Refresh()
     TreeView *SlaveTV = this->findChild<TreeView *>("SlaveTV");
     if ((MainTV == 0) || (SlaveTV == 0))
     {
-        D2TDLGDBG;
+        DBGMSG;
         return;
     }
     ResizeTv(MainTV);
@@ -199,7 +199,7 @@ void s_2tdialog::MainItemChoosed()
     TreeView *SlaveTV = this->findChild<TreeView *>("SlaveTV");
     if ((MainTV == 0) || (SlaveTV == 0))
     {
-        D2TDLGDBG;
+        DBGMSG;
         return;
     }
     QApplication::setOverrideCursor(Qt::WaitCursor);
@@ -208,13 +208,13 @@ void s_2tdialog::MainItemChoosed()
     if (sqlc.result)
     {
         QApplication::restoreOverrideCursor();
-        D2TDLGWARN;
+        WARNMSG("");
         return;
     }
     if (SlaveModel->SetupRawComp(MainDb, sltble))
     {
         QApplication::restoreOverrideCursor();
-        D2TDLGWARN;
+        WARNMSG("");
         return;
     }
 //    SlaveTV->resizeRowsToContents();
@@ -228,7 +228,7 @@ void s_2tdialog::SlaveItemChoosed()
     TreeView *SlaveTV = this->findChild<TreeView *>("SlaveTV");
     if ((MainTV == 0) || (SlaveTV == 0))
     {
-        D2TDLGDBG;
+        DBGMSG;
         return;
     }
     QString MainId = TvData(MainTV, MainTV->currentIndex().row(), 0);

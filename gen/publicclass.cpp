@@ -228,7 +228,7 @@ void PublicClass::getlinksfromFF(PublicClass::FieldFormat &ff, QString &out)
     }
 }
 
-void PublicClass::AddErrMsg(ermsgtype msgtype, quint64 ernum, quint64 ersubnum, QString msg)
+void PublicClass::AddErrMsg(ermsgtype msgtype, QString file, int line, QString msg)
 {
     if (ermsgpool.size()>=ER_BUFMAX)
         ermsgpool.removeFirst();
@@ -237,11 +237,12 @@ void PublicClass::AddErrMsg(ermsgtype msgtype, quint64 ernum, quint64 ersubnum, 
     tmpm.ErNum = ErNum;
     ErNum++;
     tmpm.type = msgtype;
-    if (ernum < ermsgs().size())
+/*    if (ernum < ermsgs().size())
         tmpm.module = ermsgs().value(ernum).toUtf8();
     else
-        tmpm.module = "Неизвестно";
-    tmpm.line = ersubnum;
+        tmpm.module = "Неизвестно"; */
+    tmpm.module = file;
+    tmpm.line = QString::number(line);
     tmpm.msg = msg;
 
     // запись в log-файл
@@ -249,13 +250,13 @@ void PublicClass::AddErrMsg(ermsgtype msgtype, quint64 ernum, quint64 ersubnum, 
     {
     case ER_MSG:
     case DBG_MSG:
-        PCLog->error(tmpm.module+"."+QString::number(ersubnum)+": "+msg);
+        PCLog->error(tmpm.module+"."+tmpm.line+": "+msg);
         break;
     case WARN_MSG:
-        PCLog->warning(tmpm.module+"."+QString::number(ersubnum)+": "+msg);
+        PCLog->warning(tmpm.module+"."+tmpm.line+": "+msg);
         break;
     case INFO_MSG:
-        PCLog->info(tmpm.module+"."+QString::number(ersubnum)+": "+msg);
+        PCLog->info(tmpm.module+"."+tmpm.line+": "+msg);
         break;
     default:
         break;

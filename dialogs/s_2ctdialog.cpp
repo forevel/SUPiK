@@ -109,7 +109,7 @@ void s_2ctdialog::resizemainTV(QModelIndex index1, QModelIndex index2)
     s_tqTreeView *tv = this->findChild<s_tqTreeView *>("mainTV");
     if (tv == 0)
     {
-        CT2DBG;
+        DBGMSG;
         return;
     }
     for (i = 0; i < tv->header()->count(); i++)
@@ -134,7 +134,7 @@ void s_2ctdialog::accepted()
     s_tqTreeView *tv = this->findChild<s_tqTreeView *>("mainTV");
     if (tv == 0)
     {
-        CT2DBG;
+        DBGMSG;
         return;
     }
     QModelIndex curIndex;
@@ -165,7 +165,7 @@ void s_2ctdialog::setTvCurrentText(QString text)
     s_tqTreeView *tv = this->findChild<s_tqTreeView *>("mainTV");
     if (tv == 0)
     {
-        CT2DBG;
+        DBGMSG;
         return;
     }
     QList<QModelIndex> item = tv->model()->match(tv->model()->index(0, 0), Qt::DisplayRole, QVariant::fromValue(text), 1, Qt::MatchRecursive);
@@ -178,7 +178,7 @@ void s_2ctdialog::Filter()
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("filterle");
     if (le == 0)
     {
-        CT2DBG;
+        DBGMSG;
         return;
     }
     if (!le->text().isEmpty())
@@ -194,7 +194,7 @@ void s_2ctdialog::Filter()
         s_tqTreeView *tv = this->findChild<s_tqTreeView *>("mainTV");
         if (tv == 0)
         {
-            CT2DBG;
+            DBGMSG;
             return;
         }
         ExpandHandle = connect(tv, SIGNAL(expanded(QModelIndex)), this, SLOT(SetExpandIndex(QModelIndex)));
@@ -208,7 +208,7 @@ void s_2ctdialog::SetExpandIndex(QModelIndex idx)
     s_tqTreeView *tv = this->findChild<s_tqTreeView *>("mainTV");
     if (tv == 0)
     {
-        CT2DBG;
+        DBGMSG;
         return;
     }
     QModelIndex ModelIndex = tv->model()->index(idx.row(),idx.column(), QModelIndex());
@@ -220,7 +220,7 @@ void s_2ctdialog::UnsetExpandIndex(QModelIndex idx)
     s_tqTreeView *tv = this->findChild<s_tqTreeView *>("mainTV");
     if (tv == 0)
     {
-        CT2DBG;
+        DBGMSG;
         return;
     }
     QModelIndex ModelIndex = tv->model()->index(idx.row(),idx.column(), QModelIndex());
@@ -264,7 +264,7 @@ void s_2ctdialog::AddItem()
     tfl.insert(tmptble, newID);
     if (tfl.result == TFRESULT_ERROR)
     {
-        CT2WARN;
+        WARNMSG("");
         return;
     }
     tfl.idtois(tmptble,QStringList("ИД"),QStringList(newID)); // добавление полей idpers, deleted, date
@@ -280,19 +280,19 @@ void s_2ctdialog::AddItem()
         }
         else
         {
-            CT2WARN;
+            WARNMSG("");
             return;
         }
     }
     else
-        CT2WARN;
+        WARNMSG("");
 }
 
 void s_2ctdialog::Update()
 {
     if (mainmodel->Setup(tble))
     {
-        CT2WARN;
+        WARNMSG("");
         return;
     }
     resizemainTV(QModelIndex(),QModelIndex());

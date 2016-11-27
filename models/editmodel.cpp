@@ -246,7 +246,7 @@ QString EditModel::Value(int Row, int Column)
 /*    tfl.vtoid(vs, vl);
     if (tfl.result == TFRESULT_ERROR)
     {
-        EMODELWARN;
+        WARNMSG("");
         return QString(); // если произошла ошибка при получении ИД по значению, добавляем пустую строку
     } */
     return vl;
@@ -260,14 +260,14 @@ int EditModel::Setup(QString Table, QString Id)
     ClearModel();
     if (Table.isEmpty())
     {
-        EMODELWARN;
+        WARNMSG("");
         return 1;
     }
     QStringList fl = QStringList() << "table" << "tablefields" << "header" << "links";
     QList<QStringList> vl = sqlc.GetMoreValuesFromTableByFields("sup", "tablefields", fl, QStringList("tablename"), QStringList(Table), "fieldsorder", true);
     if ((sqlc.result) || (vl.isEmpty()))
     {
-        EMODELWARN;
+        WARNMSG("");
         return 1;
     }
     int i;
@@ -285,7 +285,7 @@ int EditModel::Setup(QString Table, QString Id)
     }
     else
     {
-        EMODELWARN;
+        WARNMSG("");
         return 1;
     }
     // ищем ключевые поля - <tble>, alias и id<tble>
@@ -304,12 +304,12 @@ int EditModel::Setup(QString Table, QString Id)
     }
     if (idpos == -1)
     {
-        EMODELINFO("Не найдено ключевое поле в таблице "+Table);
+        INFOMSG("Не найдено ключевое поле в таблице "+Table);
         return 1;
     }
     if (!IsAliasExist) // в таблице нет поля с именем таблицы - плохо, должно быть
     {
-        EMODELINFO("Не найдено поле " + PlainTable + " в таблице "+Table);
+        INFOMSG("Не найдено поле " + PlainTable + " в таблице "+Table);
         return 1;
     }
     // устанавливаем столбцы модели
@@ -320,7 +320,7 @@ int EditModel::Setup(QString Table, QString Id)
     QStringList ValuesSl = sqlc.GetValuesFromTableByID(PlainDb, PlainTable, TableHeadersSl, Id);
     if (sqlc.result)
     {
-        EMODELWARN;
+        WARNMSG("");
         return 1;
     }
     for (i = 0; i < HeadersSl.size(); i++)
@@ -348,7 +348,7 @@ int EditModel::SetupRaw(QString Db, QString Tble, QString Id)
     ClearModel();
     if (Db.isEmpty() || Tble.isEmpty())
     {
-        EMODELWARN;
+        WARNMSG("");
         return 1;
     }
     int i;
@@ -361,7 +361,7 @@ int EditModel::SetupRaw(QString Db, QString Tble, QString Id)
     QStringList ValuesSl = sqlc.GetValuesFromTableByID(Db, Tble, TableHeadersSl, Id);
     if (sqlc.result)
     {
-        EMODELWARN;
+        WARNMSG("");
         return 1;
     }
     PublicClass::ValueStruct tmpvl;

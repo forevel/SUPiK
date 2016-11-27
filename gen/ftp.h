@@ -9,9 +9,6 @@
 #include "publicclass.h"
 
 #define PORTFTP     21 // порт связи по протоколу FTP
-#define FTPER(a)   ERMSG(PublicClass::ER_FTP,__LINE__,a)
-#define FTPWARN    WARNMSG(PublicClass::ER_FTP,__LINE__)
-#define FTPINFO(a) INFOMSG(PublicClass::ER_FTP,__LINE__,a)
 
 #define FTP_INITIALIZED 100 // Запрошенное действие инициировано, дождитесь следующего ответа прежде, чем выполнять новую команду.
 #define FTP_COMMENT     110	// Комментарий

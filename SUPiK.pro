@@ -100,7 +100,8 @@ SOURCES += main.cpp\
     widgets/s_tqtreewidget.cpp \
     widgets/s_tqwidget.cpp \
     widgets/treeview.cpp \
-    widgets/waitwidget.cpp
+    widgets/waitwidget.cpp \
+    dialogs/tb/tb_examdialog.cpp
 
 HEADERS  += startwindow.h \
     supik.h \
@@ -183,7 +184,8 @@ HEADERS  += startwindow.h \
     widgets/treeview.h \
     widgets/waitwidget.h \
     widgets/s_tqtextedit.h \
-    dialogs/sys/sys_persdialog.h
+    dialogs/sys/sys_persdialog.h \
+    dialogs/tb/tb_examdialog.h
 RESOURCES += \
     pic.qrc
 

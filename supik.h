@@ -15,13 +15,7 @@
 #define SUPIKMENU_ITEM_COLOR_SELECTED "#000000"
 #define SYS_TAB_BGCOLOR "#FF373A"
 
-// Макросы для выдачи сообщений
-#define SUPIKER(a)    ERMSG(PublicClass::ER_SUPIK, __LINE__, a)
-#define SUPIKDBG      DBGMSG(PublicClass::ER_SUPIK,__LINE__)
-#define SUPIKINFO(a)  INFOMSG(PublicClass::ER_SUPIK, __LINE__, a)
-#define SUPIKWARN     WARNMSG(PublicClass::ER_SUPIK,__LINE__)
-
-#define PROGVER    "1.0.308"
+#define PROGVER    "2.0"
 
 #define SYSSTYLESHEET "background-image: url(:/res/SysWallpaper.png);"
 
@@ -49,6 +43,7 @@ private:
     void SetSupikStatusBar();
 
     int CheckForWidget (int);
+    int CreateTab(quint32 access, QDialog *dlg, QString tabname, int tabtype);
 
     void SetSupikWindow();
     void ExitSupik ();
@@ -69,6 +64,7 @@ private:
     void ClearProblems();
     void UpdateErStatus();
     void TBExam();
+    void TBMain();
 
 private slots:
     void ExecuteSub();

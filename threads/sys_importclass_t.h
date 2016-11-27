@@ -6,9 +6,6 @@
 
 #define ROOTSIZE    2 // размер корневого элемента
 
-#define SYSICTER(a)     ERMSG(PublicClass::ER_SYSICT, __LINE__, a)
-#define SYSICTINFO(a)   INFOMSG(PublicClass::ER_SYSICT, __LINE__, a)
-
 class sys_ImportClass_T : public QObject
 {
     Q_OBJECT

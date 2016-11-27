@@ -4,10 +4,6 @@
 #include <QDialog>
 #include "../../models/s_ncmodel.h"
 
-#define DEVDOCWARN    WARNMSG(PublicClass::ER_DEVDOC, __LINE__)
-#define DEVDOCDBG     DBGMSG(PublicClass::ER_DEVDOC, __LINE__)
-#define DEVDOCINFO(a) INFOMSG(PublicClass::ER_DEVDOC, __LINE__,a)
-
 class dev_devdialog : public QDialog
 {
     Q_OBJECT

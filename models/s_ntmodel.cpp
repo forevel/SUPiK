@@ -304,7 +304,7 @@ int s_ntmodel::Setup(QString table)
     vl = sqlc.GetMoreValuesFromTableByFields("sup", "tablefields", fl, QStringList("tablename"), QStringList(table), "fieldsorder", true);
     if (sqlc.result)
     {
-        SNTMWARN;
+        WARNMSG("");
         return 1;
     }
     // 2
@@ -324,7 +324,7 @@ int s_ntmodel::Setup(QString table)
         return PublicClass::ER_NTMODEL; // не найдено поле idalias
     if (!IsAliasExist)
     {
-        SNTMINFO("Не найдено поле alias в таблице "+table);
+        INFOMSG("Не найдено поле alias в таблице "+table);
         return 1;
     }
     // 3
@@ -336,7 +336,7 @@ int s_ntmodel::Setup(QString table)
     int res = BuildTree("0", false);
     if (res)
     {
-        SNTMWARN;
+        WARNMSG("");
         return 1;
     }
     return 0;
@@ -359,7 +359,7 @@ int s_ntmodel::Setup(QString maintble, QString slvtble)
     tfl.tablefields(maintble, field, tmpsl); // взять table,tablefields,links из tablefields, где таблица maintble и заголовок ИД_а
     if (tfl.result == TFRESULT_ERROR) // нет поля idalias в таблице - это не дерево!
     {
-        SNTMWARN;
+        WARNMSG("");
         return 1;
     }
     catlist = tmpsl.at(0).split("."); // catlist - таблица, из которой брать категории
@@ -367,12 +367,12 @@ int s_ntmodel::Setup(QString maintble, QString slvtble)
     tfl.tableheaders(slvtble, headers);
     if (tfl.result == TFRESULT_ERROR)
     {
-        SNTMWARN;
+        WARNMSG("");
         return 1;
     }
     if (headers.isEmpty()) // нет заголовков в подчинённой таблице
     {
-        SNTMWARN;
+        WARNMSG("");
         return 1;
     }
     slvtblefields.clear();
@@ -384,7 +384,7 @@ int s_ntmodel::Setup(QString maintble, QString slvtble)
         tfl.tablefields(slvtble, header, tmpsl); // взяли table,tablefields,links из tablefields для подчинённой таблицы и данного заголовка
         if (tfl.result == TFRESULT_ERROR) // что-то не так с подчинённой таблицей нет такого заголовка
         {
-            SNTMWARN;
+            WARNMSG("");
             return 1;
         }
         if (tmpsl.size() > 2)
@@ -394,7 +394,7 @@ int s_ntmodel::Setup(QString maintble, QString slvtble)
         }
         else // нет почему-то в возвращённом результате второго элемента
         {
-            SNTMWARN;
+            WARNMSG("");
             return 1;
         }
     }
@@ -404,7 +404,7 @@ int s_ntmodel::Setup(QString maintble, QString slvtble)
     int res = BuildTree("0", true);
     if (res)
     {
-        SNTMWARN;
+        WARNMSG("");
         return 1;
     }
     return 0;
@@ -438,7 +438,7 @@ int s_ntmodel::BuildTree(QString id, bool twodb)
         res = BuildTree(get_child_from_db1.value(1).toString(), twodb); // в качестве аргумента функции используется индекс поля idalias
         if (res)
         {
-            SNTMWARN;
+            WARNMSG("");
             return 1;
         }
     }
@@ -449,7 +449,7 @@ int s_ntmodel::BuildTree(QString id, bool twodb)
             HaveChildren = true;
         else if (res != -1) // если не нет потомков, а просто ошибка
         {
-            SNTMWARN;
+            WARNMSG("");
             return 1;
         }
     }

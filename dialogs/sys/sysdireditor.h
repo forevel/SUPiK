@@ -4,10 +4,6 @@
 #include <QDialog>
 #include <QPoint>
 
-#define SYSDDBG     DBGMSG(PublicClass::ER_SYSDIR, __LINE__)
-#define SYSDWARN    WARNMSG(PublicClass::ER_SYSDIR,__LINE__)
-#define SYSDINFO(a) INFOMSG(PublicClass::ER_SYSDIR,__LINE__,a)
-
 class SysDirEditor : public QDialog
 {
     Q_OBJECT

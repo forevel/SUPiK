@@ -242,7 +242,7 @@ void TreeModel::GoIntoIndex(QModelIndex idx)
         ClearOnlyData();
         // 4
         if (BuildTree())
-            TMODELWARN("");
+            WARNMSG("");
         return;
     }
     else
@@ -258,7 +258,7 @@ void TreeModel::GoIntoIndex(QModelIndex idx)
         ClearOnlyData();
         // 4
         if (BuildTree())
-            TMODELWARN("");
+            WARNMSG("");
     }
 }
 
@@ -299,7 +299,7 @@ int TreeModel::SetupFile(QString Filename, QString StringToFind)
     file.setFileName(Filename);
     if (!file.open(QIODevice::ReadOnly))
     {
-        TMODELWARN("Невозможно открыть файл "+Filename);
+        WARNMSG("Невозможно открыть файл "+Filename);
         return 1;
     }
     QByteArray ba = file.readAll();
@@ -359,7 +359,7 @@ int TreeModel::Setup(QStringList Tables, int Type, bool Cond)
     // 1
     if (Tables.isEmpty())
     {
-        TMODELWARN("Передан пустой список таблиц");
+        WARNMSG("Передан пустой список таблиц");
         return 1;
     }
     TablesNum = 0;
@@ -371,7 +371,7 @@ int TreeModel::Setup(QStringList Tables, int Type, bool Cond)
     }
     if (BuildTree()) // элементы записываются в виде: <номер_таблицы>.<ИД>
     {
-        TMODELWARN("");
+        WARNMSG("");
         return 1;
     }
     return 0;
@@ -406,7 +406,7 @@ int TreeModel::SetupRaw(QString db, QString tble, QString id, QString mainfield)
 
     if (BuildTree()) // элементы записываются в виде: <номер_таблицы>.<ИД>
     {
-        TMODELWARN("");
+        WARNMSG("");
         return 1;
     }
     return 0;
@@ -417,14 +417,14 @@ int TreeModel::PrepareTable(QString Table)
     RightsFieldNum = -1;
     if (Table.isEmpty())
     {
-        TMODELDBG;
+        DBGMSG;
         return 1;
     }
     QStringList fl = QStringList() << "table" << "tablefields" << "header" << "links";
     QList<QStringList> vl = sqlc.GetMoreValuesFromTableByFields("sup", "tablefields", fl, QStringList("tablename"), QStringList(Table), "fieldsorder", true);
     if ((sqlc.result) || (vl.size() == 0))
     {
-        TMODELWARN(sqlc.LastError);
+        WARNMSG(sqlc.LastError);
         return 1;
     }
     int i;
@@ -462,7 +462,7 @@ int TreeModel::PrepareTable(QString Table)
     }
     if (idpos == -1)
     {
-        TMODELINFO("Не найдены ключевые поля в таблице "+Table);
+        INFOMSG("Не найдены ключевые поля в таблице "+Table);
         return 1;
     }
     if (!IsIdAliasExist)
@@ -473,7 +473,7 @@ int TreeModel::PrepareTable(QString Table)
     }
     else if (!IsAliasExist) // если есть idalias, но нет <tble> - это не дело
     {
-        TMODELINFO("Не найдено поле " + PlainTable + " в таблице "+Table);
+        INFOMSG("Не найдено поле " + PlainTable + " в таблице "+Table);
         return 1;
     }
     else
@@ -492,7 +492,7 @@ int TreeModel::PrepareTable(QString Table)
     tmpsl = vl.at(idpos).at(0).split("."); // tmpsl - таблица в виде db.tble
     if (tmpsl.size()<2)
     {
-        TMODELDBG;
+        DBGMSG;
         return 1;
     }
     DBs.append(tmpsl.at(0));
@@ -508,21 +508,21 @@ int TreeModel::BuildTree()
     QStringList TableId = RootIDs.top().split(".");
     if (TableId.size()<2)
     {
-        TMODELDBG;
+        DBGMSG;
         return 1;
     }
     int Table = TableId.at(0).toInt();
     QString Id = QString::number(TableId.at(1).toInt()); // убираем лишние нули
     if (SetFirstTreeElements()) // нарисовать первый элемент его самого с открытой книгой
     {
-        TMODELWARN("");
+        WARNMSG("");
         return 1;
     }
     if (TableIsTree.at(Table))
     {
         if (SetTree(Table, Id))
         {
-            TMODELWARN("");
+            WARNMSG("");
             return 1;
         }
     }
@@ -530,7 +530,7 @@ int TreeModel::BuildTree()
     {
         if (SetTable(Table, Id))
         {
-            TMODELWARN("");
+            WARNMSG("");
             return 1;
         }
     }
@@ -545,7 +545,7 @@ int TreeModel::BuildTree()
     {
         if (SetNextTree(Table, Id))
         {
-            TMODELWARN("");
+            WARNMSG("");
             return 1;
         }
     }
@@ -553,7 +553,7 @@ int TreeModel::BuildTree()
     {
         if (SetNextTable(Table, Id))
         {
-            TMODELWARN("");
+            WARNMSG("");
             return 1;
         }
     }
@@ -572,21 +572,21 @@ int TreeModel::SetFirstTreeElements()
         QStringList RIDsl = RootIDs.at(i).split(".");
         if (RIDsl.size()<2)
         {
-            TMODELDBG;
+            DBGMSG;
             return 1;
         }
         bool ok;
         int Table = RIDsl.at(0).toInt(&ok);
         if (!ok)
         {
-            TMODELDBG;
+            DBGMSG;
             return 1;
         }
         QString Id = RIDsl.at(1);
         QStringList tmpsl = sqlc.GetValuesFromTableByID(DBs.at(Table), Tables.at(Table), TableHeaders.at(Table), Id);
         if (sqlc.result)
         {
-            TMODELWARN(sqlc.LastError);
+            WARNMSG(sqlc.LastError);
             return 1;
         }
         Id = QString("%1").arg(Id.toInt(0), 7, 10, QChar('0'));
@@ -620,7 +620,7 @@ int TreeModel::SetTree(int Table, QString Id)
     QList<QStringList> vl = sqlc.GetMoreValuesFromTableByFields(DBs.at(Table), Tables.at(Table), tmpsl, QStringList("idalias"), QStringList(Id), Tables.at(Table));
     if (sqlc.result == 2) // пустой ответ вполне имеет право быть, т.к. есть ещё проверка на подчинённые таблицы с данным ИД
     {
-        TMODELWARN(sqlc.LastError);
+        WARNMSG(sqlc.LastError);
         return 1;
     }
     for (int i=0; i<vl.size(); i++)
@@ -652,7 +652,7 @@ int TreeModel::SetTree(int Table, QString Id)
         tmps = sqlc.GetValueFromTableByField(DBs.at(Table), Tables.at(Table), Tables.at(Table), "idalias", RootId);
         if (sqlc.result == SQLC_FAILED)
         {
-            TMODELWARN(sqlc.LastError);
+            WARNMSG(sqlc.LastError);
             return 1;
         }
         // если есть хотя бы один потомок, надо ставить "книжку"
@@ -692,7 +692,7 @@ int TreeModel::SetTable(int Table, QString Id)
         QList<QStringList> vl = sqlc.GetMoreValuesFromTableByFields(DBs.at(Table), MainTable, tmpsl, QStringList("deleted"), QStringList("0"), tmpsl.at(0));
         if (sqlc.result)
         {
-            TMODELWARN(sqlc.LastError);
+            WARNMSG(sqlc.LastError);
             return 1;
         }
         int NewTable = Table+1;
@@ -731,7 +731,7 @@ int TreeModel::SetTable(int Table, QString Id)
                     tmps = sqlc.GetValueFromTableByField(DBs.at(NewTable), Tables.at(NewTable), NewTableId, "id"+MainTable, RootId);
                 if (sqlc.result == SQLC_FAILED)
                 {
-                    TMODELWARN(sqlc.LastError);
+                    WARNMSG(sqlc.LastError);
                     return 1;
                 }
                 // если есть хотя бы один потомок, надо ставить "книжку"
@@ -757,7 +757,7 @@ int TreeModel::SetNextTree(int Table, QString Id)
     QList<QStringList> vl = sqlc.GetMoreValuesFromTableByFields(DBs.at(Table), Tables.at(Table), tmpsl, QStringList("id"+Tables.at(Table-1)), QStringList(Id), tmpsl.at(0));
     if (sqlc.result)
     {
-        TMODELWARN(sqlc.LastError);
+        WARNMSG(sqlc.LastError);
         return 1;
     }
     for (int i=0; i<vl.size(); i++)
@@ -789,7 +789,7 @@ int TreeModel::SetNextTree(int Table, QString Id)
         tmps = sqlc.GetValueFromTableByField(DBs.at(Table), Tables.at(Table), Tables.at(Table), "idalias", RootId);
         if (sqlc.result == SQLC_FAILED)
         {
-            TMODELWARN(sqlc.LastError);
+            WARNMSG(sqlc.LastError);
             return 1;
         }
         // если есть хотя бы один потомок, надо ставить "книжку"
@@ -812,7 +812,7 @@ int TreeModel::SetNextTable(int Table, QString Id)
     {
         if (Tables.size() < 3)
         {
-            TMODELDBG;
+            DBGMSG;
             return 1;
         }
         tmpsl = TableHeaders.at(Table+1);
@@ -823,13 +823,13 @@ int TreeModel::SetNextTable(int Table, QString Id)
         vl = sqlc.GetMoreValuesFromTableByFields(DBs.at(Table+1), Tables.at(Table+1), tmpsl, QStringList("id"+Tables.at(Table-1)), QStringList(Id), tmpsl.at(0));
         if (sqlc.result)
         {
-            TMODELWARN(sqlc.LastError);
+            WARNMSG(sqlc.LastError);
             return 1;
         }
         int tmpidx = tmpsl.indexOf("id"+Tables.at(Table));
         if (tmpidx == -1)
         {
-            TMODELDBG;
+            DBGMSG;
             return 1;
         }
         // надо подобрать уникальные iddocclasses
@@ -852,7 +852,7 @@ int TreeModel::SetNextTable(int Table, QString Id)
         {
             QStringList sl = sqlc.GetValuesFromTableByField(DBs.at(Table), Tables.at(Table), tmpsl, "id"+Tables.at(Table), idsl.at(i));
             if (sqlc.result)
-                TMODELWARN(sqlc.LastError);
+                WARNMSG(sqlc.LastError);
             else
             {
                 QString tmps = QString::number(Table)+"."+QString("%1").arg(sl.at(0).toInt(),7, 10, QChar('0')); // добавка нулей
@@ -883,7 +883,7 @@ int TreeModel::SetNextTable(int Table, QString Id)
         vl = sqlc.GetMoreValuesFromTableByFields(DBs.at(Table), Tables.at(Table), tmpsl, QStringList("id"+Tables.at(Table-1)), QStringList(Id), tmpsl.at(0));
         if (sqlc.result == 2)
         {
-            TMODELWARN(sqlc.LastError);
+            WARNMSG(sqlc.LastError);
             return 1;
         }
         int NewTable = Table+1;
@@ -912,7 +912,7 @@ int TreeModel::SetNextTable(int Table, QString Id)
                 tmps = sqlc.GetValueFromTableByField(DBs.at(NewTable), Tables.at(NewTable), "id"+Tables.at(NewTable), "id"+MainTable, RootId);
                 if (sqlc.result == SQLC_FAILED)
                 {
-                    TMODELWARN(sqlc.LastError);
+                    WARNMSG(sqlc.LastError);
                     return 1;
                 }
                 // если есть хотя бы один потомок, надо ставить "книжку"
@@ -975,5 +975,5 @@ void TreeModel::Refresh()
 {
     ClearOnlyData();
     if (BuildTree())
-        TMODELWARN("");
+        WARNMSG("");
 }

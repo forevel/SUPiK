@@ -10,10 +10,6 @@
 #include "../../widgets/s_tqlabel.h"
 #include "../../models/whplacestreemodel.h"
 
-#define WHEDWARN    WARNMSG(PublicClass::ER_WHED, __LINE__)
-#define WHEDDBG     DBGMSG(PublicClass::ER_WHED, __LINE__)
-#define WHEDINFO(a) INFOMSG(PublicClass::ER_WHED,__LINE__,a)
-
 #define MAXROWS 2
 #define MAXCOLS 6
 

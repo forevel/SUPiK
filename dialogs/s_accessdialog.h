@@ -3,8 +3,6 @@
 
 #include <QDialog>
 
-#define ACCDBG  DBGMSG(PublicClass::ER_ACC,__LINE__)
-
 class s_accessdialog : public QDialog
 {
     Q_OBJECT

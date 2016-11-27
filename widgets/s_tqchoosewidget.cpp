@@ -385,7 +385,10 @@ PublicClass::ValueStruct s_tqChooseWidget::Data()
     {
         s_tqSpinBox *sb = this->findChild<s_tqSpinBox *>("fdcsb");
         if (sb != 0)
-            vs.Value = QString::number(sb->value(),'f',6);
+        {
+            int tmpInt2 = ff.link.at(0).count("d", Qt::CaseSensitive);
+            vs.Value = QString::number(sb->value(),'f',tmpInt2);
+        }
         break;
     }
     case FD_CHECK:

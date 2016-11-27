@@ -8,10 +8,6 @@
 #include "../threads/ethernet.h"
 #include "publicclass.h"
 
-#define CLIER(a)   ERMSG(PublicClass::ER_CLI,__LINE__,a)
-#define CLIWARN    WARNMSG(PublicClass::ER_CLI,__LINE__)
-#define CLIINFO(a) INFOMSG(PublicClass::ER_CLI,__LINE__,a)
-
 #define SERVERRSTR  "ERROR"
 #define SERVEMPSTR  "EMPTY"
 //#define TIMERSOFF // если не закомментировано, таймауты отключены
@@ -166,6 +162,7 @@ public:
     void Disconnect();
     void SendCmd(int Command, QStringList &Args=QStringList());
     QString Join(QStringList &sl);
+    int GetFile(QString type, QString subtype, QString &filename);
 
 public slots:
     void StopThreads();

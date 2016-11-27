@@ -9,11 +9,6 @@
 #include "../../models/treemodel.h"
 #include "../../models/proxymodel.h"
 
-#define DIRMDBG         DBGMSG(PublicClass::ER_DIRMAIN,__LINE__)
-#define DIRMWARN        WARNMSG(PublicClass::ER_DIRMAIN,__LINE__)
-#define DIRMINFO(a)     INFOMSG(PublicClass::ER_DIRMAIN,__LINE__,a)
-#define DIRMER(a)       ERMSG(PublicClass::ER_DIRMAIN,__LINE__,a)
-
 class dir_maindialog : public QDialog
 {
     Q_OBJECT

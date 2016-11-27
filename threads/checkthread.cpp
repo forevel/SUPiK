@@ -26,9 +26,9 @@ void CheckThread::Start()
     QTimer *tmr = new QTimer(this);
     tmr->setInterval(60000); // 1 минута
     connect(tmr,SIGNAL(timeout()),this,SLOT(MinuteTest()));
-    CTHREADINFO("Проверка целостности БД начата");
+    INFOMSG("Проверка целостности БД начата");
     MainCheck();
-    CTHREADINFO("Проверка целостности БД закончена");
+    INFOMSG("Проверка целостности БД закончена");
     tmr->start();
     while (!IsAboutToFinish)
         Wait(100);

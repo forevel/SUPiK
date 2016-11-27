@@ -11,10 +11,6 @@
 
 #include "s_ncitem.h"
 
-#define NCMWARN     WARNMSG(PublicClass::ER_NCMODEL, __LINE__)
-#define NCMDBG      DBGMSG(PublicClass::ER_NCMODEL, __LINE__)
-#define NCMINFO(a)  INFOMSG(PublicClass::ER_NCMODEL, __LINE__, a)
-
 class s_ncmodel : public QAbstractTableModel
 {
     Q_OBJECT

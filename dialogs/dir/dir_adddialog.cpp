@@ -241,7 +241,7 @@ void dir_adddialog::WriteAndClose()
     sb = this->findChild<s_tqSpinBox *>("dirFieldNum");
     if ((dirNameLE == 0) || (dirAliasLE == 0) || (dirAccessCW == 0) || (dirB == 0) || (sb == 0))
     {
-        DADDDBG;
+        DBGMSG;
         return;
     }
     if (IsDir)
@@ -267,7 +267,7 @@ void dir_adddialog::WriteAndClose()
             cbfield = this->findChild<s_tqComboBox *>("field."+QString::number(i));
             if (cbfield == 0)
             {
-                DADDDBG;
+                DBGMSG;
                 return;
             }
             sl << cbfield->currentText();
@@ -276,10 +276,10 @@ void dir_adddialog::WriteAndClose()
         sqlc.CreateTable(dirdb, tble, sl);
         if (sqlc.result)
         {
-            DADDWARN;
+            WARNMSG("");
             return;
         }
-        DADDINFO("Таблица справочника создана успешно");
+        MessageBox2::information(this, "Внимание", "Таблица справочника создана успешно");
     }
     else // если таблица есть, надо проверить её на соответствие нашей структуре
     {
@@ -288,7 +288,7 @@ void dir_adddialog::WriteAndClose()
         cmpsl.removeAll("id"+tble); // убираем из сравнения ИД, если он есть
         if (sqlc.result)
         {
-            DADDDBG;
+            DBGMSG;
             return;
         }
         // убрать стандартные поля
@@ -301,7 +301,7 @@ void dir_adddialog::WriteAndClose()
             cbfield = this->findChild<s_tqComboBox *>("field."+QString::number(i));
             if (cbfield == 0)
             {
-                DADDDBG;
+                DBGMSG;
                 return;
             }
             //      проверяем наличие такого элемента в считанной структуре
@@ -332,10 +332,10 @@ void dir_adddialog::WriteAndClose()
             sqlc.AlterTable(dirdb, tble, cmpsl, sl);
             if (sqlc.result)
             {
-                DADDWARN;
+                WARNMSG("");
                 return;
             }
-            DADDINFO("Таблица справочника изменена успешно");
+            MessageBox2::information(this, "Внимание", "Таблица справочника изменена успешно");
         }
     }
     QStringList fl, vl;
@@ -356,7 +356,7 @@ void dir_adddialog::WriteAndClose()
         s_tqCheckBox *chb = this->findChild<s_tqCheckBox *>("short."+QString::number(i));
         if ((levalue == 0) || (lename == 0) || (cbfield == 0) || (chb == 0))
         {
-            DADDDBG;
+            DBGMSG;
             return;
         }
         // удаляем из наших списков найденное в полях значение, если хоть одно останется, значит, надо будет его удалить потом
@@ -375,7 +375,7 @@ void dir_adddialog::WriteAndClose()
             sqlc.RealDeleteFromDB("sup","tablefields",fl,vl);
             if (sqlc.result)
             {
-                DADDWARN;
+                WARNMSG("");
                 return;
             }
             FullTbleDeleteList.removeFirst();
@@ -391,7 +391,7 @@ void dir_adddialog::WriteAndClose()
             sqlc.RealDeleteFromDB("sup","tablefields",fl,vl);
             if (sqlc.result)
             {
-                DADDWARN;
+                WARNMSG("");
                 return;
             }
             ShortTbleDeleteList.removeFirst();
@@ -408,7 +408,7 @@ void dir_adddialog::WriteAndClose()
         s_tqCheckBox *chb = this->findChild<s_tqCheckBox *>("short."+QString::number(i));
         if ((levalue == 0) || (lename == 0) || (cbfield == 0) || (chb == 0))
         {
-            DADDDBG;
+            DBGMSG;
             return;
         }
         vl.clear();
@@ -434,7 +434,7 @@ void dir_adddialog::WriteAndClose()
                 sqlc.UpdateValuesInTable("sup", "tablefields", fl, vl, "idtablefields", id);
                 if (sqlc.result)
                 {
-                    DADDWARN;
+                    WARNMSG("");
                     return;
                 }
             }
@@ -472,7 +472,7 @@ void dir_adddialog::WriteAndClose()
             tmpString = sqlc.InsertValuesToTable("sup", tble, fl, vl);
             if (sqlc.result)
             {
-                DADDWARN;
+                WARNMSG("");
                 return;
             }
         }
@@ -481,12 +481,12 @@ void dir_adddialog::WriteAndClose()
             tmpString = sqlc.UpdateValuesInTable("sup", tble, fl, vl, "dirlist", tmpdir);
             if (sqlc.result)
             {
-                DADDWARN;
+                WARNMSG("");
                 return;
             }
         }
     }
-    DADDINFO("Записано успешно!");
+    MessageBox2::information(this, "Внимание", "Записано успешно!");
     this->close();
 }
 
@@ -499,7 +499,7 @@ void dir_adddialog::WriteToTfl(QStringList fl, QStringList vl, QStringList cmpfl
         sqlc.UpdateValuesInTable("sup", "tablefields", fl, vl, "idtablefields", id);
     if (sqlc.result)
     {
-        DADDWARN;
+        WARNMSG("");
         return;
     }
 }
@@ -513,7 +513,7 @@ void dir_adddialog::updateTWFields(double dfn)
         s_tqWidget *w = this->findChild<s_tqWidget *>("wdgt."+QString::number(i));
         if (w == 0)
         {
-            DADDDBG;
+            DBGMSG;
             return;
         }
         w->setVisible(true);
@@ -524,7 +524,7 @@ void dir_adddialog::updateTWFields(double dfn)
         s_tqWidget *w = this->findChild<s_tqWidget *>("wdgt."+QString::number(i));
         if (w == 0)
         {
-            DADDDBG;
+            DBGMSG;
             return;
         }
         w->setVisible(false);
@@ -549,7 +549,7 @@ void dir_adddialog::acceptAccess(QString rights)
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("dirAccess");
     if (le == 0)
     {
-        DADDDBG;
+        DBGMSG;
         return;
     }
     le->setText(rights);
@@ -582,14 +582,14 @@ void dir_adddialog::TbleNameChanged(QString tblename)
     s_tqComboBox *dirB = this->findChild<s_tqComboBox *>("dirBelong");
     if (dirB == 0)
     {
-        DADDDBG;
+        DBGMSG;
         return;
     }
     QStringList dirColumns = sqlc.GetColumnsFromTable(dirBelongAliases[dirB->currentText()], tblename);
     dirColumns.removeAt(dirColumns.indexOf("id"+tblename)); // убираем ИД, т.к. с ним разговор особый
     if (sqlc.result)
     {
-//        DADDINFO("Не найдена таблица");
+//        MessageBox2::information(this, "Внимание", "Не найдена таблица");
         return;
     }
     dirColumns.removeAll("date");
@@ -606,7 +606,7 @@ void dir_adddialog::TbleNameChanged(QString tblename)
         s_tqComboBox *cb = this->findChild<s_tqComboBox *>("field."+QString::number(i));
         if (cb == 0)
         {
-            DADDDBG;
+            DBGMSG;
             return;
         }
         int idx = cb->currentIndex();
@@ -625,14 +625,14 @@ void dir_adddialog::TbleChoosed()
     QStringList sl = objname.split(".");
     if (sl.size() < 2)
     {
-        DADDDBG;
+        DBGMSG;
         return;
     }
     bool ok;
     int Type = sl.at(1).toInt(&ok);
     if (!ok)
     {
-        DADDDBG;
+        DBGMSG;
         return;
     }
     s_tqComboBox *cb, *cb2;
@@ -692,13 +692,13 @@ void dir_adddialog::TbleChoosed()
     cb2 = this->findChild<s_tqComboBox *>(cb2name);
     if (cb2 == 0)
     {
-        DADDDBG;
+        DBGMSG;
         return;
     }
     tfl.tableheaders(cb->currentText(), sl);
     if (tfl.result == TFRESULT_ERROR)
     {
-        DADDWARN;
+        WARNMSG("");
         return;
     }
     QStringListModel *cb2mdl = new QStringListModel;
@@ -709,7 +709,7 @@ void dir_adddialog::TbleChoosed()
         s_tqComboBox *cb3 = this->findChild<s_tqComboBox *>("fwmaxlinkcb3");
         if (cb3 == 0)
         {
-            DADDDBG;
+            DBGMSG;
             return;
         }
         QStringListModel *cb3mdl = new QStringListModel;
@@ -735,7 +735,7 @@ void dir_adddialog::fillFields()
     lsl = sqlc.GetMoreValuesFromTableByFields("sup", "tablefields", fl, QStringList("tablename"), QStringList(dir), "fieldsorder", true);
     if (sqlc.result)
     {
-        DADDWARN;
+        WARNMSG("");
         return;
     }
     if (IsDir)
@@ -746,7 +746,7 @@ void dir_adddialog::fillFields()
     }
     if (lsl.size() == 0)
     {
-        DADDWARN;
+        WARNMSG("");
         return;
     }
     s_tqLineEdit *dirNameLE = this->findChild<s_tqLineEdit *>("dirname");
@@ -756,13 +756,13 @@ void dir_adddialog::fillFields()
     s_tqSpinBox *sb = this->findChild<s_tqSpinBox *>("dirFieldNum");
     if ((dirNameLE == 0) || (dirAliasLE == 0) || (dirBelongCB == 0) || (dirAccessCW == 0) || (sb == 0))
     {
-        DADDDBG;
+        DBGMSG;
         return;
     }
     QString tmpString = dirBelongAliases.key(lsl.at(0).at(0).split(".").at(0));
     if (tmpString.isEmpty())
     {
-        DADDDBG;
+        DBGMSG;
         return;
     }
     dirBelongCB->setCurrentText(tmpString);
@@ -781,7 +781,7 @@ void dir_adddialog::fillFields()
         tfl.valuesbyfield(table,fields,field,tmpdir, values);
         if (tfl.result == TFRESULT_ERROR)
         {
-            DADDWARN;
+            WARNMSG("");
             return;
         }
         dirAccessCW->SetValue(values.at(0));
@@ -810,7 +810,7 @@ void dir_adddialog::fillFields()
         s_tqCheckBox *chb = this->findChild<s_tqCheckBox *>("short."+QString::number(i));
         if ((cbf == 0) || (lev == 0) || (len == 0) || (chb == 0))
         {
-            DADDDBG;
+            DBGMSG;
             return;
         }
         cbf->setCurrentText(lsl.at(i).at(1));
@@ -848,7 +848,7 @@ void dir_adddialog::transliteDirName()
     dirNameLE = this->findChild<s_tqLineEdit *>("dirname");
     if (dirNameLE == 0)
     {
-        DADDDBG;
+        DBGMSG;
         return;
     }
     if (dirNameLE->text().isEmpty())
@@ -856,7 +856,7 @@ void dir_adddialog::transliteDirName()
         dirAliasLE = this->findChild<s_tqLineEdit *>("dirAlias");
         if (dirAliasLE == 0)
         {
-            DADDDBG;
+            DBGMSG;
             return;
         }
         QString tmpString = pc.getTranslit(dirAliasLE->text());
@@ -872,14 +872,14 @@ void dir_adddialog::FPBPressed()
     QStringList sl = pbname.split(".");
     if (sl.size() < 2)
     {
-        DADDDBG;
+        DBGMSG;
         return;
     }
     bool ok;
     idx = sl.at(1).toInt(&ok);
     if (!ok)
     {
-        DADDDBG;
+        DBGMSG;
         return;
     }
     QDialog *dlg = new QDialog(this);
@@ -888,7 +888,7 @@ void dir_adddialog::FPBPressed()
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("value."+QString::number(idx));
     if (le == 0)
     {
-        DADDDBG;
+        DBGMSG;
         return;
     }
     QStringList links = le->text().split("."); // формируем links
@@ -926,7 +926,7 @@ void dir_adddialog::FPBPressed()
     s_tqSpinBox *spb = this->findChild<s_tqSpinBox *>("dirFieldNum");
     if (spb == 0)
     {
-        DADDDBG;
+        DBGMSG;
         return;
     }
     int NumFields = spb->value();
@@ -1247,7 +1247,7 @@ void dir_adddialog::DTypeCBIndexChanged(int FD)
     QStringList tmpStringList;
     if (cb == 0)
     {
-        DADDDBG;
+        DBGMSG;
         return;
     }
     switch (FD)
@@ -1301,14 +1301,14 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
     s_tqStackedWidget *sw = this->findChild<s_tqStackedWidget *>("linksconstrsw");
     if (sw == 0)
     {
-        DADDDBG;
+        DBGMSG;
         return;
     }
     sw->setCurrentIndex(wdgtsidx);
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("value."+QString::number(idx));
     if (le == 0)
     {
-        DADDDBG;
+        DBGMSG;
         return;
     }
     QStringList links = le->text().split("."); // формируем links
@@ -1321,7 +1321,7 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
             s_tqSpinBox *NumberSB = this->findChild<s_tqSpinBox *>("number");
             if (NumberSB == 0)
             {
-                DADDDBG;
+                DBGMSG;
                 return;
             }
             NumberSB->setValue(links.at(3).toDouble());
@@ -1335,14 +1335,14 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
             s_tqComboBox *tcb = this->findChild<s_tqComboBox *>("tcb."+QString::number(FW_LINK));
             if (tcb == 0)
             {
-                DADDDBG;
+                DBGMSG;
                 return;
             }
             tcb->setCurrentText(links.at(3));
             tcb = this->findChild<s_tqComboBox *>("fwlinkcb2");
             if (tcb == 0)
             {
-                DADDDBG;
+                DBGMSG;
                 return;
             }
             tcb->setCurrentText(links.at(4));
@@ -1355,7 +1355,7 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
         {
             s_tqComboBox *tcb = this->findChild<s_tqComboBox *>("tcb."+QString::number(FW_SPECIAL));
             {
-                DADDDBG;
+                DBGMSG;
                 return;
             }
                 return;
@@ -1363,7 +1363,7 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
             tcb = this->findChild<s_tqComboBox *>("fwspecialcb2");
             if (tcb == 0)
             {
-                DADDDBG;
+                DBGMSG;
                 return;
             }
             tcb->setCurrentText(links.at(4));
@@ -1377,14 +1377,14 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
             s_tqComboBox *tcb = this->findChild<s_tqComboBox *>("tcb."+QString::number(FW_ALLINK));
             if (tcb == 0)
             {
-                DADDDBG;
+                DBGMSG;
                 return;
             }
             tcb->setCurrentText(links.at(3));
             tcb = this->findChild<s_tqComboBox *>("fwallinkcb2");
             if (tcb == 0)
             {
-                DADDDBG;
+                DBGMSG;
                 return;
             }
             tcb->setCurrentText(links.at(4));
@@ -1404,14 +1404,14 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
                 s_tqComboBox *cb = this->findChild<s_tqComboBox *>("tble."+QString::number(i));
                 if (cb == 0)
                 {
-                    DADDDBG;
+                    DBGMSG;
                     return;
                 }
                 cb->setCurrentText(links.at(0));
                 cb = this->findChild<s_tqComboBox *>("tblefield."+QString::number(i));
                 if (cb == 0)
                 {
-                    DADDDBG;
+                    DBGMSG;
                     return;
                 }
                 cb->setCurrentText(links.at(1));
@@ -1429,21 +1429,21 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
             s_tqComboBox *tcb = this->findChild<s_tqComboBox *>("tcb."+QString::number(FW_MAXLINK));
             if (tcb == 0)
             {
-                DADDDBG;
+                DBGMSG;
                 return;
             }
             tcb->setCurrentText(links.at(3));
             tcb = this->findChild<s_tqComboBox *>("fwmaxlinkcb2");
             if (tcb == 0)
             {
-                DADDDBG;
+                DBGMSG;
                 return;
             }
             tcb->setCurrentText(links.at(4));
             tcb = this->findChild<s_tqComboBox *>("fwmaxlinkcb3");
             if (tcb == 0)
             {
-                DADDDBG;
+                DBGMSG;
                 return;
             }
             tcb->setCurrentText(links.at(5));
@@ -1452,7 +1452,7 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
                 s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fwmaxlinkle");
                 if (le == 0)
                 {
-                    DADDDBG;
+                    DBGMSG;
                     return;
                 }
                 le->setText(links.at(6));
@@ -1467,7 +1467,7 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
             s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fwmaskedle");
             if (le == 0)
             {
-                DADDDBG;
+                DBGMSG;
                 return;
             }
             QString tmps = links.at(3);
@@ -1488,7 +1488,7 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
             s_tqSpinBox *NumberSB = this->findChild<s_tqSpinBox *>("id");
             if (NumberSB == 0)
             {
-                DADDDBG;
+                DBGMSG;
                 return;
             }
             NumberSB->setValue(links.at(3).toDouble());
@@ -1502,7 +1502,7 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
             s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fwequatle");
             if (le == 0)
             {
-                DADDDBG;
+                DBGMSG;
                 return;
             }
             le->setText(links.at(4));
@@ -1511,14 +1511,14 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
                 le = this->findChild<s_tqLineEdit *>("fwequatle2");
                 if (le == 0)
                 {
-                    DADDDBG;
+                    DBGMSG;
                     return;
                 }
                 le->setText(links.at(6));
                 s_tqComboBox *cb = this->findChild<s_tqComboBox *>("fwequatcb");
                 if (cb == 0)
                 {
-                    DADDDBG;
+                    DBGMSG;
                     return;
                 }
                 QString op = links.at(5);
@@ -1537,14 +1537,14 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
             s_tqSpinBox *NumberSB = this->findChild<s_tqSpinBox *>("fnumber");
             if (NumberSB == 0)
             {
-                DADDDBG;
+                DBGMSG;
                 return;
             }
             NumberSB->setValue(links.at(3).count("n", Qt::CaseSensitive));
             NumberSB = this->findChild<s_tqSpinBox *>("fnumber2");
             if (NumberSB == 0)
             {
-                DADDDBG;
+                DBGMSG;
                 return;
             }
             NumberSB->setValue(links.at(3).count("d", Qt::CaseSensitive));
@@ -1564,7 +1564,7 @@ void dir_adddialog::ConstructLink()
     s_tqComboBox *cb = this->findChild<s_tqComboBox *>("dtypecb");
     if (cb == 0)
     {
-        DADDDBG;
+        DBGMSG;
         return;
     }
     links.append(QString::number(cb->currentIndex()));
@@ -1572,7 +1572,7 @@ void dir_adddialog::ConstructLink()
     cb = this->findChild<s_tqComboBox *>("ltypecb");
     if (cb == 0)
     {
-        DADDDBG;
+        DBGMSG;
         return;
     }
     links.append(QString::number(FW_Links.indexOf(cb->currentText())));
@@ -1580,7 +1580,7 @@ void dir_adddialog::ConstructLink()
     s_tqSpinBox *spb = this->findChild<s_tqSpinBox *>("dependsspb");
     if (spb == 0)
     {
-        DADDDBG;
+        DBGMSG;
         return;
     }
     int spbvalue = spb->value();
@@ -1595,7 +1595,7 @@ void dir_adddialog::ConstructLink()
         s_tqComboBox *tcb = this->findChild<s_tqComboBox *>("tcb."+QString::number(FW_ALLINK));
         if (tcb == 0)
         {
-            DADDDBG;
+            DBGMSG;
             return;
         }
         links.append(tcb->currentText());
@@ -1603,7 +1603,7 @@ void dir_adddialog::ConstructLink()
         tcb = this->findChild<s_tqComboBox *>("fwallinkcb2");
         if (tcb == 0)
         {
-            DADDDBG;
+            DBGMSG;
             return;
         }
         links.append(tcb->currentText());
@@ -1616,7 +1616,7 @@ void dir_adddialog::ConstructLink()
             s_tqComboBox *cb = this->findChild<s_tqComboBox *>("tble."+QString::number(i));
             if (cb == 0)
             {
-                DADDDBG;
+                DBGMSG;
                 return;
             }
             if (cb->currentText().isEmpty())
@@ -1626,7 +1626,7 @@ void dir_adddialog::ConstructLink()
             cb = this->findChild<s_tqComboBox *>("tblefield."+QString::number(i));
             if (cb == 0)
             {
-                DADDDBG;
+                DBGMSG;
                 return;
             }
             links.append(cb->currentText());
@@ -1640,14 +1640,14 @@ void dir_adddialog::ConstructLink()
         s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fwequatle");
         if (le == 0)
         {
-            DADDDBG;
+            DBGMSG;
             return;
         }
         links.append(le->text());
         le = this->findChild<s_tqLineEdit *>("fwequatle2");
         if (le == 0)
         {
-            DADDDBG;
+            DBGMSG;
             return;
         }
         if (!le->text().isEmpty())
@@ -1657,7 +1657,7 @@ void dir_adddialog::ConstructLink()
             s_tqComboBox *cb = this->findChild<s_tqComboBox *>("fwequatcb");
             if (cb == 0)
             {
-                DADDDBG;
+                DBGMSG;
                 return;
             }
             links.append(ops[cb->currentIndex()]);
@@ -1671,7 +1671,7 @@ void dir_adddialog::ConstructLink()
         spb = this->findChild<s_tqSpinBox *>("id");
         if (spb == 0)
         {
-            DADDDBG;
+            DBGMSG;
             return;
         }
         links.append(QString::number(spb->value()));
@@ -1682,7 +1682,7 @@ void dir_adddialog::ConstructLink()
         s_tqComboBox *tcb = this->findChild<s_tqComboBox *>("tcb."+QString::number(FW_LINK));
         if (tcb == 0)
         {
-            DADDDBG;
+            DBGMSG;
             return;
         }
         links.append(tcb->currentText());
@@ -1690,7 +1690,7 @@ void dir_adddialog::ConstructLink()
         tcb = this->findChild<s_tqComboBox *>("fwlinkcb2");
         if (tcb == 0)
         {
-            DADDDBG;
+            DBGMSG;
             return;
         }
         links.append(tcb->currentText());
@@ -1701,7 +1701,7 @@ void dir_adddialog::ConstructLink()
         s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fwmaskedle");
         if (le == 0)
         {
-            DADDDBG;
+            DBGMSG;
             return;
         }
         links.append("\\\"^"); // в lineedit-е \", для БД кавычки надо ещё больше обрамить
@@ -1714,7 +1714,7 @@ void dir_adddialog::ConstructLink()
         s_tqComboBox *tcb = this->findChild<s_tqComboBox *>("tcb."+QString::number(FW_MAXLINK));
         if (tcb == 0)
         {
-            DADDDBG;
+            DBGMSG;
             return;
         }
         links.append(tcb->currentText());
@@ -1722,7 +1722,7 @@ void dir_adddialog::ConstructLink()
         tcb = this->findChild<s_tqComboBox *>("fwmaxlinkcb2");
         if (tcb == 0)
         {
-            DADDDBG;
+            DBGMSG;
             return;
         }
         links.append(tcb->currentText());
@@ -1730,14 +1730,14 @@ void dir_adddialog::ConstructLink()
         tcb = this->findChild<s_tqComboBox *>("fwmaxlinkcb3");
         if (tcb == 0)
         {
-            DADDDBG;
+            DBGMSG;
             return;
         }
         links.append(tcb->currentText());
         s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fwmaxlinkle");
         if (le == 0)
         {
-            DADDDBG;
+            DBGMSG;
             return;
         }
         if (!le->text().isEmpty())
@@ -1752,7 +1752,7 @@ void dir_adddialog::ConstructLink()
         spb = this->findChild<s_tqSpinBox *>("number");
         if (spb == 0)
         {
-            DADDDBG;
+            DBGMSG;
             return;
         }
         links.append(QString::number(spb->value()));
@@ -1763,7 +1763,7 @@ void dir_adddialog::ConstructLink()
         s_tqComboBox *tcb = this->findChild<s_tqComboBox *>("tcb."+QString::number(FW_SPECIAL));
         if (tcb == 0)
         {
-            DADDDBG;
+            DBGMSG;
             return;
         }
         links.append(tcb->currentText());
@@ -1771,7 +1771,7 @@ void dir_adddialog::ConstructLink()
         tcb = this->findChild<s_tqComboBox *>("fwspecialcb2");
         if (tcb == 0)
         {
-            DADDDBG;
+            DBGMSG;
             return;
         }
         links.append(tcb->currentText());
@@ -1783,7 +1783,7 @@ void dir_adddialog::ConstructLink()
         spb = this->findChild<s_tqSpinBox *>("fnumber");
         if (spb == 0)
         {
-            DADDDBG;
+            DBGMSG;
             return;
         }
         tmps.fill('n', spb->value());
@@ -1791,7 +1791,7 @@ void dir_adddialog::ConstructLink()
         spb = this->findChild<s_tqSpinBox *>("fnumber2");
         if (spb == 0)
         {
-            DADDDBG;
+            DBGMSG;
             return;
         }
         tmps.fill('d', spb->value());
@@ -1804,7 +1804,7 @@ void dir_adddialog::ConstructLink()
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("value."+QString::number(idx));
     if (le == 0)
     {
-        DADDDBG;
+        DBGMSG;
         return;
     }
     le->setText(links);

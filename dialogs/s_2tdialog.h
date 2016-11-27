@@ -8,11 +8,6 @@
 #include "../models/treemodel.h"
 #include "../widgets/treeview.h"
 
-#define D2TDLGDBG         DBGMSG(PublicClass::ER_2TDLG,__LINE__)
-#define D2TDLGWARN        WARNMSG(PublicClass::ER_2TDLG,__LINE__)
-#define D2TDLGINFO(a)     INFOMSG(PublicClass::ER_2TDLG,__LINE__,a)
-#define D2TDLGER(a)       ERMSG(PublicClass::ER_2TDLG,__LINE__,a)
-
 class s_2tdialog : public QDialog
 {
     Q_OBJECT

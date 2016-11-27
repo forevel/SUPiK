@@ -11,10 +11,6 @@
 #define FSIZE   32 // максимальное количество редактируемых полей справочника
 #define FSZPR   8 // максимальное количество полей на одну вкладку
 
-#define DADDDBG     DBGMSG(PublicClass::ER_DIRADD,__LINE__)
-#define DADDWARN    WARNMSG(PublicClass::ER_DIRADD,__LINE__)
-#define DADDINFO(a) INFOMSG(PublicClass::ER_DIRADD,__LINE__,a)
-
 class dir_adddialog : public QDialog
 {
     Q_OBJECT

@@ -114,7 +114,7 @@ void sys_systemdialog::SetSysTree()
     TreeView *MainTV = this->findChild<TreeView *>("MainTV");
     if (MainTV == 0)
     {
-        SYSSDBG;
+        DBGMSG;
         return;
     }
     MainTV->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -140,7 +140,7 @@ void sys_systemdialog::SetSlave(QModelIndex idx)
     TreeView *MainTV = this->findChild<TreeView *>("MainTV");
     if (MainTV == 0)
     {
-        SYSSDBG;
+        DBGMSG;
         return;
     }
     TreeModel *mdl = static_cast<TreeModel *>(MainTV->model());
@@ -156,14 +156,14 @@ void sys_systemdialog::SetSlave(QModelIndex idx)
         tfl.htovlc(table,field,cmpfield,tmpString, tmpsl); // получить имя вызываемой функции
         if (tfl.result == TFRESULT_ERROR)
         {
-            SYSSWARN;
+            WARNMSG("");
             return;
         }
         tmpString = tmpsl.at(0);
         tmpString = sqlc.GetValueFromTableByField("sup","sysmenumethods","sysmenumethods","idsysmenumethods",tmpString);
         if (sqlc.result)
         {
-            SYSSWARN;
+            WARNMSG("");
             return;
         }
         if (tmpString == "")
@@ -287,7 +287,7 @@ QString sys_systemdialog::getMainIndex(int column)
     TreeView *MainTV = this->findChild<TreeView *>("MainTV");
     if (MainTV == 0)
     {
-        SYSSDBG;
+        DBGMSG;
         return QString();
     }
     QString tmpString = MainTV->model()->index(MainTV->currentIndex().row(), column, QModelIndex()).data(Qt::DisplayRole).toString();
@@ -300,7 +300,7 @@ void sys_systemdialog::MainMenuEditor()
     s_tqStackedWidget *wdgt = this->findChild<s_tqStackedWidget *>("sw");
     if (wdgt == 0)
     {
-        SYSSDBG;
+        DBGMSG;
         return;
     }
     SysmenuEditor *dlg = new SysmenuEditor;
@@ -315,7 +315,7 @@ void sys_systemdialog::SystemMenuEditor()
     s_tqStackedWidget *wdgt = this->findChild<s_tqStackedWidget *>("sw");
     if (wdgt == 0)
     {
-        SYSSDBG;
+        DBGMSG;
         return;
     }
     SysmenuEditor *dlg = new SysmenuEditor;
@@ -330,7 +330,7 @@ void sys_systemdialog::SystemDirEditor()
     QStackedWidget *sw = this->findChild<QStackedWidget *>("stw");
     if (sw == 0)
     {
-        SYSSDBG;
+        DBGMSG;
         return;
     }
     dir_maindialog *dird = new dir_maindialog("Справочники системные");
@@ -345,7 +345,7 @@ void sys_systemdialog::TablesEditor()
     s_tqStackedWidget *wdgt = this->findChild<s_tqStackedWidget *>("sw");
     if (wdgt == 0)
     {
-        SYSSDBG;
+        DBGMSG;
         return;
     }
     s_tqWidget *wdt = this->findChild<s_tqWidget *>("tableseditorwidget");
@@ -418,7 +418,7 @@ void sys_systemdialog::RemoveWidget()
     s_tqStackedWidget *wdgt = this->findChild<s_tqStackedWidget *>("sw");
     if (wdgt == 0)
     {
-        SYSSDBG;
+        DBGMSG;
         return;
     }
     wdgt->removeWidget(wdgt->currentWidget());
@@ -429,7 +429,7 @@ void sys_systemdialog::NewTable()
     QStackedWidget *sw = this->findChild<QStackedWidget *>("stw");
     if (sw == 0)
     {
-        SYSSDBG;
+        DBGMSG;
         return;
     }
     dir_adddialog *dlg = new dir_adddialog(false,"");
@@ -443,14 +443,14 @@ void sys_systemdialog::EditTable()
     TreeView *tv = this->findChild<TreeView *>("tabletv");
     if (tv == 0)
     {
-        SYSSDBG;
+        DBGMSG;
         return;
     }
     QString tblename = tv->model()->data(tv->model()->index(tv->currentIndex().row(),1,QModelIndex()),Qt::DisplayRole).toString();
     QStackedWidget *sw = this->findChild<QStackedWidget *>("stw");
     if (sw == 0)
     {
-        SYSSDBG;
+        DBGMSG;
         return;
     }
     dir_adddialog *dlg = new dir_adddialog(true,"",tblename);
@@ -464,7 +464,7 @@ void sys_systemdialog::DeleteTable()
     TreeView *tv = this->findChild<TreeView *>("tabletv");
     if (tv == 0)
     {
-        SYSSDBG;
+        DBGMSG;
         return;
     }
     QString tblename = tv->model()->data(tv->model()->index(tv->currentIndex().row(),1,QModelIndex()),Qt::DisplayRole).toString();
@@ -481,11 +481,11 @@ void sys_systemdialog::DeleteTable()
         sqlc.RealDeleteFromDB("sup","tablefields",fl,vl);
         if (sqlc.result)
         {
-            SYSSWARN;
+            WARNMSG("");
             return;
         }
     }
-    SYSSINFO("Удалено успешно!");
+    MessageBox2::information(this, "Внимание", "Удалено успешно!");
     SetSlave(QModelIndex());
 }
 
@@ -494,7 +494,7 @@ void sys_systemdialog::DirEditor()
     s_tqStackedWidget *wdgt = this->findChild<s_tqStackedWidget *>("sw");
     if (wdgt == 0)
     {
-        SYSSDBG;
+        DBGMSG;
         return;
     }
     SysDirEditor *dlg = new SysDirEditor;
@@ -508,7 +508,7 @@ void sys_systemdialog::PersEditor()
     s_tqStackedWidget *wdgt = this->findChild<s_tqStackedWidget *>("sw");
     if (wdgt == 0)
     {
-        SYSSDBG;
+        DBGMSG;
         return;
     }
     sys_persdialog *dlg = new sys_persdialog;

@@ -4,10 +4,6 @@
 #include <QDialog>
 #include <QModelIndex>
 
-#define SYSPDBG     DBGMSG(PublicClass::ER_SYSPERS, __LINE__)
-#define SYSPWARN    WARNMSG(PublicClass::ER_SYSPERS,__LINE__)
-#define SYSPINFO(a) INFOMSG(PublicClass::ER_SYSPERS,__LINE__,a)
-
 class sys_persdialog : public QDialog
 {
     Q_OBJECT

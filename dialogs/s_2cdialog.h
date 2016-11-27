@@ -2,16 +2,11 @@
 #define S_GENERAL2COLUMNSDIALOG_H
 
 #include <QDialog>
-#include <QByteArray>
 #include <QSortFilterProxyModel>
 //#include "../models/s_ncmodel.h"
 #include "../models/editmodel.h"
 
 #define CD_ERROR    0x0200
-
-#define CD2WARN WARNMSG(PublicClass::ER_2CDLG, __LINE__)
-#define CD2DBG  DBGMSG(PublicClass::ER_2CDLG, __LINE__)
-#define CD2INFO(a)  INFOMSG(PublicClass::ER_2CDLG, __LINE__, a)
 
 enum s_2cdialog_modes
 {

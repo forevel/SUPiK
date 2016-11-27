@@ -111,7 +111,7 @@ void Wh_Editor::AddNewWh()
     s_2cdialog *dlg = new s_2cdialog("Склады::Добавить");
     dlg->setup(table, MODE_EDITNEW, newID);
     if (dlg->result)
-        WHEDWARN;
+        WARNMSG("");
     else
         dlg->exec();
     UpdateWhComboBox();
@@ -122,7 +122,7 @@ void Wh_Editor::UpdateWhComboBox()
     s_tqComboBox *cb = this->findChild<s_tqComboBox *>("whcb");
     if (cb == 0)
     {
-        WHEDDBG;
+        DBGMSG;
         return;
     }
     QStringListModel *mdl = qobject_cast<QStringListModel *>(cb->model());
@@ -140,7 +140,7 @@ void Wh_Editor::WriteAndClose()
     if (WhModel->Save())
         return;
     else
-        WHEDINFO("Записано успешно!");
+        MessageBox2::information(this, "Внимание", "Записано успешно!");
     emit CloseAllWidgets();
 }
 
@@ -149,7 +149,7 @@ void Wh_Editor::CancelAndClose()
     // удалим новосозданные элементы из таблицы
     if (WhModel->DeleteNew())
     {
-        WHEDWARN;
+        WARNMSG("");
         return;
     }
     emit CloseAllWidgets();
@@ -164,7 +164,7 @@ void Wh_Editor::AddNewPlace()
     s_2cdialog *dlg = new s_2cdialog("Склады::Размещения::Добавить");
     dlg->setup("Склады типы размещения_полн", MODE_EDITNEW, newID);
     if (dlg->result)
-        WHEDWARN;
+        WARNMSG("");
     else
         dlg->exec();
 }
@@ -179,7 +179,7 @@ void Wh_Editor::ChangeWh(QString str)
     tfl.valuesbyfield(table, fields, field, str, PlaceID, false);
     if (tfl.result == TFRESULT_ERROR)
     {
-        WHEDWARN;
+        WARNMSG("");
         return;
     }
     // закроем все открытые виджеты, включая "корневой"
@@ -201,7 +201,7 @@ void Wh_Editor::ChangeWh(QString str)
     Wh = ID;
     if (WhModel->Load(ID))
     {
-        WHEDWARN;
+        WARNMSG("");
         return;
     }
     IDs.clear();
@@ -217,7 +217,7 @@ void Wh_Editor::BuildWorkspace(int ID, bool IsWarehouse)
     s_tqStackedWidget *stw = this->findChild<s_tqStackedWidget *>("stw");
     if (stw == 0)
     {
-        WHEDDBG;
+        DBGMSG;
         return;
     }
     s_tqWidget *wdgt = new s_tqWidget;
@@ -232,7 +232,7 @@ void Wh_Editor::BuildWorkspace(int ID, bool IsWarehouse)
         WhPlacesTreeModel::WhPlacesTreeItem *item = WhModel->Data(ID);
         if (item == 0)
         {
-            WHEDWARN;
+            WARNMSG("");
             return;
         }
         QString tmps = "\\" + item->Alias;
@@ -317,7 +317,7 @@ void Wh_Editor::UpdatePlace()
     CurIDProperties.Rows = vl.at(3).toInt();
     if ((CurIDProperties.Columns == -1) || (CurIDProperties.Rows == -1))
     {
-        WHEDWARN;
+        WARNMSG("");
         return;
     }
     if (CurIDProperties.PlaceType == 0) // текущее размещение - склад (корневой элемент)
@@ -330,7 +330,7 @@ void Wh_Editor::UpdatePlace()
         tfl.valuesbyfield(table, fl, field, value, vl);
         if ((tfl.result == TFRESULT_ERROR) || (vl.size() < 2))
         {
-            WHEDWARN;
+            WARNMSG("");
             return;
         }
         CurIDProperties.PlacePrefix = vl.at(0);
@@ -338,7 +338,7 @@ void Wh_Editor::UpdatePlace()
         s_tqChooseWidget *cw = this->findChild<s_tqChooseWidget *>("chooseplace");
         if (cw == 0)
         {
-            WHEDDBG;
+            DBGMSG;
             return;
         }
         cw->SetValue(CurIDProperties.ChoosePlaceString);
@@ -349,7 +349,7 @@ void Wh_Editor::UpdatePlace()
     s_tqWidget *w = this->findChild<s_tqWidget *>("cellwidget");
     if (w == 0)
     {
-        WHEDDBG;
+        DBGMSG;
         return;
     }
     QLayout *l = w->layout();
@@ -439,13 +439,13 @@ void Wh_Editor::GoToPlace()
     int ID = sender()->objectName().toInt();
     if (ID == -1)
     {
-        WHEDWARN;
+        WARNMSG("");
         return;
     }
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>(QString::number(ID));
     if (le == 0)
     {
-        WHEDDBG;
+        DBGMSG;
         return;
     }
     IDs.push(ID);
@@ -470,13 +470,13 @@ void Wh_Editor::ChangePlace(QVariant PlaceName)
         return;
     if (!CheckPriorities(PlaceName.toString()))
     {
-        WHEDINFO("Невозможно создать размещение, не соблюдены правила вложенности");
+        MessageBox2::information(this, "Внимание", "Невозможно создать размещение, не соблюдены правила вложенности");
         return;
     }
     WhPlacesTreeModel::WhPlacesTreeItem *item = WhModel->Data(CurID);
     if (item == NULL)
     {
-        WHEDDBG;
+        DBGMSG;
         return;
     }
     QStringList vl;
@@ -518,7 +518,7 @@ void Wh_Editor::ChangePlace(QVariant PlaceName)
     tfl.valuesbyfield(table, fields, field, value, vl);
     if (tfl.result == TFRESULT_ERROR)
     {
-        WHEDWARN;
+        WARNMSG("");
         return;
     }
     item->WhPlaceTypeID = vl.at(0).toInt();
@@ -539,7 +539,7 @@ bool Wh_Editor::CheckPriorities(QString PlaceName)
     tfl.valuesbyfield(table, fields, field, PlaceName, vl);
     if ((tfl.result == TFRESULT_ERROR) || (vl.size() < 1))
     {
-        WHEDWARN;
+        WARNMSG("");
         return false;
     }
     table = "Склады ёмкости размещения_полн";
@@ -549,7 +549,7 @@ bool Wh_Editor::CheckPriorities(QString PlaceName)
     tfl.valuesbyfield(table, fields, field, value, vl);
     if ((tfl.result == TFRESULT_ERROR) || (vl.size() < 1))
     {
-        WHEDWARN;
+        WARNMSG("");
         return false;
     }
     int PrNew = vl.at(0).toInt();
@@ -562,7 +562,7 @@ bool Wh_Editor::CheckPriorities(QString PlaceName)
     tfl.valuesbyfield(table,fields,field,value, vl);
     if ((tfl.result == TFRESULT_ERROR) || (vl.size() < 1))
     {
-        WHEDWARN;
+        WARNMSG("");
         return false;
     }
     table = "Склады типы размещения_полн";
@@ -570,7 +570,7 @@ bool Wh_Editor::CheckPriorities(QString PlaceName)
     tfl.valuesbyfield(table, fields, field, value, vl);
     if ((tfl.result == TFRESULT_ERROR) || (vl.size() < 1))
     {
-        WHEDWARN;
+        WARNMSG("");
         return false;
     }
     table = "Склады ёмкости размещения_полн";
@@ -579,7 +579,7 @@ bool Wh_Editor::CheckPriorities(QString PlaceName)
     tfl.valuesbyfield(table, fields, field, value, vl);
     if ((tfl.result == TFRESULT_ERROR) || (vl.size() < 1))
     {
-        WHEDWARN;
+        WARNMSG("");
         return false;
     }
     int PrParent = vl.at(0).toInt();
@@ -627,7 +627,7 @@ QStringList Wh_Editor::NameAndPicture(int ID)
     tfl.valuesbyfield(table, fields, field, value, PlaceTank);
     if ((tfl.result == TFRESULT_ERROR) || (PlaceTank.size() < 1))
     {
-//        WHEDWARN;
+//        WARNMSG("");
         return QStringList(); // размещение ещё пустое (нет ссылки на элемент размещения)
     }
     table = "Склады ёмкости размещения_полн";
@@ -637,7 +637,7 @@ QStringList Wh_Editor::NameAndPicture(int ID)
     tfl.valuesbyfield(table, fields, field, value, PlacePicture);
     if (tfl.result == TFRESULT_ERROR)
     {
-        WHEDWARN;
+        WARNMSG("");
         return QStringList();
     }
     tmps = ":/res/"+PlacePicture.at(0)+".png";

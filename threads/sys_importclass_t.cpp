@@ -27,7 +27,7 @@ void sys_ImportClass_T::Run()
     tfl.tablefields(ImpInitial.tablename, field, sl);
     if (tfl.result == TFRESULT_ERROR)
     {
-        SYSICTER("Проблема получения данных из таблицы "+ImpInitial.tablename);
+        ERMSG("Проблема получения данных из таблицы "+ImpInitial.tablename);
         emit ProcessFinished();
         return;
     }
@@ -35,7 +35,7 @@ void sys_ImportClass_T::Run()
     sl = DbTble.split(".");
     if (sl.size() < 2)
     {
-        SYSICTER("Ошибка в таблице tablefields");
+        ERMSG("Ошибка в таблице tablefields");
         emit ProcessFinished();
         return;
     }
@@ -52,7 +52,7 @@ void sys_ImportClass_T::Run()
             TableFields.append(tmpsl.at(1));
         else
         {
-            SYSICTER("Пустой ответ");
+            ERMSG("Пустой ответ");
             break;
         }
     }
@@ -94,7 +94,7 @@ void sys_ImportClass_T::Run()
                 ParentID = sqlc.GetValueFromTableByField(TableDB,TableName,"id"+TableName,TableName,ParentClass);
                 if (sqlc.result)
                 {
-                    SYSICTER("Не найден родитель для класса "+ClassNum);
+                    ERMSG("Не найден родитель для класса "+ClassNum);
                     emit ProcessFinished();
                     return;
                 }
@@ -106,7 +106,7 @@ void sys_ImportClass_T::Run()
                 sqlc.InsertValuesToTable(TableDB,TableName, TableFields, TableValues);
                 if (sqlc.result)
                 {
-                    SYSICTER("Проблема при записи очередного поля № "+QString::number(RowNum));
+                    ERMSG("Проблема при записи очередного поля № "+QString::number(RowNum));
                     emit ProcessFinished();
                     return;
                 }
@@ -116,7 +116,7 @@ void sys_ImportClass_T::Run()
                 sqlc.UpdateValuesInTable(TableDB,TableName,TableFields,TableValues,"id"+TableName,tmps);
                 if (sqlc.result)
                 {
-                    SYSICTER("Проблема при обновлении очередного поля № "+QString::number(RowNum));
+                    ERMSG("Проблема при обновлении очередного поля № "+QString::number(RowNum));
                     emit ProcessFinished();
                     return;
                 }
@@ -124,7 +124,7 @@ void sys_ImportClass_T::Run()
             else
             {
                 emit ProcessFinished();
-                SYSICTER("Проблема при получении данных по очередному полю № "+QString::number(RowNum));
+                ERMSG("Проблема при получении данных по очередному полю № "+QString::number(RowNum));
                 return;
             }
             RowNum++;
@@ -166,7 +166,7 @@ void sys_ImportClass_T::Run()
                 sqlc.InsertValuesToTable(TableDB, TableName, TableFields, TableValues);
                 if (sqlc.result != SQLC_OK)
                 {
-                    SYSICTER("Проблема при записи очередного поля № "+QString::number(RowNum));
+                    ERMSG("Проблема при записи очередного поля № "+QString::number(RowNum));
                     emit ProcessFinished();
                     return;
                 }
@@ -176,7 +176,7 @@ void sys_ImportClass_T::Run()
                 sqlc.UpdateValuesInTable(TableDB,TableName,TableFields,TableValues,"id"+TableName,tmps);
                 if (sqlc.result != SQLC_OK)
                 {
-                    SYSICTER("Проблема при обновлении очередного поля № "+QString::number(RowNum));
+                    ERMSG("Проблема при обновлении очередного поля № "+QString::number(RowNum));
                     emit ProcessFinished();
                     return;
                 }
@@ -184,13 +184,13 @@ void sys_ImportClass_T::Run()
             else
             {
                 emit ProcessFinished();
-                SYSICTER("Проблема при получении данных по очередному полю № "+QString::number(RowNum));
+                ERMSG("Проблема при получении данных по очередному полю № "+QString::number(RowNum));
                 return;
             }
             RowNum++;
         }
     }
-    SYSICTINFO("Импорт завершён успешно!");
+    INFOMSG("Импорт завершён успешно!");
     emit ProcessFinished();
 }
 

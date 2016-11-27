@@ -33,7 +33,7 @@ void SysmenuEditor::SetupUI(QString tble) // tble - имя таблицы, из 
     if (res)
     {
         QApplication::restoreOverrideCursor();
-        SYSMWARN;
+        WARNMSG("");
         return;
     }
     tv->setModel(treemodel);
@@ -88,7 +88,7 @@ void SysmenuEditor::ChangeFieldsSlot(QModelIndex idx)
     TreeView *tv = this->findChild<TreeView *>("tv");
     if (tv == 0)
     {
-        SYSMDBG;
+        DBGMSG;
         return;
     }
     TreeModel *mdl= static_cast<TreeModel *>(tv->model());
@@ -118,7 +118,7 @@ void SysmenuEditor::ChangeFields(QString str)
     }
     else
     {
-        SYSMWARN;
+        WARNMSG("");
         return;
     }
 }
@@ -132,7 +132,7 @@ void SysmenuEditor::Delete()
     tfl.tablefields(table, idfield, sl); // возьмём реальное имя таблицы из tablefields. sl(0) - <table>, sl(1) - <tablefields>, sl(2) - <links>
     if (tfl.result == TFRESULT_ERROR)
     {
-        SYSMWARN;
+        WARNMSG("");
         return;
     }
     QString tmpdb = sl.at(0).split(".").at(0);
@@ -146,16 +146,16 @@ void SysmenuEditor::Delete()
             tfl.remove(table, tmpString);
             if (tfl.result == TFRESULT_ERROR)
             {
-                SYSMWARN;
+                WARNMSG("");
                 return;
             }
             sqlc.DeleteFromDB(tmpdb, tmptble, "idalias", tmpString);
             if (sqlc.result)
             {
-                SYSMWARN;
+                WARNMSG("");
                 return;
             }
-            SYSMINFO("Записано успешно!");
+            MessageBox2::information(this, "Внимание", "Записано успешно!");
         }
     }
     else
@@ -165,11 +165,11 @@ void SysmenuEditor::Delete()
             tfl.remove(table, tmpString);
             if (tfl.result == TFRESULT_ERROR)
             {
-                SYSMWARN;
+                WARNMSG("");
                 return;
             }
         }
-        SYSMINFO("Записано успешно!");
+        MessageBox2::information(this, "Внимание", "Записано успешно!");
     }
     UpdateTree();
 }
@@ -202,7 +202,7 @@ void SysmenuEditor::AddToTree(QString str)
     tfl.insert(table, newID);
     if (tfl.result == TFRESULT_ERROR)
     {
-        SYSMWARN;
+        WARNMSG("");
         return;
     }
     fields.insert(0,"ИД");
@@ -211,7 +211,7 @@ void SysmenuEditor::AddToTree(QString str)
     if (tfl.result != TFRESULT_ERROR)
         ChangeFields(newID);
     else
-        SYSMWARN;
+        WARNMSG("");
 }
 /*
 void SysmenuEditor::ChangeName()
@@ -230,7 +230,7 @@ void SysmenuEditor::ChangeName()
         tmpString = tfl.toid(tble, "Наименование", tmpString);
         if (tfl.result == TFRESULT_ERROR)
         {
-            SYSMWARN;
+            WARNMSG("");
             return;
         }
         QStringList fl = QStringList() << "Наименование" << "ИД";
@@ -238,7 +238,7 @@ void SysmenuEditor::ChangeName()
         tfl.idtois(tble,fl,vl);
         if (tfl.result == TFRESULT_ERROR)
         {
-            SYSMWARN;
+            WARNMSG("");
             return;
         }
         INFOMSG(PublicClass::ER_CMPMAIN,__LINE__,"Изменение проведено!");
@@ -251,7 +251,7 @@ QString SysmenuEditor::GetMainIndex(int column)
     TreeView *tv = this->findChild<TreeView *>("tv");
     if (tv == 0)
     {
-        SYSMDBG;
+        DBGMSG;
         return QString();
     }
     QModelIndex index = tv->model()->index(tv->currentIndex().row(), column, tv->model()->parent(tv->currentIndex()));
@@ -266,14 +266,14 @@ void SysmenuEditor::UpdateTree()
     TreeView *tv = this->findChild<TreeView *>("tv");
     if (tv == 0)
     {
-        SYSMDBG;
+        DBGMSG;
         return;
     }
     TreeModel *mdl = dynamic_cast<TreeModel *>(tv->model());
     int res = mdl->Setup(tble + "_сокращ");
     if (res)
     {
-        SYSMWARN;
+        WARNMSG("");
         return;
     }
 }

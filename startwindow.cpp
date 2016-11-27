@@ -208,7 +208,7 @@ void StartWindow::OkPBClicked()
             pc.LandP->setValue("login/ischecked", false);
         }
         pc.AutonomousMode = false;
-        STARTINFO("Выполнено подключение к серверу");
+        INFOMSG("Выполнено подключение к серверу");
         SupLog->info("Server found!");
 //        QStringList fl = QStringList() << "" << "12345.txt";
 //        Cli->SendCmd(Client::CMD_GETFILE, fl);
@@ -216,7 +216,7 @@ void StartWindow::OkPBClicked()
     }
     default:
         pc.AutonomousMode = true;
-        STARTER("Сервер СУПиК недоступен");
+        ERMSG("Сервер СУПиК недоступен");
         break;
     }
     this->hide();

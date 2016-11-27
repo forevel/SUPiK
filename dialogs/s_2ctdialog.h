@@ -5,9 +5,6 @@
 #include "../models/proxymodel.h"
 #include "../models/s_ntmodel.h"
 
-#define CT2WARN WARNMSG(PublicClass::ER_2CTDLG, __LINE__)
-#define CT2DBG  DBGMSG(PublicClass::ER_2CTDLG, __LINE__)
-
 class s_2ctdialog : public QDialog
 {
     Q_OBJECT

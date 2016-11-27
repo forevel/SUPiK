@@ -9,10 +9,6 @@
 #include <QIcon>
 #include "s_ntitem.h"
 
-#define SNTMDBG         DBGMSG(PublicClass::ER_NTMODEL,__LINE__)
-#define SNTMWARN        WARNMSG(PublicClass::ER_NTMODEL,__LINE__)
-#define SNTMINFO(a)     INFOMSG(PublicClass::ER_NTMODEL,__LINE__,a)
-
 class s_ntmodel : public QAbstractItemModel
 {
     Q_OBJECT

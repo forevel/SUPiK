@@ -114,7 +114,7 @@ void dev_devdialog::Refresh()
     TreeView *tv = this->findChild<TreeView *>("mtv");
     if (tv == 0)
     {
-        DEVDOCDBG;
+        DBGMSG;
         return;
     }
     ProxyModel *tvmodel = new ProxyModel;
@@ -148,7 +148,7 @@ void dev_devdialog::AddNewDev()
     tfl.insert(table, newID);
     if (tfl.result == TFRESULT_ERROR)
     {
-        DEVDOCWARN;
+        WARNMSG("");
         return;
     }
     DevMainDialog *dlg = new DevMainDialog(newID);
@@ -170,11 +170,11 @@ void dev_devdialog::DeleteDev()
     tfl.remove(table, GetIndex(0));
     if (tfl.result == TFRESULT_ERROR)
     {
-        DEVDOCWARN;
+        WARNMSG("");
         return;
     }
     else
-        DEVDOCINFO("Удалено успешно!");
+        MessageBox2::information(this, "Успешно", "Удалено успешно!");
     Refresh();
 }
 
@@ -183,7 +183,7 @@ QString dev_devdialog::GetIndex(int column)
     TreeView *MainTV = this->findChild<TreeView *>("mtv");
     if (MainTV == 0)
     {
-        DEVDOCDBG;
+        DBGMSG;
         return QString();
     }
     QString tmpString = MainTV->model()->index(MainTV->currentIndex().row(), column, QModelIndex()).data(Qt::DisplayRole).toString();
@@ -196,7 +196,7 @@ void dev_devdialog::EditDev()
     QString ID = GetIndex(0);
     if (ID.isEmpty())
     {
-        DEVDOCWARN;
+        WARNMSG("");
         return;
     }
     DevMainDialog *dlg = new DevMainDialog(ID);
@@ -204,7 +204,7 @@ void dev_devdialog::EditDev()
     s_tqStackedWidget *stw = this->findChild<s_tqStackedWidget *>("stw");
     if (stw == 0)
     {
-        DEVDOCDBG;
+        DBGMSG;
         return;
     }
     stw->addWidget(dlg);
@@ -240,7 +240,7 @@ void dev_devdialog::ResizeMainTV()
     TreeView *tv = this->findChild<TreeView *>("mtv");
     if (tv == 0)
     {
-        DEVDOCDBG;
+        DBGMSG;
         return;
     }
     tv->resizeColumnsToContents();

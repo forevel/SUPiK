@@ -5,10 +5,6 @@
 #include <QMap>
 #include "../../widgets/waitwidget.h"
 
-#define SIMPDBG     DBGMSG(PublicClass::ER_SIMP,__LINE__)
-#define SIMPWARN    WARNMSG(PublicClass::ER_SIMP,__LINE__)
-#define SIMPINFO(a) INFOMSG(PublicClass::ER_SIMP,__LINE__,a)
-
 #define ROOTSIZE    2 // размер корневого элемента
 
 class sys_ImportClass : public QDialog

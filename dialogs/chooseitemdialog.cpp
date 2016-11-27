@@ -129,7 +129,7 @@ void ChooseItemDialog::accepted()
     TreeView *tv = this->findChild<TreeView *>("MainTV");
     if (tv == 0)
     {
-        CHIDLGDBG;
+        DBGMSG;
         return;
     }
     // 0-я колонка - это всегда должен быть ИД, по нему потом выбираются значения из таблиц
@@ -157,7 +157,7 @@ void ChooseItemDialog::SetTvCurrentText(QString text)
     TreeView *tv = this->findChild<TreeView *>("MainTV");
     if (tv == 0)
     {
-        CHIDLGDBG;
+        DBGMSG;
         return;
     }
     ProxyModel *mdl = static_cast<ProxyModel *>(tv->model());
@@ -172,7 +172,7 @@ void ChooseItemDialog::Filter()
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("filterle");
     if (le == 0)
     {
-        CHIDLGDBG;
+        DBGMSG;
         return;
     }
     pMainModel->setFilterWildcard("*"+le->text()+"*");
@@ -215,7 +215,7 @@ void ChooseItemDialog::AddItem()
     tfl.insert(tmptble, newID);
     if (tfl.result == TFRESULT_ERROR)
     {
-        CHIDLGWARN;
+        WARNMSG("");
         return;
     }
     tfl.idtois(tmptble,QStringList("ИД"),QStringList(newID)); // добавление полей idpers, deleted, date
@@ -231,19 +231,19 @@ void ChooseItemDialog::AddItem()
         }
         else
         {
-            CHIDLGWARN;
+            WARNMSG("");
             return;
         }
     }
     else
-        CHIDLGWARN;
+        WARNMSG("");
 }
 
 void ChooseItemDialog::Update()
 {
     if (MainModel->Setup(tble))
     {
-        CHIDLGWARN;
+        WARNMSG("");
         return;
     }
     TreeView *tv = this->findChild<TreeView *>("MainTV");
@@ -256,7 +256,7 @@ void ChooseItemDialog::ResizeMainTV()
     TreeView *tv = this->findChild<TreeView *>("MainTV");
     if (tv == 0)
     {
-        CHIDLGDBG;
+        DBGMSG;
         return;
     }
     tv->resizeColumnsToContents();

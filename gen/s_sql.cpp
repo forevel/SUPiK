@@ -585,13 +585,13 @@ QStringList s_sql::GetValuesFromTableByColumnAndFields(QString db, QString tble,
     if (cmpfl.isEmpty())
     {
         result = 4;
-        WARNMSG(PublicClass::ER_SQL, __LINE__, "Переданный список сравнения пуст");
+        WARNMSG("Переданный список сравнения пуст");
         return QStringList();
     }
     if (cmpfl.size() != cmpvl.size())
     {
         result = 5;
-        WARNMSG(PublicClass::ER_SQL, __LINE__, "Длина списка полей сравнения не совпадает с длиной списка значений");
+        WARNMSG("Длина списка полей сравнения не совпадает с длиной списка значений");
         return QStringList();
     }
     if (pc.AutonomousMode)
@@ -731,13 +731,13 @@ QString s_sql::GetValueFromTableByFields (QString db, QString tble, QString fiel
     if (cmpfields.isEmpty())
     {
         result = 4;
-        WARNMSG(PublicClass::ER_SQL, __LINE__, "Переданный список сравнения пуст");
+        WARNMSG("Переданный список сравнения пуст");
         return QString();
     }
     if (cmpfields.size() != cmpvalues.size())
     {
         result = 5;
-        WARNMSG(PublicClass::ER_SQL, __LINE__, "Длина списка полей сравнения не совпадает с длиной списка значений");
+        WARNMSG("Длина списка полей сравнения не совпадает с длиной списка значений");
         return QString();
     }
     if (pc.AutonomousMode)
@@ -880,7 +880,7 @@ QString s_sql::InsertValuesToTable(QString db, QString tble, QStringList fl, QSt
     if (fl.size() != vl.size())
     {
         result=1; // кол-во полей и кол-во значений не равны друг другу, ошибка
-        WARNMSG(PublicClass::ER_SQL, __LINE__, "Длина списка полей сравнения не совпадает с длиной списка значений");
+        WARNMSG("Длина списка полей сравнения не совпадает с длиной списка значений");
         return QString(); // проблемы с записью
     }
     if (pc.AutonomousMode)
@@ -1231,13 +1231,13 @@ QList<QStringList> s_sql::GetMoreValuesFromTableByFields(QString db, QString tbl
         if (cmpfields.isEmpty())
         {
             result = 4;
-            WARNMSG(PublicClass::ER_SQL, __LINE__, "Переданный список сравнения пуст");
+            WARNMSG("Переданный список сравнения пуст");
             return QList<QStringList>();
         }
         if (cmpfields.size() != cmpvalues.size())
         {
             result = 5;
-            WARNMSG(PublicClass::ER_SQL, __LINE__, "Длина списка полей сравнения не совпадает с длиной списка значений");
+            WARNMSG("Длина списка полей сравнения не совпадает с длиной списка значений");
             return QList<QStringList>();
         }
         tmpString = "SELECT ";

@@ -196,7 +196,7 @@ void SysProblemsDialog::UpdateMainTv()
     TreeView *tv = this->findChild<TreeView *>("mainTV");
     if (tv == 0)
     {
-        PROBSDBG;
+        DBGMSG;
         return;
     }
     tv->resizeColumnsToContents();

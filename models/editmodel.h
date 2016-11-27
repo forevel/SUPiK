@@ -9,10 +9,6 @@
 #include <QModelIndexList>
 #include "../gen/publicclass.h"
 
-#define EMODELWARN     WARNMSG(PublicClass::ER_EMODEL, __LINE__)
-#define EMODELDBG       DBGMSG(PublicClass::ER_EMODEL, __LINE__)
-#define EMODELINFO(a)   INFOMSG(PublicClass::ER_EMODEL, __LINE__, a)
-
 class EditModelItem
 {
 public:

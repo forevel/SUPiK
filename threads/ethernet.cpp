@@ -180,7 +180,7 @@ void Ethernet::SslErrors(QList<QSslError> errlist)
 void Ethernet::SockError(QAbstractSocket::SocketError err)
 {
     EthLog->error("SockError: "+QString::number(err));
-    ETHER(sock->errorString());
+    ERMSG(sock->errorString());
 }
 
 void Ethernet::SendData()
@@ -201,6 +201,7 @@ void Ethernet::InitiateWriteDataToPort(QByteArray *ba)
     OutDataBufMtx.lock();
     OutDataBuf = *ba;
     OutDataBufMtx.unlock();
+    delete ba;
 }
 
 void Ethernet::CheckForData()

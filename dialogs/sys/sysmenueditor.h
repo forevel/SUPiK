@@ -5,10 +5,6 @@
 #include <QModelIndex>
 #include <QPoint>
 
-#define SYSMDBG     DBGMSG(PublicClass::ER_SYSMENU, __LINE__)
-#define SYSMWARN    WARNMSG(PublicClass::ER_SYSMENU,__LINE__)
-#define SYSMINFO(a) INFOMSG(PublicClass::ER_SYSMENU,__LINE__,a)
-
 class SysmenuEditor : public QDialog
 {
     Q_OBJECT

@@ -434,7 +434,7 @@ QString s_ncmodel::value(int row, int column)
     if (tfl.result == TFRESULT_ERROR)
     {
         result=1;
-        NCMWARN;
+        WARNMSG("");
         return QString(); // если произошла ошибка при получении ИД по значению, добавляем пустую строку
     }
     return vl;
@@ -594,7 +594,7 @@ void s_ncmodel::setup(QString tble)
     if (tfl.result == TFRESULT_ERROR)
     {
         result=1;
-        NCMWARN;
+        WARNMSG("");
         return;
     }
     // в DataToWrite.at(1) содержатся links, в DataToWrite.at(0) - заголовки
@@ -623,7 +623,7 @@ void s_ncmodel::Add(QString tble)
     if (tfl.result == TFRESULT_ERROR)
     {
         result=1;
-        NCMWARN;
+        WARNMSG("");
         return;
     }
     // в lsl.at(1) содержатся links, в lsl.at(0) - заголовки
@@ -650,7 +650,7 @@ void s_ncmodel::setup(QString tble, QString id)
     if (tfl.result == TFRESULT_ERROR)
     {
         result=1;
-        NCMWARN;
+        WARNMSG("");
         return;
     }
     QStringList links;
@@ -658,7 +658,7 @@ void s_ncmodel::setup(QString tble, QString id)
     if (tfl.result == TFRESULT_ERROR)
     {
         result=1;
-        NCMWARN;
+        WARNMSG("");
         return;
     }
     QString tmpString;
@@ -692,7 +692,7 @@ void s_ncmodel::setupcolumn(QString tble, QString header)
     tfl.htovl(tble, header, tmpsl);
     if (tfl.result == TFRESULT_ERROR)
     {
-        NCMWARN;
+        WARNMSG("");
         return;
     }
     DataToWrite.append(tmpsl);
@@ -715,7 +715,7 @@ int s_ncmodel::setupraw(QString db, QString tble, QStringList fl, QString orderf
         fl = sqlc.GetColumnsFromTable(db, tble);
         if (sqlc.result)
         {
-            NCMWARN;
+            WARNMSG("");
             return 1;
         }
     }
@@ -724,7 +724,7 @@ int s_ncmodel::setupraw(QString db, QString tble, QStringList fl, QString orderf
         QStringList tmpsl = sqlc.GetValuesFromTableByColumn(db, tble, fl.at(i),orderfield,true);
         if (sqlc.result == 2) // ошибка при запросе
         {
-            NCMWARN;
+            WARNMSG("");
             return 1;
         }
         DataToWrite.append(tmpsl);

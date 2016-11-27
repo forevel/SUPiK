@@ -126,7 +126,6 @@ void Client::SendCmd(int Command, QStringList &Args)
     Result.clear(); // очищаем результаты
     FieldsLeast = false;
     FieldsLeastToAdd = 0;
-    ReadBytes = 0;
     DetectedError = CLIER_NOERROR;
     CurrentCommand = Command;
     Busy = true;
@@ -171,7 +170,7 @@ void Client::SendCmd(int Command, QStringList &Args)
         fp.setFileName(pc.HomeDir+"Incoming/"+Args.at(2));
         if (!fp.open(QIODevice::WriteOnly))
         {
-            CLIER("Невозможно создать файл" + Args.at(2));
+            ERMSG("Невозможно создать файл" + Args.at(2));
             DetectedError = CLIER_GETFER;
             return;
         }
@@ -189,7 +188,7 @@ void Client::SendCmd(int Command, QStringList &Args)
         fp.setFileName(Args.at(0));
         if (!fp.open(QIODevice::ReadOnly))
         {
-            CLIER("Невозможно открыть файл "+Args.at(0));
+            ERMSG("Невозможно открыть файл "+Args.at(0));
             DetectedError = CLIER_PUTFER;
             return;
         }
@@ -234,11 +233,12 @@ void Client::SendCmd(int Command, QStringList &Args)
     default:
         break;
     }
-/*    if (Command == ANS_PSW)
+    if (Command == M_ANSPSW)
         CliLog->info(">********");
-    else */
+    else
         CliLog->info(">"+CommandString); //+codec->fromUnicode(CommandString));
     QByteArray *ba = new QByteArray(CommandString.toUtf8());//codec->fromUnicode(CommandString));
+    ComReplyTimeoutIsSet = false;
     emit ClientSend(ba);
 }
 
@@ -255,7 +255,7 @@ void Client::ParseReply(QByteArray *ba)
     CmdOk = false;
     DetectedError = CLIER_NOERROR;
     QTextCodec *codec = QTextCodec::codecForName("Windows-1251");
-    if (CurrentCommand != ANS_GETFILE) // приём файла обрабатывается по-другому
+    if (CurrentCommand != M_AGETFILE) // приём файла обрабатывается по-другому
     {
         switch (FirstReplyPass)
         {
@@ -288,8 +288,6 @@ void Client::ParseReply(QByteArray *ba)
         IncomingString = QString::fromLocal8Bit(RcvData);
         CliLog->info("<"+IncomingString);
         ArgList = SeparateBuf(RcvData);
-//        while (ArgList.last().isEmpty())
-//            ArgList.removeLast();
         if (ArgList.isEmpty()) // ничего толкового не получено
             return;
         ServerResponse = ArgList.first();
@@ -599,7 +597,6 @@ void Client::ParseReply(QByteArray *ba)
         CmdOk = true;
         bool ok;
         RcvDataSize = ServerResponse.toLong(&ok,10);
-        ReadBytes = 0;
         if (!ok)
         {
             CliLog->warning("Not a decimal value detected");
@@ -613,23 +610,37 @@ void Client::ParseReply(QByteArray *ba)
     // последующие приёмы файла
     case M_AGETFILE:
     {
-        if (fp.isOpen())
+        if (!fp.isOpen())
         {
             CliLog->error("File error");
             CurrentCommand = M_IDLE;
             DetectedError = CLIER_GETFER;
             return;
         }
-/*        if (ComReplyTimeoutIsSet)
+        if (ComReplyTimeoutIsSet)
         {
-            if (fp)
-                fclose(fp);
-            fp = 0;
+            if (fp.isOpen())
+                fp.close();
             emit TransferComplete();
-            CmdOk = true;
+            if (ReadBytes >= RcvDataSize)
+            {
+                CmdOk = true;
+                DetectedError = CLIER_NOERROR;
+            }
+            else
+            {
+                CliLog->error("GetFile read timeout");
+                QString tmpString = "ReadBytes = " + QString::number(ReadBytes);
+                CliLog->info(tmpString);
+                tmpString = "RcvDataSize = " + QString::number(RcvDataSize);
+                CliLog->info(tmpString);
+                DetectedError = CLIER_GETFTOUT;
+                Busy = false;
+                TimeoutTimer->stop();
+                return;
+            }
             break;
-        }*/
-//        QString IncomeData = QString::fromLocal8Bit(*ba);
+        }
         CliLog->info("< ...binary data "+QString::number(ba->size())+" size...");
         if (ba->data() == SERVERRSTR)
         {
@@ -641,20 +652,23 @@ void Client::ParseReply(QByteArray *ba)
         }
         if (ba->data() == "IDLE\n") // закончили передачу
         {
-            fp.close();
+            if (fp.isOpen())
+                fp.close();
             emit TransferComplete();
             CmdOk = true;
             break;
         }
-        ReadBytes += fp.write(*ba);
+        ReadBytes += ba->size();
+        qint64 rb = fp.write(*ba);
         emit BytesRead(ReadBytes);
-        CliLog->info(QString::number(ReadBytes)+" bytes written to file");
+        CliLog->info(QString::number(rb)+" bytes written to file");
         if (ReadBytes >= RcvDataSize)
         {
             if (fp.isOpen())
                 fp.close();
             emit TransferComplete();
             CmdOk = true;
+            SendCmd(M_AGETFILE);
             break;
         }
         SendCmd(M_AGETFILE);
@@ -699,7 +713,7 @@ void Client::ClientDisconnected()
 
 void Client::ClientErr(int error)
 {
-    CLIER(Ethernet::EthernetErrors()[error]);
+    ERMSG(Ethernet::EthernetErrors()[error]);
     Busy = false;
     DetectedError = CLIER_GENERAL;
     TimeoutTimer->stop();
@@ -707,7 +721,7 @@ void Client::ClientErr(int error)
 
 void Client::Timeout()
 {
-    CLIER("Произошло превышение времени ожидания");
+    ERMSG("Произошло превышение времени ожидания");
     Busy = false;
     FileBusy = false;
     DetectedError = CLIER_TIMEOUT;
@@ -720,6 +734,7 @@ void Client::ComReplyTimeout()
     QByteArray *ba = new QByteArray;
     ParseReply(ba); // принудительная обработка принятой посылки
     delete ba;
+    GetComReplyTimer->stop();
 }
 
 // разделение буфера на подстроки по пробелу. Значения в кавычках берутся целиком
@@ -752,7 +767,7 @@ int Client::CheckArgs(QString cmd, QStringList &Args, int argsnum, bool fieldsch
     {
         if (Args.size()<1)
         {
-            CLIER("DBG: Fieldscheck");
+            ERMSG("DBG: Fieldscheck");
             return 5;
         }
         QString fieldsnum = Args.at(0);
@@ -771,7 +786,7 @@ int Client::CheckArgs(QString cmd, QStringList &Args, int argsnum, bool fieldsch
         int pidx = (fieldscheck) ? 1 : 0;
         if (Args.size()<(pidx+1))
         {
-            CLIER("DBG: Pairscheck");
+            ERMSG("DBG: Pairscheck");
             return 5;
         }
         QString pairsnum = Args.at(pidx);
@@ -796,4 +811,23 @@ int Client::CheckArgs(QString cmd, QStringList &Args, int argsnum, bool fieldsch
         }
     }
     return 0;
+}
+
+int Client::GetFile(QString type, QString subtype, QString &filename)
+{
+    QStringList sl;
+    sl.clear();
+    sl << type << subtype << filename;
+    Cli->SendCmd(M_GETFILE, sl);
+    while (Cli->Busy)
+    {
+        QThread::msleep(10);
+        qApp->processEvents(QEventLoop::AllEvents);
+    }
+    if (Cli->DetectedError != Client::CLIER_NOERROR)
+    {
+        WARNMSG("");
+        return CLIER_GETFER;
+    }
+    return CLIER_NOERROR;
 }

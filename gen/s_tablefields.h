@@ -1,9 +1,6 @@
 #ifndef S_TABLEFIELDS_H
 #define S_TABLEFIELDS_H
 
-#define TFWARN(a)   WARNMSG(PublicClass::ER_TFIELD,__LINE__,a)
-#define TFDBG       DBGMSG(PublicClass::ER_TFIELD,__LINE__)
-
 #include "s_sql.h"
 #include "publicclass.h"
 

@@ -112,7 +112,7 @@ void cmp_compdialog::SetupUI()
     mainmodel->setup(CompLetter+"Компоненты_описание_сокращ");
     if (mainmodel->result)
     {
-        COMPWARN;
+        WARNMSG("");
         QApplication::restoreOverrideCursor();
         return;
     }
@@ -167,7 +167,7 @@ void cmp_compdialog::MainItemChoosed(QModelIndex idx)
     s_tqTableView *tv = this->findChild<s_tqTableView *>("mtv");
     if (tv == 0)
     {
-        COMPDBG;
+        DBGMSG;
         return;
     }
     QString tmps = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole).toString();
@@ -180,7 +180,7 @@ void cmp_compdialog::MainItemChoosed(QModelIndex idx)
     tfl.valuesbyfield(table,fl,field,tmps, sl); // взяли имя таблицы в БД, описание которой выбрали в главной таблице
     if (tfl.result != TFRESULT_ERROR)
     {
-        COMPWARN;
+        WARNMSG("");
         return;
     }
     // теперь надо вытащить в slavemodel все компоненты из выбранной таблицы
@@ -188,11 +188,11 @@ void cmp_compdialog::MainItemChoosed(QModelIndex idx)
     CompTbles = sl.at(0);
     slavemodel->setupraw(CompDb,CompTbles,fl,"id"); // строим таблицу с сортировкой по ИД
     if (slavemodel->result)
-        COMPINFO("Проблемы при построении таблицы "+CompTbles);
+        MessageBox2::information(this, "Внимание", "Проблемы при построении таблицы "+CompTbles);
     tv = this->findChild<s_tqTableView *>("stv");
     if (tv == 0)
     {
-        COMPDBG;
+        DBGMSG;
         return;
     }
     tv->resizeColumnsToContents();
@@ -211,13 +211,13 @@ void cmp_compdialog::SlaveItemChoosed(QModelIndex idx)
     s_tqTableView *tv = this->findChild<s_tqTableView *>("stv");
     if (tv == 0)
     {
-        COMPDBG;
+        DBGMSG;
         return;
     }
     QString CompIDs = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole).toString();
     if (CompTble == 0) // не была задана таблица компонентов (раздел)
     {
-        COMPINFO("Не выбран раздел в левой части");
+        MessageBox2::information(this, "Внимание", "Не выбран раздел в левой части");
         return;
     }
     StartCompDialog(CompIDs, CMPMODE_ED);
@@ -248,7 +248,7 @@ void cmp_compdialog::AddNewItem()
     // В CompDb содержится выбранная БД, соответствующая типу компонентов
     if ((CompDb == 0) || (CompTble == 0))
     {
-        COMPINFO("Не выбран раздел в левой части");
+        MessageBox2::information(this, "Внимание", "Не выбран раздел в левой части");
         return;
     }
     QStringList fl = QStringList() << "Наименование";
@@ -259,13 +259,13 @@ void cmp_compdialog::AddNewItem()
     tfl.valuesbyfield(table,fl,field,tmps, sl); // взяли имя таблицы в БД, описание которой выбрали в главной таблице
     if (tfl.result == TFRESULT_ERROR)
     {
-        COMPWARN;
+        WARNMSG("");
         return;
     }
     int CompID = sqlc.GetNextFreeIndexSimple(CompDb, sl.at(0)); // ищем первый свободный ИД
     if (sqlc.result)
     {
-        COMPWARN;
+        WARNMSG("");
         return;
     }
     Cancelled = false;
@@ -281,7 +281,7 @@ void cmp_compdialog::AddNewOnExistingItem()
     s_tqTableView *tv = this->findChild<s_tqTableView *>("stv");
     if (tv == 0)
     {
-        COMPDBG;
+        DBGMSG;
         return;
     }
     QString CompIDs = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole).toString();
@@ -299,19 +299,19 @@ void cmp_compdialog::DeleteItem()
     s_tqTableView *tv = this->findChild<s_tqTableView *>("stv");
     if (tv == 0)
     {
-        COMPDBG;
+        DBGMSG;
         return;
     }
     QString CompIDs = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole).toString();
     sqlc.DeleteFromDB(CompDb,CompTbles,"id",CompIDs);
     if (sqlc.result)
     {
-        COMPWARN;
+        WARNMSG("");
         return;
     }
     else
     {
-        COMPINFO("Удалено успешно!");
+        MessageBox2::information(this, "Успешно", "Удалено успешно!");
         MainItemChoosed(QModelIndex());
     }
 }
@@ -327,7 +327,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
     QStringList vl = sqlc.GetValuesFromTableByIDSimple(CompDb,CompTbles,fl,QString::number(id));
     if (sqlc.result) // нет такого элемента или ошибка в БД
     {
-        COMPWARN;
+        WARNMSG("");
         return;
     }
     // теперь надо взять индекс производителя
@@ -343,12 +343,12 @@ void cmp_compdialog::CheckNkAndAdd(int id)
     }
     else
     {
-        COMPWARN;
+        WARNMSG("");
         return;
     }
     if (tfl.result == TFRESULT_ERROR)
     {
-        COMPWARN;
+        WARNMSG("");
         return;
     }
     // теперь ищем в БД номенклатуры такой уже элемент
@@ -379,7 +379,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
             tfl.valuesbyfield(table,fl,field,tmps, sl); // взяли имя таблицы в БД, описание которой выбрали в главной таблице
             if (tfl.result == TFRESULT_ERROR)
             {
-                COMPWARN;
+                WARNMSG("");
                 return;
             }
             // теперь возьмём ИД в таблице категорий
@@ -388,7 +388,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
                 tmps = sl.at(0);
             else
             {
-                COMPWARN;
+                WARNMSG("");
                 return;
             }
             table = "Категории_сокращ";
@@ -396,7 +396,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
             tfl.valuesbyfield(table,fl,field,tmps, sl);
             if ((tfl.result == TFRESULT_ERROR) || (sl.isEmpty()))
             {
-                COMPWARN;
+                WARNMSG("");
                 return;
             }
             fl = QStringList() << "ИД" << "Наименование" << "Категория" << "Производитель" << ElementString;
@@ -408,7 +408,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
             tfl.idtois(table, fl, vl);
             if (tfl.result == TFRESULT_ERROR)
             {
-                COMPWARN;
+                WARNMSG("");
                 return;
             }
         }
@@ -417,7 +417,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
     {
         if (nkidsl.size()<2)
         {
-            COMPWARN;
+            WARNMSG("");
             return;
         }
         // проверяем, есть ли у данного элемента в БД ссылка на данный компонент (может, уже было создано ранее для другого раздела)
@@ -440,7 +440,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
         tfl.valuesbyfield(table,sl,field,value,vl);
         if ((tfl.result == TFRESULT_ERROR) || (vl.size()<8))
         {
-            COMPWARN;
+            WARNMSG("");
             return;
         }
         // 2. Обновить значение ElementString до QString::number(id)
@@ -451,7 +451,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
         tfl.idtois(table,sl,vl);
         if (tfl.result == TFRESULT_ERROR)
         {
-            COMPWARN;
+            WARNMSG("");
             return;
         }
     }

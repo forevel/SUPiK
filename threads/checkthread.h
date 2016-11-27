@@ -11,12 +11,6 @@ QT_END_NAMESPACE
 
 #include "../gen/publicclass.h"
 
-// Макросы для выдачи сообщений
-#define CTHREADER(a)    ERMSG(PublicClass::ER_CTHREAD, __LINE__, a)
-#define CTHREADDBG      DBGMSG(PublicClass::ER_CTHREAD,__LINE__)
-#define CTHREADINFO(a)  INFOMSG(PublicClass::ER_CTHREAD, __LINE__, a)
-#define CTHREADWARN     WARNMSG(PublicClass::ER_CTHREAD,__LINE__)
-
 class CheckThread : public QObject
 {
     Q_OBJECT

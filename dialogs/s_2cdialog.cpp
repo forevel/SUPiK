@@ -50,7 +50,7 @@ void s_2cdialog::setup(QString tble, int Mode, QString id, bool isQuarantine)
     if (MainModel->Setup(tble, id))
     {
         QApplication::restoreOverrideCursor();
-        CD2WARN;
+        WARNMSG("");
         return;
     }
     FillHeaderData();
@@ -71,7 +71,7 @@ void s_2cdialog::SetupRaw(QString db, QString tble, int Mode, QString id)
     if (MainModel->SetupRaw(db, tble, id))
     {
         QApplication::restoreOverrideCursor();
-        CD2WARN;
+        WARNMSG("");
         return;
     }
     FillHeaderData();
@@ -165,7 +165,7 @@ void s_2cdialog::AddItem()
         tfl.insert(tmptble, newID);
         if (tfl.result == TFRESULT_ERROR)
         {
-            CD2WARN;
+            WARNMSG("");
             return;
         }
         tfl.idtois(tmptble,QStringList("ИД"),QStringList(newID)); // добавление полей idpers, deleted, date
@@ -181,19 +181,19 @@ void s_2cdialog::AddItem()
             }
             else
             {
-                CD2WARN;
+                WARNMSG("");
                 return;
             }
         }
         else
-            CD2WARN;
+            WARNMSG("");
     }
     else if (Mode == MODE_CHOOSE_RAW)
     {
         QString newid = sqlc.InsertValuesToTable(Db, tble.at(0), QStringList(), QStringList()); // вставка новой пустой строки
         if (sqlc.result)
         {
-            CD2WARN;
+            WARNMSG("");
             return;
         }
         QStringList tmptablefields = QStringList() << "date" << "idpers";
@@ -201,7 +201,7 @@ void s_2cdialog::AddItem()
         sqlc.UpdateValuesInTable(Db, tble.at(0), tmptablefields, tmpvalues, "id"+tble.at(0), newid);
         if (sqlc.result)
         {
-            CD2WARN;
+            WARNMSG("");
             return;
         }
         s_2cdialog *newdialog = new s_2cdialog("");
@@ -214,7 +214,7 @@ void s_2cdialog::AddItem()
         }
         else
         {
-            CD2WARN;
+            WARNMSG("");
             return;
         }
     }
@@ -225,7 +225,7 @@ void s_2cdialog::Update()
 /*    MainModel->Setup(tble.at(0));
     if (mainmodel->result)
     {
-        CD2WARN;
+        WARNMSG("");
         return;
     } */
 }
@@ -236,7 +236,7 @@ void s_2cdialog::AddTable(QString tble)
     MainModel->Add(tble);
     if (MainModel->result)
     {
-        CD2WARN;
+        WARNMSG("");
         return;
     }
     result = 0;
@@ -248,7 +248,7 @@ void s_2cdialog::resizemainTV(QModelIndex, QModelIndex)
     s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
     if (tv == 0)
     {
-        CD2DBG;
+        DBGMSG;
         return;
     }
     tv->resizeColumnsToContents();
@@ -302,16 +302,16 @@ void s_2cdialog::accepted()
         tfl.idtoisv(tmps, headers, values);
         if (tfl.result == TFRESULT_ERROR)
         {
-            CD2WARN;
+            WARNMSG("");
             return;
         }
-        CD2INFO("Записано успешно!");
+        INFOMSG("Записано успешно!");
         if (IsQuarantine)
         {
             tfl.remove(oldtble, oldid); // при успешной записи в некарантин, из карантина старую надо удалить
             if (tfl.result == TFRESULT_ERROR)
             {
-                CD2WARN;
+                WARNMSG("");
                 return;
             }
         }
@@ -321,10 +321,10 @@ void s_2cdialog::accepted()
         sqlc.UpdateValuesInTable(Db, tble.at(0), headers, values, "id"+tble.at(0), Id);
         if (sqlc.result)
         {
-            CD2WARN;
+            WARNMSG("");
             return;
         }
-        CD2INFO("Записано успешно!");
+        INFOMSG("Записано успешно!");
     }
     emit changeshasbeenMade(QString());
     this->close();

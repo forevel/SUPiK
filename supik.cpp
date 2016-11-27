@@ -16,6 +16,7 @@
 #include "dialogs/sys/sys_importclass.h"
 #include "dialogs/sys/sys_erdialog.h"
 #include "dialogs/tb/tb_maindialog.h"
+#include "dialogs/tb/tb_examdialog.h"
 #include "widgets/s_tqlabel.h"
 #include "widgets/s_colortabwidget.h"
 #include "widgets/s_tqtableview.h"
@@ -59,6 +60,7 @@ supik::supik()
     pf["Dummy"]=&supik::Dummy;
     pf["SysImportClass"] = &supik::SysImportClass;
     pf["TBExam"] = &supik::TBExam;
+    pf["TBMain"] = &supik::TBMain;
     ErMsgNum = 0;
 }
 
@@ -368,7 +370,7 @@ void supik::Components()
         return;
     if (!(pc.access & (ACC_SYS_WR | ACC_ALT_WR)))
     {
-        SUPIKER("Недостаточно прав для продолжения!");
+        ERMSG("Недостаточно прав для продолжения!");
         return;
     }
     int idx = CheckForWidget(pc.TW_COMP);
@@ -457,7 +459,7 @@ void supik::WhIncome()
         return;
     if (!(pc.access & (ACC_SYS_WR | ACC_WH_WR)))
     {
-        SUPIKER("Недостаточно прав для продолжения!");
+        ERMSG("Недостаточно прав для продолжения!");
         return;
     }
 
@@ -511,7 +513,7 @@ void supik::WhEditor()
         return;
     if (!(pc.access & (ACC_SYS_WR | ACC_WH_WR)))
     {
-        SUPIKER("Недостаточно прав для продолжения!");
+        ERMSG("Недостаточно прав для продолжения!");
         return;
     }
 
@@ -531,7 +533,7 @@ void supik::DevDoc() // редактор документов на издели�
         return;
     if (!(pc.access & (ACC_ALT_WR | ACC_SYS_WR | ACC_WH_WR)))
     {
-        SUPIKER("Недостаточно прав для продолжения!");
+        ERMSG("Недостаточно прав для продолжения!");
         return;
     }
 
@@ -551,7 +553,7 @@ void supik::DevDev() // редактор изделий (классификат�
         return;
     if (!(pc.access & (ACC_SYS_WR | ACC_DOC_WR)))
     {
-        SUPIKER("Недостаточно прав для продолжения!");
+        ERMSG("Недостаточно прав для продолжения!");
         return;
     }
 
@@ -564,6 +566,8 @@ void supik::DevDev() // редактор изделий (классификат�
     MainTW->repaint();
 }
 
+// [0] - access needed, [1] - QDialog *, [2] - TabName, [3] - TabType
+
 void supik::TBExam()
 {
     S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
@@ -571,11 +575,11 @@ void supik::TBExam()
         return;
     if (!(pc.access & (ACC_TB_RO | ACC_TB_WR)))
     {
-        SUPIKER("Недостаточно прав для продолжения!");
+        ERMSG("Недостаточно прав для продолжения!");
         return;
     }
 
-    tb_maindialog *tbm = new tb_maindialog;
+    tb_examdialog *tbm = new tb_examdialog;
 
     int ids = MainTW->addTab(tbm, "ОТ и ТБ");
     MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_TB));
@@ -584,9 +588,38 @@ void supik::TBExam()
     MainTW->repaint();
 }
 
+void supik::TBMain()
+{
+    tb_maindialog *dlg = new tb_maindialog;
+    if (CreateTab(ACC_TB_RO | ACC_TB_WR, dlg, "ОТ и ТБ", pc.TW_TB) == RESULTBAD)
+    {
+        WARNMSG("Невозможно открыть вкладку");
+        return;
+    }
+}
+
 void supik::Dummy()
 {
     // пустышка
+}
+
+int supik::CreateTab(quint32 access, QDialog *dlg, QString tabname, int tabtype)
+{
+    S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
+    if (MainTW == 0)
+        return RESULTBAD;
+    if (!(pc.access & (access)))
+    {
+        ERMSG("Недостаточно прав для продолжения!");
+        return RESULTBAD;
+    }
+
+    int ids = MainTW->addTab(dlg, tabname);
+    MainTW->tabBar()->setTabData(ids, QVariant(tabtype));
+    MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
+    MainTW->tabBar()->setCurrentIndex(ids);
+    MainTW->repaint();
+    return RESULTOK;
 }
 
 void supik::BackupDir()
@@ -667,7 +700,7 @@ void supik::ErrorProtocol()
     s_tqPushButton *pb = this->findChild<s_tqPushButton *>("errorprotpb");
     if (pb == 0)
     {
-        SUPIKDBG;
+        DBGMSG;
         return;
     }
     pb->setIcon(QIcon(":/res/ErNo.png"));
@@ -698,7 +731,7 @@ void supik::periodic1s()
         QAction *ta = this->findChild<QAction *>("warning");
         if (ta == 0)
         {
-            SUPIKDBG;
+            DBGMSG;
             return;
         }
         int idx = CheckForWidget(pc.TW_PROB);
@@ -716,7 +749,7 @@ void supik::periodic1s()
         s_tqPushButton *pb = this->findChild<s_tqPushButton *>("errorprotpb");
         if (pb == 0)
         {
-            SUPIKDBG;
+            DBGMSG;
             return;
         }
         pb->setIcon(QIcon(":/res/ErYes.png"));
@@ -729,7 +762,7 @@ void supik::ClearProblems()
     QAction *ta = this->findChild<QAction *>("warning");
     if (ta == 0)
     {
-        SUPIKDBG;
+        DBGMSG;
         return;
     }
     int idx = CheckForWidget(pc.TW_PROB);

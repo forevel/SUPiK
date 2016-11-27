@@ -142,14 +142,14 @@ void sys_ImportClass::ImpExpPBPressed()
     s_tqCheckBox *chb = this->findChild<s_tqCheckBox *>("treechb");
     if (chb == 0)
     {
-        SIMPDBG;
+        DBGMSG;
         return;
     }
     sys_ImportClass_T *t = new sys_ImportClass_T;
     sys_ImportClass_T::imp_struct InitialData;
     if ((filename.isEmpty()) || (XLSMap->isEmpty()))
     {
-        SIMPWARN;
+        WARNMSG("");
         return;
     }
     InitialData.filename = filename;
@@ -177,7 +177,7 @@ void sys_ImportClass::LoadAndCheckFile()
     QTableWidget *tv = this->findChild<QTableWidget *>("xlstv");
     if ((cw == 0) || (tv == 0))
     {
-        SIMPDBG;
+        DBGMSG;
         return;
     }
     filename = cw->Value();
@@ -216,7 +216,7 @@ void sys_ImportClass::LoadAndCheckFile()
     s_tqComboBox *cb = this->findChild<s_tqComboBox *>("xlscb");
     if (cb == 0)
     {
-        SIMPDBG;
+        DBGMSG;
         return;
     }
     QStringList sl;
@@ -236,14 +236,14 @@ void sys_ImportClass::TableChoosed(QString tble)
     tfl.TableColumn(tble, field, sl);
     if (tfl.result == TFRESULT_ERROR)
     {
-        SIMPWARN;
+        WARNMSG("");
         return;
     }
     tblename = tble;
     s_tqComboBox *cb = this->findChild<s_tqComboBox *>("tablecb");
     if (cb == 0)
     {
-        SIMPDBG;
+        DBGMSG;
         return;
     }
     QStringListModel *slm = new QStringListModel;
@@ -259,12 +259,12 @@ void sys_ImportClass::MakeConnection()
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("defaultle");
     if ((tablecb == 0) || (xlscb == 0) || (conntw == 0) || (le == 0))
     {
-        SIMPDBG;
+        DBGMSG;
         return;
     }
     if (tablecb->count() == 0)
     {
-        SIMPWARN;
+        WARNMSG("");
         return;
     }
     QString xlscbitem;
@@ -277,7 +277,7 @@ void sys_ImportClass::MakeConnection()
     }
     else
     {
-        SIMPWARN;
+        WARNMSG("");
         return;
     }
     QString tablecbitem = tablecb->currentText();

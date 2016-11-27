@@ -24,10 +24,15 @@ QT_END_NAMESPACE
 #include "publiclang.h"
 
 // Макросы для выдачи сообщений
-#define ERMSG(...)     pc.AddErrMsg(PublicClass::ER_MSG,__VA_ARGS__)
+/*#define ERMSG(...)     pc.AddErrMsg(PublicClass::ER_MSG,__VA_ARGS__)
 #define DBGMSG(...)    pc.AddErrMsg(PublicClass::DBG_MSG,__VA_ARGS__)
 #define INFOMSG(...)   pc.AddErrMsg(PublicClass::INFO_MSG,__VA_ARGS__)
-#define WARNMSG(...)   pc.AddErrMsg(PublicClass::WARN_MSG,__VA_ARGS__)
+#define WARNMSG(...)   pc.AddErrMsg(PublicClass::WARN_MSG,__VA_ARGS__) */
+
+#define WARNMSG(a)  pc.AddErrMsg(PublicClass::ER_MSG, __FILE__, __LINE__, a)
+#define DBGMSG      pc.AddErrMsg(PublicClass::DBG_MSG, __FILE__, __LINE__, "")
+#define INFOMSG(a)  pc.AddErrMsg(PublicClass::INFO_MSG, __FILE__, __LINE__, a)
+#define ERMSG(a)    pc.AddErrMsg(PublicClass::ER_MSG, __FILE__, __LINE__, a)
 
 // тип редактируемого компонента (для cmp_...)
 #define CTYPE_ALT   1
@@ -115,6 +120,10 @@ QT_END_NAMESPACE
 // типы возвращаемых значений
 #define VS_STRING   0 // простая строка
 #define VS_ICON     1 // значение в виде ссылки на иконку
+
+// общие результаты
+#define RESULTBAD   -1
+#define RESULTOK    0
 
 class PublicClass
 {
@@ -464,14 +473,14 @@ public:
         QString DateTime;
         ermsgtype type;
         QString module;
-        quint64 line;
+        QString line;
         QString msg;
         int ErNum;
     };
     QList<ermsg> ermsgpool;
     int ErNum;
 
-    void AddErrMsg(ermsgtype msgtype, quint64 ernum, quint64 ersubnum, QString msg="");
+    void AddErrMsg(ermsgtype msgtype, QString file, int line, QString msg="");
     void ConvertId(bool ColumnZero, QString &Id); // преобразование <tble>.000<id> в нормальный id
     bool OpenAndCheckDBs();
 

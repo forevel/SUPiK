@@ -5,9 +5,6 @@
 #include "../models/proxymodel.h"
 #include "../models/treemodel.h"
 
-#define CHIDLGWARN WARNMSG(PublicClass::ER_CHIDLG, __LINE__)
-#define CHIDLGDBG  DBGMSG(PublicClass::ER_CHIDLG, __LINE__)
-
 class ChooseItemDialog : public QDialog
 {
     Q_OBJECT

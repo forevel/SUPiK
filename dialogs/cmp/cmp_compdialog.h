@@ -7,10 +7,6 @@
 #define CMP_CONSTR      0x04
 #define CMP_DEVICES     0x05
 
-#define COMPWARN    WARNMSG(PublicClass::ER_COMP, __LINE__)
-#define COMPDBG     DBGMSG(PublicClass::ER_COMP, __LINE__)
-#define COMPINFO(a) INFOMSG(PublicClass::ER_COMP, __LINE__,a)
-
 #include <QDialog>
 
 #include "../../models/s_ncmodel.h"

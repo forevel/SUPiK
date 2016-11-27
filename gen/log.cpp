@@ -47,7 +47,7 @@ void Log::Init(QString Filename)
     fp = new QFile(LogFile);
     if (!fp->open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text))
     {
-        LOGER("Невозможно создать log-файл: "+LogFile);
+        ERMSG("Невозможно создать log-файл: "+LogFile);
         CanLog = false;
         return;
     }
@@ -90,6 +90,18 @@ void Log::WriteFile(QString Prepend, QString msg)
     CheckAndGz();
 }
 
+void Log::Info(QByteArray &ba)
+{
+    QString tmps = QDateTime::currentDateTime().toString("dd-MM-yyyy hh:mm:ss");
+    fp->write(tmps.toLocal8Bit());
+    tmps = " info: ";
+    fp->write(tmps.toLocal8Bit());
+    fp->write(ba);
+    fp->write("\n");
+    fp->flush();
+    CheckAndGz();
+}
+
 void Log::CheckAndGz()
 {
     QString GZippedLogFile = LogFile + ".xz";
@@ -110,7 +122,7 @@ void Log::CheckAndGz()
             {
                 if (fn.rename(tmpsnew) == false) // error
                 {
-                    LOGER("Cannot rename file");
+                    ERMSG("Cannot rename file");
                     return;
                 }
             }
@@ -121,7 +133,7 @@ void Log::CheckAndGz()
         lzma_ret ret = lzma_easy_encoder(&strm, 6, LZMA_CHECK_CRC64);
         if (ret != LZMA_OK)
         {
-            LOGER("Something wrong with lzma_easy_encoder");
+            ERMSG("Something wrong with lzma_easy_encoder");
             return;
         }
         uint8_t inbuf[BUFSIZ];
@@ -134,13 +146,13 @@ void Log::CheckAndGz()
         fd.setFileName(LogFile);
         if (!fd.open(QIODevice::ReadOnly | QIODevice::Text))
         {
-            LOGER("Cannot open the file"+LogFile);
+            ERMSG("Cannot open the file"+LogFile);
             return;
         }
         fr.setFileName(GZippedLogFile);
         if (!fr.open(QIODevice::WriteOnly | QIODevice::Truncate))
         {
-            LOGER("Cannot open the file"+GZippedLogFile);
+            ERMSG("Cannot open the file"+GZippedLogFile);
             return;
         }
         lzma_action action = LZMA_RUN;
@@ -165,7 +177,7 @@ void Log::CheckAndGz()
                 size_t written_size = fr.write(reinterpret_cast<char *>(&(outbuf[0])), write_size);
                 if (written_size != write_size)
                 {
-                    LOGER("Write error");
+                    ERMSG("Write error");
                     return;
                 }
                 strm.next_out = outbuf;

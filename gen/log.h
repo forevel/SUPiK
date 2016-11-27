@@ -24,10 +24,6 @@
 #include <QObject>
 #include <QFile>
 
-#define LOGER(a)   ERMSG(PublicClass::ER_LOG,__LINE__,a)
-#define LOGWARN    WARNMSG(PublicClass::ER_LOG,__LINE__)
-#define LOGINFO(a) INFOMSG(PublicClass::ER_LOG,__LINE__,a)
-
 #define LOG_MAX_SIZE    1048576
 
 class Log : public QObject
@@ -41,6 +37,7 @@ public:
     void error(QString str);
     void warning(QString str);
     void info(QString str);
+    void Info(QByteArray &ba);
     void intvarvalue(QString var, int value);
     void WriteFile(QString Prepend, QString msg);
     

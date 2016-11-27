@@ -31,7 +31,7 @@ wh_dialog::wh_dialog(int Reason, QString id, QWidget *parent) :
     setAttribute(Qt::WA_DeleteOnClose);
     if (Reason > R_SIZE)
     {
-        WARNMSG(PublicClass::ER_WH, __LINE__);
+        WARNMSG("");
         this->close();
     }
     mainmodel = new s_ncmodel;
@@ -49,7 +49,7 @@ wh_dialog::wh_dialog(int Reason, QString id, QWidget *parent) :
     FlowFields.clear();
     if (res = SetupUI(id))
     {
-        WARNMSG(PublicClass::ER_WH, __LINE__);
+        WARNMSG("");
         this->close();
     }
 }

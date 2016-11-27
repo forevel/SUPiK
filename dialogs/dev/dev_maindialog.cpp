@@ -37,7 +37,7 @@ DevMainDialog::DevMainDialog(QString DevID, QWidget *parent) : QDialog(parent)
     SetupUI();
     if (Fill(DevID))
     {
-        DEVMAINWARN;
+        WARNMSG("");
         return;
     }
 }
@@ -217,7 +217,7 @@ void DevMainDialog::Refresh()
 /*    TreeView *tv = this->findChild<TreeView *>("mtv");
     if (tv == 0)
     {
-        DEVMAINDBG;
+        DBGMSG;
         return;
     }
     ProxyModel *tvmodel = new ProxyModel;
@@ -245,12 +245,12 @@ int DevMainDialog::Fill(QString DevID)
     QString DevDesc = sqlc.GetValueFromTableByID("dev", "devices", "description", DevID);
     if (sqlc.result)
     {
-        DEVMAINWARN;
+        WARNMSG("");
         return 1;
     }
     if (!Ftps->ChDir("/"))
     {
-        DEVMAINER("Невозможно перейти к корневому каталогу");
+        ERMSG("Невозможно перейти к корневому каталогу");
         return 1;
     }
     QString Dir = DevDesc;
@@ -258,7 +258,7 @@ int DevMainDialog::Fill(QString DevID)
     {
         if (!Ftps->MkDir(Dir))
         {
-            DEVMAINER("Невозможно создать каталог "+DevDesc+" на ftp-сервере");
+            ERMSG("Невозможно создать каталог "+DevDesc+" на ftp-сервере");
             return 1;
         }
         else
@@ -266,7 +266,7 @@ int DevMainDialog::Fill(QString DevID)
     } */
     if (!Ftps->List())
     {
-        DEVMAINER("Невозможно получить данные с FTP-сервера");
+        ERMSG("Невозможно получить данные с FTP-сервера");
         return 1;
     }
     return 0;
@@ -277,7 +277,7 @@ void DevMainDialog::SetClassByManuf(QVariant Class)
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("decimalle");
     if (le == 0)
     {
-        DEVMAINDBG;
+        DBGMSG;
         return;
     }
     QString tmps = le->text();
@@ -285,18 +285,18 @@ void DevMainDialog::SetClassByManuf(QVariant Class)
 /*    QStringList ClassDecimals = tfl.htovlc("Классификатор ЕСКД_полн","Наименование","ИД",Class.toString());
     if (ClassDecimals.isEmpty())
     {
-        DEVMAINWARN;
+        WARNMSG("");
         return;
     }
     QString ClassDecimal = ClassDecimals.at(0);
     if (tfl.result == TFRESULT_ERROR)
     {
-        DEVMAINWARN;
+        WARNMSG("");
         return;
     }
     if (ClassDecimal.isEmpty())
     {
-        DEVMAINER("У данного производителя отсутствует код предприятия");
+        ERMSG("У данного производителя отсутствует код предприятия");
         return;
     } */
     if (tmpsl.size()>1)
@@ -312,7 +312,7 @@ void DevMainDialog::SetDecimalByManuf(QVariant Manuf)
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("decimalle");
     if (le == 0)
     {
-        DEVMAINDBG;
+        DBGMSG;
         return;
     }
     QString tmps = le->text();
@@ -324,18 +324,18 @@ void DevMainDialog::SetDecimalByManuf(QVariant Manuf)
     tfl.htovlc(table,field,cmpfield,Manuf.toString(), ManufDecimals);
     if (ManufDecimals.isEmpty())
     {
-        DEVMAINWARN;
+        WARNMSG("");
         return;
     }
     QString ManufDecimal = ManufDecimals.at(0);
     if (tfl.result == TFRESULT_ERROR)
     {
-        DEVMAINWARN;
+        WARNMSG("");
         return;
     }
     if (ManufDecimal.isEmpty())
     {
-        DEVMAINER("У данного производителя отсутствует код предприятия");
+        ERMSG("У данного производителя отсутствует код предприятия");
         return;
     }
     tmpsl.replace(0, ManufDecimal);

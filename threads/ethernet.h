@@ -7,10 +7,6 @@
 #include <QByteArray>
 #include <QSslSocket>
 
-#define ETHER(a)   ERMSG(PublicClass::ER_ETH,__LINE__,a)
-#define ETHWARN    WARNMSG(PublicClass::ER_ETH,__LINE__)
-#define ETHINFO(a) INFOMSG(PublicClass::ER_ETH,__LINE__,a)
-
 // ошибки IP-сокета
 #define SKT_UNKNOWNER       1 // неизвестная ошибка
 #define SKT_REFUSEDER       2 // тайм-аут при открытии сокета

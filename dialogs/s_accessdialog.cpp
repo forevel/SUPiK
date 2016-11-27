@@ -92,7 +92,7 @@ void s_accessdialog::OkPressed()
             s_tqCheckBox *cb = this->findChild<s_tqCheckBox *>(QString::number(i*2+j));
             if (cb == 0)
             {
-                ACCDBG;
+                DBGMSG;
                 return;
             }
             if (cb->isChecked())

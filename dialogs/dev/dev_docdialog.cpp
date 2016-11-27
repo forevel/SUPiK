@@ -148,7 +148,7 @@ void dev_docdialog::Filter()
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("filterle");
     if (le == 0)
     {
-        DEVDOCDBG;
+        DBGMSG;
         return;
     }
     MainProxyModel->setFilterWildcard("*"+le->text()+"*");
@@ -242,7 +242,7 @@ void dev_docdialog::AddNewDoc()
 {
     if (DevDocTble.isEmpty())
     {
-        DEVDOCINFO("Не выбран раздел в левой части");
+        MessageBox2::information(this, "Внимание", "Не выбран раздел в левой части");
         return;
     }
 }
@@ -314,7 +314,7 @@ void dev_docdialog::ResizeMainTV()
     TreeView *tv = this->findChild<TreeView *>("mtv");
     if (tv == 0)
     {
-        DEVDOCDBG;
+        DBGMSG;
         return;
     }
     for (int i = 0; i < tv->horizontalHeader()->count(); i++)

@@ -42,19 +42,19 @@ void SysDirEditor::FillTable()
     s_tqTableView *tv = this->findChild<s_tqTableView *>("tv");
     if (tv == 0)
     {
-        SYSDDBG;
+        DBGMSG;
         return;
     }
     TreeModel *mdl = static_cast<TreeModel *>(tv->model());
     if (mdl == 0)
     {
-        SYSDDBG;
+        DBGMSG;
         return;
     }
 
     if (mdl->Setup("Справочники_сокращ"))
     {
-        SYSDWARN;
+        WARNMSG("");
         return;
     }
     tv->horizontalHeader()->setDefaultAlignment(Qt::AlignCenter);
@@ -85,7 +85,7 @@ void SysDirEditor::EditDir()
     s_tqTableView *tv = this->findChild<s_tqTableView *>("tv");
     if (tv == 0)
     {
-        SYSDWARN;
+        WARNMSG("");
         return;
     }
     QString tmpString;
@@ -97,13 +97,13 @@ void SysDirEditor::EditDir()
     tmpString = QString::number(tmpString.toInt(0));
     if (tmpString.isEmpty())
     {
-        SYSDWARN;
+        WARNMSG("");
         return;
     }
     s_2cdialog *newdialog = new s_2cdialog("Справочники:"+tmpString);
     newdialog->setup("Справочники_полн",MODE_EDIT,tmpString);
     if (newdialog->result)
-        SYSDWARN;
+        WARNMSG("");
     else
         newdialog->exec();
     FillTable();
@@ -114,7 +114,7 @@ void SysDirEditor::DeleteDir()
     s_tqTableView *tv = this->findChild<s_tqTableView *>("tv");
     if (tv == 0)
     {
-        SYSDDBG;
+        DBGMSG;
         return;
     }
     QString dirname = tv->model()->data(tv->model()->index(tv->currentIndex().row(),1,QModelIndex()),Qt::DisplayRole).toString();
@@ -125,9 +125,9 @@ void SysDirEditor::DeleteDir()
     sqlc.RealDeleteFromDB("sup","dirlist",fl,vl);
     if (sqlc.result)
     {
-        SYSDWARN;
+        WARNMSG("");
         return;
     }
-    SYSDINFO("Удалено успешно!");
+    MessageBox2::information(this, "Успешно", "Удалено успешно!");
     FillTable();
 }

@@ -21,7 +21,7 @@ bool Ftp::Connect(QString Host)
 /*    LogFile = new QFile("ftp.log");
     if (!LogFile->open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text))
     {
-        FTPER("Невозможно создать log-файл");
+        ERMSG("Невозможно создать log-файл");
         CanLog = false;
     }
     else
@@ -150,12 +150,12 @@ bool Ftp::Login(QString User, QString Password)
         return false;
     if (!SendCmd(CMD_USER, User))
     {
-        FTPER("Неверное имя");
+        ERMSG("Неверное имя");
         return false;
     }
     if (!SendCmd(CMD_PASS, Password))
     {
-        FTPER("Неверный пароль");
+        ERMSG("Неверный пароль");
         return false;
     }
     return true;
@@ -167,7 +167,7 @@ bool Ftp::ChDir(QString Dir)
         return false;
     if (!SendCmd(CMD_CWD, Dir))
     {
-        FTPER("Что-то не так с именем каталога");
+        ERMSG("Что-то не так с именем каталога");
         return false;
     }
     return true;
@@ -179,7 +179,7 @@ bool Ftp::List()
         return false;
     if (!StartPASV(CMD_LIST))
     {
-        FTPER("Команда LIST не прошла");
+        ERMSG("Команда LIST не прошла");
         return false;
     }
     return true;
@@ -191,7 +191,7 @@ bool Ftp::MkDir(QString Dir)
         return false;
     if (!SendCmd(CMD_MKD, Dir))
     {
-        FTPER("Невозможно создать каталог "+Dir);
+        ERMSG("Невозможно создать каталог "+Dir);
         return false;
     }
     return true;
@@ -261,7 +261,7 @@ bool Ftp::StartPASV(int Command, QString Filename, QByteArray *ba, int size)
         QFile *file = new QFile(Filename);
         if (!file->open(QIODevice::WriteOnly))
         {
-            FTPER("Ошибка открытия файла: "+Filename);
+            ERMSG("Ошибка открытия файла: "+Filename);
             return false;
         }
         QByteArray *tmpba = new QByteArray(file->readAll());
@@ -280,7 +280,7 @@ bool Ftp::GetFile(QString Filename, QByteArray *ba, int size)
     QByteArray *tmpba = new QByteArray;
     if (!StartPASV(CMD_LIST, Filename, tmpba, size))
     {
-        FTPER("Не прошла команда LIST");
+        ERMSG("Не прошла команда LIST");
         return false;
     }
 
@@ -495,14 +495,14 @@ void Ftp::FtpConnected()
 
 void Ftp::FtpErr(int error)
 {
-    FTPER(Ethernet::EthernetErrors()[error]);
+    ERMSG(Ethernet::EthernetErrors()[error]);
     Busy = false;
     TimeoutTimer->stop();
 }
 
 void Ftp::Timeout()
 {
-    FTPER("Произошло превышение времени ожидания");
+    ERMSG("Произошло превышение времени ожидания");
     Busy = false;
     FileBusy = false;
     TimeoutTimer->stop();

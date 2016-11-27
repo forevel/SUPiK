@@ -83,7 +83,7 @@ void cmp_newsubsection::transliteDirName()
     s_tqLineEdit *le2 = this->findChild<s_tqLineEdit *>("tblename");
     if ((le1 == 0) || (le2 == 0))
     {
-        CMPNSDBG;
+        DBGMSG;
         return;
     }
     if (le2->text().isEmpty())
@@ -122,13 +122,13 @@ void cmp_newsubsection::Ok()
     s_tqChooseWidget *cw = this->findChild<s_tqChooseWidget *>("cwpar");
     if ((le1 == 0) || (le2 == 0) || (cw == 0))
     {
-        CMPNSDBG;
+        DBGMSG;
         w->Stop();
         return;
     }
     if ((le1->text().isEmpty()) || (le2->text().isEmpty()))
     {
-        CMPNSWARN;
+        WARNMSG("");
         w->Stop();
         return;
     }
@@ -160,13 +160,13 @@ void cmp_newsubsection::Ok()
         sqlc.CreateTable(dbsl.at(CompType), desc, Fields, true); // Simple=true, т.е. id без имени таблицы
         if (sqlc.result)
         {
-            CMPNSWARN;
+            WARNMSG("");
             w->Stop();
             return;
         }
     }
     else
-        CMPNSINFO("Таблица "+desc+" уже имеется в БД!");
+        MessageBox2::information(this, "Внимание", "Таблица "+desc+" уже имеется в БД!");
     // создаём её описание в description
     // сначала проверяем, нет ли такой записи
     Fields = QStringList() << "description" << "descriptionfull";
@@ -179,7 +179,7 @@ void cmp_newsubsection::Ok()
         tfl.insert(TableName, newID);
         if (tfl.result == TFRESULT_ERROR)
         {
-            CMPNSINFO("Ошибка добавления записи в таблицу description");
+            MessageBox2::information(this, "Внимание", "Ошибка добавления записи в таблицу description");
             w->Stop();
             return;
         }
@@ -190,7 +190,7 @@ void cmp_newsubsection::Ok()
     if (tfl.result == TFRESULT_ERROR)
     {
         tfl.Delete(TableName, newID);
-        CMPNSINFO("Ошибка обновления записи в таблице description");
+        MessageBox2::information(this, "Внимание", "Ошибка обновления записи в таблице description");
         w->Stop();
         return;
     }
@@ -203,7 +203,7 @@ void cmp_newsubsection::Ok()
         tfl.insert(TableName, newID);
         if (tfl.result == TFRESULT_ERROR)
         {
-            CMPNSWARN;
+            WARNMSG("");
             w->Stop();
             return;
         }
@@ -213,12 +213,12 @@ void cmp_newsubsection::Ok()
         if (tfl.result == TFRESULT_ERROR)
         {
             tfl.Delete(TableName, newID);
-            CMPNSWARN;
+            WARNMSG("");
             w->Stop();
             return;
         }
     }
     w->Stop();
     this->close();
-    CMPNSINFO("Записано успешно!");
+    MessageBox2::information(this, "Внимание", "Записано успешно!");
 }

@@ -296,187 +296,90 @@ void supik::ExitSupik()
 
 void supik::SettingsEdit()
 {
-    S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
-    if (MainTW == 0)
-        return;
-    int idx = CheckForWidget(pc.TW_SET);
-    if (idx != -1)
+    sys_settingsdialog *qssda = new sys_settingsdialog;
+    if (CreateTab(ACC_ALL, qssda, "Система::Редактор настроек", pc.TW_SET) == RESULTBAD)
     {
-        MainTW->setCurrentIndex(idx);
+        WARNMSG("Невозможно открыть вкладку");
         return;
     }
-
-    sys_settingsdialog *qssda = new sys_settingsdialog;
-    qssda->SetupUI();
-    qssda->setAttribute(Qt::WA_DeleteOnClose);
-
-    int ids = MainTW->addTab(qssda, "Система::Редактор настроек");
-    MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_SET));
-    MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
-    MainTW->tabBar()->setCurrentIndex(ids);
-    MainTW->repaint();
 }
 
 // Редактор системы
 
 void supik::SysStructEdit()
 {
-    S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
-    if (MainTW == 0)
-        return;
-    int idx = CheckForWidget(pc.TW_SYSST);
-    if (idx != -1)
+    sys_systemdialog *qsyda = new sys_systemdialog;
+    if (CreateTab(ACC_SYS_WR, qsyda, "Система::Редактор параметров", pc.TW_SYSST) == RESULTBAD)
     {
-        MainTW->setCurrentIndex(idx);
+        WARNMSG("Невозможно открыть вкладку");
         return;
     }
-
-    sys_systemdialog *qsyda = new sys_systemdialog;
-    int ids = MainTW->addTab(qsyda, "Система::Редактор параметров");
-    MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_SYSST));
-    MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
-    MainTW->tabBar()->setCurrentIndex(ids);
-    MainTW->repaint();
 }
 
 // Импорт классификатора
 
 void supik::SysImportClass()
 {
-    S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
-    if (MainTW == 0)
-        return;
-    int idx = CheckForWidget(pc.TW_SYSIC);
-    if (idx != -1)
+    sys_ImportClass *dlg = new sys_ImportClass;
+    if (CreateTab(ACC_SYS_RO, dlg, "Система::Импорт из XLSX", pc.TW_SYSIC) == RESULTBAD)
     {
-        MainTW->setCurrentIndex(idx);
+        WARNMSG("Невозможно открыть вкладку");
         return;
     }
-
-    sys_ImportClass *dlg = new sys_ImportClass;
-    int ids = MainTW->addTab(dlg, "Система::Импорт из XLSX");
-    MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_SYSIC));
-    MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
-    MainTW->tabBar()->setCurrentIndex(ids);
-    MainTW->repaint();
 }
 
 // Редактор компонентов
 
 void supik::Components()
 {
-    S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
-    if (MainTW == 0)
-        return;
-    if (!(pc.access & (ACC_SYS_WR | ACC_ALT_WR)))
-    {
-        ERMSG("Недостаточно прав для продолжения!");
-        return;
-    }
-    int idx = CheckForWidget(pc.TW_COMP);
-    if (idx != -1)
-    {
-        MainTW->setCurrentIndex(idx);
-        return;
-    }
-
     cmp_compdialog *qccda = new cmp_compdialog(CMP_ALTIUM);
-
-    int ids = MainTW->addTab(qccda, "Компоненты::Altium");
-    MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_COMP));
-    MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
-    MainTW->tabBar()->setCurrentIndex(ids);
-    MainTW->repaint();
+    if (CreateTab(ACC_ALT_RO, qccda, "Компоненты::Altium", pc.TW_COMP) == RESULTBAD)
+    {
+        WARNMSG("Невозможно открыть вкладку");
+        return;
+    }
 }
 
 void supik::Directories()
 {
-    S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
-    if (MainTW == 0)
-        return;
-    int idx = CheckForWidget(pc.TW_DIR);
-    if (idx != -1)
+    dir_maindialog *dird = new dir_maindialog("Справочники");
+    if (CreateTab(ACC_ALL, dird, "Справочники::Справочники", pc.TW_DIR) == RESULTBAD)
     {
-        MainTW->setCurrentIndex(idx);
+        WARNMSG("Невозможно открыть вкладку");
         return;
     }
-
-    dir_maindialog *dird = new dir_maindialog("Справочники");
-
-    int ids = MainTW->addTab(dird, "Справочники::Справочники");
-    MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_DIR));
-    MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
-    MainTW->tabBar()->setCurrentIndex(ids);
-    MainTW->repaint();
 }
 
 void supik::SysDirectories()
 {
-    S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
-    if (MainTW == 0)
-        return;
-    int idx = CheckForWidget(pc.TW_SYSDIR);
-    if (idx != -1)
+    dir_maindialog *dird = new dir_maindialog("Справочники системные");
+    if (CreateTab(ACC_SYS_WR, dird, "Справочники::системные", pc.TW_SYSDIR) == RESULTBAD)
     {
-        MainTW->setCurrentIndex(idx);
+        WARNMSG("Невозможно открыть вкладку");
         return;
     }
-
-    dir_maindialog *dird = new dir_maindialog("Справочники системные");
-
-    int ids = MainTW->addTab(dird, "Справочники::системные");
-    MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_SYSDIR));
-    MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
-    MainTW->tabBar()->setCurrentIndex(ids);
-    MainTW->repaint();
 }
 
 void supik::ProbCheck()
 {
-    S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
-    if (MainTW == 0)
-        return;
-    int idx = CheckForWidget(pc.TW_PROB);
-    if (idx != -1)
-    {
-        MainTW->setCurrentIndex(idx);
-        return;
-    }
     SysProblemsDialog *probDialog = new SysProblemsDialog;
     probDialog->setObjectName("ProblemsDialog");
-    int ids = MainTW->addTab(probDialog, "Сообщения: "+QString::number(pc.ProblemsList.size()));
-    MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_PROB));
-    MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
-    MainTW->tabBar()->setCurrentIndex(ids);
     connect (probDialog, SIGNAL(ProblemsNumberUpdated()), this, SLOT(UpdateProblemsNumberInTab()));
-    MainTW->repaint();
+    if (CreateTab(ACC_ALL, probDialog, "Сообщения: "+QString::number(pc.ProblemsList.size()), pc.TW_PROB) == RESULTBAD)
+    {
+        WARNMSG("Невозможно открыть вкладку");
+        return;
+    }
 }
 
 void supik::WhIncome()
 {
-    S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
-    if (MainTW == 0)
-        return;
-    if (!(pc.access & (ACC_SYS_WR | ACC_WH_WR)))
+    wh_dialog *whd = new wh_dialog (true, ""); // isIncoming = true
+    if (CreateTab(ACC_WH_WR, whd, "Склады::Приём на склад", pc.TW_WH) == RESULTBAD)
     {
-        ERMSG("Недостаточно прав для продолжения!");
+        WARNMSG("Невозможно открыть вкладку");
         return;
     }
-
-    wh_dialog *whd = new wh_dialog (true, ""); // isIncoming = true
-    int ids = MainTW->addTab(whd, "Склады::Приём на склад");
-    MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_WH));
-    MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
-    MainTW->tabBar()->setCurrentIndex(ids);
-    MainTW->repaint();
-
-/*    s_ncdialog *whd = new s_ncdialog;
-    whd->setupUI("whincome", ":/res/WhWallpaper.jpg", DT_GENERAL);
-    connect(whd,SIGNAL(error(int,int)),this,SLOT(ShowErMsg(int,int)));
-    int ids = MainTW->addTab(whd, "Приём на склад");
-    MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_WH));
-    MainTW->tabBar()->setCurrentIndex(ids);
-    MainTW->repaint(); */
 }
 
 void supik::WhOutgoing()
@@ -508,90 +411,50 @@ void supik::WhSearch()
 
 void supik::WhEditor()
 {
-    S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
-    if (MainTW == 0)
-        return;
-    if (!(pc.access & (ACC_SYS_WR | ACC_WH_WR)))
+    Wh_Editor *whd = new Wh_Editor;
+    if (CreateTab(ACC_WH_WR, whd, "Склады::Редактор складов", pc.TW_WH) == RESULTBAD)
     {
-        ERMSG("Недостаточно прав для продолжения!");
+        WARNMSG("Невозможно открыть вкладку");
         return;
     }
-
-    Wh_Editor *whd = new Wh_Editor;
-
-    int ids = MainTW->addTab(whd, "Склады::Редактор складов");
-    MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_WH));
-    MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
-    MainTW->tabBar()->setCurrentIndex(ids);
-    MainTW->repaint();
 }
 
 void supik::DevDoc() // редактор документов на изделия
 {
-    S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
-    if (MainTW == 0)
-        return;
-    if (!(pc.access & (ACC_ALT_WR | ACC_SYS_WR | ACC_WH_WR)))
+    dev_docdialog *ddd = new dev_docdialog;
+    if (CreateTab(ACC_ALT_WR | ACC_WH_WR, ddd, "Изделия::Документация", pc.TW_DEV) == RESULTBAD)
     {
-        ERMSG("Недостаточно прав для продолжения!");
+        WARNMSG("Невозможно открыть вкладку");
         return;
     }
-
-    dev_docdialog *ddd = new dev_docdialog;
-
-    int ids = MainTW->addTab(ddd, "Изделия::Документация");
-    MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_DEV));
-    MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
-    MainTW->tabBar()->setCurrentIndex(ids);
-    MainTW->repaint();
 }
 
 void supik::DevDev() // редактор изделий (классификатор)
 {
-    S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
-    if (MainTW == 0)
-        return;
-    if (!(pc.access & (ACC_SYS_WR | ACC_DOC_WR)))
+    dev_devdialog *ddd = new dev_devdialog;
+    if (CreateTab(ACC_DOC_WR, ddd, "Изделия::Классификатор", pc.TW_DEV) == RESULTBAD)
     {
-        ERMSG("Недостаточно прав для продолжения!");
+        WARNMSG("Невозможно открыть вкладку");
         return;
     }
-
-    dev_devdialog *ddd = new dev_devdialog;
-
-    int ids = MainTW->addTab(ddd, "Изделия::Классификатор");
-    MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_DEV));
-    MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
-    MainTW->tabBar()->setCurrentIndex(ids);
-    MainTW->repaint();
 }
 
 // [0] - access needed, [1] - QDialog *, [2] - TabName, [3] - TabType
 
 void supik::TBExam()
 {
-    S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
-    if (MainTW == 0)
-        return;
-    if (!(pc.access & (ACC_TB_RO | ACC_TB_WR)))
+    tb_examdialog *tbm = new tb_examdialog;
+    if (CreateTab(ACC_TB_RO | ACC_TB_WR, tbm, "Экзамен ОТ и ТБ", pc.TW_TB) == RESULTBAD)
     {
-        ERMSG("Недостаточно прав для продолжения!");
+        WARNMSG("Невозможно открыть вкладку");
         return;
     }
-
-    tb_examdialog *tbm = new tb_examdialog;
-
-    int ids = MainTW->addTab(tbm, "ОТ и ТБ");
-    MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_TB));
-    MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
-    MainTW->tabBar()->setCurrentIndex(ids);
-    MainTW->repaint();
 }
 
 void supik::TBMain()
 {
     tb_maindialog *dlg = new tb_maindialog;
-    if (CreateTab(ACC_TB_RO | ACC_TB_WR, dlg, "ОТ и ТБ", pc.TW_TB) == RESULTBAD)
+    if (CreateTab(ACC_TB_WR, dlg, "Информация ОТ и ТБ", pc.TW_TB) == RESULTBAD)
     {
         WARNMSG("Невозможно открыть вкладку");
         return;
@@ -624,49 +487,27 @@ int supik::CreateTab(quint32 access, QDialog *dlg, QString tabname, int tabtype)
 
 void supik::BackupDir()
 {
-    S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
-    if (MainTW == 0)
-        return;
-    int idx = CheckForWidget(pc.TW_SYSBU);
-    if (idx != -1)
+    sys_backuprestoredirdialog *brd = new sys_backuprestoredirdialog (false); // isIncoming = false
+    if (CreateTab(ACC_SYS_RO, brd, "Экспорт в файл", pc.TW_SYSBU) == RESULTBAD)
     {
-        MainTW->setCurrentIndex(idx);
+        WARNMSG("Невозможно открыть вкладку");
         return;
     }
-
-    sys_backuprestoredirdialog *brd = new sys_backuprestoredirdialog (false); // isIncoming = false
-
-    int ids = MainTW->addTab(brd, "Экспорт в файл");
-    MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_SYSBU));
-    MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
-    MainTW->tabBar()->setCurrentIndex(ids);
-    MainTW->repaint();
 }
 
 void supik::RestoreDir()
 {
-    S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
-    if (MainTW == 0)
-        return;
-    int idx = CheckForWidget(pc.TW_SYSRS);
-    if (idx != -1)
+    sys_backuprestoredirdialog *brd = new sys_backuprestoredirdialog (true);
+    if (CreateTab(ACC_SYS_RO, brd, "Импорт из файла", pc.TW_SYSRS) == RESULTBAD)
     {
-        MainTW->setCurrentIndex(idx);
+        WARNMSG("Невозможно открыть вкладку");
         return;
     }
-
-    sys_backuprestoredirdialog *brd = new sys_backuprestoredirdialog (true);
-
-    int ids = MainTW->addTab(brd, "Импорт из файла");
-    MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_SYSRS));
-    MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
-    MainTW->tabBar()->setCurrentIndex(ids);
-    MainTW->repaint();
 }
 
 void supik::Quarantine()
 {
-    S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
+/*    S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
     if (MainTW == 0)
         return;
     int idx = CheckForWidget(pc.TW_QUAR);
@@ -682,21 +523,11 @@ void supik::Quarantine()
     MainTW->tabBar()->setTabData(ids, QVariant(pc.TW_QUAR));
     MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
     MainTW->tabBar()->setCurrentIndex(ids);
-    MainTW->repaint();
+    MainTW->repaint(); */
 }
 
 void supik::ErrorProtocol()
 {
-    S_ColorTabWidget *MainTW = this->findChild<S_ColorTabWidget *>("MainTW");
-    if (MainTW == 0)
-        return;
-
-    int idx = CheckForWidget(PublicClass::TW_ERPROT);
-    if (idx != -1)
-    {
-        MainTW->setCurrentIndex(idx);
-        return;
-    }
     s_tqPushButton *pb = this->findChild<s_tqPushButton *>("errorprotpb");
     if (pb == 0)
     {
@@ -707,12 +538,11 @@ void supik::ErrorProtocol()
     ErMsgNum = pc.ermsgpool.size();
     SysErDialog *serr = new SysErDialog;
     serr->InitiateDialog();
-
-    int ids = MainTW->addTab(serr, "Протокол ошибок");
-    MainTW->tabBar()->setTabData(ids, QVariant(PublicClass::TW_ERPROT));
-    MainTW->tabBar()->tabButton(ids,QTabBar::RightSide)->hide();
-    MainTW->tabBar()->setCurrentIndex(ids);
-    MainTW->repaint();
+    if (CreateTab(ACC_ALL, serr, "Протокол ошибок", pc.TW_ERPROT) == RESULTBAD)
+    {
+        WARNMSG("Невозможно открыть вкладку");
+        return;
+    }
 }
 
 void supik::executeDirDialog()

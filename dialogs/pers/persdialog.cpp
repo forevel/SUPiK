@@ -1,8 +1,7 @@
-#include "dev_maindialog.h"
+#include "persdialog.h"
 #include <QAction>
-#include <QScrollArea>
-#include <QMenu>
 #include <QIcon>
+#include <QImage>
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -26,334 +25,250 @@
 #include "../../widgets/s_tqsplitter.h"
 #include "../../widgets/s_tqstackedwidget.h"
 #include "../../widgets/s_tqwidget.h"
+#include "../../widgets/wgenfunc.h"
 #include "../../gen/publicclass.h"
 #include "../../gen/s_tablefields.h"
-#include "../../gen/ftp.h"
 #include "../messagebox.h"
 
-DevMainDialog::DevMainDialog(QString DevID, QWidget *parent) : QDialog(parent)
+PersDialog::PersDialog(QString PersID, int DialogType, QWidget *parent) : QDialog(parent)
 {
+    this->DialogType = DialogType;
     setAttribute(Qt::WA_DeleteOnClose);
     SetupUI();
-    if (Fill(DevID))
+    if (Fill(PersID))
     {
         WARNMSG("");
         return;
     }
 }
 
-DevMainDialog::~DevMainDialog()
+PersDialog::~PersDialog()
 {
 
 }
 
-void DevMainDialog::paintEvent(QPaintEvent *event)
+void PersDialog::paintEvent(QPaintEvent *event)
 {
     QPainter painter(this);
-    painter.drawPixmap(rect(), QPixmap(":/res/DevWallpaper.png"));
+    painter.drawPixmap(rect(), QPixmap(":/res/PersWallPaper.png"));
 
     event->accept();
 }
 
 // Настройка интерфейса
 
-void DevMainDialog::SetupUI()
+void PersDialog::SetupUI(int DialogType)
 {
-    QVBoxLayout *lyout = new QVBoxLayout;
-    QScrollArea *SArea = new QScrollArea;
-    s_tqWidget *w = new s_tqWidget;
-    SArea->setStyleSheet("QScrollArea {background-color: rgba(0,0,0,0);}");
-    SArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    SArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
-    QVBoxLayout *slyout = new QVBoxLayout;
-    QHBoxLayout *hlyout = new QHBoxLayout;
+    QVBoxLayout *vlyout1 = new QVBoxLayout;
+    QVBoxLayout *vlyout2 = new QVBoxLayout;
+    QHBoxLayout *hlyout1 = new QHBoxLayout;
+    QHBoxLayout *hlyout2 = new QHBoxLayout;
 
     s_tqPushButton *pb = new s_tqPushButton;
     pb->setIcon(QIcon(":/res/cross.png"));
-    connect(pb,SIGNAL(clicked(bool)),this,SIGNAL(DialogClosed()));
     connect(pb, SIGNAL(clicked()), this, SLOT(close()));
     pb->setToolTip("Закрыть вкладку");
-    hlyout->addWidget(pb,0);
-    hlyout->addStretch(100);
-    slyout->addLayout(hlyout);
+    hlyout1->addWidget(pb,0);
+    hlyout1->addStretch(100);
+    vlyout1->addLayout(hlyout1);
 
-//    s_tqGroupBox *gb = new s_tqGroupBox;
-    hlyout = new QHBoxLayout;
-    s_tqLabel *lbl = new s_tqLabel("ИД изделия:");
-    hlyout->addWidget(lbl);
+    hlyout1 = new QHBoxLayout;
+    s_tqLabel *lbl = new s_tqLabel;
+    lbl->setObjectName("photo");
+    lbl->setMinimumSize(150, 200);
+    lbl->setScaledContents(true);
+    lbl->setPixmap(QPixmap(":/res/Einstein.png"));
+    hlyout1->addWidget(lbl, 50);
+    lbl = new s_tqLabel;
+    lbl->setText("ФИО: ");
+    hlyout2->addWidget(lbl, 10);
     s_tqLineEdit *le = new s_tqLineEdit;
-    le->setObjectName("devidle");
-    le->setEnabled(false);
-    hlyout->addWidget(le, 5);
-    hlyout->addStretch(5);
-    lbl = new s_tqLabel("Дата внесения в классификатор:");
-    hlyout->addWidget(lbl);
+    le->setObjectName("le.1");
+    le->setEnabled(isEnabled);
+    hlyout2->addWidget(le, 30);
+    vlyout2->addLayout(hlyout2);
+    hlyout2 = new QHBoxLayout;
+    lbl = new s_tqLabel("Дата рождения: ");
+    hlyout2->addWidget(lbl, 10);
     le = new s_tqLineEdit;
-    le->setObjectName("datele");
-    le->setEnabled(false);
-    hlyout->addWidget(le, 5);
-    hlyout->addStretch(5);
-    lbl = new s_tqLabel("Внёс:");
-    hlyout->addWidget(lbl);
+    le->setObjectName("le.2");
+    le->setEnabled(isEnabled);
+    hlyout2->addWidget(le, 30);
+    vlyout2->addLayout(hlyout2);
+    hlyout2 = new QHBoxLayout;
+    lbl = new s_tqLabel("Должность: ");
+    hlyout2->addWidget(lbl, 10);
     le = new s_tqLineEdit;
-    le->setObjectName("persle");
-    le->setEnabled(false);
-    hlyout->addWidget(le, 10);
-    slyout->addLayout(hlyout);
+    le->setObjectName("le.3");
+    le->setEnabled(isEnabled);
+    hlyout2->addWidget(le, 30);
+    vlyout2->addLayout(hlyout2);
+    if (DialogType == PDT_TB)
+    {
+        hlyout2 = new QHBoxLayout;
+        lbl = new s_tqLabel("Группа по ЭБ: ");
+        hlyout2->addWidget(lbl, 10);
+        le = new s_tqLineEdit;
+        le->setObjectName("le.31");
+        le->setEnabled(isEnabled);
+        hlyout2->addWidget(le, 30);
+        vlyout2->addLayout(hlyout2);
+    }
+    hlyout1->addLayout(vlyout2);
+    vlyout1->addLayout(hlyout1);
 
-    hlyout = new QHBoxLayout;
-    lbl = new s_tqLabel("Фирма-изготовитель:");
-    hlyout->addWidget(lbl);
-    s_tqChooseWidget *cw = new s_tqChooseWidget(true);
-    cw->Setup("2.2..Производители_сокращ.Наименование");
-    cw->setObjectName("manufcw");
-    connect(cw,SIGNAL(textchanged(QVariant)),this,SLOT(SetDecimalByManuf(QVariant)));
-    hlyout->addWidget(cw, 10);
-    lbl = new s_tqLabel("Класс:");
-    hlyout->addWidget(lbl);
-    cw = new s_tqChooseWidget(true);
-    cw->Setup("2.2..Классификатор ЕСКД_сокращ.Наименование");
-    cw->setObjectName("classcw");
-    connect(cw,SIGNAL(textchanged(QVariant)),this,SLOT(SetClassByManuf(QVariant)));
-    hlyout->addWidget(cw, 10);
-    lbl = new s_tqLabel("Децимальный номер:");
-    hlyout->addWidget(lbl);
-    le = new s_tqLineEdit;
-    le->setObjectName("decimalle");
-    le->setEnabled(false);
-    hlyout->addWidget(le, 10);
-    slyout->addLayout(hlyout);
-
-    hlyout = new QHBoxLayout;
-    lbl = new s_tqLabel("Наименование:");
-    hlyout->addWidget(lbl);
-    le = new s_tqLineEdit;
-    le->setObjectName("namele");
-    hlyout->addWidget(le,10);
-    lbl = new s_tqLabel("Редакция:");
-    hlyout->addWidget(lbl);
-    s_tqComboBox *cb = new s_tqComboBox;
-    cb->setObjectName("revisioncb");
-    hlyout->addWidget(cb, 2);
-    slyout->addLayout(hlyout);
-
-    s_tqFrame *line = new s_tqFrame;
-    line->setFrameShape(QFrame::HLine);
-    line->setFrameShadow(QFrame::Sunken);
-    slyout->addWidget(line);
-
-    QGridLayout *glyout = new QGridLayout;
-//    s_tqGroupBox *gb = new s_tqGroupBox(255,255,51,40);
-    s_tqGroupBox *gb = new s_tqGroupBox(pc.DifferentColors().at(0));
-    gb->setTitle("Схемы");
-    gb->setObjectName("sch");
-    gb->setMinimumHeight(70);
-    glyout->addWidget(gb, 0, 0, 1, 1);
-    gb = new s_tqGroupBox(pc.DifferentColors().at(1));
-    gb->setTitle("Чертежи");
-    gb->setObjectName("chert");
-    gb->setMinimumHeight(70);
-    glyout->addWidget(gb, 0, 1, 1, 1);
-    gb = new s_tqGroupBox(pc.DifferentColors().at(2));
-    gb->setTitle("Изготовление");
-    gb->setObjectName("izg");
-    gb->setMinimumHeight(70);
-    glyout->addWidget(gb, 0, 2, 1, 1);
-
-    gb = new s_tqGroupBox(pc.DifferentColors().at(3));
-    gb->setTitle("Проектные");
-    gb->setObjectName("pr");
-    gb->setMinimumHeight(70);
-    glyout->addWidget(gb, 1, 0, 1, 1);
-    gb = new s_tqGroupBox(pc.DifferentColors().at(4));
-    gb->setTitle("Эксплуатационные");
-    gb->setObjectName("eksp");
-    gb->setMinimumHeight(70);
-    glyout->addWidget(gb, 1, 1, 1, 1);
-    gb = new s_tqGroupBox(pc.DifferentColors().at(5));
-    gb->setTitle("Прогр. обесп.");
-    gb->setObjectName("po");
-    gb->setMinimumHeight(70);
-    glyout->addWidget(gb, 1, 2, 1, 1);
-
-    gb = new s_tqGroupBox(pc.DifferentColors().at(6));
-    gb->setTitle("Модели");
-    gb->setObjectName("mod");
-    gb->setMinimumHeight(70);
-    glyout->addWidget(gb, 2, 0, 1, 1);
-/*    gb = new s_tqGroupBox;
-    gb->setTitle("");
-    gb->setEnabled(false);
-    gb->setMinimumHeight(70);
-    glyout->addWidget(gb, 2, 1, 1, 1);
-    gb = new s_tqGroupBox;
-    gb->setTitle("");
-    gb->setEnabled(false);
-    gb->setMinimumHeight(70);
-    glyout->addWidget(gb, 2, 2, 1, 1); */
-    slyout->addLayout(glyout);
-
-    pb = new s_tqPushButton("История",153,255,204,40);
-    connect(pb,SIGNAL(clicked()),this,SLOT(History()));
-    slyout->addWidget(pb);
-
-    pb = new s_tqPushButton("Объекты",255,102,0,40);
-    connect(pb,SIGNAL(clicked()),this,SLOT(Objects()));
-    slyout->addWidget(pb);
-
-    pb = new s_tqPushButton("Командировки",255,102,102,40);
-    connect(pb,SIGNAL(clicked()),this,SLOT(Trips()));
-    slyout->addWidget(pb);
-    w->setLayout(slyout);
-    w->setSizePolicy(QSizePolicy::Maximum,QSizePolicy::Ignored);
-    SArea->setWidget(w);
-    lyout->addWidget(SArea);
-    setLayout(lyout);
-    Refresh();
+    switch(DialogType)
+    {
+    case PDT_TB:
+    {
+        hlyout1 = new QHBoxLayout;
+        lbl = new s_tqLabel("Дата сдачи экзамена по ЭБ: ");
+        hlyout1->addWidget(lbl, 10);
+        le = new s_tqLineEdit;
+        le->setObjectName("le.32");
+        le->setEnabled(isEnabled);
+        hlyout1->addWidget(le, 30);
+        lbl = new s_tqLabel("Оценка: ");
+        hlyout1->addWidget(lbl, 10);
+        le = new s_tqLineEdit;
+        le->setObjectName("le.33");
+        le->setEnabled(isEnabled);
+        hlyout1->addWidget(le, 30);
+        pb = new s_tqPushButton("Протокол");
+        connect(pb,SIGNAL(clicked(bool)),this,SLOT(ShowEBProt()));
+        hlyout1->addWidget(pb, 3);
+        vlyout1->addLayout(hlyout1);
+        hlyout1 = new QHBoxLayout;
+        pb = new s_tqPushButton("Ввод данных по ЭБ");
+        connect(pb,SIGNAL(clicked(bool)),this,SLOT(EnterEBData()));
+        hlyout1->addWidget(pb, 30);
+        pb = new s_tqPushButton("История сдачи экзамена");
+        connect(pb,SIGNAL(clicked(bool)),this,SLOT(ShowEBHistory()));
+        hlyout1->addWidget(pb, 30);
+        hlyout1->addStretch(100);
+        vlyout1->addLayout(hlyout1);
+        hlyout1 = new QHBoxLayout;
+        lbl = new s_tqLabel("Дата инструктажа по ПБ: ");
+        hlyout1->addWidget(lbl, 10);
+        le = new s_tqLineEdit;
+        le->setObjectName("le.41");
+        le->setEnabled(isEnabled);
+        hlyout1->addWidget(le, 30);
+        lbl = new s_tqLabel;
+        lbl->setObjectName("PBGoodlbl");
+        lbl->setPixmap(QPixmap(":/res/cross.png"));
+        hlyout1->addWidget(lbl, 5);
+        pb = new s_tqPushButton("Ввод данных");
+        connect(pb,SIGNAL(clicked(bool)),this,SLOT(EnterPBData()));
+        hlyout1->addWidget(pb, 10);
+        vlyout1->addLayout(hlyout1);
+        hlyout1 = new QHBoxLayout;
+        lbl = new s_tqLabel("Дата инструктажа по ОТ: ");
+        hlyout1->addWidget(lbl, 10);
+        le = new s_tqLineEdit;
+        le->setObjectName("le.42");
+        le->setEnabled(isEnabled);
+        hlyout1->addWidget(le, 30);
+        lbl = new s_tqLabel;
+        lbl->setObjectName("OTGoodlbl");
+        lbl->setPixmap(QPixmap(":/res/cross.png"));
+        hlyout1->addWidget(lbl, 5);
+        pb = new s_tqPushButton("Ввод данных");
+        connect(pb,SIGNAL(clicked(bool)),this,SLOT(EnterOTData()));
+        hlyout1->addWidget(pb, 10);
+        vlyout1->addLayout(hlyout1);
+        hlyout1 = new QHBoxLayout;
+        lbl = new s_tqLabel("Дата прохождения профосмотра: ");
+        hlyout1->addWidget(lbl, 10);
+        le = new s_tqLineEdit;
+        le->setObjectName("le.43");
+        le->setEnabled(isEnabled);
+        hlyout1->addWidget(le, 30);
+        lbl = new s_tqLabel;
+        lbl->setObjectName("MedGoodlbl");
+        lbl->setPixmap(QPixmap(":/res/cross.png"));
+        hlyout1->addWidget(lbl, 5);
+        pb = new s_tqPushButton("Ввод данных");
+        connect(pb,SIGNAL(clicked(bool)),this,SLOT(EnterMedData()));
+        hlyout1->addWidget(pb, 10);
+        pb = new s_tqPushButton("Протокол");
+        connect(pb,SIGNAL(clicked(bool)),this,SLOT(ShowMedProt()));
+        hlyout1->addWidget(pb, 3);
+        vlyout1->addLayout(hlyout1);
+        break;
+    }
+    case PDT_PERS:
+    {
+        break;
+    }
+    default:
+        break;
+    }
+    setLayout(vlyout1);
 }
 
-void DevMainDialog::Refresh()
+int PersDialog::Fill(QString PersID)
 {
-/*    TreeView *tv = this->findChild<TreeView *>("mtv");
-    if (tv == 0)
+    QString FIO;
+    QStringList fl = QStringList() << "Полные ФИО" << "Дата рождения" << "Должность";
+    QStringList vl;
+    tfl.valuesbyfield("Персонал_полн", fl, "ИД", PersID, vl);
+    if ((tfl.result != TFRESULT_NOERROR) || (vl.size() < 3))
     {
-        DBGMSG;
+        TFWARN;
         return;
     }
-    ProxyModel *tvmodel = new ProxyModel;
-    TreeModel *mdl = new TreeModel;
-    tvmodel->setSourceModel(mdl);
-    QItemSelectionModel *m = tv->selectionModel();
-    tv->setModel(tvmodel);
-    delete m;
-    mdl->Setup("Изделия_сокращ");
-    ResizeMainTV(); */
-}
-
-void DevMainDialog::Filter()
-{
-
-}
-
-void DevMainDialog::Unfilter()
-{
-
-}
-
-int DevMainDialog::Fill(QString DevID)
-{
-    QString DevDesc = sqlc.GetValueFromTableByID("dev", "devices", "description", DevID);
-    if (sqlc.result)
+    int i;
+    for (i=0; i<vl.size(); ++i)
     {
-        WARNMSG("");
-        return 1;
+        if (!SetLEData(this, "le."+QString::number(i), vl.at(i)))
+            WARNMSG("");
     }
-    if (!Ftps->ChDir("/"))
-    {
-        ERMSG("Невозможно перейти к корневому каталогу");
-        return 1;
-    }
-    QString Dir = DevDesc;
-/*    if (!Ftps->ChDir(Dir))
-    {
-        if (!Ftps->MkDir(Dir))
-        {
-            ERMSG("Невозможно создать каталог "+DevDesc+" на ftp-сервере");
-            return 1;
-        }
-        else
-            DEVMAININFO("Каталог создан успешно");
-    } */
-    if (!Ftps->List())
-    {
-        ERMSG("Невозможно получить данные с FTP-сервера");
-        return 1;
-    }
+    fl = QStringList() <<
     return 0;
 }
 
-void DevMainDialog::SetClassByManuf(QVariant Class)
-{
-    s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("decimalle");
-    if (le == 0)
-    {
-        DBGMSG;
-        return;
-    }
-    QString tmps = le->text();
-    QStringList tmpsl = tmps.split(".");
-/*    QStringList ClassDecimals = tfl.htovlc("Классификатор ЕСКД_полн","Наименование","ИД",Class.toString());
-    if (ClassDecimals.isEmpty())
-    {
-        WARNMSG("");
-        return;
-    }
-    QString ClassDecimal = ClassDecimals.at(0);
-    if (tfl.result == TFRESULT_ERROR)
-    {
-        WARNMSG("");
-        return;
-    }
-    if (ClassDecimal.isEmpty())
-    {
-        ERMSG("У данного производителя отсутствует код предприятия");
-        return;
-    } */
-    if (tmpsl.size()>1)
-        tmpsl.replace(1, Class.toString());
-    else
-        tmpsl.append(Class.toString());
-    tmps=tmpsl.join(".");
-    le->setText(tmps);
-}
-
-void DevMainDialog::SetDecimalByManuf(QVariant Manuf)
-{
-    s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("decimalle");
-    if (le == 0)
-    {
-        DBGMSG;
-        return;
-    }
-    QString tmps = le->text();
-    QStringList tmpsl = tmps.split(".");
-    QStringList ManufDecimals;
-    QString table = "Производители_полн";
-    QString field = "Код предприятия";
-    QString cmpfield = "Наименование";
-    tfl.htovlc(table,field,cmpfield,Manuf.toString(), ManufDecimals);
-    if (ManufDecimals.isEmpty())
-    {
-        WARNMSG("");
-        return;
-    }
-    QString ManufDecimal = ManufDecimals.at(0);
-    if (tfl.result == TFRESULT_ERROR)
-    {
-        WARNMSG("");
-        return;
-    }
-    if (ManufDecimal.isEmpty())
-    {
-        ERMSG("У данного производителя отсутствует код предприятия");
-        return;
-    }
-    tmpsl.replace(0, ManufDecimal);
-    tmps=tmpsl.join(".");
-    le->setText(tmps);
-}
-
-void DevMainDialog::History()
+void PersDialog::Filter()
 {
 
 }
 
-void DevMainDialog::Objects()
+void PersDialog::Unfilter()
 {
 
 }
 
-void DevMainDialog::Trips()
+void PersDialog::ShowEBHistory()
+{
+
+}
+
+void PersDialog::ShowEBProt()
+{
+
+}
+
+void PersDialog::ShowMedProt()
+{
+
+}
+
+void PersDialog::EnterEBData()
+{
+
+}
+
+void PersDialog::EnterMedData()
+{
+
+}
+
+void PersDialog::EnterOTData()
+{
+
+}
+
+void PersDialog::EnterPBData()
 {
 
 }

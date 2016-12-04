@@ -19,6 +19,8 @@
 sys_settingsdialog::sys_settingsdialog(QWidget *parent) :
     QDialog(parent)
 {
+    setAttribute(Qt::WA_DeleteOnClose);
+    SetupUI();
 }
 
 void sys_settingsdialog::paintEvent(QPaintEvent *event)

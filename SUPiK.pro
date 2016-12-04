@@ -101,7 +101,11 @@ SOURCES += main.cpp\
     widgets/s_tqwidget.cpp \
     widgets/treeview.cpp \
     widgets/waitwidget.cpp \
-    dialogs/tb/tb_examdialog.cpp
+    dialogs/tb/tb_examdialog.cpp \
+    dialogs/pers/persdialog.cpp \
+    models/baseitem.cpp \
+    models/baseitemmodel.cpp \
+    widgets/wgenfunc.cpp
 
 HEADERS  += startwindow.h \
     supik.h \
@@ -185,7 +189,11 @@ HEADERS  += startwindow.h \
     widgets/waitwidget.h \
     widgets/s_tqtextedit.h \
     dialogs/sys/sys_persdialog.h \
-    dialogs/tb/tb_examdialog.h
+    dialogs/tb/tb_examdialog.h \
+    dialogs/pers/persdialog.h \
+    models/baseitem.h \
+    models/baseitemmodel.h \
+    widgets/wgenfunc.h
 RESOURCES += \
     pic.qrc
 
@@ -203,3 +211,6 @@ DEPENDPATH += $$PWD/../xlsxwriter/src/xlsx
 
 LIBS += -llibeay32 -lssleay32
 LIBS += -lliblzma
+
+DISTFILES += \
+    res/Einstein.jpg

@@ -10,8 +10,6 @@
 #include "../../widgets/s_tqchoosewidget.h"
 #include "../../widgets/s_tqcombobox.h"
 #include "../../widgets/s_tqcheckbox.h"
-#include "../../models/s_ntmodel.h"
-#include "../../models/s_ncmodel.h"
 #include "../../gen/s_sql.h"
 #include "../../gen/publicclass.h"
 #include "../../gen/s_tablefields.h"

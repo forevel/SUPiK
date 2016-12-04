@@ -1171,7 +1171,7 @@ bool s_tablefields::Check(QString &tble, QString &cmpfield, QString &cmpvalue)
     }
 }
 
-void s_tablefields::valuesbyfield(QString &tble, QStringList &fl, QString &cmpfield, QString &cmpvalue, QStringList &out, bool Warn)
+void s_tablefields::valuesbyfield(const QString &tble, QStringList &fl, const QString &cmpfield, const QString &cmpvalue, QStringList &out, bool Warn)
 {
     QStringList sl;
     out.clear();
@@ -1186,7 +1186,7 @@ void s_tablefields::valuesbyfield(QString &tble, QStringList &fl, QString &cmpfi
         }
         QString cmpdb = sl.at(0).split(".").at(0); // реальное имя БД
         QString cmptble = sl.at(0).split(".").at(1); // реальное название таблицы
-        cmpfield = sl.at(1); // реальное название поля сравнения
+        QString realcmpfield = sl.at(1); // реальное название поля сравнения
         for (int i = 0; i < fl.size(); i++)
         {
             QString field = fl.at(i);
@@ -1198,7 +1198,7 @@ void s_tablefields::valuesbyfield(QString &tble, QStringList &fl, QString &cmpfi
             }
             fl.replace(i, sl.at(1)); // заменяем русское наименование поля на его реальное название
         }
-        out = sqlc.GetValuesFromTableByField(cmpdb,cmptble,fl,cmpfield,cmpvalue);
+        out = sqlc.GetValuesFromTableByField(cmpdb,cmptble,fl,realcmpfield,cmpvalue);
         if ((sqlc.result) && (Warn))
         {
             WARNMSG(sqlc.LastError);
@@ -1311,7 +1311,7 @@ void s_tablefields::TableColumn(QString &tble, QString &field, QStringList &out)
     result = TFRESULT_NOERROR;
 }
 
-void s_tablefields::tablefields(QString &tble, QString &header, QStringList &out)
+void s_tablefields::tablefields(const QString &tble, const QString &header, QStringList &out)
 {
     QStringList fl = QStringList() << "table" << "tablefields" << "links";
     QStringList cmpfl = QStringList() << "tablename" << "header";

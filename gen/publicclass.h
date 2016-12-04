@@ -67,6 +67,7 @@ QT_END_NAMESPACE
 #define ACC_DOC_RO      0x0400
 #define ACC_DOC_WR      0x0800
 #define ACC_NUM         12
+#define ACC_ALL         0xFFFF
 
 #define INSERT  1
 #define UPDATE  2
@@ -131,93 +132,6 @@ public:
     PublicClass();
     ~PublicClass();
 
-    // Коды ошибок
-    enum Errors
-    {
-        ER_SUPIK,    // supik
-        ER_COMP,     // cmp_compdialog
-        ER_CMPMAIN,  // cmp_maindialog
-        ER_CMPNS,    // cmp_newsubsection
-        ER_DIRADD,   // dir_adddialog
-        ER_WH,       // wh_dialog
-        ER_WHED,     // wh_editor
-        ER_SYS,      // sys_systemdialog
-        ER_DIRMAIN,  // dir_maindialog
-        ER_CHWDG,    // s_tqchoosewidget
-        ER_SYSMENU,  // sysmenueditor
-        ER_SYSDIR,   // sysdireditor
-        ER_2TDLG,    // 2tdialog
-        ER_2CTDLG,   // 2ctdialog
-        ER_2CDLG,    // 2cdialog
-        ER_NCMODEL,  // s_ncmodel
-        ER_NTMODEL,  // s_ntmodel
-        ER_TFIELD,   // tablefields
-        ER_SQL,      // s_sql
-        ER_START,    // startwindow
-        ER_DEVDOC,   // dev_docdialog
-        ER_ACC,      // s_accessdialog
-        ER_SFTP,     // sftp
-        ER_SYSSET,   // sys_settingsdialog
-        ER_SYSICT,   // sys_importclass_t
-        ER_TMODEL,   // treemodel
-        ER_EMODEL,   // editmodel
-        ER_CHIDLG,   // chooseitemdialog
-        ER_CTHREAD,  // checkthread
-        ER_DEVMAIN,  // DevMainDialog
-        ER_PROBS,    // SysProblemsDialog
-        ER_FTP,      // Ftp
-        ER_CLI,      // Client
-        ER_LOG,      // Log
-        ER_ETH,      // Ethernet
-        ER_SIMP,     // sys_importclass
-        ER_TBM,      // tb_maindialog
-        ER_SYSPERS  // sys_persdialog
-    };
-
-    static QMap<int, QString> ermsgs()
-    {
-        QMap<int, QString>map;
-        map.insert(ER_SUPIK, QString::fromLocal8Bit("Супик"));
-        map.insert(ER_COMP, QString::fromLocal8Bit("Комп"));
-        map.insert(ER_CMPMAIN, QString::fromLocal8Bit("Комп_гл"));
-        map.insert(ER_CMPNS, QString::fromLocal8Bit("Комп_новкатег"));
-        map.insert(ER_DIRADD, QString::fromLocal8Bit("Доб_справ"));
-        map.insert(ER_WH, QString::fromLocal8Bit("Работа со складом"));
-        map.insert(ER_WHED, QString::fromLocal8Bit("Редактор_складов"));
-        map.insert(ER_SYS, QString::fromLocal8Bit("Система"));
-        map.insert(ER_DIRMAIN, QString::fromLocal8Bit("Справочники_гл"));
-        map.insert(ER_CHWDG, QString::fromLocal8Bit("Строка_выбора"));
-        map.insert(ER_SYSMENU, QString::fromLocal8Bit("Ред_сист_меню"));
-        map.insert(ER_SYSDIR, QString::fromLocal8Bit("Ред_сист_справ"));
-        map.insert(ER_2TDLG, QString::fromLocal8Bit("Д_2_табл"));
-        map.insert(ER_2CTDLG, QString::fromLocal8Bit("Д_дерево"));
-        map.insert(ER_2CDLG, QString::fromLocal8Bit("Д_таблица"));
-        map.insert(ER_NCMODEL, QString::fromLocal8Bit("Модель_таблица"));
-        map.insert(ER_NTMODEL, QString::fromLocal8Bit("Модель_дерево"));
-        map.insert(ER_TFIELD, QString::fromLocal8Bit("Таблицы"));
-        map.insert(ER_SQL, QString::fromLocal8Bit("БД"));
-        map.insert(ER_START, QString::fromLocal8Bit("Вход_в_систему"));
-        map.insert(ER_DEVDOC, QString::fromLocal8Bit("Изделия_документы"));
-        map.insert(ER_ACC, QString::fromLocal8Bit("Права_доступа"));
-        map.insert(ER_SFTP, QString::fromLocal8Bit("Ftp_клиент"));
-        map.insert(ER_SYSSET, QString::fromLocal8Bit("Система_настройки"));
-        map.insert(ER_SYSICT, QString::fromLocal8Bit("Система_импорт_XLS"));
-        map.insert(ER_TMODEL, QString::fromLocal8Bit("Дерево_модель"));
-        map.insert(ER_EMODEL, QString::fromLocal8Bit("Табл_ред_модель"));
-        map.insert(ER_CHIDLG, QString::fromLocal8Bit("Выбор_элем_диалог"));
-        map.insert(ER_CTHREAD, QString::fromLocal8Bit("Проверки_поток"));
-        map.insert(ER_DEVMAIN, QString::fromLocal8Bit("Ред_изделий"));
-        map.insert(ER_PROBS, QString::fromLocal8Bit("Д_проблемы"));
-        map.insert(ER_FTP, QString::fromLocal8Bit("Ftp"));
-        map.insert(ER_CLI, QString::fromLocal8Bit("Клиент"));
-        map.insert(ER_LOG, QString::fromLocal8Bit("Логи"));
-        map.insert(ER_ETH, QString::fromLocal8Bit("Ethernet"));
-        map.insert(ER_SIMP, QString::fromLocal8Bit("Импорт"));
-        map.insert(ER_TBM, QString::fromLocal8Bit("ТБ_гл"));
-        map.insert(ER_SYSPERS, QString::fromLocal8Bit("Система_персонал"));
-        return map;
-    }
-
     // диалоговые окна в СУПиКе
     enum SupikDialogWindows
     {
@@ -235,7 +149,8 @@ public:
         TW_QUAR,    // работа с карантином
         TW_DEV,     // редактор документов
         TW_ADM,     // сисадминистрирование
-        TW_TB       // техника безопасности
+        TW_TB,      // техника безопасности
+        TW_PERS     // сотрудники
     };
 
     // определение проблем
@@ -483,6 +398,7 @@ public:
     void AddErrMsg(ermsgtype msgtype, QString file, int line, QString msg="");
     void ConvertId(bool ColumnZero, QString &Id); // преобразование <tble>.000<id> в нормальный id
     bool OpenAndCheckDBs();
+
 
 private:
     void openBD(QSqlDatabase &db, QString dbid, QString dbname, QString login, QString psw);

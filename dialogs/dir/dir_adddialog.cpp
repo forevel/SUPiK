@@ -802,7 +802,7 @@ void dir_adddialog::fillFields()
     TbleNameChanged(dirNameLE->text()); // принудительно имитируем изменение имени таблицы для заполнения комбобоксов
     for (int i = 0; i < lsl.size(); i++)
     {
-        if (i > 16)
+        if (i > FSIZE)
             break;
         cbf = this->findChild<s_tqComboBox *>("field."+QString::number(i)); // имя поля
         lev = this->findChild<s_tqLineEdit *>("value."+QString::number(i)); // строка 1
@@ -1064,7 +1064,7 @@ s_tqWidget *dir_adddialog::SetWidget(int FType)
         slm->setStringList(vls);
         cb->setModel(slm);
         cb->setObjectName("tcb."+QString::number(FW_ALLINK));
-        connect(cb,SIGNAL(currentTextChanged(QString)),this,SLOT(TbleChoosed(QString)));
+        connect(cb,SIGNAL(currentTextChanged(QString)),this,SLOT(TbleChoosed()));
         hlyout->addWidget(cb);
         vlyout->addLayout(hlyout);
         hlyout = new QHBoxLayout;
@@ -1088,7 +1088,7 @@ s_tqWidget *dir_adddialog::SetWidget(int FType)
         slm->setStringList(vls);
         cb->setModel(slm);
         cb->setObjectName("tcb."+QString::number(FW_MAXLINK));
-        connect(cb,SIGNAL(currentTextChanged(QString)),this,SLOT(TbleChoosed(QString)));
+        connect(cb,SIGNAL(currentTextChanged(QString)),this,SLOT(TbleChoosed()));
         hlyout->addWidget(cb);
         vlyout->addLayout(hlyout);
         hlyout = new QHBoxLayout;

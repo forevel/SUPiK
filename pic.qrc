@@ -77,5 +77,7 @@
         <file>res/ans_good.gif</file>
         <file>res/ans_neutral.gif</file>
         <file>res/2.x.png</file>
+        <file>res/PersWallPaper.png</file>
+        <file>res/Einstein.png</file>
     </qresource>
 </RCC>

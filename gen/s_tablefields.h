@@ -31,11 +31,11 @@ public:
     void remove(QString &tble, QString &id); // "удаление" элемента из таблицы
     void Delete(QString &tble, QString &id); // реальное удаление из таблицы
     bool Check(QString &tble, QString &cmpfield, QString &cmpvalue); // проверка наличия записи в таблице
-    void tablefields(QString &tble, QString &header, QStringList &out);
+    void tablefields(const QString &tble, const QString &header, QStringList &out);
     void tableheaders(QString &tble, QStringList &out);
     void tablelinks(QString &tble, QStringList &out);
     bool tableistree (QString &tble);
-    void valuesbyfield(QString &tble, QStringList &fl, QString &cmpfield, QString &cmpvalue, QStringList &out, bool Warn=true);
+    void valuesbyfield(const QString &tble, QStringList &fl, const QString &cmpfield, const QString &cmpvalue, QStringList &out, bool Warn=true);
     void valuesbyfields(QString &tble, QStringList &fl, QStringList &cmpfields, QStringList &cmpvalues, QStringList &out, bool Warn=true);
     void HeaderByFields(QString &tble, QString &header, QStringList &cmpfl, QStringList &cmpvl, QStringList &out);
     void TableColumn(QString &tble, QString &field, QStringList &out); // взять значения поля field, где tablename=tble

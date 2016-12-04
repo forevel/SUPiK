@@ -28,6 +28,7 @@ PublicClass::PublicClass()
     TabColors[TW_WH] = QColor(204, 204, 51); // WAREHOUSE
     TabColors[TW_DEV] = QColor(204, 255, 255); // DEVICES
     TabColors[TW_TB] = QColor(204, 204, 255); // TB
+    TabColors[TW_PERS] = QColor(102, 204, 255); // PERS
     AutonomousMode = true; // изначально неизвестно, доступен ли сервер, поэтому на всякий случай ставим признак автономности
     PCLog = new Log;
     PCLog->Init(HomeDir+"sup.log");

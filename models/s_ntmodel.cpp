@@ -321,7 +321,7 @@ int s_ntmodel::Setup(QString table)
             IsAliasExist = true;
     }
     if (!IsIdAliasExist)
-        return PublicClass::ER_NTMODEL; // не найдено поле idalias
+        return 1; // не найдено поле idalias
     if (!IsAliasExist)
     {
         INFOMSG("Не найдено поле alias в таблице "+table);

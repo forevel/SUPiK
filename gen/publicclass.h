@@ -3,19 +3,17 @@
 
 #include <QObject>
 
-QT_BEGIN_NAMESPACE
-class QSettings;
-class QSqlDatabase;
-class QColor;
-QT_END_NAMESPACE
-
 #include <QMap>
 #include <QDateTime>
 #include <QStringList>
+#include <QSettings>
 #include <QColor>
 #include <QFont>
 #include <QIcon>
 #include <QMutex>
+#include <QPixmap>
+#include "../widgets/s_tqlineedit.h"
+#include "../widgets/s_tqlabel.h"
 
 #include <QtSql/QSqlDatabase>
 #include <QtSql/QSqlError>
@@ -24,10 +22,6 @@ QT_END_NAMESPACE
 #include "publiclang.h"
 
 // Макросы для выдачи сообщений
-/*#define ERMSG(...)     pc.AddErrMsg(PublicClass::ER_MSG,__VA_ARGS__)
-#define DBGMSG(...)    pc.AddErrMsg(PublicClass::DBG_MSG,__VA_ARGS__)
-#define INFOMSG(...)   pc.AddErrMsg(PublicClass::INFO_MSG,__VA_ARGS__)
-#define WARNMSG(...)   pc.AddErrMsg(PublicClass::WARN_MSG,__VA_ARGS__) */
 
 #define WARNMSG(a)  pc.AddErrMsg(PublicClass::ER_MSG, __FILE__, __LINE__, a)
 #define DBGMSG      pc.AddErrMsg(PublicClass::DBG_MSG, __FILE__, __LINE__, "")

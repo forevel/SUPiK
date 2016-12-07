@@ -24,13 +24,14 @@ public slots:
 
 private:
     void SetupUI();
+    void ShowPhoto(const QString &Pers);
 
     int DialogType;
 
 private slots:
     void Filter();
     void Unfilter();
-    int Fill(QString PersID);
+    bool Fill(QString PersID);
     void ShowEBProt();
     void ShowMedProt();
     void EnterEBData();
@@ -38,6 +39,7 @@ private slots:
     void EnterPBData();
     void EnterOTData();
     void EnterMedData();
+    void LoadPhoto();
 
 protected:
     void paintEvent(QPaintEvent *);

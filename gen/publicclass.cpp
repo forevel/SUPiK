@@ -1,11 +1,9 @@
 #include "publicclass.h"
 
 #include <QVariant>
-#include <QColor>
 #include <QString>
 #include <QSettings>
 #include <QDate>
-#include <QDateTime>
 #include <QDir>
 #include "s_sql.h"
 #include "log.h"

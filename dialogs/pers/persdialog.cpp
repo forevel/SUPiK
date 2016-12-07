@@ -2,6 +2,7 @@
 #include <QAction>
 #include <QIcon>
 #include <QImage>
+#include <QFile>
 #include <QGridLayout>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -57,7 +58,7 @@ void PersDialog::paintEvent(QPaintEvent *event)
 
 // Настройка интерфейса
 
-void PersDialog::SetupUI(int DialogType)
+void PersDialog::SetupUI()
 {
     QVBoxLayout *vlyout1 = new QVBoxLayout;
     QVBoxLayout *vlyout2 = new QVBoxLayout;
@@ -78,13 +79,18 @@ void PersDialog::SetupUI(int DialogType)
     lbl->setMinimumSize(150, 200);
     lbl->setScaledContents(true);
     lbl->setPixmap(QPixmap(":/res/Einstein.png"));
-    hlyout1->addWidget(lbl, 50);
+    vlyout2->addWidget(lbl);
+    pb = new s_tqPushButton("Загрузить другое фото");
+    connect(pb,SIGNAL(clicked(bool)),this,SLOT(LoadPhoto()));
+    vlyout2->addWidget(pb);
+    hlyout1->addLayout(vlyout2, 50);
+    vlyout2 = new QVBoxLayout;
     lbl = new s_tqLabel;
     lbl->setText("ФИО: ");
     hlyout2->addWidget(lbl, 10);
     s_tqLineEdit *le = new s_tqLineEdit;
     le->setObjectName("le.1");
-    le->setEnabled(isEnabled);
+    le->setEnabled(true);
     hlyout2->addWidget(le, 30);
     vlyout2->addLayout(hlyout2);
     hlyout2 = new QHBoxLayout;
@@ -92,7 +98,7 @@ void PersDialog::SetupUI(int DialogType)
     hlyout2->addWidget(lbl, 10);
     le = new s_tqLineEdit;
     le->setObjectName("le.2");
-    le->setEnabled(isEnabled);
+    le->setEnabled(true);
     hlyout2->addWidget(le, 30);
     vlyout2->addLayout(hlyout2);
     hlyout2 = new QHBoxLayout;
@@ -100,7 +106,7 @@ void PersDialog::SetupUI(int DialogType)
     hlyout2->addWidget(lbl, 10);
     le = new s_tqLineEdit;
     le->setObjectName("le.3");
-    le->setEnabled(isEnabled);
+    le->setEnabled(true);
     hlyout2->addWidget(le, 30);
     vlyout2->addLayout(hlyout2);
     if (DialogType == PDT_TB)
@@ -110,7 +116,7 @@ void PersDialog::SetupUI(int DialogType)
         hlyout2->addWidget(lbl, 10);
         le = new s_tqLineEdit;
         le->setObjectName("le.31");
-        le->setEnabled(isEnabled);
+        le->setEnabled(true);
         hlyout2->addWidget(le, 30);
         vlyout2->addLayout(hlyout2);
     }
@@ -126,13 +132,13 @@ void PersDialog::SetupUI(int DialogType)
         hlyout1->addWidget(lbl, 10);
         le = new s_tqLineEdit;
         le->setObjectName("le.32");
-        le->setEnabled(isEnabled);
+        le->setEnabled(true);
         hlyout1->addWidget(le, 30);
         lbl = new s_tqLabel("Оценка: ");
         hlyout1->addWidget(lbl, 10);
         le = new s_tqLineEdit;
         le->setObjectName("le.33");
-        le->setEnabled(isEnabled);
+        le->setEnabled(true);
         hlyout1->addWidget(le, 30);
         pb = new s_tqPushButton("Протокол");
         connect(pb,SIGNAL(clicked(bool)),this,SLOT(ShowEBProt()));
@@ -152,7 +158,7 @@ void PersDialog::SetupUI(int DialogType)
         hlyout1->addWidget(lbl, 10);
         le = new s_tqLineEdit;
         le->setObjectName("le.41");
-        le->setEnabled(isEnabled);
+        le->setEnabled(true);
         hlyout1->addWidget(le, 30);
         lbl = new s_tqLabel;
         lbl->setObjectName("PBGoodlbl");
@@ -167,7 +173,7 @@ void PersDialog::SetupUI(int DialogType)
         hlyout1->addWidget(lbl, 10);
         le = new s_tqLineEdit;
         le->setObjectName("le.42");
-        le->setEnabled(isEnabled);
+        le->setEnabled(true);
         hlyout1->addWidget(le, 30);
         lbl = new s_tqLabel;
         lbl->setObjectName("OTGoodlbl");
@@ -182,7 +188,7 @@ void PersDialog::SetupUI(int DialogType)
         hlyout1->addWidget(lbl, 10);
         le = new s_tqLineEdit;
         le->setObjectName("le.43");
-        le->setEnabled(isEnabled);
+        le->setEnabled(true);
         hlyout1->addWidget(le, 30);
         lbl = new s_tqLabel;
         lbl->setObjectName("MedGoodlbl");
@@ -207,7 +213,7 @@ void PersDialog::SetupUI(int DialogType)
     setLayout(vlyout1);
 }
 
-int PersDialog::Fill(QString PersID)
+bool PersDialog::Fill(QString PersID)
 {
     QString FIO;
     QStringList fl = QStringList() << "Полные ФИО" << "Дата рождения" << "Должность";
@@ -215,8 +221,8 @@ int PersDialog::Fill(QString PersID)
     tfl.valuesbyfield("Персонал_полн", fl, "ИД", PersID, vl);
     if ((tfl.result != TFRESULT_NOERROR) || (vl.size() < 3))
     {
-        TFWARN;
-        return;
+        WARNMSG("");
+        return false;
     }
     int i;
     for (i=0; i<vl.size(); ++i)
@@ -224,8 +230,8 @@ int PersDialog::Fill(QString PersID)
         if (!SetLEData(this, "le."+QString::number(i), vl.at(i)))
             WARNMSG("");
     }
-    fl = QStringList() <<
-    return 0;
+//    fl = QStringList() <<
+    return true;
 }
 
 void PersDialog::Filter()
@@ -271,4 +277,28 @@ void PersDialog::EnterOTData()
 void PersDialog::EnterPBData()
 {
 
+}
+
+void PersDialog::LoadPhoto()
+{
+
+}
+
+void PersDialog::ShowPhoto(const QString &Pers)
+{
+    QFile fp;
+    fp.setFileName(pc.HomeDir+"pers/photo/"+Pers+".jpg");
+    if (!fp.open(QIODevice::ReadOnly))
+    {
+        fp.setFileName(pc.HomeDir+"pers/photo/"+Pers+".png");
+        if (!fp.open(QIODevice::ReadOnly))
+        {
+            WARNMSG("Нет фотографии для сотрудника " + Pers);
+            return;
+        }
+    }
+    QPixmap pm(fp.fileName());
+    fp.close();
+    if (!SetLBLImage(this, "photo", &pm))
+        WARNMSG("");
 }

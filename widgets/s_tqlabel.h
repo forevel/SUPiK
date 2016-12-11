@@ -30,6 +30,7 @@ private slots:
 
 protected:
     void paintEvent(QPaintEvent *event);
+    void resizeEvent(QResizeEvent *e);
     void mousePressEvent(QMouseEvent *e);
 };
 

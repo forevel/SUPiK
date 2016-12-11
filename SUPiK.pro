@@ -105,7 +105,8 @@ SOURCES += main.cpp\
     dialogs/pers/persdialog.cpp \
     models/baseitem.cpp \
     models/baseitemmodel.cpp \
-    widgets/wgenfunc.cpp
+    dialogs/tb/tb_func.cpp \
+    widgets/wd_func.cpp
 
 HEADERS  += startwindow.h \
     supik.h \
@@ -193,7 +194,8 @@ HEADERS  += startwindow.h \
     dialogs/pers/persdialog.h \
     models/baseitem.h \
     models/baseitemmodel.h \
-    widgets/wgenfunc.h
+    dialogs/tb/tb_func.h \
+    widgets/wd_func.h
 RESOURCES += \
     pic.qrc
 

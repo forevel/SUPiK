@@ -24,22 +24,21 @@ public slots:
 
 private:
     void SetupUI();
-    void ShowPhoto(const QString &Pers);
 
     int DialogType;
+    QString idPers, Pers, EBDate, OTDate, PBDate, MedDate;
+    QList<QColor> CList = QList<QColor>() << Qt::darkGreen << Qt::darkYellow << Qt::red;
 
 private slots:
-    void Filter();
-    void Unfilter();
-    bool Fill(QString PersID);
+    bool Fill();
     void ShowEBProt();
     void ShowMedProt();
     void EnterEBData();
     void ShowEBHistory();
-    void EnterPBData();
-    void EnterOTData();
-    void EnterMedData();
+    void SetPhoto();
     void LoadPhoto();
+    void Accept();
+    void AcceptEBData();
 
 protected:
     void paintEvent(QPaintEvent *);

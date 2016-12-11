@@ -488,8 +488,8 @@ void tb_examdialog::ProcessResultsAndExit()
         // сформируем протокол в pdf
         sl = QStringList() << "ИД" << "ИД вопроса" << "Номер ответа" << "Правильный ответ";
         lsl.insert(0, sl);
-        QString Filename = pc.HomeDir + pc.Pers+" " + pc.DateTime.replace(':','.') +".pdf";
-        PdfOut *PdfDoc = new PdfOut(Filename);
+        QString FullFilename = pc.HomeDir + pc.Pers+" " + pc.DateTime.replace(':','.') +".pdf";
+        PdfOut *PdfDoc = new PdfOut(FullFilename);
         QFont font;
         font.setPointSize(15);
         PdfDoc->SetTextFont(font);
@@ -506,7 +506,7 @@ void tb_examdialog::ProcessResultsAndExit()
             this->close();
             return;
         }
-        Filename = pc.Pers+" " + pc.DateTime.replace(':','.') +".pdf";
+        QString Filename = pc.Pers+" " + pc.DateTime.replace(':','.') +".pdf";
         QStringList fl = QStringList() << "ИД" << "Результат" << "Раздел" << "Тип" << "Файл";
         QStringList vl = QStringList() << newID << QString::number(Mark, 'g', 2) << QString::number(TBGroup) << QString::number(ExType) << Filename;
         tfl.idtois(table, fl, vl);
@@ -517,15 +517,7 @@ void tb_examdialog::ProcessResultsAndExit()
             return;
         }
         // отправим протокол на сервер
-        sl.clear();
-        sl << FL_TB << FL_PROT << Filename;
-        Cli->SendCmd(M_PUTFILE, sl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
-        if (Cli->DetectedError != Client::CLIER_NOERROR)
+        if (Cli->PutFile(FullFilename, FLT_TB, FLST_PROT, Filename) != Client::CLIER_NOERROR)
         {
             WARNMSG("");
             return;

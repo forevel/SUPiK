@@ -1,4 +1,5 @@
 #include "tb_maindialog.h"
+#include "tb_func.h"
 #include "../../models/treemodel.h"
 #include "../../models/griddelegate.h"
 #include <QAction>
@@ -152,20 +153,20 @@ void tb_maindialog::SetupModel()
         QString TBGroup = (i < TBGroups.size()) ? TBGroups.at(i) : TB_NODATA;
         SetMainModelData(row, 1, TBGroup, Qt::black);
         tmps = (i < POs.size()) ? POs.at(i) : TB_NODATA;
-        SetMainModelData(row, 5, tmps, CList.at(CheckDate(DT_MED, tmps)));
+        SetMainModelData(row, 5, tmps, CList.at(TBFunc::CheckDate(TBFunc::DT_MED, tmps)));
         tmps = (i < PBs.size()) ? PBs.at(i) : TB_NODATA;
-        SetMainModelData(row, 4, tmps, CList.at(CheckDate(DT_PB, tmps)));
+        SetMainModelData(row, 4, tmps, CList.at(TBFunc::CheckDate(TBFunc::DT_PB, tmps)));
         tmps = (i < OTs.size()) ? OTs.at(i) : TB_NODATA;
-        SetMainModelData(row, 3, tmps, CList.at(CheckDate(DT_OT, tmps)));
+        SetMainModelData(row, 3, tmps, CList.at(TBFunc::CheckDate(TBFunc::DT_OT, tmps)));
         QStringList Dates, fl, vl;
         fl << "idpers" << "section";
         if (TBGroup == TB_NODATA)
-            vl << PersIds.at(i) << "3"; // 3 - 3-я группа по ЭБ
+            vl << PersIds.at(i) << "2"; // 2 - 2-я группа по ЭБ (без экзаменов)
         else
             vl << PersIds.at(i) << TBGroup;
         Dates = sqlc.GetValuesFromTableByColumnAndFields("tb", "examresults", "date", fl, vl, "date", false); // Dates - дата последнего экзамена
         if (Dates.size())
-            SetMainModelData(row, 2, Dates.at(0), CList.at(CheckDate(DT_TB, Dates.at(0))));
+            SetMainModelData(row, 2, Dates.at(0), CList.at(TBFunc::CheckDate(TBFunc::DT_TB, Dates.at(0))));
         else
             SetMainModelData(row, 2, TB_NODATA, CList.at(TBDATE_BAD));
     }
@@ -178,55 +179,4 @@ void tb_maindialog::SetMainModelData(int row, int column, const QString &data, c
     else
         MainModel->SetModelData(row, column, data, Qt::EditRole);
     MainModel->SetModelData(row, column, color, Qt::ForegroundRole);
-}
-
-int tb_maindialog::CheckDate(int type, const QString &date)
-{
-    QDateTime dtme = QDateTime::fromString(date, "yyyy-MM-dd hh:mm:ss");
-    if (!dtme.isValid())
-        return TBDATE_BAD;
-    QDateTime CurDateTime = QDateTime::currentDateTime();
-    QString periodstr, table, field;
-    QStringList fl, vl;
-    switch (type)
-    {
-    case DT_MED:
-        periodstr = "int-po";
-        break;
-    case DT_OT:
-        periodstr = "int-ot";
-        break;
-    case DT_PB:
-        periodstr = "int-pb";
-        break;
-    case DT_TB:
-        periodstr = "int-eb";
-        break;
-    default:
-        return TBDATE_BAD;
-    }
-    table = "Настройки_ТБ_полн";
-    field = "Обозначение";
-    fl << "Значение";
-    tfl.valuesbyfield(table, fl, field, periodstr, vl); // в vl - значение в месяцах периода проверок
-    if ((tfl.result != TFRESULT_NOERROR) || (vl.isEmpty()))
-    {
-        WARNMSG("");
-        return TBDATE_BAD;
-    }
-    bool ok;
-    int months = vl.at(0).toInt(&ok);
-    if (!ok)
-    {
-        WARNMSG("");
-        return TBDATE_BAD;
-    }
-    dtme = dtme.addMonths(months);
-    qint64 SubDays = dtme.daysTo(CurDateTime);
-    if (SubDays < -DAYS_TO_BAD) // две недели до конца
-        return TBDATE_OK;
-    if (SubDays <= 0)
-        return TBDATE_WARN;
-    else
-        return TBDATE_BAD;
 }

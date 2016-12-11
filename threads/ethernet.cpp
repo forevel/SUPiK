@@ -50,7 +50,6 @@ Ethernet::Ethernet(QString Host, int Port, int Type, QObject *parent) :
 
 void Ethernet::Run()
 {
-    Busy = true;
     switch (EthType)
     {
     case ETH_PLAIN:
@@ -97,7 +96,6 @@ void Ethernet::Run()
                     delete sslsock;
                 }
                 emit finished();
-                Busy = false;
                 return;
             }
             QThread::msleep(10);
@@ -201,7 +199,7 @@ void Ethernet::InitiateWriteDataToPort(QByteArray *ba)
     OutDataBufMtx.lock();
     OutDataBuf = *ba;
     OutDataBufMtx.unlock();
-    delete ba;
+    Busy = false;
 }
 
 void Ethernet::CheckForData()

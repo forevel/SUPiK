@@ -79,16 +79,20 @@
 #define C_CRALT		1301
 
 // описания типов файлов
-#define FL_TB       "0"
-#define FL_DOC      "1"
-#define FL_ALT      "2"
+#define FLT_TB       "0"
+#define FLT_DOC      "1"
+#define FLT_ALT      "2"
+#define FLT_PERS     "3"
 
 // описания подтипов файлов
-#define FL_PROT     "0" // протоколы
-#define FL_TECHDOC  "1" // техдокументация
-#define FL_LIBS     "2" // библиотеки
-#define FL_LIBSYM   "3" // библиотеки Altium - SchLib
-#define FL_LIBFOOT  "4" // библиотеки Altium - PcbLib
+#define FLST_PROT     "0" // протоколы
+#define FLST_TECHDOC  "1" // техдокументация
+#define FLST_LIBS     "2" // библиотеки
+#define FLST_LIBSYM   "3" // библиотеки Altium - SchLib
+#define FLST_LIBFOOT  "4" // библиотеки Altium - PcbLib
+#define FLST_PHOTO    "5" // фотографии
+
+#define READBUFMAX  16384
 
 class Client : public QObject
 {
@@ -157,12 +161,15 @@ public:
     QList<QStringList> Result;
     QString ResultStr;
     int ResultInt, DetectedError;
+    const QStringList PathPrefixes = QStringList() << "tb/" << "doc/" << "alt/" << "pers/";
+    const QStringList PathSuffixes = QStringList() << "prot/" << "dsheet/" << "libs/" << "symbols/" << "footprints/" << "photo/";
 
     int Connect(QString Host, QString Port);
     void Disconnect();
     void SendCmd(int Command, QStringList &Args=QStringList());
     QString Join(QStringList &sl);
-    int GetFile(QString type, QString subtype, QString &filename);
+    int GetFile(const QString &type, const QString &subtype, const QString &filename);
+    int PutFile(const QString &localfilename, const QString &type, const QString &subtype, const QString &filename);
 
 public slots:
     void StopThreads();
@@ -178,7 +185,7 @@ signals:
 
 private:
 
-    QByteArray RcvData, WrData;
+    QByteArray RcvData, *WrData;
     Ethernet *MainEthernet, *FileEthernet;
     QTimer *TimeoutTimer, *GetComReplyTimer, *GetFileTimer;
     bool FileBusy, Connected, FileConnected, CmdOk, LoginOk, FirstReplyPass, ComReplyTimeoutIsSet, FieldsLeast;

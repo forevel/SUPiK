@@ -113,7 +113,7 @@ bool BaseItemModel::removeColumns(int position, int columns, const QModelIndex &
 
 bool BaseItemModel::insertRows(int position, int rows, const QModelIndex &index)
 {
-    int i, j;
+    int i;
     Q_UNUSED(index);
     if ((position > MainData.size()) || (position < 0))
         return false;

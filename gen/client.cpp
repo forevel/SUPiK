@@ -51,6 +51,8 @@ Client::Client(QObject *parent) : QObject(parent)
     CmdMap.insert(T_UPDV, {"T_UPDV", 3, "TC", RESULT_NONE, false, false});
     CmdMap.insert(M_PUTFILE, {"M_PUTFILE", 4, "M7", RESULT_NONE, false, false}); // 0 - local filename, 1 - type, 2 - subtype, 3 - filename, [4] - filesize, added in SendCmd
     CmdMap.insert(M_GETFILE, {"M_GETFILE", 3, "M8", RESULT_NONE, false, false}); // 0 - type, 1 - subtype, 2 - filename
+//    PathPrefixes = QStringList() << "tb/" << "doc/" << "alt/" << "pers/";
+//    PathSuffixes = QStringList() << "prot/" << "dsheet/" << "libs/" << "symbols/" << "footprints/" << "photo/";
 }
 
 Client::~Client()
@@ -167,7 +169,21 @@ void Client::SendCmd(int Command, QStringList &Args)
     // далее ожидание прихода "<длина_в_байтах>\n", затем приём содержимого файла блоками по 16384 байт, после каждого отсылка RDY\n
     case M_GETFILE:
     {
-        fp.setFileName(pc.HomeDir+"Incoming/"+Args.at(2));
+        bool ok;
+        int fltype, flsubtype;
+        fltype = Args.at(0).toInt(&ok);
+        if (ok)
+            flsubtype = Args.at(1).toInt(&ok);
+        if ((!ok) || (fltype >= PathPrefixes.size()) || (flsubtype >= PathSuffixes.size()))
+        {
+            ERMSG("GETFILE: Ошибка в параметрах");
+            DetectedError = CLIER_GETFER;
+            return;
+        }
+        QDir *dr = new QDir;
+        dr->mkpath(pc.HomeDir+PathPrefixes.at(fltype)+PathSuffixes.at(flsubtype));
+        delete dr;
+        fp.setFileName(pc.HomeDir + PathPrefixes.at(fltype) + PathSuffixes.at(flsubtype) + Args.at(2));
         if (!fp.open(QIODevice::WriteOnly))
         {
             ERMSG("Невозможно создать файл" + Args.at(2));
@@ -203,7 +219,11 @@ void Client::SendCmd(int Command, QStringList &Args)
     case M_APUTFILE:
     {
         CliLog->info("> ...binary data...");
-        emit ClientSend(&WrData);
+        MainEthernet->Busy = true;
+        emit ClientSend(WrData);
+        while (MainEthernet->Busy)
+            qApp->processEvents(QEventLoop::AllEvents, 10);
+        delete WrData;
         return;
     }
         // ANS_GETFILE - второй и последующие ответы на принятую информацию (с записью блока в файл)
@@ -239,7 +259,11 @@ void Client::SendCmd(int Command, QStringList &Args)
         CliLog->info(">"+CommandString); //+codec->fromUnicode(CommandString));
     QByteArray *ba = new QByteArray(CommandString.toUtf8());//codec->fromUnicode(CommandString));
     ComReplyTimeoutIsSet = false;
+    MainEthernet->Busy = true;
     emit ClientSend(ba);
+    while (MainEthernet->Busy)
+        qApp->processEvents(QEventLoop::AllEvents, 10);
+    delete ba;
 }
 
 // ############################################ ОБРАБОТКА ОТВЕТА ##############################################
@@ -549,23 +573,27 @@ void Client::ParseReply(QByteArray *ba)
         break;
     }
     case M_PUTFILE:
+    case M_APUTFILE:
     {
         if (ServerResponse == "OK")
         {
-            qint64 BytesLeast = XmitDataSize - WrittenBytes;
             emit BytesWritten(WrittenBytes);
             CliLog->info(QString::number(WrittenBytes)+" bytes written to file");
-            if (BytesLeast > 0)
+            qint64 BytesToSend = XmitDataSize - WrittenBytes;
+            if (BytesToSend > READBUFMAX)
+                BytesToSend = READBUFMAX;
+            if (BytesToSend > 0)
             {
                 if (fp.isOpen())
                 {
-                    WrData = fp.read(BytesLeast);
-                    if (WrData.isEmpty())
+                    WrData = new QByteArray(fp.read(BytesToSend));
+                    if (WrData->isEmpty())
                     {
+                        delete WrData;
                         DetectedError = CLIER_PUTFER;
                         return;
                     }
-                    WrittenBytes += WrData.size();
+                    WrittenBytes += WrData->size();
                     SendCmd(M_APUTFILE);
                     return;
                 }
@@ -813,7 +841,7 @@ int Client::CheckArgs(QString cmd, QStringList &Args, int argsnum, bool fieldsch
     return 0;
 }
 
-int Client::GetFile(QString type, QString subtype, QString &filename)
+int Client::GetFile(const QString &type, const QString &subtype, const QString &filename)
 {
     QStringList sl;
     sl.clear();
@@ -824,10 +852,18 @@ int Client::GetFile(QString type, QString subtype, QString &filename)
         QThread::msleep(10);
         qApp->processEvents(QEventLoop::AllEvents);
     }
-    if (Cli->DetectedError != Client::CLIER_NOERROR)
+    return DetectedError;
+}
+
+int Client::PutFile(const QString &localfilename, const QString &type, const QString &subtype, const QString &filename)
+{
+    QStringList sl;
+    sl << localfilename << type << subtype << filename;
+    Cli->SendCmd(M_PUTFILE, sl);
+    while (Cli->Busy)
     {
-        WARNMSG("");
-        return CLIER_GETFER;
+        QThread::msleep(10);
+        qApp->processEvents(QEventLoop::AllEvents);
     }
-    return CLIER_NOERROR;
+    return DetectedError;
 }

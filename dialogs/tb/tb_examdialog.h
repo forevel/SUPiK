@@ -14,7 +14,7 @@
 #define TB_TH_SIZ   3 // средства индивид. защиты
 #define TB_TH_POM   4 // первая помощь
 
-#define MAX_MARK    10 // максимальная оценка
+#define MAX_MARK    5 // максимальная оценка
 
 #include <QDialog>
 #include "../../models/treemodel.h"

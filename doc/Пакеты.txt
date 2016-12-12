@@ -1,0 +1,1 @@
+SmtpClient-For-Qt v1.1	https://github.com/bluetiger9/SmtpClient-for-Qt/tree/v1.1/src

@@ -356,10 +356,10 @@ void PersDialog::AcceptEBData()
         WARNMSG("EBdlg not found");
         return;
     }
-    QString tmps = WDFunc::CWData(dlg, "EBdate");
+    QString tmps = WDFunc::CWData(this, "EBdate");
     WDFunc::SetLEData(this, "le.32", tmps);
     WDFunc::SetLEColor(this, "le.32", CList.at(TBFunc::CheckDate(TBFunc::DT_TB, tmps)));
-    WDFunc::SetLEData(this, "le.33", WDFunc::LEData(dlg, "EBmark"));
+    WDFunc::SetLEData(this, "le.33", WDFunc::LEData(this, "EBmark"));
     dlg->close();
 }
 

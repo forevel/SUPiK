@@ -527,6 +527,7 @@ void s_tablefields::vtoid(PublicClass::ValueStruct &vl, QString &out)
         case FW_SPECIAL:
         case FW_FLINK:
         case FW_ILINK:
+        case FW_DATE:
         {
             if (ff.delegate == FD_SPIN) // для спина отдельная обработка, ибо дурит как хочет
             {

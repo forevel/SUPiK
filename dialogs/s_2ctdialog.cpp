@@ -261,13 +261,13 @@ void s_2ctdialog::AddItem()
     QString Caption = tmptble;
     tmptble.append("_полн");
     QString newID;
-    tfl.insert(tmptble, newID);
+    tfl.Insert(tmptble, newID);
     if (tfl.result == TFRESULT_ERROR)
     {
         WARNMSG("");
         return;
     }
-    tfl.idtois(tmptble,QStringList("ИД"),QStringList(newID)); // добавление полей idpers, deleted, date
+    tfl.Update(tmptble,QStringList("ИД"),QStringList(newID)); // добавление полей idpers, deleted, date
     if (tfl.result != TFRESULT_ERROR)
     {
         s_2cdialog *newdialog = new s_2cdialog(Caption);

@@ -311,7 +311,7 @@ void dir_maindialog::AddNew()
     isNewID = true;
     QString newID;
     QString table = Tables.last()+"_полн";
-    tfl.insert(table, newID); // добавление элементов разрешается только в крайнюю таблицу
+    tfl.Insert(table, newID); // добавление элементов разрешается только в крайнюю таблицу
     if (tfl.result == TFRESULT_ERROR)
     {
         DBGMSG;
@@ -337,7 +337,7 @@ void dir_maindialog::AddNew()
         vl << newID;
         break;
     }
-    tfl.idtois(table,fl,vl);
+    tfl.Update(table,fl,vl);
     EditItem(newID);
     isNewID = false;
 }
@@ -359,7 +359,7 @@ void dir_maindialog::DeleteData()
 void dir_maindialog::DeleteDataUnconditional(QString id)
 {
     QString table = Tables.last()+"_полн";
-    tfl.remove(table, id);
+    tfl.Remove(table, id);
     if (tfl.result == TFRESULT_ERROR)
     {
         WARNMSG("");

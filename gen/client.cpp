@@ -35,7 +35,7 @@ Client::Client(QObject *parent) : QObject(parent)
     CmdMap.insert(S_GID, {"S_GID", 2, "S>", RESULT_STRING, false, false});
     CmdMap.insert(T_GVSBFS, {"T_GVSBFS", 6, "T1", RESULT_MATRIX, true, true});
     CmdMap.insert(T_GVSBC, {"T_GVSBC", 2, "T2", RESULT_VECTOR, false, false});
-    CmdMap.insert(T_GVSBCF, {"T_GVSBCF", 4, "T3", RESULT_VECTOR, false, false});
+    CmdMap.insert(T_GVSBCF, {"T_GVSBCF", 5, "T3", RESULT_VECTOR, false, false});
     CmdMap.insert(T_GFT, {"T_GFT", 1, "T7", RESULT_MATRIX, false, false});
     CmdMap.insert(T_TV, {"T_TV", 3, "T:", RESULT_STRING, false, false});
     CmdMap.insert(T_IDTV, {"T_IDTV", 2, "T9", RESULT_VECTOR, false, false});
@@ -321,6 +321,8 @@ void Client::ParseReply(QByteArray *ba)
             DetectedError = CLIER_SERVER;
             Busy = false;
             TimeoutTimer->stop();
+            if (fp.isOpen())
+                fp.remove();
             return;
         }
         if (ServerResponse == SERVEMPSTR)
@@ -329,6 +331,8 @@ void Client::ParseReply(QByteArray *ba)
             DetectedError = CLIER_EMPTY;
             Busy = false;
             TimeoutTimer->stop();
+            if (fp.isOpen())
+                fp.remove();
             return;
         }
         if (ServerResponse == "IDLE")
@@ -629,6 +633,8 @@ void Client::ParseReply(QByteArray *ba)
         {
             CliLog->warning("Not a decimal value detected");
             DetectedError = CLIER_GETFER;
+            if (fp.isOpen())
+                fp.remove();
             return;
         }
         emit BytesOverall(RcvDataSize);
@@ -641,32 +647,22 @@ void Client::ParseReply(QByteArray *ba)
         if (!fp.isOpen())
         {
             CliLog->error("File error");
-            CurrentCommand = M_IDLE;
             DetectedError = CLIER_GETFER;
             return;
         }
         if (ComReplyTimeoutIsSet)
         {
-            if (fp.isOpen())
-                fp.close();
             emit TransferComplete();
-            if (ReadBytes >= RcvDataSize)
-            {
-                CmdOk = true;
-                DetectedError = CLIER_NOERROR;
-            }
-            else
-            {
-                CliLog->error("GetFile read timeout");
-                QString tmpString = "ReadBytes = " + QString::number(ReadBytes);
-                CliLog->info(tmpString);
-                tmpString = "RcvDataSize = " + QString::number(RcvDataSize);
-                CliLog->info(tmpString);
-                DetectedError = CLIER_GETFTOUT;
-                Busy = false;
-                TimeoutTimer->stop();
-                return;
-            }
+            CliLog->error("GetFile read timeout");
+            QString tmpString = "ReadBytes = " + QString::number(ReadBytes);
+            CliLog->info(tmpString);
+            tmpString = "RcvDataSize = " + QString::number(RcvDataSize);
+            CliLog->info(tmpString);
+            DetectedError = CLIER_GETFTOUT;
+            Busy = false;
+            TimeoutTimer->stop();
+            if (fp.isOpen())
+                fp.remove();
             break;
         }
         CliLog->info("< ...binary data "+QString::number(ba->size())+" size...");
@@ -676,6 +672,8 @@ void Client::ParseReply(QByteArray *ba)
             DetectedError = CLIER_SERVER;
             Busy = false;
             TimeoutTimer->stop();
+            if (fp.isOpen())
+                fp.remove();
             return;
         }
         if (ba->data() == "IDLE\n") // закончили передачу

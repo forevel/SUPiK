@@ -31,11 +31,11 @@ private:
     QString hdr, links;
     PublicClass::FieldFormat ff;
     bool Transparent;
-    QWidget *parent;
 
 private slots:
     void pbclicked();
     void dateChoosed(QDate);
+    void DateTimeEditFinished(QDateTime);
     void accepted(QString);
 };
 

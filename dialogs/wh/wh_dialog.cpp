@@ -657,7 +657,7 @@ void wh_dialog::chooseDate()
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("Date");
     QDate dte;
     QString tmpString = le->text();
-    dte = QDate::fromString(le->text(), "dd/MM/yyyy");
+    dte = QDate::fromString(le->text(), "dd-MM-yyyy");
     s_tqCalendarWidget *calWdgt = new s_tqCalendarWidget;
     QPoint pt;
     pt = this->cursor().pos();

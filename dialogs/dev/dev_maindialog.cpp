@@ -282,7 +282,7 @@ void DevMainDialog::SetClassByManuf(QVariant Class)
     }
     QString tmps = le->text();
     QStringList tmpsl = tmps.split(".");
-/*    QStringList ClassDecimals = tfl.htovlc("Классификатор ЕСКД_полн","Наименование","ИД",Class.toString());
+/*    QStringList ClassDecimals = tfl.GetValuesByColumnAndField("Классификатор ЕСКД_полн","Наименование","ИД",Class.toString());
     if (ClassDecimals.isEmpty())
     {
         WARNMSG("");
@@ -321,7 +321,7 @@ void DevMainDialog::SetDecimalByManuf(QVariant Manuf)
     QString table = "Производители_полн";
     QString field = "Код предприятия";
     QString cmpfield = "Наименование";
-    tfl.htovlc(table,field,cmpfield,Manuf.toString(), ManufDecimals);
+    tfl.GetValuesByColumnAndField(table,field,cmpfield,Manuf.toString(), ManufDecimals);
     if (ManufDecimals.isEmpty())
     {
         WARNMSG("");

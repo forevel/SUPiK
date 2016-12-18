@@ -603,7 +603,7 @@ void cmp_maindialog::SetUnitsAndPars()
                 QString field = "Наименование";
                 QString ida = "ИД_а";
                 QString idavalue = vl.at(i*2+1);
-                tfl.htovlc(table, field, ida, idavalue, cbfl);
+                tfl.GetValuesByColumnAndField(table, field, ida, idavalue, cbfl);
                 cbmdl->setStringList(cbfl);
                 s_tqComboBox *cb = this->findChild<s_tqComboBox *>("par"+QString::number(i)+"cb");
                 if (cb == 0)
@@ -834,7 +834,7 @@ void cmp_maindialog::AddManuf()
 {
     QString newID, tmps;
     tmps = "Производители_полн";
-    tfl.insert(tmps, newID);
+    tfl.Insert(tmps, newID);
     s_2cdialog *newdialog = new s_2cdialog("Производители:добавить");
     newdialog->setup("Производители_полн",MODE_EDITNEW,newID);
     if (newdialog->result)

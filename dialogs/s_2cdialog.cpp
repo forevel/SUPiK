@@ -162,13 +162,13 @@ void s_2cdialog::AddItem()
         QString Caption = tmptble;
         tmptble.append("_полн");
         QString newID;
-        tfl.insert(tmptble, newID);
+        tfl.Insert(tmptble, newID);
         if (tfl.result == TFRESULT_ERROR)
         {
             WARNMSG("");
             return;
         }
-        tfl.idtois(tmptble,QStringList("ИД"),QStringList(newID)); // добавление полей idpers, deleted, date
+        tfl.Update(tmptble,QStringList("ИД"),QStringList(newID)); // добавление полей idpers, deleted, date
         if (tfl.result != TFRESULT_ERROR)
         {
             s_2cdialog *newdialog = new s_2cdialog(Caption);
@@ -294,12 +294,12 @@ void s_2cdialog::accepted()
             if (tmph != -1)
             oldid = values.at(tmph);
             newtble.remove(" карантин"); // убираем " карантин", т.к. пишем в некарантинную таблицу
-            tfl.insert(newtble, newid);
+            tfl.Insert(newtble, newid);
             values.replace(tmph, newid); // создаём новую запись в некарантинной таблице
             tble.replace(0, newtble); // подготовка к следующему оператору
         }
         tmps = tble.at(0);
-        tfl.idtoisv(tmps, headers, values);
+        tfl.Updatev(tmps, headers, values);
         if (tfl.result == TFRESULT_ERROR)
         {
             WARNMSG("");
@@ -308,7 +308,7 @@ void s_2cdialog::accepted()
         INFOMSG("Записано успешно!");
         if (IsQuarantine)
         {
-            tfl.remove(oldtble, oldid); // при успешной записи в некарантин, из карантина старую надо удалить
+            tfl.Remove(oldtble, oldid); // при успешной записи в некарантин, из карантина старую надо удалить
             if (tfl.result == TFRESULT_ERROR)
             {
                 WARNMSG("");

@@ -13,6 +13,7 @@
 #include "../../widgets/s_tqchoosewidget.h"
 #include "../../widgets/s_tqlineedit.h"
 #include "../../widgets/s_tqpushbutton.h"
+#include "../../widgets/s_tqcombobox.h"
 #include "../../widgets/wd_func.h"
 #include "../../gen/publicclass.h"
 #include "../../gen/s_tablefields.h"
@@ -20,13 +21,18 @@
 #include "../../gen/client.h"
 #include "../tb/tb_func.h"
 
-PersDialog::PersDialog(QString PersID, int DialogType, QWidget *parent) : QDialog(parent)
+PersDialog::PersDialog(QString PersID, int DialogType, int Mode, QWidget *parent) : QDialog(parent)
 {
     this->DialogType = DialogType;
+    this->Mode = Mode;
     setAttribute(Qt::WA_DeleteOnClose);
     idPers = PersID;
+    idRec = "0";
+    idRecEkz = "0";
+    EBDataChanged = false;
+    EkzType = EKZ_GENERAL;
     SetupUI();
-    if (Fill())
+    if (!Fill())
     {
         WARNMSG("");
         return;
@@ -58,7 +64,7 @@ void PersDialog::SetupUI()
 
     s_tqPushButton *pb = new s_tqPushButton;
     pb->setIcon(QIcon(":/res/cross.png"));
-    connect(pb, SIGNAL(clicked()), this, SLOT(close()));
+    connect(pb, SIGNAL(clicked()), this, SLOT(CloseDialog()));
     pb->setToolTip("Закрыть вкладку");
     hlyout1->addWidget(pb,0);
     hlyout1->addStretch(100);
@@ -191,7 +197,7 @@ void PersDialog::SetupUI()
     hlyout1->addWidget(pb);
     pb = new s_tqPushButton("Отмена");
     pb->setIcon(QIcon(":/res/cross.png"));
-    connect(pb,SIGNAL(clicked()),this,SLOT(close()));
+    connect(pb,SIGNAL(clicked()),this,SLOT(CloseDialog()));
     hlyout1->addWidget(pb);
     hlyout1->addStretch(100);
     vlyout1->addLayout(hlyout1);
@@ -216,77 +222,75 @@ bool PersDialog::Fill()
     }
     Pers = vl.at(0); // полные ФИО сотрудника
     SetPhoto();
-    switch(DialogType)
+    if (Mode == MODE_EDIT)
     {
-    case PDT_TB:
-    {
-        QString table = "Персонал_ТБ_полн";
-        QStringList header("Группа");
-        QStringList TBGroups, POs, PBs, OTs;
-        tfl.valuesbyfield(table, header, "ИД сотрудника", idPers, TBGroups);
-        if (tfl.result != TFRESULT_NOERROR)
-            return false;
-        header = QStringList() << "Дата профосмотра";
-        tfl.valuesbyfield(table, header, "ИД сотрудника", idPers, POs);
-        if (tfl.result != TFRESULT_NOERROR)
-            return false;
-        header = QStringList() << "Дата ПБ";
-        tfl.valuesbyfield(table, header, "ИД сотрудника", idPers, PBs);
-        if (tfl.result != TFRESULT_NOERROR)
-            return false;
-        header = QStringList() << "Дата ОТ";
-        tfl.valuesbyfield(table, header, "ИД сотрудника", idPers, OTs);
-        if (tfl.result != TFRESULT_NOERROR)
-            return false;
-        QString TBGroup = (TBGroups.isEmpty()) ? TB_NODATA : TBGroups.at(0);
-        TBGroup = (TBGroup.isEmpty()) ? TB_NODATA : TBGroup;
-        QString PO = (POs.isEmpty()) ? TB_NODATA : POs.at(0);
-        PO = (PO.isEmpty()) ? TB_NODATA : PO;
-        QString PB = (PBs.isEmpty()) ? TB_NODATA : PBs.at(0);
-        PB = (PB.isEmpty()) ? TB_NODATA : PB;
-        QString OT = (OTs.isEmpty()) ? TB_NODATA : OTs.at(0);
-        OT = (OT.isEmpty()) ? TB_NODATA : OT;
-        if (!WDFunc::SetLEData(this, "le.41", TBGroup))
-            WARNMSG("");
-        vl = QStringList() << PO << PB << OT;
-        for (i=0; i<vl.size(); ++i)
+        switch(DialogType)
         {
-            if (!WDFunc::SetCWData(this, "cw."+QString::number(i), vl.at(i)))
-                WARNMSG("");
-        }
-        vl.clear();
-        fl = QStringList() << "idpers" << "section";
-        if (TBGroup.at(0) == TB_NODATA)
-            vl << idPers << "2"; // 2 - 2-я группа по ЭБ (без экзаменов)
-        else
-            vl << idPers << TBGroup.at(0);
-        sl = sqlc.GetValuesFromTableByColumnAndFields("tb", "examresults", "date", fl, vl, "date", false); // Dates - дата последнего экзамена
-        if ((sl.isEmpty()) || (sqlc.result != SQLC_OK))
+        case PDT_TB:
         {
-            EBDate = "N/A";
-            WDFunc::SetLEColor(this, "le.32", CList.at(TBDATE_BAD));
+            QString table = "Персонал_ТБ_полн";
+            QStringList headers = QStringList() << "Группа" << "Дата профосмотра" << "Дата ПБ" << "Дата ОТ" << "ИД";
+            QStringList sl;
+            QString TBGroup, PO, PB, OT;
+            tfl.valuesbyfield(table, headers, "ИД сотрудника", idPers, sl);
+            if ((tfl.result != TFRESULT_NOERROR) || (sl.size() < 5))
+            {
+                WARNMSG("Bad tfl result");
+                return false;
+            }
+            TBGroup = sl.at(0);
+            PO = sl.at(1);
+            PB = sl.at(2);
+            OT = sl.at(3);
+            idRec = sl.at(4);
+            TBGroup = (TBGroup.isEmpty()) ? TB_NODATA : TBGroup;
+            PO = (PO.isEmpty()) ? TB_NODATA : PO;
+            PB = (PB.isEmpty()) ? TB_NODATA : PB;
+            OT = (OT.isEmpty()) ? TB_NODATA : OT;
+            if (!WDFunc::SetLEData(this, "le.41", TBGroup))
+                DBGMSG;
+            vl = QStringList() << PB << OT << PO;
+            for (i=0; i<vl.size(); ++i)
+            {
+                if (!WDFunc::SetCWData(this, "cw."+QString::number(i), vl.at(i)))
+                    DBGMSG;
+            }
+            vl.clear();
+            fl = QStringList() << "idpers" << "section";
+            if (TBGroup.at(0) == TB_NODATA)
+                vl << idPers << "2"; // 2 - 2-я группа по ЭБ (без экзаменов)
+            else
+                vl << idPers << TBGroup.at(0);
+            sl = sqlc.GetValuesFromTableByColumnAndFields("tb", "examresults", "date", fl, vl, "date", false); // Date - дата последнего экзамена
+            if ((sl.isEmpty()) || (sqlc.result != SQLC_OK))
+            {
+                EBDate = "N/A";
+                WDFunc::SetLEColor(this, "le.32", CList.at(TBDATE_BAD));
+            }
+            else
+            {
+                EBDate = sl.at(0);
+                WDFunc::SetLEColor(this, "le.32", CList.at(TBFunc::CheckDateTime(TBFunc::DT_TB, sl.at(0))));
+            }
+            WDFunc::SetLEData(this, "le.32", EBDate);
+            sl = sqlc.GetValuesFromTableByColumnAndFields("tb", "examresults", "examresults", fl, vl, "date", false);
+            if ((sl.isEmpty()) || (sqlc.result != SQLC_OK))
+                WDFunc::SetLEData(this, "le.33", "N/A");
+            else
+                WDFunc::SetLEData(this, "le.33", sl.at(0));
+            sl = sqlc.GetValuesFromTableByColumnAndFields("tb", "examresults", "idexamresults", fl, vl, "date", false);
+            if ((sl.isEmpty()) || (sqlc.result != SQLC_OK))
+                idRecEkz = "0";
+            else
+                idRecEkz = sl.at(0);
         }
-        else
+        case PDT_PERS:
         {
-            EBDate = sl.at(0);
-            WDFunc::SetLEColor(this, "le.32", CList.at(TBFunc::CheckDate(TBFunc::DT_TB, sl.at(0))));
+            break;
         }
-        WDFunc::SetLEData(this, "le.32", EBDate);
-        sl = sqlc.GetValuesFromTableByColumnAndFields("tb", "examresults", "examresults", fl, vl, "date", false); // Dates - дата последнего экзамена
-        if ((sl.isEmpty()) || (sqlc.result != SQLC_OK))
-            WDFunc::SetLEData(this, "le.33", "N/A");
-        else
-            WDFunc::SetLEData(this, "le.33", sl.at(0));
-        MedDate = WDFunc::CWData(this, "cw.0");
-        PBDate = WDFunc::CWData(this, "cw.1");
-        OTDate = WDFunc::CWData(this, "cw.2");
-    }
-    case PDT_PERS:
-    {
-        break;
-    }
-    default:
-        break;
+        default:
+            break;
+        }
     }
     return true;
 }
@@ -310,6 +314,7 @@ void PersDialog::EnterEBData()
 {
     QDialog *dlg = new QDialog(this);
     dlg->setObjectName("EBdlg");
+    dlg->setAttribute(Qt::WA_DeleteOnClose);
     QHBoxLayout *hlyout = new QHBoxLayout;
     hlyout->addStretch(300);
     s_tqLabel *lbl = new s_tqLabel(Pers);
@@ -321,7 +326,7 @@ void PersDialog::EnterEBData()
     hlyout->addWidget(lbl);
     s_tqChooseWidget *cw = new s_tqChooseWidget(true);
     cw->setObjectName("EBdate");
-    cw->Setup("2.18..");
+    cw->Setup("2.21.."); // FW_DATETIME
     cw->SetValue(EBDate);
     hlyout->addWidget(cw);
     lyout->addLayout(hlyout);
@@ -331,6 +336,14 @@ void PersDialog::EnterEBData()
     s_tqLineEdit *le = new s_tqLineEdit(WDFunc::LEData(this, "le.33"));
     le->setObjectName("EBmark");
     hlyout->addWidget(le);
+    s_tqComboBox *cb = new s_tqComboBox;
+    cb->addItem("Очередной");
+    cb->addItem("Внеочередной");
+    connect(cb,SIGNAL(currentTextChanged(QString)),this,SLOT(SetEkzType(QString)));
+    cb->setCurrentIndex(0);
+    lbl = new s_tqLabel("Тип экзамена:");
+    hlyout->addWidget(lbl);
+    hlyout->addWidget(cb);
     lyout->addLayout(hlyout);
     hlyout = new QHBoxLayout;
     hlyout->addStretch(100);
@@ -348,8 +361,14 @@ void PersDialog::EnterEBData()
     dlg->show();
 }
 
+void PersDialog::SetEkzType(const QString &ekztype)
+{
+    this->EkzType = (ekztype == "Очередной") ? EKZ_GENERAL : EKZ_NGENERAL;
+}
+
 void PersDialog::AcceptEBData()
 {
+    EBDataChanged = true;
     QDialog *dlg = this->findChild<QDialog *>("EBdlg");
     if (dlg == 0)
     {
@@ -358,14 +377,74 @@ void PersDialog::AcceptEBData()
     }
     QString tmps = WDFunc::CWData(this, "EBdate");
     WDFunc::SetLEData(this, "le.32", tmps);
-    WDFunc::SetLEColor(this, "le.32", CList.at(TBFunc::CheckDate(TBFunc::DT_TB, tmps)));
+    EBDate = tmps;
+    WDFunc::SetLEColor(this, "le.32", CList.at(TBFunc::CheckDateTime(TBFunc::DT_TB, tmps)));
     WDFunc::SetLEData(this, "le.33", WDFunc::LEData(this, "EBmark"));
     dlg->close();
 }
 
 void PersDialog::Accept()
 {
-
+    QString ID;
+    switch (DialogType)
+    {
+    case PDT_TB:
+    {
+        if (Mode == MODE_EDITNEW)
+        {
+            tfl.Insert("Персонал_ТБ_полн", ID);
+            if (tfl.result != TFRESULT_NOERROR)
+            {
+                WARNMSG("Bad TFL result");
+                return;
+            }
+        }
+        else
+            ID = idRec;
+        MedDate = WDFunc::CWData(this, "cw.2");
+        PBDate = WDFunc::CWData(this, "cw.0");
+        OTDate = WDFunc::CWData(this, "cw.1");
+        QString table = "Персонал_ТБ_полн";
+        QStringList headers = QStringList() << "Группа" << "Дата профосмотра" << "Дата ПБ" << "Дата ОТ" << "ИД" << "ИД сотрудника";
+        QStringList values = QStringList() << WDFunc::LEData(this, "le.41") << MedDate << PBDate << OTDate << ID << idPers;
+        tfl.Update(table, headers, values);
+        if (tfl.result != TFRESULT_NOERROR)
+        {
+            WARNMSG("Bad TFL result");
+            return;
+        }
+        if (EBDataChanged)
+        {
+            if (idRecEkz == "0") // новая запись должна быть сделана
+            {
+                tfl.Insert("Экзам рез_полн", idRecEkz);
+                if (tfl.result != TFRESULT_NOERROR)
+                {
+                    WARNMSG("Bad TFL result");
+                    return;
+                }
+            }
+            QString EkzTypeToWrite = (EkzType == EKZ_GENERAL) ? "1" : "0";
+            headers = QStringList() << "Раздел" << "Результат" << "Тип" << "ИД" << "Дата" << "ИДПольз";
+            values = QStringList() << WDFunc::LEData(this, "le.41") << WDFunc::LEData(this, "le.33") << EkzTypeToWrite << idRecEkz << \
+                                      WDFunc::LEData(this, "le.32") << idPers;
+            tfl.Update("Экзам рез_полн", headers, values);
+            if (tfl.result != TFRESULT_NOERROR)
+            {
+                WARNMSG("Bad TFL result");
+                return;
+            }
+        }
+        break;
+    }
+    case PDT_PERS:
+    {
+        break;
+    }
+    default:
+        return;
+    }
+    this->CloseDialog();
 }
 
 void PersDialog::LoadPhoto()
@@ -373,7 +452,10 @@ void PersDialog::LoadPhoto()
     QString FileName = QFileDialog::getOpenFileName(this, "Загрузка фотографии", pc.HomeDir+"pers/photo", "Images (*.png *.jpg *.gif)");
     QString DestFileName = pc.HomeDir+"pers/photo/"+idPers;
     if (FileName.isEmpty())
+    {
+        WARNMSG("Пустое имя файла");
         return;
+    }
     QFile fp(FileName);
     if (!fp.copy(DestFileName))
     {
@@ -387,7 +469,7 @@ void PersDialog::LoadPhoto()
     }
     if (Cli->PutFile(DestFileName, FLT_PERS, FLST_PHOTO, idPers) != Client::CLIER_NOERROR)
     {
-        WARNMSG("");
+        WARNMSG("Client Putfile bad result");
         return;
     }
     SetPhoto();
@@ -418,4 +500,10 @@ void PersDialog::SetPhoto()
     }
     if (!WDFunc::SetLBLImage(this, "photo", &pm))
         WARNMSG("");
+}
+
+void PersDialog::CloseDialog()
+{
+    emit DialogClosed();
+    close();
 }

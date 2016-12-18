@@ -593,7 +593,7 @@ void FlowModel::setup(QString tble)
     DataToWrite.clear();
     ClearModel();
     QStringList headers, links;
-    tfl.tbvll(tble, DataToWrite);
+    tfl.GetAllValuesFromTable(tble, DataToWrite);
     if (tfl.result == TFRESULT_ERROR)
     {
         result=1;
@@ -622,7 +622,7 @@ void FlowModel::Add(QString tble)
     result = 0;
     QStringList headers, links;
     DataToWrite.clear();
-    tfl.tbvll(tble, DataToWrite);
+    tfl.GetAllValuesFromTable(tble, DataToWrite);
     if (tfl.result == TFRESULT_ERROR)
     {
         result=1;
@@ -692,7 +692,7 @@ void FlowModel::setupcolumn(QString tble, QString header)
     ClearModel();
     DataToWrite.clear();
     QStringList tmpsl;
-    tfl.htovl(tble, header, tmpsl);
+    tfl.GetValuesByColumn(tble, header, tmpsl);
     if (tfl.result == TFRESULT_ERROR)
     {
         WARNMSG("");

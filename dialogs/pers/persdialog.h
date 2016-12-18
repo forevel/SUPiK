@@ -3,12 +3,13 @@
 
 #include <QDialog>
 #include <QVariant>
+#include "../../gen/publicclass.h"
 
 class PersDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit PersDialog(QString PersID="", int DialogType = PDT_PERS, QWidget *parent = 0);
+    explicit PersDialog(QString PersID="", int DialogType = PDT_PERS, int Mode = MODE_EDIT, QWidget *parent = 0);
     ~PersDialog();
 
     enum PersDialogTypes
@@ -23,10 +24,17 @@ signals:
 public slots:
 
 private:
+    enum EkzTypes
+    {
+        EKZ_GENERAL,
+        EKZ_NGENERAL
+    };
+
     void SetupUI();
 
-    int DialogType;
-    QString idPers, Pers, EBDate, OTDate, PBDate, MedDate;
+    int DialogType, Mode, EkzType;
+    bool EBDataChanged;
+    QString idPers, Pers, EBDate, OTDate, PBDate, MedDate, idRec, idRecEkz;
     QList<QColor> CList = QList<QColor>() << Qt::darkGreen << Qt::darkYellow << Qt::red;
 
 private slots:
@@ -39,6 +47,8 @@ private slots:
     void LoadPhoto();
     void Accept();
     void AcceptEBData();
+    void SetEkzType(const QString &ekztype);
+    void CloseDialog();
 
 protected:
     void paintEvent(QPaintEvent *);

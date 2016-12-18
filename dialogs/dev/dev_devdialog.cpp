@@ -145,7 +145,7 @@ void dev_devdialog::AddNewDev()
 {
     QString newID;
     QString table = "Изделия_полн";
-    tfl.insert(table, newID);
+    tfl.Insert(table, newID);
     if (tfl.result == TFRESULT_ERROR)
     {
         WARNMSG("");
@@ -167,7 +167,7 @@ void dev_devdialog::DeleteDev()
     if (res == QMessageBox::Cancel)
         return;
     QString table = "Изделия_полн";
-    tfl.remove(table, GetIndex(0));
+    tfl.Remove(table, GetIndex(0));
     if (tfl.result == TFRESULT_ERROR)
     {
         WARNMSG("");

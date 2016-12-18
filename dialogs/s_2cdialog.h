@@ -7,17 +7,6 @@
 
 #define CD_ERROR    0x0200
 
-enum s_2cdialog_modes
-{
-    MODE_CHOOSE,
-    MODE_EDIT,
-    MODE_EDITNEW,
-    MODE_FILE,
-    MODE_CHOOSE_RAW,
-    MODE_EDIT_RAW,
-    MODE_EDITNEW_RAW
-};
-
 class s_2cdialog : public QDialog
 {
     Q_OBJECT

@@ -92,7 +92,8 @@
 #define FW_DATE     18 // отображение диалога выбора даты
 #define FW_ID       19 // автодополнение незначащими нулями
 #define FW_CRYPT    20 // значение с шифрованием
-#define FW_COUNT    21 // количество типов полей
+#define FW_DATETIME 21 // диалог выбора даты и времени
+#define FW_COUNT    22 // количество типов полей
 
 // тип делегата
 #define FD_SIMPLE   0 // простой делегат без рамки для надписей
@@ -119,6 +120,21 @@
 // общие результаты
 #define RESULTBAD   -1
 #define RESULTOK    0
+
+#define DATEFORMAT  "dd-MM-yyyy"
+#define DATETIMEFORMAT  "dd-MM-yyyy hh:mm:ss"
+#define TIMEFORMAT  "hh:mm:ss"
+
+enum s_2cdialog_modes
+{
+    MODE_CHOOSE,
+    MODE_EDIT,
+    MODE_EDITNEW,
+    MODE_FILE,
+    MODE_CHOOSE_RAW,
+    MODE_EDIT_RAW,
+    MODE_EDITNEW_RAW
+};
 
 class PublicClass
 {
@@ -364,7 +380,7 @@ public:
         QStringList link;
     } FieldFormat;
 
-    void getFFfromLinks(QString &links, FieldFormat &ff) const;
+    void getFFfromLinks(const QString &links, FieldFormat &ff) const;
     void getlinksfromFF(FieldFormat &ff, QString &out);
     void InitiatePublicClass();
     QString getTranslit(QString);

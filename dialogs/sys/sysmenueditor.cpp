@@ -143,7 +143,7 @@ void SysmenuEditor::Delete()
     {
         if (MessageBox2::question(this, "Вы уверены?", "Категория содержит подкатегории.\nВы уверены, что хотите удалить её?"))
         {
-            tfl.remove(table, tmpString);
+            tfl.Remove(table, tmpString);
             if (tfl.result == TFRESULT_ERROR)
             {
                 WARNMSG("");
@@ -162,7 +162,7 @@ void SysmenuEditor::Delete()
     {
         if (MessageBox2::question(this, "Вы уверены?", "Вы уверены?"))
         {
-            tfl.remove(table, tmpString);
+            tfl.Remove(table, tmpString);
             if (tfl.result == TFRESULT_ERROR)
             {
                 WARNMSG("");
@@ -199,7 +199,7 @@ void SysmenuEditor::AddToTree(QString str)
     fields << "Наименование" << "ИД_а" << "Права доступа";
     values << NewClass << str << "0007";
     QString newID;
-    tfl.insert(table, newID);
+    tfl.Insert(table, newID);
     if (tfl.result == TFRESULT_ERROR)
     {
         WARNMSG("");
@@ -207,7 +207,7 @@ void SysmenuEditor::AddToTree(QString str)
     }
     fields.insert(0,"ИД");
     values.insert(0,newID);
-    tfl.idtois(table,fields,values);
+    tfl.Update(table,fields,values);
     if (tfl.result != TFRESULT_ERROR)
         ChangeFields(newID);
     else
@@ -235,7 +235,7 @@ void SysmenuEditor::ChangeName()
         }
         QStringList fl = QStringList() << "Наименование" << "ИД";
         QStringList vl = QStringList() << tmpValue << tmpString;
-        tfl.idtois(tble,fl,vl);
+        tfl.Update(tble,fl,vl);
         if (tfl.result == TFRESULT_ERROR)
         {
             WARNMSG("");

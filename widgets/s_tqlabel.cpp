@@ -31,6 +31,7 @@ void s_tqLabel::resizeEvent(QResizeEvent *e)
     // https://codedump.io/share/riGs8oqowda6/1/how-to-autoresize-qlabel-pixmap-keeping-ratio-without-using-classes
     if (pixmap() != 0)
         setPixmap(pixmap()->scaled(width(), height(), Qt::KeepAspectRatio));
+    e->accept();
 }
 
 void s_tqLabel::setData(QVariant dat)

@@ -50,7 +50,7 @@ int WhPlacesTreeModel::Insert(WhPlacesTreeItem *Value)
 {
     // сначала ищем первый свободный ИД в таблице Склады размещение
     QString NewID;
-    tfl.insert("Склады размещение_полн", NewID);
+    tfl.Insert("Склады размещение_полн", NewID);
     if (tfl.result == TFRESULT_ERROR)
         return -1;
     // затем добавляем элемент
@@ -190,7 +190,7 @@ int WhPlacesTreeModel::Save()
             QStringList vl = QStringList() << QString::number(item->Id) << item->Alias << QString::number(item->IdAlias) << \
                                               item->Description << item->Name << QString::number(item->WhID) << QString::number(item->WhNum) << \
                                               QString::number(item->WhPlaceTypeID);
-            tfl.idtois(table, fl, vl);
+            tfl.Update(table, fl, vl);
             if (tfl.result == TFRESULT_ERROR)
                 return 1;
         }

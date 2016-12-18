@@ -2,6 +2,7 @@
 #define TB_FUNC_H
 
 #include <QString>
+#include <QDateTime>
 
 #define TBDATE_OK   0
 #define TBDATE_WARN 1
@@ -27,6 +28,10 @@ public:
     TBFunc();
 
     static int CheckDate(int type, const QString &date);
+    static int CheckDateTime(int type, const QString &datetime);
+
+private:
+    static int Check(int type, const QDateTime &dtm);
 };
 
 #endif // TB_FUNC_H

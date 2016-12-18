@@ -9,6 +9,7 @@
 #include "s_tqspinbox.h"
 #include "s_tqcombobox.h"
 #include "s_tqcheckbox.h"
+#include "s_tqdatetimewidget.h"
 #include "s_maskedle.h"
 #include "s_tqlabel.h"
 #include "../gen/s_sql.h"
@@ -186,8 +187,10 @@ void s_tqChooseWidget::pbclicked()
     case FW_DATE:
     {
         s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fdcle");
+        if (le == 0)
+            return;
         QDate dte;
-        dte = QDate::fromString(le->text(), "dd/MM/yyyy");
+        dte = QDate::fromString(le->text(), DATEFORMAT);
         s_tqCalendarWidget *calWdgt = new s_tqCalendarWidget;
         QPoint pt;
         pt = le->cursor().pos();
@@ -196,6 +199,23 @@ void s_tqChooseWidget::pbclicked()
         connect(calWdgt, SIGNAL(activated(QDate)), this, SLOT(dateChoosed(QDate)));
         connect(calWdgt, SIGNAL(activated(QDate)), calWdgt, SLOT(close()));
         calWdgt->show();
+        break;
+    }
+    case FW_DATETIME:
+    {
+        s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fdcle");
+        if (le == 0)
+            return;
+        QDateTime dte;
+        dte = QDateTime::fromString(le->text(), DATETIMEFORMAT);
+        s_tqDateTimeWidget *dt = new s_tqDateTimeWidget;
+        QPoint pt;
+        pt = le->cursor().pos();
+        dt->move(pt);
+        dt->SetDateTime(dte);
+        connect(dt, SIGNAL(activated(QDateTime)), this, SLOT(DateTimeEditFinished(QDateTime)));
+        connect(dt, SIGNAL(activated(QDateTime)), this,SLOT(DateTimeEditFinished(QDateTime)));
+        dt->show();
         break;
     }
     case FW_SPECIAL:
@@ -413,7 +433,12 @@ PublicClass::ValueStruct s_tqChooseWidget::Data()
 
 void s_tqChooseWidget::dateChoosed(QDate dte)
 {
-    accepted(dte.toString("dd/MM/yyyy"));
+    accepted(dte.toString("dd-MM-yyyy"));
+}
+
+void s_tqChooseWidget::DateTimeEditFinished(QDateTime dtm)
+{
+    accepted(dtm.toString("dd-MM-yyyy hh:mm:ss"));
 }
 
 void s_tqChooseWidget::setAData(QVariant dat)

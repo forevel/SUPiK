@@ -56,8 +56,8 @@ void PublicClass::InitiatePublicClass()
     icons[3] = QIcon(":/res/calend.png");
     icons[4] = QIcon(":/res/refresh.png");
     icons[5] = QIcon(":/res/TN.png");
-//    Date = QDate::currentDate().toString("dd/MM/yyyy");
-    DateTime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
+//    Date = QDate::currentDate().toString(DATEFORMAT);
+    DateTime = QDateTime::currentDateTime().toString(DATETIMEFORMAT);
     SQLPath = LandP->value("settings/SQLPath","localhost").toString();
     PathToLibs = LandP->value("settings/pathtolibs","").toString();
     PathToSup = LandP->value("settings/pathtosup","").toString();
@@ -186,7 +186,7 @@ QString PublicClass::getTranslit(QString str)
     return newstr;
 }
 
-void PublicClass::getFFfromLinks(QString &links, FieldFormat &ff) const
+void PublicClass::getFFfromLinks(const QString &links, FieldFormat &ff) const
 {
     QStringList tmpsl = links.split(".");
     ff.ftype = 8;

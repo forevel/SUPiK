@@ -553,7 +553,7 @@ void supik::executeDirDialog()
 void supik::periodic1s()
 {
     PeriodicOddSecond = !PeriodicOddSecond;
-    pc.DateTime = QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss");
+    pc.DateTime = QDateTime::currentDateTime().toString(DATETIMEFORMAT);
     s_tqLabel *le = this->findChild<s_tqLabel *>("datetime");
     le->setText(pc.DateTime);
     if (IsProblemsDetected)

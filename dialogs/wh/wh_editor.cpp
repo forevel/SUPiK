@@ -74,7 +74,7 @@ void Wh_Editor::SetupUI()
     hlyout = new QHBoxLayout;
     // Комбобокс с наименованиями складов из wh
     QStringListModel *mdl = new QStringListModel;
-//    QStringList vl = tfl.htovl("Склады_сокращ", "Наименование");
+//    QStringList vl = tfl.GetValuesByColumn("Склады_сокращ", "Наименование");
 //    mdl->setStringList(vl);
     s_tqComboBox *cb = new s_tqComboBox;
     cb->setObjectName("whcb");
@@ -104,10 +104,10 @@ void Wh_Editor::AddNewWh()
 {
     QString newID;
     QString table = "Склады размещение_полн";
-    tfl.insert(table, newID);
+    tfl.Insert(table, newID);
     QStringList fl = QStringList() << "ИД" << "ИД_а" << "Склад" << "Тип размещения";
     QStringList vl = QStringList() << newID << "0" << newID << "4";
-    tfl.idtois(table, fl, vl);
+    tfl.Update(table, fl, vl);
     s_2cdialog *dlg = new s_2cdialog("Склады::Добавить");
     dlg->setup(table, MODE_EDITNEW, newID);
     if (dlg->result)
@@ -131,7 +131,7 @@ void Wh_Editor::UpdateWhComboBox()
     QString field = "Наименование";
     QString cmpfield = "ИД_а";
     QString cmpvalue = "0";
-    tfl.htovlc(table, field, cmpfield, cmpvalue, vl);
+    tfl.GetValuesByColumnAndField(table, field, cmpfield, cmpvalue, vl);
     mdl->setStringList(vl);
 }
 
@@ -160,7 +160,7 @@ void Wh_Editor::AddNewPlace()
 {
     QString newID;
     QString table = "Склады типы размещения_полн";
-    tfl.insert(table, newID);
+    tfl.Insert(table, newID);
     s_2cdialog *dlg = new s_2cdialog("Склады::Размещения::Добавить");
     dlg->setup("Склады типы размещения_полн", MODE_EDITNEW, newID);
     if (dlg->result)

@@ -176,7 +176,7 @@ void cmp_newsubsection::Ok()
     if (sqlc.result) // нет такой записи
     {
         // создаём запись
-        tfl.insert(TableName, newID);
+        tfl.Insert(TableName, newID);
         if (tfl.result == TFRESULT_ERROR)
         {
             MessageBox2::information(this, "Внимание", "Ошибка добавления записи в таблицу description");
@@ -186,7 +186,7 @@ void cmp_newsubsection::Ok()
     }
     QStringList fl = QStringList() << "ИД" << "Наименование" << "Описание";
     QStringList vl = QStringList() << newID << desc << descfull;
-    tfl.idtois(TableName,fl,vl);
+    tfl.Update(TableName,fl,vl);
     if (tfl.result == TFRESULT_ERROR)
     {
         tfl.Delete(TableName, newID);
@@ -200,7 +200,7 @@ void cmp_newsubsection::Ok()
     QString tmps = "Наименование";
     if (!(tfl.Check(TableName,tmps,descfull))) // нет такой категории, пишем в БД
     {
-        tfl.insert(TableName, newID);
+        tfl.Insert(TableName, newID);
         if (tfl.result == TFRESULT_ERROR)
         {
             WARNMSG("");
@@ -209,7 +209,7 @@ void cmp_newsubsection::Ok()
         }
         QStringList fl = QStringList() << "ИД" << "Наименование" << "ИД_а" << "Параметры";
         QStringList vl = QStringList() << newID << descfull << "0" << cw->Value();
-        tfl.idtois(TableName,fl,vl);
+        tfl.Update(TableName,fl,vl);
         if (tfl.result == TFRESULT_ERROR)
         {
             tfl.Delete(TableName, newID);

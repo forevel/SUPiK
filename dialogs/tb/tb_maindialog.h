@@ -27,7 +27,12 @@ signals:
 public slots:
 
 private slots:
-    void ShowPers(QModelIndex);
+    void ShowPers();
+    void ShowPersDlg();
+    void TvContext(QPoint);
+    void AddPers();
+    void SetPers(const QString &pers);
+    void Refresh();
 
 protected:
     void paintEvent(QPaintEvent *);
@@ -39,6 +44,8 @@ private:
 
     QList<PersTB> TBList;
     BaseItemModel *MainModel;
+    QString Pers;
+    int Mode;
 };
 
 

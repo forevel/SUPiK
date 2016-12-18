@@ -311,7 +311,7 @@ QList<s_tqWidget *> tb_examdialog::PrepareQuestionsByTheme(int theme, int questn
     QString tble = "Экзамен ТБ_полн";
     QString field = "ИД";
     QStringList idvl;
-    tfl.HeaderByFields(tble, field, cmpfl, cmpvl, idvl);
+    tfl.GetValuesByColumnAndFields(tble, field, cmpfl, cmpvl, idvl);
     if (tfl.result == TFRESULT_ERROR)
     {
         WARNMSG("");
@@ -463,7 +463,7 @@ void tb_examdialog::ProcessResultsAndExit()
         for (int i=0; i<TB_QUESTNUM; ++i)
         {
             QString newID;
-            tfl.insert(table, newID);
+            tfl.Insert(table, newID);
             if (tfl.result == TFRESULT_ERROR)
             {
                 WARNMSG("");
@@ -477,7 +477,7 @@ void tb_examdialog::ProcessResultsAndExit()
             QStringList fl = QStringList() << "ИД" << "ИД вопроса" << "Номер ответа" << "Правильный ответ";
             QString tmps = (ans.Good) ? "1" : "0";
             QStringList vl = QStringList() << newID << QString::number(ans.Id) << QString::number(ans.Answer) << tmps;
-            tfl.idtois(table, fl, vl);
+            tfl.Update(table, fl, vl);
             if (tfl.result == TFRESULT_ERROR)
             {
                 WARNMSG("");
@@ -499,7 +499,7 @@ void tb_examdialog::ProcessResultsAndExit()
         // запишем результаты в Экзам рез
         table = "Экзам рез_полн";
         QString newID;
-        tfl.insert(table, newID);
+        tfl.Insert(table, newID);
         if (tfl.result == TFRESULT_ERROR)
         {
             WARNMSG("");
@@ -509,7 +509,7 @@ void tb_examdialog::ProcessResultsAndExit()
         QString Filename = pc.Pers+" " + pc.DateTime.replace(':','.') +".pdf";
         QStringList fl = QStringList() << "ИД" << "Результат" << "Раздел" << "Тип" << "Файл";
         QStringList vl = QStringList() << newID << QString::number(Mark, 'g', 2) << QString::number(TBGroup) << QString::number(ExType) << Filename;
-        tfl.idtois(table, fl, vl);
+        tfl.Update(table, fl, vl);
         if (tfl.result == TFRESULT_ERROR)
         {
             WARNMSG("");

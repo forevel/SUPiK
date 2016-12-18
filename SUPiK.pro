@@ -106,7 +106,8 @@ SOURCES += main.cpp\
     models/baseitem.cpp \
     models/baseitemmodel.cpp \
     dialogs/tb/tb_func.cpp \
-    widgets/wd_func.cpp
+    widgets/wd_func.cpp \
+    widgets/s_tqdatetimewidget.cpp
 
 HEADERS  += startwindow.h \
     supik.h \
@@ -195,7 +196,8 @@ HEADERS  += startwindow.h \
     models/baseitem.h \
     models/baseitemmodel.h \
     dialogs/tb/tb_func.h \
-    widgets/wd_func.h
+    widgets/wd_func.h \
+    widgets/s_tqdatetimewidget.h
 RESOURCES += \
     pic.qrc
 

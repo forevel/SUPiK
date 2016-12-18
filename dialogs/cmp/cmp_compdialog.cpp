@@ -369,7 +369,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
             // создаём новый элемент в БД карантинной номенклатуры
             QString newID;
             table = "Номенклатура карантин_полн";
-            tfl.insert(table, newID);
+            tfl.Insert(table, newID);
             // найдём сначала описание категории в таблице описания для данной БД
             fl = QStringList() << "Описание";
             tmps = QString::number(CompTble); // убираем старшие незначащие нули
@@ -405,7 +405,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
             vl.insert(0, newID);
             vl.replace(3, ManufId); // меняем наименование производителя на его ИД
             table = "Номенклатура карантин_полн";
-            tfl.idtois(table, fl, vl);
+            tfl.Update(table, fl, vl);
             if (tfl.result == TFRESULT_ERROR)
             {
                 WARNMSG("");
@@ -448,7 +448,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
         // 3. Отправить все значения обратно в таблицу
         sl.insert(0, "ИД");
         vl.insert(0, nkidsl.at(0));
-        tfl.idtois(table,sl,vl);
+        tfl.Update(table,sl,vl);
         if (tfl.result == TFRESULT_ERROR)
         {
             WARNMSG("");

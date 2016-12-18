@@ -10,8 +10,19 @@ TBFunc::TBFunc()
 
 int TBFunc::CheckDate(int type, const QString &date)
 {
-    QDateTime dtme = QDateTime::fromString(date, "yyyy-MM-dd hh:mm:ss");
-    if (!dtme.isValid())
+    QDateTime dtme = QDateTime::fromString(date, "dd-MM-yyyy");
+    return Check(type, dtme);
+}
+
+int TBFunc::CheckDateTime(int type, const QString &datetime)
+{
+    QDateTime dtme = QDateTime::fromString(datetime, "dd-MM-yyyy hh:mm:ss");
+    return Check(type, dtme);
+}
+
+int TBFunc::Check(int type, const QDateTime &dtm)
+{
+    if (!dtm.isValid())
         return TBDATE_BAD;
     QDateTime CurDateTime = QDateTime::currentDateTime();
     QString periodstr, table, field;
@@ -49,8 +60,8 @@ int TBFunc::CheckDate(int type, const QString &date)
         WARNMSG("");
         return TBDATE_BAD;
     }
-    dtme = dtme.addMonths(months);
-    qint64 SubDays = dtme.daysTo(CurDateTime);
+    QDateTime newdtm = dtm.addMonths(months);
+    qint64 SubDays = newdtm.daysTo(CurDateTime);
     if (SubDays < -DAYS_TO_BAD) // две недели до конца
         return TBDATE_OK;
     if (SubDays <= 0)

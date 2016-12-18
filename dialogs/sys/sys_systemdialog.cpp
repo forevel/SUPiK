@@ -153,7 +153,7 @@ void sys_systemdialog::SetSlave(QModelIndex idx)
         QString table = "Системное меню_полн";
         QString field = "Вызываемая функция";
         QString cmpfield = "Наименование";
-        tfl.htovlc(table,field,cmpfield,tmpString, tmpsl); // получить имя вызываемой функции
+        tfl.GetValuesByColumnAndField(table,field,cmpfield,tmpString, tmpsl); // получить имя вызываемой функции
         if (tfl.result == TFRESULT_ERROR)
         {
             WARNMSG("");

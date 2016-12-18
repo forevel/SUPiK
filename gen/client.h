@@ -55,12 +55,12 @@
 // TF-commands (tablefields)
 #define T_COMMAND   1200
 #define T_GVSBFS	1201 // ValuesByFields
-#define T_GVSBC		1202 // htovl
-#define T_GVSBCF	1203 // htovlc
+#define T_GVSBC		1202 // GetValuesByColumn
+#define T_GVSBCF	1203 // GetValuesByColumnAndField
 #define T_C         1204 // TFCheck
 #define T_DEL		1205
 #define T_RDEL		1206
-#define T_GFT		1207 // GetFullTable (tbvll)
+#define T_GFT		1207 // GetFullTable (GetAllValuesFromTable)
 #define T_GID		1208
 #define T_IDTV		1209
 #define T_TV		1210

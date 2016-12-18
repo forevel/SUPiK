@@ -91,7 +91,7 @@ void dir_adddialog::setupUI()
     le->setObjectName("dirAlias");
     connect(le, SIGNAL(editingFinished()), this, SLOT(transliteDirName()));
     dlg1Layout->addWidget(le, 0, 1);
-    lbl = new s_tqLabel("Количество полей");
+    lbl = new s_tqLabel("Количество полей (исключая id, date, idpers и deleted)");
     spb = new s_tqSpinBox;
     spb->setObjectName("dirFieldNum");
     spb->setValue(1);
@@ -412,10 +412,10 @@ void dir_adddialog::WriteAndClose()
             return;
         }
         vl.clear();
-        cmpvl.clear();
         vl << cbfield->currentText() << dirdb+"."+tble  << "" << lename->text() << levalue->text(); // "" - на месте ключевого поля, т.к. ИД пишем далее
-        tmpString = QString("%1").arg(i+1, 2, 10, QChar('0')); // i+1, т.к. на 0-м месте должен идти ИД
+        tmpString = QString("%1").arg(i+1, 2, 10, QChar('0')); // fieldsorder = i+1, т.к. на 0-м месте должен идти ИД
         vl << tmpString << FullTblename << pc.DateTime << "0" << QString::number(pc.idPers);
+        cmpvl.clear();
         cmpvl << FullTblename << cbfield->currentText();
         WriteToTfl(fl, vl, cmpfl, cmpvl);
         vl.replace(6, ShortTblename); // заменяем полное наименование на сокращённое
@@ -440,6 +440,16 @@ void dir_adddialog::WriteAndClose()
             }
         }
     }
+    // запись в tablefields полей ДАТА и ИДПОЛЬЗ
+    cmpvl = QStringList() << FullTblename << "date";
+    vl = QStringList() << "date" << dirdb+"."+tble << "" << "Дата" << "2.21.." << QString("%1").arg(numfields+1, 2, 10, QChar('0')) << \
+                          FullTblename << pc.DateTime << "0" << QString::number(pc.idPers);
+    WriteToTfl(fl, vl, cmpfl, cmpvl);
+    cmpvl = QStringList() << FullTblename << "idpers";
+    vl = QStringList() << "idpers" << dirdb+"."+tble << "" << "ИДПольз" << "2.2..Персонал_полн.ФИО" << QString("%1").arg(numfields+2, 2, 10, QChar('0')) << \
+                          FullTblename << pc.DateTime << "0" << QString::number(pc.idPers);
+    WriteToTfl(fl, vl, cmpfl, cmpvl);
+
     // теперь записать id
     vl.clear();
     cmpvl.clear();

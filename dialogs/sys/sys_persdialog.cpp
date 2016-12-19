@@ -20,7 +20,8 @@ void sys_persdialog::SetupUI()
     tv->setObjectName("tv");
     QApplication::setOverrideCursor(Qt::WaitCursor);
     TreeModel *treemodel = new TreeModel;
-    int res = treemodel->SetupRaw("sup", "perspsw", "idperspsw", "idpersonel");
+//    QStringList PersPswFields = QStringList() << "idperspsw" << "idpersonel";
+    int res = treemodel->Setup("Пароли_сокращ", true);
     if (res)
     {
         QApplication::restoreOverrideCursor();

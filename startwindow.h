@@ -25,6 +25,7 @@ private slots:
     void UNameLEReturnPressed();
     void OpenSettingsDialog();
     void ChangePassword();
+    void ActivatedEnter();
 
 private:
     sys_settingsdialog qssd;

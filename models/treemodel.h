@@ -12,6 +12,11 @@
 #define TM_SIMPLE_ELEMENT           "0"
 #define TM_ELEMENT_WITH_CHILDREN    "1"
 
+// возвращаемые результаты
+#define TM_OK           0
+#define TM_BADSOURCE    1 // некорректные входные данные
+#define TM_BADRESULT    2 // ошибка при выполнении алгоритма
+
 class TreeModel : public QAbstractTableModel
 {
     Q_OBJECT
@@ -35,8 +40,8 @@ public:
     int Setup(QStringList Tables, int Type=TT_TYPE1, bool Cond = false);
     int Setup(QString Table, bool Cond = false);
     int SetupFile(QString Filename, QString StringToFind);
-    int SetupRawComp(QString db, QString tble);
-    int SetupRaw(QString db, QString tble, QString id="", QString mainfield="");
+//    int SetupRawComp(QString db, QString tble);
+    int SetupRaw(QString db, QString tble, QStringList fields = QStringList());
     void Refresh();
     bool HaveChildren(int row);
     void SetLastItem(QColor FColor, QColor BColor, QFont Font, QIcon Icon, QString AData="0");

@@ -37,7 +37,7 @@ private:
     EditModel *MainModel;
     bool Cancelled;
     int constheight;
-    void setupUI();
+    bool setupUI();
     void Update();
     void FillHeaderData();
 
@@ -45,7 +45,7 @@ private slots:
     void accepted(QModelIndex);
     void accepted();
     void cancelled();
-    void resizemainTV(QModelIndex, QModelIndex);
+    void resizemainTV();
     void AddItem();
 
 protected:

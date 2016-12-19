@@ -1,6 +1,7 @@
 #include "s_2cdialog.h"
 #include "../models/s_duniversal.h"
 #include "../widgets/s_tqtableview.h"
+#include "../widgets/treeview.h"
 #include "../widgets/s_tqpushbutton.h"
 #include "../widgets/s_tqlineedit.h"
 #include "../widgets/s_tqlabel.h"
@@ -46,13 +47,15 @@ void s_2cdialog::setup(QString tble, int Mode, QString id, bool isQuarantine)
     this->tble.append(tble);
     this->Mode = Mode;
     this->Id = id;
-    setupUI();
+    MainModel = new EditModel;
     if (MainModel->Setup(tble, id))
     {
         QApplication::restoreOverrideCursor();
         WARNMSG("");
         return;
     }
+    if (!setupUI())
+        return;
     FillHeaderData();
     this->IsQuarantine = isQuarantine;
     result = 0;
@@ -67,13 +70,15 @@ void s_2cdialog::SetupRaw(QString db, QString tble, int Mode, QString id)
     this->Mode = Mode;
     this->Id = id;
     this->Db = db;
-    setupUI();
+    MainModel = new EditModel;
     if (MainModel->SetupRaw(db, tble, id))
     {
         QApplication::restoreOverrideCursor();
         WARNMSG("");
         return;
     }
+    if (!setupUI())
+        return;
     FillHeaderData();
     result = 0;
     QApplication::restoreOverrideCursor();
@@ -83,9 +88,8 @@ void s_2cdialog::SetupFile(QString Filename, QString StringToFind, QString str)
 {
 }
 
-void s_2cdialog::setupUI()
+bool s_2cdialog::setupUI()
 {
-    setStyleSheet("QDialog {background-color: rgba(204,204,153);}");
     QVBoxLayout *mainLayout = new QVBoxLayout;
     QHBoxLayout *hlyout = new QHBoxLayout;
     s_tqPushButton *pb = new s_tqPushButton;
@@ -102,7 +106,7 @@ void s_2cdialog::setupUI()
     hlyout->addWidget(lbl, 0, Qt::AlignRight);
     mainLayout->addLayout(hlyout);
     QHBoxLayout *pbLayout = new QHBoxLayout;
-    s_tqTableView *mainTV = new s_tqTableView; // autoResize = true
+    TreeView *mainTV = new TreeView;
     mainTV->setObjectName("mainTV");
     s_duniversal *uniDelegate = new s_duniversal;
     s_tqPushButton *pbOk = new s_tqPushButton("Ага");
@@ -113,16 +117,10 @@ void s_2cdialog::setupUI()
     pbLayout->addWidget(pbCancel, 0);
     connect (pbOk, SIGNAL(clicked()), this, SLOT(accepted()));
     connect (pbCancel, SIGNAL(clicked()), this, SLOT(cancelled()));
-    MainModel = new EditModel;
-    connect(MainModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(resizemainTV(QModelIndex,QModelIndex)));
     mainTV->setModel(MainModel);
     mainTV->setSortingEnabled(true);
     mainTV->setEditTriggers(QAbstractItemView::AllEditTriggers);
-    mainTV->verticalHeader()->setVisible(false);
-    mainTV->horizontalHeader()->setVisible(false);
     mainTV->setItemDelegate(uniDelegate);
-    mainTV->resizeColumnsToContents();
-    mainTV->resizeRowsToContents();
     connect (mainTV,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(accepted(QModelIndex)));
     if ((Mode == MODE_CHOOSE) || (Mode == MODE_CHOOSE_RAW))
     {
@@ -145,11 +143,13 @@ void s_2cdialog::setupUI()
         hlyout->addStretch(1);
         mainLayout->addLayout(hlyout);
     }
+    mainTV->resizeColumnsToContents();
+    mainTV->resizeRowsToContents();
     mainLayout->addWidget(mainTV);
-    mainLayout->setAlignment(mainTV, Qt::AlignLeft);
-    mainLayout->addStretch(100);
     mainLayout->addLayout(pbLayout);
     setLayout(mainLayout);
+    connect(MainModel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(resizemainTV()));
+    return true;
 }
 
 void s_2cdialog::AddItem()
@@ -243,25 +243,16 @@ void s_2cdialog::AddTable(QString tble)
     return; */
 }
 
-void s_2cdialog::resizemainTV(QModelIndex, QModelIndex)
+void s_2cdialog::resizemainTV()
 {
-    s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
+    TreeView *tv = this->findChild<TreeView *>("mainTV");
     if (tv == 0)
     {
         DBGMSG;
         return;
     }
     tv->resizeColumnsToContents();
-    int wdth = 0;
-    for (int i = 0; i < tv->model()->columnCount(); i++)
-        wdth += tv->columnWidth(i);
-    tv->setMinimumWidth(wdth+10);
-    int hgth = 0;
-    for (int i = 0; i < tv->model()->rowCount(); i++)
-        hgth += tv->rowHeight(i);
-    int tmpi = QApplication::desktop()->availableGeometry().height()-350; // -350 - чтобы высота диалога не выходила за пределы видимой части экрана
-    hgth = (hgth > tmpi) ? tmpi : hgth;
-    tv->setMinimumHeight(hgth+10);
+    tv->resizeRowsToContents();
 }
 
 void s_2cdialog::paintEvent(QPaintEvent *e)

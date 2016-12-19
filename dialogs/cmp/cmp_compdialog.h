@@ -9,8 +9,7 @@
 
 #include <QDialog>
 
-#include "../../models/s_ncmodel.h"
-#include "../../models/s_ntmodel.h"
+#include "../../models/treemodel.h"
 
 class cmp_compdialog : public QDialog
 {
@@ -48,7 +47,7 @@ private:
     QString CompLetter, CompDb, CompTbles;
     bool Cancelled;
     int CompType, CompTble;
-    s_ncmodel *slavemodel;
+    TreeModel *MainModel, *SlaveModel;
 
     bool CheckAndAdd();
     bool isModified();

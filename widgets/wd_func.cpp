@@ -2,6 +2,7 @@
 #include "s_tqlineedit.h"
 #include "s_tqlabel.h"
 #include "s_tqchoosewidget.h"
+#include "s_tqtableview.h"
 #include <QPalette>
 
 bool WDFunc::SetCWData(QWidget *w, const QString &cwname, const QString &cwvalue)
@@ -69,4 +70,33 @@ bool WDFunc::SetLBLImage(QWidget *w, const QString &lblname, QPixmap *pm)
         return false;
     lbl->setPixmap(*pm);
     return true;
+}
+
+QString WDFunc::TVField(QWidget *w, const QString &tvname, int column, bool isid)
+{
+    s_tqTableView *tv = w->findChild<s_tqTableView *>(tvname);
+    if (tv == 0)
+        return QString();
+    QString tmps = tv->model()->data(tv->model()->index(tv->currentIndex().row(),column,QModelIndex()),Qt::DisplayRole).toString();
+    if (isid) // если поле с ИД, надо убрать первую цифру - номер таблицы и разделяющую точку, если они присутствуют
+    {
+        QStringList sl = tmps.split(".");
+        if (sl.size() > 1) // есть номер таблицы
+            tmps = sl.at(1);
+        bool ok;
+        int tmpi = tmps.toInt(&ok);
+        if (!ok)
+            return QString();
+        tmps = QString::number(tmpi); // убираем старшие незначащие нули
+    }
+    return tmps;
+}
+
+void WDFunc::TVAutoResize(QWidget *w, const QString &tvname)
+{
+    s_tqTableView *tv = w->findChild<s_tqTableView *>(tvname);
+    if (tv == 0)
+        return;
+    tv->resizeColumnsToContents();
+    tv->resizeRowsToContents();
 }

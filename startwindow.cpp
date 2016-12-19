@@ -53,8 +53,8 @@ void StartWindow::SetupUI()
     resize(213, 136);
     QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
     setSizePolicy(sizePolicy);
-    setMinimumSize(QSize(213, 136));
-    setMaximumSize(QSize(213, 136));
+    setMinimumSize(QSize(213, 152));
+    setMaximumSize(QSize(213, 152));
     QIcon StartWindowIcon;
     StartWindowIcon.addFile(QString::fromUtf8(":/res/supik.png"), QSize(), QIcon::Normal, QIcon::Off);
     setWindowIcon(StartWindowIcon);
@@ -94,6 +94,10 @@ void StartWindow::SetupUI()
     StartWindowLayout->setColumnStretch(0, 0);
     StartWindowLayout->setColumnStretch(2, 0);
 
+    pb = new s_tqPushButton("Вход с помощью кода активации");
+    connect(pb,SIGNAL(clicked(bool)),this,SLOT(ActivatedEnter()));
+    StartWindowLayout->addWidget(pb, 5, 0, 1, 3);
+
     CentralWidget->setLayout(StartWindowLayout);
     setCentralWidget(CentralWidget);
     QWidget::setTabOrder(UNameLE, PasswdLE);
@@ -105,6 +109,11 @@ void StartWindow::SetupUI()
     connect (SystemPB, SIGNAL(clicked()), this, SLOT(OpenSettingsDialog()));
     connect (UNameLE, SIGNAL(returnPressed()), this, SLOT(UNameLEReturnPressed()));
     connect (PasswdLE, SIGNAL(returnPressed()), this, SLOT(PasswdLEReturnPressed()));
+}
+
+void StartWindow::ActivatedEnter()
+{
+
 }
 
 void StartWindow::ChangePassword()

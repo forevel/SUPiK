@@ -14,8 +14,8 @@ s_tqTableView::s_tqTableView(QWidget *parent) :
     setStyleSheet("QTableView {background-color: rgba(0,0,0,0);}");
     setFrameStyle(QFrame::NoFrame);
     setShowGrid(false);
-    horizontalScrollBar()->setStyleSheet("QScrollBar {background-color: rgba(0,0,0,0);}");
-    verticalScrollBar()->setStyleSheet("QScrollBar {background-color: rgba(0,0,0,0);}");
+    horizontalScrollBar()->setStyleSheet("QScrollBar::horizontal {background: rgba(0,0,0,0);}");
+    verticalScrollBar()->setStyleSheet("QScrollBar::vertical {background: rgba(0,0,0,0);}");
     horizontalHeader()->setStyleSheet("QHeaderView::section {background-color: rgba(0,0,0,0);}");
     horizontalHeader()->setAttribute(Qt::WA_TranslucentBackground, true);
     verticalHeader()->setStyleSheet("QHeaderView::section {background-color: rgba(0,0,0,0);}");

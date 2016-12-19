@@ -23,6 +23,7 @@
 #include "../../widgets/s_tqsplitter.h"
 #include "../../widgets/s_colortabwidget.h"
 #include "../../widgets/s_tqwidget.h"
+#include "../../widgets/wd_func.h"
 #include "../../gen/publicclass.h"
 #include "../../gen/s_tablefields.h"
 #include "../messagebox.h"
@@ -101,23 +102,23 @@ void cmp_compdialog::SetupUI()
     hlyout->setAlignment(lbl, Qt::AlignRight);
 
     lyout->addLayout(hlyout);
+
     s_tqTableView *MainTV = new s_tqTableView;
-    s_duniversal *gridItemDelegate = new s_duniversal;
-    MainTV->setItemDelegate(gridItemDelegate);
+    s_duniversal *GridItemDelegate = new s_duniversal;
+    MainTV->setItemDelegate(GridItemDelegate);
     MainTV->setObjectName("mtv");
     MainTV->horizontalHeader()->setVisible(true);
     MainTV->verticalHeader()->setVisible(false);
-    s_ncmodel *mainmodel = new s_ncmodel;
-    ProxyModel *mainproxymodel = new ProxyModel;
-    mainmodel->setup(CompLetter+"Компоненты_описание_сокращ");
-    if (mainmodel->result)
+    MainModel = new TreeModel;
+    ProxyModel *MainProxyModel = new ProxyModel;
+    if (MainModel->Setup(CompLetter+"Компоненты_описание_сокращ", false) != TM_OK)
     {
         WARNMSG("");
         QApplication::restoreOverrideCursor();
         return;
     }
-    mainproxymodel->setSourceModel(mainmodel);
-    MainTV->setModel(mainproxymodel);
+    MainProxyModel->setSourceModel(MainModel);
+    MainTV->setModel(MainProxyModel);
     MainTV->resizeColumnsToContents();
     MainTV->resizeRowsToContents();
     MainTV->setSelectionMode(QAbstractItemView::NoSelection);
@@ -135,11 +136,11 @@ void cmp_compdialog::SetupUI()
     s_tqFrame *right = new s_tqFrame;
     QVBoxLayout *rlyout = new QVBoxLayout;
     s_tqTableView *SlaveTV = new s_tqTableView;
-    SlaveTV->setItemDelegate(gridItemDelegate);
-    slavemodel = new s_ncmodel;
-    ProxyModel *slaveproxymodel = new ProxyModel;
-    slaveproxymodel->setSourceModel(slavemodel);
-    SlaveTV->setModel(slaveproxymodel);
+    SlaveTV->setItemDelegate(GridItemDelegate);
+    SlaveModel = new TreeModel;
+    ProxyModel *SlaveProxyModel = new ProxyModel;
+    SlaveProxyModel->setSourceModel(SlaveModel);
+    SlaveTV->setModel(SlaveProxyModel);
     SlaveTV->setObjectName("stv");
     SlaveTV->horizontalHeader()->setVisible(true);
     SlaveTV->verticalHeader()->setVisible(false);
@@ -164,39 +165,35 @@ void cmp_compdialog::MainItemChoosed(QModelIndex idx)
 {
     Q_UNUSED(idx);
     QApplication::setOverrideCursor(Qt::WaitCursor);
-    s_tqTableView *tv = this->findChild<s_tqTableView *>("mtv");
-    if (tv == 0)
-    {
-        DBGMSG;
-        return;
-    }
-    QString tmps = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole).toString();
-    QStringList fl = QStringList() << "Наименование";
-    CompTble = tmps.toInt();
-    tmps = QString::number(CompTble); // убираем старшие незначащие нули
-    QStringList sl;
-    QString table = CompLetter+"Компоненты_описание_полн";
-    QString field = "ИД";
-    tfl.valuesbyfield(table,fl,field,tmps, sl); // взяли имя таблицы в БД, описание которой выбрали в главной таблице
-    if (tfl.result != TFRESULT_ERROR)
+    QString tvid = WDFunc::TVField(this, "mtv", 0, true);
+    if (tvid.isEmpty())
     {
         WARNMSG("");
         return;
     }
-    // теперь надо вытащить в slavemodel все компоненты из выбранной таблицы
-    fl = QStringList() << "id" << "PartNumber" << "Manufacturer";
-    CompTbles = sl.at(0);
-    slavemodel->setupraw(CompDb,CompTbles,fl,"id"); // строим таблицу с сортировкой по ИД
-    if (slavemodel->result)
-        MessageBox2::information(this, "Внимание", "Проблемы при построении таблицы "+CompTbles);
-    tv = this->findChild<s_tqTableView *>("stv");
-    if (tv == 0)
+    CompTble = tvid.toInt();
+    QStringList fl = QStringList() << "Наименование";
+    QStringList sl;
+    QString table = CompLetter+"Компоненты_описание_полн";
+    QString field = "ИД";
+    tfl.valuesbyfield(table,fl,field,tvid,sl); // взяли имя таблицы в БД, описание которой выбрали в главной таблице
+    if (tfl.result != TFRESULT_NOERROR)
     {
-        DBGMSG;
+        QApplication::restoreOverrideCursor();
+        WARNMSG("");
         return;
     }
-    tv->resizeColumnsToContents();
-    tv->resizeRowsToContents();
+    // теперь надо вытащить в SlaveModel все компоненты из выбранной таблицы
+    fl = QStringList() << "id" << "PartNumber" << "Manufacturer";
+    if (sl.isEmpty())
+    {
+        WARNMSG("");
+        return;
+    }
+    CompTbles = sl.at(0);
+    if (SlaveModel->SetupRaw(CompDb,CompTbles,fl) != TM_OK) // строим таблицу с сортировкой по ИД
+        MessageBox2::information(this, "Внимание", "Проблемы при построении таблицы "+CompTbles);
+    WDFunc::TVAutoResize(this, "stv");
     QApplication::restoreOverrideCursor();
 }
 
@@ -208,13 +205,7 @@ void cmp_compdialog::EditItem()
 void cmp_compdialog::SlaveItemChoosed(QModelIndex idx)
 {
     Q_UNUSED(idx);
-    s_tqTableView *tv = this->findChild<s_tqTableView *>("stv");
-    if (tv == 0)
-    {
-        DBGMSG;
-        return;
-    }
-    QString CompIDs = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole).toString();
+    QString CompIDs = WDFunc::TVField(this, "stv", 0, true);
     if (CompTble == 0) // не была задана таблица компонентов (раздел)
     {
         MessageBox2::information(this, "Внимание", "Не выбран раздел в левой части");
@@ -278,13 +269,7 @@ void cmp_compdialog::AddNewItem()
 
 void cmp_compdialog::AddNewOnExistingItem()
 {
-    s_tqTableView *tv = this->findChild<s_tqTableView *>("stv");
-    if (tv == 0)
-    {
-        DBGMSG;
-        return;
-    }
-    QString CompIDs = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole).toString();
+    QString CompIDs = WDFunc::TVField(this, "stv", 0, true);
     Cancelled = false;
     StartCompDialog(CompIDs,CMPMODE_EX,true); // создаём на базе компонента CompIDs компонент с новым индексом
     if (!Cancelled)
@@ -296,13 +281,7 @@ void cmp_compdialog::DeleteItem()
 {
     if (!(MessageBox2::question(this, "Удалить элемент", "Вы уверены, что хотите удалить элемент?")))
         return;
-    s_tqTableView *tv = this->findChild<s_tqTableView *>("stv");
-    if (tv == 0)
-    {
-        DBGMSG;
-        return;
-    }
-    QString CompIDs = tv->model()->data(tv->model()->index(tv->currentIndex().row(),0,QModelIndex()),Qt::DisplayRole).toString();
+    QString CompIDs = WDFunc::TVField(this, "stv", 0, true);
     sqlc.DeleteFromDB(CompDb,CompTbles,"id",CompIDs);
     if (sqlc.result)
     {

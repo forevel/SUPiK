@@ -14,6 +14,8 @@ public:
     static QString LEData(QWidget *w, const QString &lename);
     static bool SetLEColor(QWidget *w, const QString &lename, const QColor &color);
     static bool SetLBLImage(QWidget *w, const QString &lblname, QPixmap *pm);
+    static QString TVField(QWidget *w, const QString &tvname, int column, bool isid=false);
+    static void TVAutoResize(QWidget *w, const QString &tvname);
 };
 
 #endif // WD_FUNC

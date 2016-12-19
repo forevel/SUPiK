@@ -211,7 +211,8 @@ void s_2tdialog::MainItemChoosed()
         WARNMSG("");
         return;
     }
-    if (SlaveModel->SetupRawComp(MainDb, sltble))
+    QStringList sl = QStringList() << "id" << "PartNumber";
+    if (SlaveModel->SetupRaw(MainDb, sltble, sl))
     {
         QApplication::restoreOverrideCursor();
         WARNMSG("");

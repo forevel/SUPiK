@@ -6,10 +6,12 @@
 
 #include "startwindow.h"
 #include "gen/s_sql.h"
+#include "gen/s_tablefields.h"
 #include "widgets/s_tqcheckbox.h"
 #include "dialogs/messagebox.h"
 #include "gen/client.h"
 #include "gen/log.h"
+#include "widgets/wd_func.h"
 
 Log *SupLog;
 
@@ -86,7 +88,6 @@ void StartWindow::SetupUI()
     StartWindowLayout->addWidget(SaveCB, 2, 1, 1, 2);
     s_tqPushButton *pb = new s_tqPushButton("Сменить пароль");
     connect(pb,SIGNAL(clicked()),this,SLOT(ChangePassword()));
-    pb->setEnabled(false);
     StartWindowLayout->addWidget(pb, 3, 0, 1, 3);
     StartWindowLayout->addWidget(OkPB, 4, 0, 1, 2);
     StartWindowLayout->addWidget(SystemPB, 4, 2);
@@ -118,59 +119,50 @@ void StartWindow::ActivatedEnter()
 
 void StartWindow::ChangePassword()
 {
-    // поменять на работу с сервером!
-/*    s_tqLineEdit *UNameLE = this->findChild<s_tqLineEdit *>("UNameLE");
-    s_tqLineEdit *PasswdLE = this->findChild<s_tqLineEdit *>("PasswdLE");
-    if ((UNameLE == 0) || (PasswdLE == 0))
-    {
-        MessageBox2::error(this,"Системная ошибка","Отсутствуют элементы в диалоге, строка "+QString::number(__LINE__));
-        return;
-    }
-    QString login = UNameLE->text();
-    QString psw = PasswdLE->text();
-    QStringList cmpfl = QStringList() << "login" << "psw";
-    QStringList cmpvl = QStringList() << login << psw;
-    sqlc.GetValueFromTableByFields(sqlc.GetDB("sup"),"personel","idpersonel",cmpfl,cmpvl);
+    QString login = WDFunc::LEData(this, "UNameLE");
+    QString psw = WDFunc::LEData(this, "PasswdLE");
+    QStringList cmpfl = QStringList() << "login";
+    QStringList cmpvl = QStringList() << login;
+    QString idPers = sqlc.GetValueFromTableByFields("sup","personel","idpersonel",cmpfl,cmpvl);
     if (sqlc.result)
-        MessageBox2::error(this,"Ошибка!","Не найден пользователь с таким логином/паролем");
+        MessageBox2::error(this,"Ошибка!","Не найден пользователь с таким логином");
     else
     {
-        bool ok = false;
-        QString newpsw = QInputDialog::getText(this,"Сменить пароль","Новый пароль:", QLineEdit::Password, "", &ok);
-        if (!ok)
-            return;
-        QString new2psw = QInputDialog::getText(this,"Сменить пароль","Повторите ввод:", QLineEdit::Password, "", &ok);
-        if (!ok)
-            return;
-        if (newpsw != new2psw)
-        {
-            MessageBox2::error(this,"Ошибка!","Введённые строки не совпадают");
-            return;
-        }
-        sqlc.UpdateValuesInTable(sqlc.GetDB("sup"),"personel",QStringList("psw"),QStringList(newpsw),"login",login);
-        if (sqlc.result)
-            MessageBox2::error(this,"Ошибка!","Ошибка при смене пароля");
+        QStringList idPsw;
+        QStringList fl = QStringList() << "Сотрудник" << "Пароль";
+        QStringList vl = QStringList() << idPers << psw;
+        tfl.valuesbyfields("Пароли_полн", QStringList("ИД"), fl, vl, idPsw);
+        if ((tfl.result != TFRESULT_NOERROR) || (idPsw.isEmpty()))
+            MessageBox2::error(this,"Ошибка!","Пароль неверен");
         else
-            PasswdLE->setText(newpsw);
-    } */
+        {
+            bool ok = false;
+            QString newpsw = QInputDialog::getText(this,"Сменить пароль","Новый пароль:", QLineEdit::Password, "", &ok);
+            if (!ok)
+                return;
+            QString new2psw = QInputDialog::getText(this,"Сменить пароль","Повторите ввод:", QLineEdit::Password, "", &ok);
+            if (!ok)
+                return;
+            if (newpsw != new2psw)
+            {
+                MessageBox2::error(this,"Ошибка!","Введённые строки не совпадают");
+                return;
+            }
+            fl = QStringList() << "ИД" << "Пароль";
+            vl = QStringList() << idPsw.at(0) << newpsw;
+            tfl.Update("Пароли_полн", fl, vl);
+            if (tfl.result != TFRESULT_NOERROR)
+                MessageBox2::error(this,"Ошибка!","Ошибка при смене пароля");
+            else
+                WDFunc::SetLEData(this, "PasswdLE", newpsw);
+        }
+    }
 }
 
 void StartWindow::OkPBClicked()
 {
     QString tmpString;
 
-    s_tqLineEdit *UNameLE = this->findChild<s_tqLineEdit *>("UNameLE");
-    if (UNameLE == 0)
-    {
-        SupLog->error("Отладочная ошибка в строке "+QString::number(__LINE__));
-        return;
-    }
-    s_tqLineEdit *PasswdLE = this->findChild<s_tqLineEdit *>("PasswdLE");
-    if (PasswdLE == 0)
-    {
-        SupLog->error("Отладочная ошибка в строке "+QString::number(__LINE__));
-        return;
-    }
     s_tqCheckBox *SaveCB = this->findChild<s_tqCheckBox *>("SaveCB");
     if (SaveCB == 0)
     {
@@ -178,9 +170,8 @@ void StartWindow::OkPBClicked()
         return;
     }
 
-    pc.PersLogin = UNameLE->text();
-    pc.PersPsw = PasswdLE->text();
-
+    pc.PersLogin = WDFunc::LEData(this, "UNameLE");
+    pc.PersPsw = WDFunc::LEData(this, "PasswdLE");
     QPixmap StartWindowSplashPixmap(":/res/2.x.png");
     QSplashScreen *StartWindowSplashScreen = new QSplashScreen(StartWindowSplashPixmap);
     StartWindowSplashScreen->show();
@@ -206,8 +197,8 @@ void StartWindow::OkPBClicked()
     {
         if (SaveCB->isChecked())
         {
-            pc.LandP->setValue("login/login", UNameLE->text());
-            pc.LandP->setValue("login/psw", PasswdLE->text());
+            pc.LandP->setValue("login/login", pc.PersLogin);
+            pc.LandP->setValue("login/psw", pc.PersPsw);
             pc.LandP->setValue("login/ischecked", SaveCB->isChecked());
         }
         else

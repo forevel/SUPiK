@@ -63,7 +63,7 @@ void PublicClass::InitiatePublicClass()
     PathToSup = LandP->value("settings/pathtosup","").toString();
     timerperiod = LandP->value("settings/timerperiod","1").toInt();
     FtpServer = LandP->value("settings/FtpServer","ftp.asu-vei.ru").toString();
-    SupikServer = LandP->value("settings/Server","asu-vei.ru").toString();
+    SupikServer = LandP->value("settings/Server","supik.mycompany.ru").toString();
     SupikPort = LandP->value("settings/Port","9687").toString();
 
 

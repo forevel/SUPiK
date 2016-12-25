@@ -51,16 +51,28 @@ Client::Client(QObject *parent) : QObject(parent)
     CmdMap.insert(T_UPDV, {"T_UPDV", 3, "TC", RESULT_NONE, false, false});
     CmdMap.insert(M_PUTFILE, {"M_PUTFILE", 4, "M7", RESULT_NONE, false, false}); // 0 - local filename, 1 - type, 2 - subtype, 3 - filename, [4] - filesize, added in SendCmd
     CmdMap.insert(M_GETFILE, {"M_GETFILE", 3, "M8", RESULT_NONE, false, false}); // 0 - type, 1 - subtype, 2 - filename
-//    PathPrefixes = QStringList() << "tb/" << "doc/" << "alt/" << "pers/";
-//    PathSuffixes = QStringList() << "prot/" << "dsheet/" << "libs/" << "symbols/" << "footprints/" << "photo/";
+    CmdMap.insert(M_ACTIVATE, {"M_ACTIVATE", 2, "M9", RESULT_NONE, false, false}); // 0 - code, 1 - newpass
 }
 
 Client::~Client()
 {
 }
 
-int Client::Connect(QString Host, QString Port)
+int Client::Connect(QString Host, QString Port, int ClientMode)
 {
+    if (Connected) // если уже подсоединены, не надо по второму разу
+        return CLIER_NOERROR;
+    CliMode = ClientMode;
+    if (ClientMode == CLIMODE_TEST)
+    {
+        Pers = "test";
+        Pass = "test";
+    }
+    else
+    {
+        Pers = pc.PersLogin;
+        Pass = pc.PersPsw;
+    }
     CliLog = new Log;
     CliLog->Init(pc.HomeDir+"/cli.log");
     CliLog->info("=== Log started ===");
@@ -118,13 +130,23 @@ void Client::StopThreads()
 
 void Client::Disconnect()
 {
-    SendCmd(M_QUIT);
-    MainEthernet->Busy = false;
-    MainEthernet->Stop();
+    if (Connected)
+    {
+        SendCmd(M_QUIT);
+        MainEthernet->Busy = false;
+        MainEthernet->Stop();
+        Connected = false;
+    }
 }
 
 void Client::SendCmd(int Command, QStringList &Args)
 {
+    if ((CliMode == CLIMODE_TEST) && (Command != M_ACTIVATE))
+    {
+        CliLog->warning("illegal test command");
+        DetectedError = CLIER_CMDER;
+        return;
+    }
     Result.clear(); // очищаем результаты
     FieldsLeast = false;
     FieldsLeastToAdd = 0;
@@ -161,6 +183,11 @@ void Client::SendCmd(int Command, QStringList &Args)
     {
         break;
     } */
+    // ACTIVATE активировать учётную запись пользователя
+    // 0 - код активации
+    // 1 - новый пароль
+    case M_ACTIVATE:
+        break; // all is already included in CommandString
     // GETF получить файл с сервера
     // 0 - тип файла
     // 1 - подтип файла
@@ -242,12 +269,12 @@ void Client::SendCmd(int Command, QStringList &Args)
     }
     case M_ANSLOGIN:
     {
-        CommandString = pc.PersLogin+"\n";
+        CommandString = Pers+"\n";
         break;
     }
     case M_ANSPSW:
     {
-        CommandString = pc.PersPsw+"\n";
+        CommandString = Pass+"\n";
         break;
     }
     default:
@@ -392,6 +419,7 @@ void Client::ParseReply(QByteArray *ba)
         break;
     }
     // commands without any reply
+    case M_ACTIVATE:
     case S_TC:
     case S_TA:
     case S_TD:
@@ -858,6 +886,17 @@ int Client::PutFile(const QString &localfilename, const QString &type, const QSt
     QStringList sl;
     sl << localfilename << type << subtype << filename;
     Cli->SendCmd(M_PUTFILE, sl);
+    while (Cli->Busy)
+    {
+        QThread::msleep(10);
+        qApp->processEvents(QEventLoop::AllEvents);
+    }
+    return DetectedError;
+}
+
+int Client::SendAndGetResult(int command, QStringList &args)
+{
+    Cli->SendCmd(command, args);
     while (Cli->Busy)
     {
         QThread::msleep(10);

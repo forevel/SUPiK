@@ -17,6 +17,7 @@ Log *SupLog;
 
 StartWindow::StartWindow(QWidget *parent) : QMainWindow(parent)
 {
+    Cli = new Client;
     pc.HomeDir = QDir::homePath()+"/.supik/";
     SupLog = new Log;
     SupLog->Init(pc.HomeDir+"/sup.log");
@@ -112,13 +113,53 @@ void StartWindow::SetupUI()
     connect (PasswdLE, SIGNAL(returnPressed()), this, SLOT(PasswdLEReturnPressed()));
 }
 
+int StartWindow::ClientConnect(int Mode)
+{
+    pc.InitiatePublicClass();
+    int res = Cli->Connect(pc.SupikServer, pc.SupikPort, Mode);
+    if ((res != Client::CLIER_NOERROR) && (res != Client::CLIER_TIMEOUT))
+    {
+        MessageBox2::error(this, "Ошибка!", "Ошибка подключения к серверу");
+        return RESULTBAD;
+    }
+    return RESULTOK;
+}
+
 void StartWindow::ActivatedEnter()
 {
-
+    bool ok = false;
+    QString Code = QInputDialog::getText(this,"Ввод кода активации","Введите код:", QLineEdit::Password, "", &ok);
+    if (!ok)
+        return;
+    if (ClientConnect(Client::CLIMODE_TEST) != RESULTOK)
+        return;
+    QStringList fl = QStringList() << "ИД" << "Имя";
+    QStringList vl;
+    tfl.valuesbyfield("Персонал_полн", QStringList("ИД"), "Строка активации", Code, vl);
+    if ((tfl.result != TFRESULT_NOERROR) || (vl.size() < 2))
+    {
+        MessageBox2::error(this, "Ошибка", "Не найден код активации, обратитесь к администратору СУПиК");
+        return;
+    }
+    QString newpsw;
+    if (EnterAndChangePassword(vl.at(0), newpsw) != RESULTOK)
+        MessageBox2::error(this,"Ошибка!","Ошибка при смене пароля");
+    else
+    {
+        WDFunc::SetLEData(this, "PasswdLE", newpsw);
+        WDFunc::SetLEData(this, "UNameLE", vl.at(1));
+    }
+    // обнуляем признак активации
+    fl = QStringList() << "ИД" << "Строка активации";
+    vl = QStringList() << vl.at(0) << "0";
+    tfl.Update("Персонал_полн", fl, vl);
+    if (tfl.result != TFRESULT_NOERROR)
+        MessageBox2::information(this, "Ошибка", "Ошибка при обновлении базы данных");
 }
 
 void StartWindow::ChangePassword()
 {
+    ClientConnect(Client::CLIMODE_TEST);
     QString login = WDFunc::LEData(this, "UNameLE");
     QString psw = WDFunc::LEData(this, "PasswdLE");
     QStringList cmpfl = QStringList() << "login";
@@ -136,22 +177,8 @@ void StartWindow::ChangePassword()
             MessageBox2::error(this,"Ошибка!","Пароль неверен");
         else
         {
-            bool ok = false;
-            QString newpsw = QInputDialog::getText(this,"Сменить пароль","Новый пароль:", QLineEdit::Password, "", &ok);
-            if (!ok)
-                return;
-            QString new2psw = QInputDialog::getText(this,"Сменить пароль","Повторите ввод:", QLineEdit::Password, "", &ok);
-            if (!ok)
-                return;
-            if (newpsw != new2psw)
-            {
-                MessageBox2::error(this,"Ошибка!","Введённые строки не совпадают");
-                return;
-            }
-            fl = QStringList() << "ИД" << "Пароль";
-            vl = QStringList() << idPsw.at(0) << newpsw;
-            tfl.Update("Пароли_полн", fl, vl);
-            if (tfl.result != TFRESULT_NOERROR)
+            QString newpsw;
+            if (EnterAndChangePassword(idPsw.at(0), newpsw) != RESULTOK)
                 MessageBox2::error(this,"Ошибка!","Ошибка при смене пароля");
             else
                 WDFunc::SetLEData(this, "PasswdLE", newpsw);
@@ -159,16 +186,34 @@ void StartWindow::ChangePassword()
     }
 }
 
+int StartWindow::EnterAndChangePassword(const QString &idPers, QString &newpsw)
+{
+    bool ok = false;
+    newpsw = QInputDialog::getText(this,"Сменить пароль","Новый пароль:", QLineEdit::Password, "", &ok);
+    if (!ok)
+        return RESULTBAD;
+    QString new2psw = QInputDialog::getText(this,"Сменить пароль","Повторите ввод:", QLineEdit::Password, "", &ok);
+    if (!ok)
+        return RESULTBAD;
+    if (newpsw != new2psw)
+    {
+        MessageBox2::error(this,"Ошибка!","Введённые строки не совпадают");
+        return RESULTBAD;
+    }
+    QStringList fl = QStringList() << "ИД" << "Пароль";
+    QStringList vl = QStringList() << idPers << newpsw;
+    tfl.Update("Пароли_полн", fl, vl);
+    if (tfl.result != TFRESULT_NOERROR)
+    {
+        MessageBox2::error(this,"Ошибка!","Ошибка при смене пароля");
+        return RESULTBAD;
+    }
+    return RESULTOK;
+}
+
 void StartWindow::OkPBClicked()
 {
     QString tmpString;
-
-    s_tqCheckBox *SaveCB = this->findChild<s_tqCheckBox *>("SaveCB");
-    if (SaveCB == 0)
-    {
-        SupLog->error("Отладочная ошибка в строке "+QString::number(__LINE__));
-        return;
-    }
 
     pc.PersLogin = WDFunc::LEData(this, "UNameLE");
     pc.PersPsw = WDFunc::LEData(this, "PasswdLE");
@@ -177,8 +222,8 @@ void StartWindow::OkPBClicked()
     StartWindowSplashScreen->show();
 
     StartWindowSplashScreen->showMessage("Подключение к серверу СУПиК...", Qt::AlignRight, Qt::white);
-    Cli = new Client;
-    int res = Cli->Connect(pc.SupikServer, pc.SupikPort);
+    Cli->Disconnect();
+    int res = Cli->Connect(pc.SupikServer, pc.SupikPort, Client::CLIMODE_WORK);
     switch (res)
     {
     case Client::CLIER_LOGIN:
@@ -195,11 +240,11 @@ void StartWindow::OkPBClicked()
         break;
     case Client::CLIER_NOERROR:
     {
-        if (SaveCB->isChecked())
+        if (WDFunc::ChBData(this, "SaveCB"))
         {
             pc.LandP->setValue("login/login", pc.PersLogin);
             pc.LandP->setValue("login/psw", pc.PersPsw);
-            pc.LandP->setValue("login/ischecked", SaveCB->isChecked());
+            pc.LandP->setValue("login/ischecked", true);
         }
         else
         {
@@ -210,8 +255,6 @@ void StartWindow::OkPBClicked()
         pc.AutonomousMode = false;
         INFOMSG("Выполнено подключение к серверу");
         SupLog->info("Server found!");
-//        QStringList fl = QStringList() << "" << "12345.txt";
-//        Cli->SendCmd(Client::CMD_GETFILE, fl);
         break;
     }
     default:
@@ -305,31 +348,15 @@ void StartWindow::LoadLanguage()
 
 void StartWindow::Startup()
 {
-    s_tqLineEdit *UNameLE = this->findChild<s_tqLineEdit *>("UNameLE");
-    if (UNameLE == 0)
-    {
-        MessageBox2::error(this, "Ошибка!", "Отладочная ошибка в строке "+QString::number(__LINE__));
-        return;
-    }
-    s_tqLineEdit *PasswdLE = this->findChild<s_tqLineEdit *>("PasswdLE");
-    if (PasswdLE == 0)
-    {
-        MessageBox2::error(this, "Ошибка!", "Отладочная ошибка в строке "+QString::number(__LINE__));
-        return;
-    }
-    s_tqCheckBox *SaveCB = this->findChild<s_tqCheckBox *>("SaveCB");
-    if (SaveCB == 0)
-    {
-        MessageBox2::error(this, "Ошибка!", "Отладочная ошибка в строке "+QString::number(__LINE__));
-        return;
-    }
-    UNameLE->setText(pc.LandP->value("login/login","").toString());
-    PasswdLE->setText(pc.LandP->value("login/psw","").toString());
-    SaveCB->setChecked(pc.LandP->value("login/ischecked",false).toBool());
+    WDFunc::SetLEData(this, "UNameLE", pc.LandP->value("login/login","").toString());
+    WDFunc::SetLEData(this, "PasswdLE", pc.LandP->value("login/psw","").toString());
+    WDFunc::SetChBData(this, "SaveCB", pc.LandP->value("login/ischecked",false).toBool());
     QString tmpString = pc.LandP->value("settings/lang","").toString();
     if (tmpString.isEmpty())
         OpenSettingsDialog();
     pc.InitiatePublicClass();
+    pc.PersLogin = WDFunc::LEData(this, "UNameLE");
+    pc.PersPsw = WDFunc::LEData(this, "PasswdLE");
 }
 
 void StartWindow::OpenSettingsDialog()

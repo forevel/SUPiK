@@ -40,7 +40,7 @@ Log::~Log()
     }
 }
 
-void Log::Init(QString Filename)
+void Log::Init(const QString &Filename)
 {
     LogFile = Filename;
     // тестовая проверка открытия файла на запись
@@ -54,31 +54,31 @@ void Log::Init(QString Filename)
     CanLog = true;
 }
 
-void Log::error(QString str)
+void Log::error(const QString &str)
 {
     if (CanLog)
         WriteFile("Error", str);
 }
 
-void Log::info(QString str)
+void Log::info(const QString &str)
 {
     if (CanLog)
         WriteFile("Info", str);
 }
 
-void Log::warning(QString str)
+void Log::warning(const QString &str)
 {
     if (CanLog)
         WriteFile("Warning",str);
 }
 
-void Log::intvarvalue(QString var, int value)
+void Log::intvarvalue(const QString &var, int value)
 {
     if (CanLog)
         WriteFile(var, QString::number(value));
 }
 
-void Log::WriteFile(QString Prepend, QString msg)
+void Log::WriteFile(const QString &Prepend, const QString &msg)
 {
     QString tmps = QDateTime::currentDateTime().toString("dd-MM-yyyy hh:mm:ss");
     fp->write(tmps.toLocal8Bit());

@@ -24,6 +24,7 @@
 #define M_PSW		1006 // запрос пароля (зарез.)
 #define M_PUTFILE   1007 // отправка файла на сервер
 #define M_GETFILE   1008 // прием файла с сервера
+#define M_ACTIVATE  1009 // активация пользователя
 // M-statuses
 #define M_IDLE		1000
 #define M_RDY		1051
@@ -146,6 +147,12 @@ public:
         CMD_STATUS  // запрос статуса от сервера
     };
 
+    enum ClientModes
+    {
+        CLIMODE_TEST,   // тестовый режим с тестовыми логином и паролем - нужно для активации
+        CLIMODE_WORK    // основной режим работы
+    };
+
     struct CmdStruct
     {
         QString CmdString;
@@ -164,12 +171,13 @@ public:
     const QStringList PathPrefixes = QStringList() << "tb/" << "doc/" << "alt/" << "pers/";
     const QStringList PathSuffixes = QStringList() << "prot/" << "dsheet/" << "libs/" << "symbols/" << "footprints/" << "photo/";
 
-    int Connect(QString Host, QString Port);
+    int Connect(QString Host, QString Port, int ClientMode);
     void Disconnect();
     void SendCmd(int Command, QStringList &Args=QStringList());
     QString Join(QStringList &sl);
     int GetFile(const QString &type, const QString &subtype, const QString &filename);
     int PutFile(const QString &localfilename, const QString &type, const QString &subtype, const QString &filename);
+    int SendAndGetResult(int command, QStringList &args=QStringList()); // send command with arguments and get result (only "OK" or "ERROR")
 
 public slots:
     void StopThreads();
@@ -192,11 +200,12 @@ private:
     QString FileHost;
     quint16 FilePort;
     quint64 WrittenBytes, ReadBytes, RcvDataSize, XmitDataSize, MsgNum;
-    int CurrentCommand;
+    int CurrentCommand, CliMode;
     QFile fp;
     int FieldsNum;
     int ResultType;
     int FieldsLeastToAdd;
+    QString Pers, Pass;
 
     QString RemoveSpaces(QString str);
     void WriteErrorAndBreakReceiving(QString ErMsg);

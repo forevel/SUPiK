@@ -56,7 +56,6 @@ void PublicClass::InitiatePublicClass()
     icons[3] = QIcon(":/res/calend.png");
     icons[4] = QIcon(":/res/refresh.png");
     icons[5] = QIcon(":/res/TN.png");
-//    Date = QDate::currentDate().toString(DATEFORMAT);
     DateTime = QDateTime::currentDateTime().toString(DATETIMEFORMAT);
     SQLPath = LandP->value("settings/SQLPath","localhost").toString();
     PathToLibs = LandP->value("settings/pathtolibs","").toString();
@@ -79,63 +78,54 @@ bool PublicClass::OpenAndCheckDBs()
     // подключать только те базы, к которым есть доступ у пользователя
     DbNotOpened = 0x0000;
     openBD(alt, "ALT", "altium", "supik", "sysupik");
-    alt.setConnectOptions("MYSQL_OPT_CONNECT_TIMEOUT=4");
     if (!alt.open())
     {
         DbNotOpened |= DB_ALT;
         LastError = alt.lastError().text();
     }
     openBD(con, "CON", "constructives", "supik", "sysupik");
-    con.setConnectOptions("MYSQL_OPT_CONNECT_TIMEOUT=4");
     if (!con.open())
     {
         DbNotOpened |= DB_CON;
         LastError = alt.lastError().text();
     }
     openBD(dev, "DEV", "devices", "supik", "sysupik");
-    dev.setConnectOptions("MYSQL_OPT_CONNECT_TIMEOUT=4");
     if (!dev.open())
     {
         DbNotOpened |= DB_DEV;
         LastError = alt.lastError().text();
     }
     openBD(ent, "ENT", "enterprise", "supik", "sysupik");
-    ent.setConnectOptions("MYSQL_OPT_CONNECT_TIMEOUT=4");
     if (!ent.open())
     {
         DbNotOpened |= DB_ENT;
         LastError = alt.lastError().text();
     }
     openBD(sch, "SCH", "schemagee", "supik", "sysupik");
-    sch.setConnectOptions("MYSQL_OPT_CONNECT_TIMEOUT=4");
     if (!sch.open())
     {
         DbNotOpened |= DB_SCH;
         LastError = alt.lastError().text();
     }
     openBD(sol, "SOL", "solidworks", "supik", "sysupik");
-    sol.setConnectOptions("MYSQL_OPT_CONNECT_TIMEOUT=4");
     if (!sol.open())
     {
         DbNotOpened |= DB_SOL;
         LastError = alt.lastError().text();
     }
     openBD(sup, "SUP", "supik", "supik", "sysupik");
-    sup.setConnectOptions("MYSQL_OPT_CONNECT_TIMEOUT=4");
     if (!sup.open())
     {
         DbNotOpened |= DB_SUP;
         LastError = alt.lastError().text();
     }
     openBD(tb, "TB", "tb", "supik", "sysupik");
-    tb.setConnectOptions("MYSQL_OPT_CONNECT_TIMEOUT=4");
     if (!tb.open())
     {
         DbNotOpened |= DB_TB;
         LastError = alt.lastError().text();
     }
     openBD(sadm, "SADM", "sysadm", "supik", "sysupik");
-    sadm.setConnectOptions("MYSQL_OPT_CONNECT_TIMEOUT=4");
     if (!sadm.open())
     {
         DbNotOpened |= DB_SADM;

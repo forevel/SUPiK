@@ -33,13 +33,13 @@ class Log : public QObject
 public:
     explicit Log(QObject *parent=0);
     ~Log();
-    void Init(QString Filename);
-    void error(QString str);
-    void warning(QString str);
-    void info(QString str);
+    void Init(const QString &Filename);
+    void error(const QString &str);
+    void warning(const QString &str);
+    void info(const QString &str);
     void Info(QByteArray &ba);
-    void intvarvalue(QString var, int value);
-    void WriteFile(QString Prepend, QString msg);
+    void intvarvalue(const QString &var, int value);
+    void WriteFile(const QString &Prepend, const QString &msg);
     
 private:
     QString LogFile;

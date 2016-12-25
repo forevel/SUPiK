@@ -34,6 +34,8 @@ private:
     void SetupUI();
     void LoadLanguage();
     void Startup();
+    int ClientConnect(int Mode);
+    int EnterAndChangePassword(const QString &idPers, QString &newpsw);
 };
 
 #endif // STARTWINDOW_H

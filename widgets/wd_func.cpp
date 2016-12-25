@@ -3,6 +3,7 @@
 #include "s_tqlabel.h"
 #include "s_tqchoosewidget.h"
 #include "s_tqtableview.h"
+#include "s_tqcheckbox.h"
 #include <QPalette>
 
 bool WDFunc::SetCWData(QWidget *w, const QString &cwname, const QString &cwvalue)
@@ -99,4 +100,21 @@ void WDFunc::TVAutoResize(QWidget *w, const QString &tvname)
         return;
     tv->resizeColumnsToContents();
     tv->resizeRowsToContents();
+}
+
+bool WDFunc::ChBData(QWidget *w, const QString &chbname)
+{
+    s_tqCheckBox *chb = w->findChild<s_tqCheckBox *>(chbname);
+    if (chb == 0)
+        return false;
+    return chb->isChecked();
+}
+
+bool WDFunc::SetChBData(QWidget *w, const QString &chbname, bool data)
+{
+    s_tqCheckBox *chb = w->findChild<s_tqCheckBox *>(chbname);
+    if (chb == 0)
+        return false;
+    chb->setChecked(data);
+    return true;
 }

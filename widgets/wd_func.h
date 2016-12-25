@@ -16,6 +16,8 @@ public:
     static bool SetLBLImage(QWidget *w, const QString &lblname, QPixmap *pm);
     static QString TVField(QWidget *w, const QString &tvname, int column, bool isid=false);
     static void TVAutoResize(QWidget *w, const QString &tvname);
+    static bool ChBData(QWidget *w, const QString &chbname);
+    static bool SetChBData(QWidget *w, const QString &chbname, bool data);
 };
 
 #endif // WD_FUNC

@@ -3,6 +3,8 @@
 #include <QInputDialog>
 #include <QGridLayout>
 #include <QDir>
+#include <QThread>
+#include <QCoreApplication>
 
 #include "startwindow.h"
 #include "gen/s_sql.h"
@@ -131,62 +133,72 @@ void StartWindow::ActivatedEnter()
     QString Code = QInputDialog::getText(this,"Ввод кода активации","Введите код:", QLineEdit::Password, "", &ok);
     if (!ok)
         return;
+    Cli->Disconnect();
     if (ClientConnect(Client::CLIMODE_TEST) != RESULTOK)
         return;
-    QStringList fl = QStringList() << "ИД" << "Имя";
-    QStringList vl;
-    tfl.valuesbyfield("Персонал_полн", QStringList("ИД"), "Строка активации", Code, vl);
-    if ((tfl.result != TFRESULT_NOERROR) || (vl.size() < 2))
-    {
-        MessageBox2::error(this, "Ошибка", "Не найден код активации, обратитесь к администратору СУПиК");
-        return;
-    }
+    pc.AutonomousMode = false;
     QString newpsw;
-    if (EnterAndChangePassword(vl.at(0), newpsw) != RESULTOK)
+    if (!EnterNewPassword(newpsw))
         MessageBox2::error(this,"Ошибка!","Ошибка при смене пароля");
     else
-    {
-        WDFunc::SetLEData(this, "PasswdLE", newpsw);
-        WDFunc::SetLEData(this, "UNameLE", vl.at(1));
-    }
-    // обнуляем признак активации
-    fl = QStringList() << "ИД" << "Строка активации";
-    vl = QStringList() << vl.at(0) << "0";
-    tfl.Update("Персонал_полн", fl, vl);
-    if (tfl.result != TFRESULT_NOERROR)
-        MessageBox2::information(this, "Ошибка", "Ошибка при обновлении базы данных");
+        Activate(Code, newpsw);
 }
 
 void StartWindow::ChangePassword()
 {
-    ClientConnect(Client::CLIMODE_TEST);
-    QString login = WDFunc::LEData(this, "UNameLE");
-    QString psw = WDFunc::LEData(this, "PasswdLE");
+    pc.PersLogin = WDFunc::LEData(this, "UNameLE");
+    pc.PersPsw = WDFunc::LEData(this, "PasswdLE");
+    if (ClientConnect(Client::CLIMODE_WORK) != RESULTOK)
+        return;
+    pc.AutonomousMode = false;
     QStringList cmpfl = QStringList() << "login";
-    QStringList cmpvl = QStringList() << login;
+    QStringList cmpvl = QStringList() << pc.PersLogin;
     QString idPers = sqlc.GetValueFromTableByFields("sup","personel","idpersonel",cmpfl,cmpvl);
     if (sqlc.result)
         MessageBox2::error(this,"Ошибка!","Не найден пользователь с таким логином");
     else
     {
-        QStringList idPsw;
-        QStringList fl = QStringList() << "Сотрудник" << "Пароль";
-        QStringList vl = QStringList() << idPers << psw;
-        tfl.valuesbyfields("Пароли_полн", QStringList("ИД"), fl, vl, idPsw);
-        if ((tfl.result != TFRESULT_NOERROR) || (idPsw.isEmpty()))
-            MessageBox2::error(this,"Ошибка!","Пароль неверен");
+        QString newpsw, code;
+        if (EnterNewPassword(newpsw) != RESULTOK)
+            MessageBox2::error(this,"Ошибка!","Ошибка при вводе пароля");
         else
+            WDFunc::SetLEData(this, "PasswdLE", newpsw);
+        qsrand(QDateTime::currentDateTime().time().second());
+        code.fill((qrand()%26)+0x40); // rand(A-Z)
+        QStringList fl = QStringList() << "ИД" << "Строка активации";
+        QStringList vl = QStringList() << idPers << code;
+        tfl.Update("Пароли_полн", fl, vl);
+        if (tfl.result != TFRESULT_NOERROR)
         {
-            QString newpsw;
-            if (EnterAndChangePassword(idPsw.at(0), newpsw) != RESULTOK)
-                MessageBox2::error(this,"Ошибка!","Ошибка при смене пароля");
-            else
-                WDFunc::SetLEData(this, "PasswdLE", newpsw);
+            MessageBox2::error(this,"Ошибка!","Ошибка при смене пароля");
+            return;
         }
+        Activate(code, newpsw);
     }
 }
 
-int StartWindow::EnterAndChangePassword(const QString &idPers, QString &newpsw)
+void StartWindow::Activate(const QString &code, const QString &newpsw)
+{
+    QStringList sl;
+    sl << code << newpsw;
+    if (!Cli->isConnected())
+        return;
+    Cli->SendCmd(M_ACTIVATE, sl);
+    while (Cli->Busy)
+    {
+        QThread::msleep(10);
+        qApp->processEvents(QEventLoop::AllEvents);
+    }
+    if (Cli->DetectedError != Client::CLIER_NOERROR)
+        MessageBox2::error(this,"Ошибка!","Ошибка при активации, обратитесь к администратору СУПиК");
+    else
+    {
+        WDFunc::SetLEData(this, "PasswdLE", newpsw);
+        MessageBox2::information(this,"Успешно!","Активация произведена успешно! Можно заходить под своим именем");
+    }
+}
+
+int StartWindow::EnterNewPassword(QString &newpsw)
 {
     bool ok = false;
     newpsw = QInputDialog::getText(this,"Сменить пароль","Новый пароль:", QLineEdit::Password, "", &ok);
@@ -198,14 +210,6 @@ int StartWindow::EnterAndChangePassword(const QString &idPers, QString &newpsw)
     if (newpsw != new2psw)
     {
         MessageBox2::error(this,"Ошибка!","Введённые строки не совпадают");
-        return RESULTBAD;
-    }
-    QStringList fl = QStringList() << "ИД" << "Пароль";
-    QStringList vl = QStringList() << idPers << newpsw;
-    tfl.Update("Пароли_полн", fl, vl);
-    if (tfl.result != TFRESULT_NOERROR)
-    {
-        MessageBox2::error(this,"Ошибка!","Ошибка при смене пароля");
         return RESULTBAD;
     }
     return RESULTOK;
@@ -223,6 +227,7 @@ void StartWindow::OkPBClicked()
 
     StartWindowSplashScreen->showMessage("Подключение к серверу СУПиК...", Qt::AlignRight, Qt::white);
     Cli->Disconnect();
+    pc.AutonomousMode = true;
     int res = Cli->Connect(pc.SupikServer, pc.SupikPort, Client::CLIMODE_WORK);
     switch (res)
     {

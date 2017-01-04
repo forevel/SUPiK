@@ -904,3 +904,8 @@ int Client::SendAndGetResult(int command, QStringList &args)
     }
     return DetectedError;
 }
+
+bool Client::isConnected()
+{
+    return Connected;
+}

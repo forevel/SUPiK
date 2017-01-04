@@ -172,6 +172,7 @@ public:
     const QStringList PathSuffixes = QStringList() << "prot/" << "dsheet/" << "libs/" << "symbols/" << "footprints/" << "photo/";
 
     int Connect(QString Host, QString Port, int ClientMode);
+    bool isConnected();
     void Disconnect();
     void SendCmd(int Command, QStringList &Args=QStringList());
     QString Join(QStringList &sl);

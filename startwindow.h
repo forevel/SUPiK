@@ -35,7 +35,8 @@ private:
     void LoadLanguage();
     void Startup();
     int ClientConnect(int Mode);
-    int EnterAndChangePassword(const QString &idPers, QString &newpsw);
+    int EnterNewPassword(QString &newpsw);
+    void Activate(const QString &code, const QString &newpsw);
 };
 
 #endif // STARTWINDOW_H

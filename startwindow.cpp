@@ -138,7 +138,7 @@ void StartWindow::ActivatedEnter()
         return;
     pc.AutonomousMode = false;
     QString newpsw;
-    if (!EnterNewPassword(newpsw))
+    if (EnterNewPassword(newpsw) != RESULTOK)
         MessageBox2::error(this,"Ошибка!","Ошибка при смене пароля");
     else
         Activate(Code, newpsw);

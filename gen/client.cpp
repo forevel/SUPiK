@@ -141,7 +141,7 @@ void Client::Disconnect()
 
 void Client::SendCmd(int Command, QStringList &Args)
 {
-    if ((CliMode == CLIMODE_TEST) && (Command != M_ACTIVATE))
+    if ((CliMode == CLIMODE_TEST) && (Command != M_ACTIVATE) && (Command != M_ANSLOGIN) && (Command != M_ANSPSW))
     {
         CliLog->warning("illegal test command");
         DetectedError = CLIER_CMDER;
@@ -392,24 +392,33 @@ void Client::ParseReply(QByteArray *ba)
     case M_ANSPSW:
     {
         // если получили в ответ "GROUP <access>", значит, всё в порядке, иначе ошибка пароля
-        if (ServerResponse == "M2")
+        if ((CliMode == CLIMODE_TEST) && (ServerResponse == SERVEROK))
         {
             LoginOk = true;
-            bool ok;
-            pc.access = ArgList.at(1).toLong(&ok,16);
-            if (!ok)
-            {
-                CliLog->warning("Group access undefined: "+ArgList.at(1));
-                pc.access = 0x0; // нет доступа никуда
-                DetectedError = CLIER_GROUP;
-                return;
-            }
-            CliLog->info("Group access: "+QString::number(pc.access));
             CmdOk = true;
             CurrentCommand = M_IDLE;
         }
         else
-            DetectedError = CLIER_PSW;
+        {
+            if (ServerResponse == "M2")
+            {
+                LoginOk = true;
+                bool ok;
+                pc.access = ArgList.at(1).toLong(&ok,16);
+                if (!ok)
+                {
+                    CliLog->warning("Group access undefined: "+ArgList.at(1));
+                    pc.access = 0x0; // нет доступа никуда
+                    DetectedError = CLIER_GROUP;
+                    return;
+                }
+                CliLog->info("Group access: "+QString::number(pc.access));
+                CmdOk = true;
+                CurrentCommand = M_IDLE;
+            }
+            else
+                DetectedError = CLIER_PSW;
+        }
         break;
     }
     case M_QUIT:

@@ -386,15 +386,25 @@ void dir_maindialog::DeleteDir()
 
 void dir_maindialog::AddDirDialog()
 {
-    dir_adddialog *AddDialog = new dir_adddialog(false, MainTable); // no update. В MainTable передаётся тип справочника ("Справочники", "Справочники системные" и т.д.)
-    AddDialog->exec();
+    if (pc.access & ACC_SYS_WR)
+    {
+        dir_adddialog *AddDialog = new dir_adddialog(false, MainTable); // no update. В MainTable передаётся тип справочника ("Справочники", "Справочники системные" и т.д.)
+        AddDialog->exec();
+    }
+    else
+        MessageBox2::error(this, "Ошибка", "Недостаточно прав для продолжения");
 }
 
 void dir_maindialog::EditDirDialog()
 {
-    QString tmpString = getMainIndex(1);
-    dir_adddialog *EditDialog = new dir_adddialog(true, MainTable, tmpString+"_полн"); // В MainTable передаётся тип справочника ("Справочники", "Справочники системные" и т.д.)
-    EditDialog->exec();
+    if (pc.access & ACC_SYS_WR)
+    {
+        QString tmpString = getMainIndex(1);
+        dir_adddialog *EditDialog = new dir_adddialog(true, MainTable, tmpString+"_полн"); // В MainTable передаётся тип справочника ("Справочники", "Справочники системные" и т.д.)
+        EditDialog->exec();
+    }
+    else
+        MessageBox2::error(this, "Ошибка", "Недостаточно прав для продолжения");
 }
 
 // ########################################## CONTEXTS ###################################################

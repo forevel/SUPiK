@@ -125,6 +125,11 @@
 #define DATETIMEFORMAT  "dd-MM-yyyy hh:mm:ss"
 #define TIMEFORMAT  "hh:mm:ss"
 
+#define DBLOGIN "supik"
+#define DBPSWD  "sysupik"
+#define SQLPORT 3306
+//#define SQLPORT 3333 // временно для отладки с виртуальной машиной
+
 enum s_2cdialog_modes
 {
     MODE_CHOOSE,
@@ -243,6 +248,19 @@ public:
         QString ProblemPerson;
     };
 
+    struct DbConnections
+    {
+        QSqlDatabase db;
+        QString connname;
+        QString dbname;
+        QString user;
+        QString pswd;
+    };
+
+    QSqlDatabase ent, alt, sup, con, sol, sch, dev, tb, sadm;
+
+    QMap<int, DbConnections> DBMap;
+
     QList<ProblemStruct> ExchangeProblemsList, ProblemsList;
     QMutex EPLMutex;
 
@@ -258,7 +276,6 @@ public:
 //    bool ErWidgetShowing;
     bool AutonomousMode; // если сервер СУПиК (становится) недоступен, признак автономного режима становится равен true
     QString LastError;
-    QSqlDatabase ent, alt, sup, con, sol, sch, dev, tb, sadm;
     QMap<QString, QSqlDatabase> db;
     quint16 DbNotOpened;
 //    QString Date; // Сегодняшняя дата
@@ -411,7 +428,7 @@ public:
 
 
 private:
-    void openBD(QSqlDatabase &db, QString dbid, QString dbname, QString login, QString psw);
+    bool openBD(int dbnum);
 };
 
 extern PublicClass pc;

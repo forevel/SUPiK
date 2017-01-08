@@ -8,10 +8,8 @@
 #include <QDir>
 
 #include "client.h"
-#include "log.h"
 
 Client *Cli = 0;
-Log *CliLog;
 
 Client::Client(QObject *parent) : QObject(parent)
 {
@@ -51,7 +49,10 @@ Client::Client(QObject *parent) : QObject(parent)
     CmdMap.insert(T_UPDV, {"T_UPDV", 3, "TC", RESULT_NONE, false, false});
     CmdMap.insert(M_PUTFILE, {"M_PUTFILE", 4, "M7", RESULT_NONE, false, false}); // 0 - local filename, 1 - type, 2 - subtype, 3 - filename, [4] - filesize, added in SendCmd
     CmdMap.insert(M_GETFILE, {"M_GETFILE", 3, "M8", RESULT_NONE, false, false}); // 0 - type, 1 - subtype, 2 - filename
-    CmdMap.insert(M_ACTIVATE, {"M_ACTIVATE", 2, "M9", RESULT_NONE, false, false}); // 0 - code, 1 - newpass
+    CmdMap.insert(M_ACTIVATE, {"M_ACTIVATE", 2, "M9", RESULT_STRING, false, false}); // 0 - code, 1 - newpass
+    CliLog = new Log;
+    CliLog->Init(pc.HomeDir+"/cli.log");
+    CliLog->info("=== Log started ===");
 }
 
 Client::~Client()
@@ -73,9 +74,6 @@ int Client::Connect(QString Host, QString Port, int ClientMode)
         Pers = pc.PersLogin;
         Pass = pc.PersPsw;
     }
-    CliLog = new Log;
-    CliLog->Init(pc.HomeDir+"/cli.log");
-    CliLog->info("=== Log started ===");
     Busy = Connected = CmdOk = false;
     TimeoutTimer = new QTimer;
     TimeoutTimer->setInterval(5000);
@@ -93,6 +91,7 @@ int Client::Connect(QString Host, QString Port, int ClientMode)
     connect(thr,SIGNAL(finished()),MainEthernet,SLOT(deleteLater()));
     connect(thr,SIGNAL(finished()),thr,SLOT(deleteLater()));
     connect(thr,SIGNAL(started()),MainEthernet,SLOT(Run()));
+    connect(MainEthernet, SIGNAL(finished()),thr, SLOT(quit()));
     connect(MainEthernet,SIGNAL(connected()),this,SLOT(ClientConnected()));
     connect(MainEthernet,SIGNAL(disconnected()),this,SLOT(ClientDisconnected()));
     connect(MainEthernet,SIGNAL(newdataarrived(QByteArray *)),this,SLOT(ParseReply(QByteArray *)));
@@ -104,7 +103,6 @@ int Client::Connect(QString Host, QString Port, int ClientMode)
     LoginOk = false;
     CurrentCommand = M_LOGIN;
     thr->start();
-    Busy = true;
     while (!LoginOk && (DetectedError == CLIER_NOERROR))
     {
         QThread::msleep(50);
@@ -133,15 +131,27 @@ void Client::Disconnect()
     if (Connected)
     {
         SendCmd(M_QUIT);
+        while ((Busy == true) && (DetectedError == CLIER_NOERROR))
+        {
+            QThread::msleep(50);
+            qApp->processEvents(QEventLoop::AllEvents);
+        }
         MainEthernet->Busy = false;
         MainEthernet->Stop();
         Connected = false;
     }
+    // wait 1 second to let the ethernet thread finish
+    QThread::sleep(1);
 }
 
 void Client::SendCmd(int Command, QStringList &Args)
 {
-    if ((CliMode == CLIMODE_TEST) && (Command != M_ACTIVATE) && (Command != M_ANSLOGIN) && (Command != M_ANSPSW))
+    if (Busy)
+    {
+        DetectedError = CLIER_BUSY;
+        return;
+    }
+    if ((CliMode == CLIMODE_TEST) && (Command != M_ACTIVATE) && (Command != M_ANSLOGIN) && (Command != M_ANSPSW) && (Command != M_QUIT))
     {
         CliLog->warning("illegal test command");
         DetectedError = CLIER_CMDER;
@@ -372,6 +382,7 @@ void Client::ParseReply(QByteArray *ba)
         if (ServerResponse == "M5")
         {
             CmdOk = true;
+            Busy = false;
             SendCmd(M_ANSLOGIN);
             return;
         }
@@ -382,6 +393,7 @@ void Client::ParseReply(QByteArray *ba)
         if (ServerResponse == "M6")
         {
             CmdOk = true;
+            Busy = false;
             SendCmd(M_ANSPSW);
             return;
         }
@@ -410,6 +422,7 @@ void Client::ParseReply(QByteArray *ba)
                     CliLog->warning("Group access undefined: "+ArgList.at(1));
                     pc.access = 0x0; // нет доступа никуда
                     DetectedError = CLIER_GROUP;
+                    Busy = false;
                     return;
                 }
                 CliLog->info("Group access: "+QString::number(pc.access));
@@ -428,7 +441,6 @@ void Client::ParseReply(QByteArray *ba)
         break;
     }
     // commands without any reply
-    case M_ACTIVATE:
     case S_TC:
     case S_TA:
     case S_TD:
@@ -458,6 +470,7 @@ void Client::ParseReply(QByteArray *ba)
         {
             WriteErrorAndBreakReceiving("Некорректное количество аргументов");
             DetectedError = CLIER_WRANSW;
+            Busy = false;
             return;
         }
         ResultInt = ArgList.at(0).toInt(&ok);
@@ -465,6 +478,7 @@ void Client::ParseReply(QByteArray *ba)
         {
             CliLog->warning("It's not possible to convert to integer: "+ArgList.at(0));
             DetectedError = CLIER_WRANSW;
+            Busy = false;
             return;
         }
         CmdOk = true;
@@ -495,6 +509,7 @@ void Client::ParseReply(QByteArray *ba)
         {
             WriteErrorAndBreakReceiving("Некорректное количество аргументов");
             DetectedError = CLIER_WRANSW;
+            Busy = false;
             return;
         }
         bool ok;
@@ -503,6 +518,7 @@ void Client::ParseReply(QByteArray *ba)
         {
             WriteErrorAndBreakReceiving("Некорректное количество посылок");
             DetectedError = CLIER_WRANSW;
+            Busy = false;
             return;
         }
         if (MsgNum == 0)
@@ -515,11 +531,13 @@ void Client::ParseReply(QByteArray *ba)
 #ifndef TIMERSOFF
         TimeoutTimer->start();
 #endif
+        Busy = false;
         SendCmd(M_NEXT);
         return;
         break;
     }
     // commands with string reply
+    case M_ACTIVATE:
     case T_TV:
     case T_TID:
     case T_VTID:
@@ -609,6 +627,7 @@ void Client::ParseReply(QByteArray *ba)
 #ifndef TIMERSOFF
         TimeoutTimer->start();
 #endif
+        Busy = false;
         SendCmd(M_NEXT);
         return;
         break;
@@ -632,9 +651,11 @@ void Client::ParseReply(QByteArray *ba)
                     {
                         delete WrData;
                         DetectedError = CLIER_PUTFER;
+                        Busy = false;
                         return;
                     }
                     WrittenBytes += WrData->size();
+                    Busy = false;
                     SendCmd(M_APUTFILE);
                     return;
                 }
@@ -656,6 +677,7 @@ void Client::ParseReply(QByteArray *ba)
         else
         {
             DetectedError = CLIER_PUTFER;
+            Busy = false;
             return;
         }
         break;
@@ -672,9 +694,11 @@ void Client::ParseReply(QByteArray *ba)
             DetectedError = CLIER_GETFER;
             if (fp.isOpen())
                 fp.remove();
+            Busy = false;
             return;
         }
         emit BytesOverall(RcvDataSize);
+        Busy = false;
         SendCmd(M_AGETFILE);
         return;
     }
@@ -685,6 +709,7 @@ void Client::ParseReply(QByteArray *ba)
         {
             CliLog->error("File error");
             DetectedError = CLIER_GETFER;
+            Busy = false;
             return;
         }
         if (ComReplyTimeoutIsSet)
@@ -711,6 +736,7 @@ void Client::ParseReply(QByteArray *ba)
             TimeoutTimer->stop();
             if (fp.isOpen())
                 fp.remove();
+            Busy = false;
             return;
         }
         if (ba->data() == "IDLE\n") // закончили передачу
@@ -731,9 +757,11 @@ void Client::ParseReply(QByteArray *ba)
                 fp.close();
             emit TransferComplete();
             CmdOk = true;
+            Busy = false;
             SendCmd(M_AGETFILE);
             break;
         }
+        Busy = false;
         SendCmd(M_AGETFILE);
         return;
     }

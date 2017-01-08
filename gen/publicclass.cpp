@@ -64,8 +64,15 @@ void PublicClass::InitiatePublicClass()
     FtpServer = LandP->value("settings/FtpServer","ftp.asu-vei.ru").toString();
     SupikServer = LandP->value("settings/Server","supik.mycompany.ru").toString();
     SupikPort = LandP->value("settings/Port","9687").toString();
-
-
+    DBMap.insert(DB_ALT, {alt, "ALT", "altium", DBLOGIN, DBPSWD});
+    DBMap.insert(DB_CON, {con, "CON", "constructives", DBLOGIN, DBPSWD});
+    DBMap.insert(DB_DEV, {dev, "DEV", "devices", DBLOGIN, DBPSWD});
+    DBMap.insert(DB_ENT, {ent, "ENT", "enterprise", DBLOGIN, DBPSWD});
+    DBMap.insert(DB_SCH, {sch, "SCH", "schemagee", DBLOGIN, DBPSWD});
+    DBMap.insert(DB_SOL, {sol, "SOL", "solidworks", DBLOGIN, DBPSWD});
+    DBMap.insert(DB_SUP, {sup, "SUP", "supik", DBLOGIN, DBPSWD});
+    DBMap.insert(DB_TB, {tb, "TB", "tb", DBLOGIN, DBPSWD});
+    DBMap.insert(DB_SADM, {sadm, "SADM", "sysadm", DBLOGIN, DBPSWD});
     symfind = "LIBREFERENCE=";
     footfind = "PATTERN=";
     idRecord = -1;
@@ -77,60 +84,10 @@ bool PublicClass::OpenAndCheckDBs()
 {
     // подключать только те базы, к которым есть доступ у пользователя
     DbNotOpened = 0x0000;
-    openBD(alt, "ALT", "altium", "supik", "sysupik");
-    if (!alt.open())
-    {
-        DbNotOpened |= DB_ALT;
-        LastError = alt.lastError().text();
-    }
-    openBD(con, "CON", "constructives", "supik", "sysupik");
-    if (!con.open())
-    {
-        DbNotOpened |= DB_CON;
-        LastError = alt.lastError().text();
-    }
-    openBD(dev, "DEV", "devices", "supik", "sysupik");
-    if (!dev.open())
-    {
-        DbNotOpened |= DB_DEV;
-        LastError = alt.lastError().text();
-    }
-    openBD(ent, "ENT", "enterprise", "supik", "sysupik");
-    if (!ent.open())
-    {
-        DbNotOpened |= DB_ENT;
-        LastError = alt.lastError().text();
-    }
-    openBD(sch, "SCH", "schemagee", "supik", "sysupik");
-    if (!sch.open())
-    {
-        DbNotOpened |= DB_SCH;
-        LastError = alt.lastError().text();
-    }
-    openBD(sol, "SOL", "solidworks", "supik", "sysupik");
-    if (!sol.open())
-    {
-        DbNotOpened |= DB_SOL;
-        LastError = alt.lastError().text();
-    }
-    openBD(sup, "SUP", "supik", "supik", "sysupik");
-    if (!sup.open())
-    {
-        DbNotOpened |= DB_SUP;
-        LastError = alt.lastError().text();
-    }
-    openBD(tb, "TB", "tb", "supik", "sysupik");
-    if (!tb.open())
-    {
-        DbNotOpened |= DB_TB;
-        LastError = alt.lastError().text();
-    }
-    openBD(sadm, "SADM", "sysadm", "supik", "sysupik");
-    if (!sadm.open())
-    {
-        DbNotOpened |= DB_SADM;
-        LastError = alt.lastError().text();
-    }
+    for (int i=0; i<DBMap.keys().size(); ++i)
+        openBD(DBMap.keys().at(i));
+    if (DbNotOpened != 0x0000)
+        return false;
     db["alt"]=alt;
     db["sup"]=sup;
     db["ent"]=ent;
@@ -140,23 +97,33 @@ bool PublicClass::OpenAndCheckDBs()
     db["con"]=con;
     db["tb"]=tb;
     db["sadm"]=sadm;
-    if (DbNotOpened != 0x0000)
-        return false;
     return true;
 }
 
-void PublicClass::openBD(QSqlDatabase &db, QString dbid, QString dbname, QString login, QString psw)
+bool PublicClass::openBD(int dbnum)
 {
-    if (!db.isOpen())
+    if (DBMap.keys().contains(dbnum))
     {
-        db = QSqlDatabase::addDatabase("QMYSQL", dbid);
-        db.setHostName(SQLPath);
-        db.setDatabaseName(dbname);
-        db.setUserName(login);
-        db.setPassword(psw);
-        db.setPort(3306);
-//       db.setPort(3333); // временно для отладки с виртуальной машиной
+        DbConnections db = DBMap.value(dbnum);
+        if (!db.db.isOpen())
+        {
+            db.db = QSqlDatabase::addDatabase("QMYSQL", db.connname);
+            db.db.setHostName(SQLPath);
+            db.db.setDatabaseName(db.dbname);
+            db.db.setUserName(db.user);
+            db.db.setPassword(db.pswd);
+            db.db.setPort(SQLPORT);
+            db.db.setConnectOptions("MYSQL_OPT_CONNECT_TIMEOUT=1"); // timeout 1s
+            if (db.db.open())
+                return true;
+            else
+                LastError = db.db.lastError().text();
+        }
+        else
+            return true;
     }
+    DbNotOpened |= dbnum;
+    return false;
 }
 
 QString PublicClass::getTranslit(QString str)

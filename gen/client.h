@@ -7,6 +7,7 @@
 #include <QMap>
 #include "../threads/ethernet.h"
 #include "publicclass.h"
+#include "log.h"
 
 #define SERVERRSTR  "ERROR"
 #define SERVEMPSTR  "EMPTY"
@@ -128,7 +129,8 @@ public:
         CLIER_PUTFER,    // ошибка отправки файла
         CLIER_WRANSW,    // кривой ответ от сервера
         CLIER_CMDER,     // ошибка обработки команды
-        CLIER_EMPTY     // пустой ответ
+        CLIER_EMPTY,     // пустой ответ
+        CLIER_BUSY      // предыдущий запрос ещё не обработан
     };
 
     enum Messages
@@ -209,6 +211,7 @@ private:
     int ResultType;
     int FieldsLeastToAdd;
     QString Pers, Pass;
+    Log *CliLog;
 
     QString RemoveSpaces(QString str);
     void WriteErrorAndBreakReceiving(QString ErMsg);

@@ -325,6 +325,8 @@ int EditModel::Setup(QString Table, QString Id)
     }
     for (i = 0; i < HeadersSl.size(); i++)
     {
+        if ((HeadersSl.at(i) == "Дата") || (HeadersSl.at(i) == "ИДПольз"))
+            continue;
         QList<PublicClass::ValueStruct> ValuesToAdd;
         PublicClass::ValueStruct tmpvl;
         tmpvl.Type = VS_STRING;

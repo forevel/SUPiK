@@ -16,12 +16,14 @@ s_sql::s_sql()
 
 QSqlDatabase s_sql::GetDB(QString dbname)
 {
-    QSqlDatabase tmpdb;
-    if (pc.db.keys().contains(dbname))
-        tmpdb = pc.db[dbname];
-    else
-        return QSqlDatabase();
-    return tmpdb;
+    for (int i=0; i<pc.DBMap.keys().size(); ++i)
+    {
+        PublicClass::DbConnections dbcon;
+        dbcon = pc.DBMap.value(pc.DBMap.keys().at(i));
+        if (dbcon.dbname == dbname)
+            return dbcon.db;
+    }
+    return QSqlDatabase();
 }
 
 // процедура возвращает имя БД по её экземпляру

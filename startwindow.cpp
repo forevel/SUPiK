@@ -89,11 +89,11 @@ void StartWindow::SetupUI()
     StartWindowLayout->addWidget(PasswdLE, 1, 1, 1, 2);
     StartWindowLayout->addWidget(SaveL, 2, 0);
     StartWindowLayout->addWidget(SaveCB, 2, 1, 1, 2);
+    StartWindowLayout->addWidget(OkPB, 3, 0, 1, 2);
+    StartWindowLayout->addWidget(SystemPB, 3, 2);
     s_tqPushButton *pb = new s_tqPushButton("Сменить пароль");
     connect(pb,SIGNAL(clicked()),this,SLOT(ChangePassword()));
-    StartWindowLayout->addWidget(pb, 3, 0, 1, 3);
-    StartWindowLayout->addWidget(OkPB, 4, 0, 1, 2);
-    StartWindowLayout->addWidget(SystemPB, 4, 2);
+    StartWindowLayout->addWidget(pb, 4, 0, 1, 3);
 
     StartWindowLayout->setColumnStretch(0, 0);
     StartWindowLayout->setColumnStretch(2, 0);
@@ -194,6 +194,7 @@ void StartWindow::Activate(const QString &code, const QString &newpsw)
     else
     {
         WDFunc::SetLEData(this, "PasswdLE", newpsw);
+        WDFunc::SetLEData(this, "UNameLE", Cli->ResultStr);
         MessageBox2::information(this,"Успешно!","Активация произведена успешно! Можно заходить под своим именем");
     }
 }
@@ -285,40 +286,61 @@ void StartWindow::OkPBClicked()
             MessageBox2::error(this, "Ошибка!", "Нет такого пользователя или пароль неверен!\n"+sqlc.LastError);
             return;
         }
-    }
-
-    QStringList sl, vl;
-    sl << "idpersonel" << "personel" << "group";
-    vl = sqlc.GetValuesFromTableByField("sup", "personel", sl, "login", pc.PersLogin);
-    if (sqlc.result)
-    {
-        MessageBox2::error(this, "Ошибка!", sqlc.LastError);
-        SupLog->error(sqlc.LastError);
-        return;
-    }
-    if (!vl.isEmpty())
-    {
-        pc.idPers=vl.at(0).toInt();
-        pc.Pers=vl.at(1);
-        pc.idGroup=vl.at(2).toInt(0);
+        QStringList sl, vl;
+        sl << "idpersonel" << "personel";
+        vl = sqlc.GetValuesFromTableByField("sup", "personel", sl, "login", pc.PersLogin);
+        if (sqlc.result)
+        {
+            MessageBox2::error(this, "Ошибка!", sqlc.LastError);
+            SupLog->error(sqlc.LastError);
+            return;
+        }
+        if (vl.size() > 1)
+        {
+            pc.idPers=vl.at(0).toInt();
+            pc.Pers=vl.at(1);
+        }
+        else
+        {
+            MessageBox2::error(this, "Ошибка!", "Пользователь не найден!");
+            SupLog->error("User not found");
+            return;
+        }
+        sl = QStringList() << "group";
+        vl = sqlc.GetValuesFromTableByField("sup", "perspsw", sl, "idpersonel", vl.at(0));
+        if ((sqlc.result) || (vl.isEmpty()))
+        {
+            MessageBox2::error(this, "Ошибка!", sqlc.LastError);
+            SupLog->error(sqlc.LastError);
+            return;
+        }
+        pc.idGroup=vl.at(0).toInt(0);
+        // считывание прав доступа к СУПиКу
+        tmpString = sqlc.GetValueFromTableByID("sup", "groups", "access", QString::number(pc.idGroup));
+        if (!tmpString.isEmpty())
+            pc.access = tmpString.toLong(0, 16); // права доступа - в hex формате
+        else // не нашли запись
+        {
+            MessageBox2::error(this, "Ошибка!", "Не найдена группа доступа, обратитесь к администратору!");
+            SupLog->error("User group not found");
+            return;
+        }
     }
     else
     {
-        MessageBox2::error(this, "Ошибка!", "Пользователь не найден!");
-        SupLog->error("User not found");
-        return;
+        QStringList sl, vl;
+        sl << "idpersonel" << "personel";
+        vl = sqlc.GetValuesFromTableByField("sup", "personel", sl, "login", pc.PersLogin);
+        if ((sqlc.result) || (vl.size() < 2))
+        {
+            MessageBox2::error(this, "Ошибка!", "Пользователь не найден!");
+            SupLog->error("User not found");
+            return;
+        }
+        pc.idPers=vl.at(0).toInt();
+        pc.Pers=vl.at(1);
     }
 
-    // считывание прав доступа к СУПиКу
-    tmpString = sqlc.GetValueFromTableByID("sup", "groups", "access", QString::number(pc.idGroup));
-    if (!tmpString.isEmpty())
-        pc.access = tmpString.toLong(0, 16); // права доступа - в hex формате
-    else // не нашли запись
-    {
-        MessageBox2::error(this, "Ошибка!", "Не найдена группа доступа, обратитесь к администратору!");
-        SupLog->error("User group not found");
-        return;
-    }
 
         // далее надо открыть только те БД, права на которые есть у товарища
 /*            OpenAndCheckDB(pc.alt);

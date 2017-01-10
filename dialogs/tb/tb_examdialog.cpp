@@ -318,12 +318,13 @@ QList<s_tqWidget *> tb_examdialog::PrepareQuestionsByTheme(int theme, int questn
         return wdgts;
     }
     qsrand(QTime::currentTime().msecsSinceStartOfDay()); // инициализация генератора случайных чисел
-
     for (int i=0; i<questnum; ++i)
     {
         s_tqWidget *w = new s_tqWidget;
         QVBoxLayout *lyout = new QVBoxLayout;
         int idsize = idvl.size();
+        if (idsize == 0) // protection against fools
+            break;
         int index = qrand()%idsize; // числа от 0 по (idsize-1)
         QString AnotherID;
         if (index < idvl.size())

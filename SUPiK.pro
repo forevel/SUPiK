@@ -36,6 +36,7 @@ SOURCES += main.cpp\
     dialogs/dev/dev_maindialog.cpp \
     dialogs/dir/dir_adddialog.cpp \
     dialogs/dir/dir_maindialog.cpp \
+    dialogs/pers/persdialog.cpp \
     dialogs/sys/sys_backuprestoredirdialog.cpp \
     dialogs/sys/sys_erdialog.cpp \
     dialogs/sys/sys_importclass.cpp \
@@ -45,6 +46,8 @@ SOURCES += main.cpp\
     dialogs/sys/sys_systemdialog.cpp \
     dialogs/sys/sysdireditor.cpp \
     dialogs/sys/sysmenueditor.cpp \
+    dialogs/tb/tb_examdialog.cpp \
+    dialogs/tb/tb_func.cpp \
     dialogs/tb/tb_maindialog.cpp \
     dialogs/wh/wh_dialog.cpp \
     dialogs/wh/wh_editor.cpp \
@@ -57,11 +60,12 @@ SOURCES += main.cpp\
     gen/s_sql.cpp \
     gen/s_tablefields.cpp \
     gen/wh_func.cpp \
+    models/baseitem.cpp \
+    models/baseitemmodel.cpp \
     models/editmodel.cpp \
     models/errorprotocolmodel.cpp \
     models/flowmodel.cpp \
     models/griddelegate.cpp \
-    models/placedelegate.cpp \
     models/proxymodel.cpp \
     models/s_duniversal.cpp \
     models/s_ncitem.cpp \
@@ -84,6 +88,7 @@ SOURCES += main.cpp\
     widgets/s_tqcheckbox.cpp \
     widgets/s_tqchoosewidget.cpp \
     widgets/s_tqcombobox.cpp \
+    widgets/s_tqdatetimewidget.cpp \
     widgets/s_tqframe.cpp \
     widgets/s_tqgroupbox.cpp \
     widgets/s_tqlabel.cpp \
@@ -93,7 +98,6 @@ SOURCES += main.cpp\
     widgets/s_tqspinbox.cpp \
     widgets/s_tqsplitter.cpp \
     widgets/s_tqstackedwidget.cpp \
-    widgets/s_tqtableview.cpp \
     widgets/s_tqtextedit.cpp \
     widgets/s_tqtoolbar.cpp \
     widgets/s_tqtreeview.cpp \
@@ -101,13 +105,7 @@ SOURCES += main.cpp\
     widgets/s_tqwidget.cpp \
     widgets/treeview.cpp \
     widgets/waitwidget.cpp \
-    dialogs/tb/tb_examdialog.cpp \
-    dialogs/pers/persdialog.cpp \
-    models/baseitem.cpp \
-    models/baseitemmodel.cpp \
-    dialogs/tb/tb_func.cpp \
-    widgets/wd_func.cpp \
-    widgets/s_tqdatetimewidget.cpp
+    widgets/wd_func.cpp
 
 HEADERS  += startwindow.h \
     supik.h \
@@ -125,6 +123,7 @@ HEADERS  += startwindow.h \
     dialogs/dev/dev_maindialog.h \
     dialogs/dir/dir_adddialog.h \
     dialogs/dir/dir_maindialog.h \
+    dialogs/pers/persdialog.h \
     dialogs/sys/sys_backuprestoredirdialog.h \
     dialogs/sys/sys_erdialog.h \
     dialogs/sys/sys_importclass.h \
@@ -134,6 +133,8 @@ HEADERS  += startwindow.h \
     dialogs/sys/sys_systemdialog.h \
     dialogs/sys/sysdireditor.h \
     dialogs/sys/sysmenueditor.h \
+    dialogs/tb/tb_examdialog.h \
+    dialogs/tb/tb_func.h \
     dialogs/tb/tb_maindialog.h \
     dialogs/wh/wh_dialog.h \
     dialogs/wh/wh_editor.h \
@@ -146,11 +147,12 @@ HEADERS  += startwindow.h \
     gen/s_sql.h \
     gen/s_tablefields.h \
     gen/wh_func.h \
+    models/baseitem.h \
+    models/baseitemmodel.h \
     models/editmodel.h \
     models/errorprotocolmodel.h \
     models/flowmodel.h \
     models/griddelegate.h \
-    models/placedelegate.h \
     models/proxymodel.h \
     models/s_duniversal.h \
     models/s_ncitem.h \
@@ -173,6 +175,7 @@ HEADERS  += startwindow.h \
     widgets/s_tqcheckbox.h \
     widgets/s_tqchoosewidget.h \
     widgets/s_tqcombobox.h \
+    widgets/s_tqdatetimewidget.h \
     widgets/s_tqframe.h \
     widgets/s_tqgroupbox.h \
     widgets/s_tqlabel.h \
@@ -182,22 +185,15 @@ HEADERS  += startwindow.h \
     widgets/s_tqspinbox.h \
     widgets/s_tqsplitter.h \
     widgets/s_tqstackedwidget.h \
-    widgets/s_tqtableview.h \
+    widgets/s_tqtextedit.h \
     widgets/s_tqtoolbar.h \
     widgets/s_tqtreeview.h \
     widgets/s_tqtreewidget.h \
     widgets/s_tqwidget.h \
     widgets/treeview.h \
     widgets/waitwidget.h \
-    widgets/s_tqtextedit.h \
-    dialogs/sys/sys_persdialog.h \
-    dialogs/tb/tb_examdialog.h \
-    dialogs/pers/persdialog.h \
-    models/baseitem.h \
-    models/baseitemmodel.h \
-    dialogs/tb/tb_func.h \
-    widgets/wd_func.h \
-    widgets/s_tqdatetimewidget.h
+    widgets/wd_func.h
+
 RESOURCES += \
     pic.qrc
 
@@ -216,5 +212,5 @@ DEPENDPATH += $$PWD/../xlsxwriter/src/xlsx
 LIBS += -llibeay32 -lssleay32
 LIBS += -lliblzma
 
-DISTFILES += \
-    res/Einstein.jpg
+#DISTFILES += \
+#    res/Einstein.jpg

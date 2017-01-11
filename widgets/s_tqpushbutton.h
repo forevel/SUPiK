@@ -11,19 +11,19 @@ public:
     explicit s_tqPushButton(QWidget *parent = 0);
     explicit s_tqPushButton(QString str, int r=0, int g=0, int b=0, int a=0, QWidget *parent = 0);
     explicit s_tqPushButton(QColor &color, QString str="", QWidget *parent = 0);
-    QVariant getAData();
-    void setAData(QVariant dat);
+/*    QVariant getAData();
+    void setAData(QVariant dat); */
 
 signals:
-    void clicked (s_tqPushButton *ptr);
+//    void clicked (s_tqPushButton *ptr);
 
 public slots:
 
 private:
-    QVariant adata;
+//    QVariant adata;
 
 private slots:
-    void PBclicked();
+//    void PBclicked();
 
 };
 

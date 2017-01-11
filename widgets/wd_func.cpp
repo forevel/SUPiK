@@ -2,7 +2,7 @@
 #include "s_tqlineedit.h"
 #include "s_tqlabel.h"
 #include "s_tqchoosewidget.h"
-#include "s_tqtableview.h"
+#include "treeview.h"
 #include "s_tqcheckbox.h"
 #include <QPalette>
 
@@ -75,7 +75,7 @@ bool WDFunc::SetLBLImage(QWidget *w, const QString &lblname, QPixmap *pm)
 
 QString WDFunc::TVField(QWidget *w, const QString &tvname, int column, bool isid)
 {
-    s_tqTableView *tv = w->findChild<s_tqTableView *>(tvname);
+    TreeView *tv = w->findChild<TreeView *>(tvname);
     if (tv == 0)
         return QString();
     QString tmps = tv->model()->data(tv->model()->index(tv->currentIndex().row(),column,QModelIndex()),Qt::DisplayRole).toString();
@@ -95,7 +95,7 @@ QString WDFunc::TVField(QWidget *w, const QString &tvname, int column, bool isid
 
 void WDFunc::TVAutoResize(QWidget *w, const QString &tvname)
 {
-    s_tqTableView *tv = w->findChild<s_tqTableView *>(tvname);
+    TreeView *tv = w->findChild<TreeView *>(tvname);
     if (tv == 0)
         return;
     tv->resizeColumnsToContents();

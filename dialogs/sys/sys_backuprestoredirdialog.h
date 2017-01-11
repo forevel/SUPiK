@@ -5,7 +5,6 @@
 #include <QDialog>
 #include <QStringListModel>
 #include "../../models/s_ncmodel.h"
-#include "../../widgets/s_tqtableview.h"
 
 class sys_backuprestoredirdialog : public QDialog
 {

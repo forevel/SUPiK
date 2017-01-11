@@ -22,7 +22,7 @@
 #include <QSqlDatabase>
 #include <QDate>
 #include "../../models/s_ncmodel.h"
-#include "../../widgets/s_tqtableview.h"
+#include "../../widgets/treeview.h"
 
 QT_BEGIN_NAMESPACE
 class QVBoxLayout;
@@ -50,7 +50,7 @@ private:
     int Reason;
     QStringList Reasons, ReasonTable, MainText;
     s_ncmodel *mainmodel;
-    s_tqTableView *mainTV;
+    TreeView *mainTV;
     float widths[W_SIZE];
     QList<QString> CTypes;
     QList<int> FTypes;

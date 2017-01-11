@@ -20,7 +20,6 @@
 #include "../../widgets/s_tqpushbutton.h"
 #include "../../widgets/s_tqcheckbox.h"
 #include "../../widgets/treeview.h"
-#include "../../widgets/s_tqtableview.h"
 #include "../../widgets/s_tqframe.h"
 #include "../../widgets/s_tqsplitter.h"
 #include "../../widgets/s_tqwidget.h"

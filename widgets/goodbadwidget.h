@@ -4,7 +4,7 @@
 #include <QWidget>
 #include <QAbstractTableModel>
 #include <QIcon>
-#include "s_tqtableview.h"
+#include "treeview.h"
 
 class GoodBadTableModel : public QAbstractTableModel
 {
@@ -55,7 +55,7 @@ public slots:
 private slots:
 
 private:
-    s_tqTableView *tv;
+    TreeView *tv;
     GoodBadTableModel *tm;
 };
 

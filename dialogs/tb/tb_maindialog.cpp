@@ -18,7 +18,8 @@
 #include "../../widgets/s_tqlineedit.h"
 #include "../../widgets/s_tqcombobox.h"
 #include "../../widgets/s_tqpushbutton.h"
-#include "../../widgets/s_tqtableview.h"
+#include "../../widgets/treeview.h"
+#include "../../widgets/wd_func.h"
 #include "../../gen/publicclass.h"
 #include "../../gen/s_tablefields.h"
 #include "../pers/persdialog.h"
@@ -74,7 +75,7 @@ void tb_maindialog::SetupUI()
     lyout->addLayout(hlyout);
 
     SetupModel();
-    s_tqTableView *tv = new s_tqTableView;
+    TreeView *tv = new TreeView;
     tv->setObjectName("maintv");
     tv->setModel(MainModel);
     GridDelegate *dlgt = new GridDelegate;
@@ -94,13 +95,14 @@ void tb_maindialog::SetupUI()
 
 void tb_maindialog::ShowPers()
 {
-    s_tqTableView *tv = this->findChild<s_tqTableView *>("maintv");
+/*    TreeView *tv = this->findChild<TreeView *>("maintv");
     if (tv == 0)
     {
         DBGMSG;
         return;
     }
-    Pers = tv->model()->data(tv->model()->index(tv->currentIndex().row(), 0, QModelIndex()), Qt::DisplayRole).toString();
+    Pers = tv->model()->data(tv->model()->index(tv->currentIndex().row(), 0, QModelIndex()), Qt::DisplayRole).toString(); */
+    Pers = WDFunc::TVField(this, "maintv", 0);
     Mode = MODE_EDIT;
     ShowPersDlg();
 }
@@ -108,13 +110,14 @@ void tb_maindialog::ShowPers()
 void tb_maindialog::Refresh()
 {
     SetupModel();
-    s_tqTableView *tv = this->findChild<s_tqTableView *>("maintv");
+    WDFunc::TVAutoResize(this, "maintv");
+/*    TreeView *tv = this->findChild<TreeView *>("maintv");
     if (tv == 0)
     {
         DBGMSG;
         return;
     }
-    tv->resizeColumnsToContents();
+    tv->resizeColumnsToContents(); */
 }
 
 void tb_maindialog::ShowPersDlg()

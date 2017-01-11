@@ -5,7 +5,7 @@
 GoodBadWidget::GoodBadWidget(QWidget *parent) : QWidget(parent)
 {
     tm = new GoodBadTableModel;
-    tv = new s_tqTableView;
+    tv = new TreeView;
     tv->horizontalHeader()->setVisible(false);
     tv->verticalHeader()->setVisible(false);
     tv->setModel(tm);

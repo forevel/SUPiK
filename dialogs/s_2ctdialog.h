@@ -34,13 +34,12 @@ private:
 
 private slots:
     void accepted();
-    void accepted(QModelIndex idx);
     void Root();
     void cancelled();
-    void resizemainTV(QModelIndex, QModelIndex);
+    void resizemainTV();
     void Filter();
-    void SetExpandIndex(QModelIndex idx);
-    void UnsetExpandIndex(QModelIndex idx);
+//    void SetExpandIndex(QModelIndex idx);
+//    void UnsetExpandIndex(QModelIndex idx);
     void ShowFilterLineEdit();
     void Unfilter();
     void AddItem();

@@ -16,7 +16,6 @@
 #include "../../widgets/s_tqlabel.h"
 #include "../../widgets/s_tqlineedit.h"
 #include "../../widgets/s_tqpushbutton.h"
-#include "../../widgets/s_tqtableview.h"
 #include "../../widgets/s_tqchoosewidget.h"
 #include "../../widgets/s_tqcombobox.h"
 #include "../../widgets/s_tqcheckbox.h"

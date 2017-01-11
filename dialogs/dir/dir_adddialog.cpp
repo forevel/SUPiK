@@ -11,8 +11,6 @@
 #include "../../widgets/s_tqlabel.h"
 #include "../../widgets/s_tqcheckbox.h"
 #include "../../widgets/s_tqspinbox.h"
-#include "../../widgets/s_tqtreeview.h"
-#include "../../widgets/s_tqtableview.h"
 #include "../../widgets/s_tqstackedwidget.h"
 #include "../s_accessdialog.h"
 #include "../messagebox.h"

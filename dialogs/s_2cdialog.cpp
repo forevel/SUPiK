@@ -1,6 +1,5 @@
 #include "s_2cdialog.h"
 #include "../models/s_duniversal.h"
-#include "../widgets/s_tqtableview.h"
 #include "../widgets/treeview.h"
 #include "../widgets/s_tqpushbutton.h"
 #include "../widgets/s_tqlineedit.h"

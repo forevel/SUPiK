@@ -64,15 +64,22 @@ void PublicClass::InitiatePublicClass()
     FtpServer = LandP->value("settings/FtpServer","ftp.asu-vei.ru").toString();
     SupikServer = LandP->value("settings/Server","supik.mycompany.ru").toString();
     SupikPort = LandP->value("settings/Port","9687").toString();
-    DBMap.insert(DB_ALT, {alt, "ALT", "altium", DBLOGIN, DBPSWD});
-    DBMap.insert(DB_CON, {con, "CON", "constructives", DBLOGIN, DBPSWD});
-    DBMap.insert(DB_DEV, {dev, "DEV", "devices", DBLOGIN, DBPSWD});
-    DBMap.insert(DB_ENT, {ent, "ENT", "enterprise", DBLOGIN, DBPSWD});
-    DBMap.insert(DB_SCH, {sch, "SCH", "schemagee", DBLOGIN, DBPSWD});
-    DBMap.insert(DB_SOL, {sol, "SOL", "solidworks", DBLOGIN, DBPSWD});
-    DBMap.insert(DB_SUP, {sup, "SUP", "supik", DBLOGIN, DBPSWD});
-    DBMap.insert(DB_TB, {tb, "TB", "tb", DBLOGIN, DBPSWD});
-    DBMap.insert(DB_SADM, {sadm, "SADM", "sysadm", DBLOGIN, DBPSWD});
+    DBMap.insert(DB_ALT, {QSqlDatabase(), "ALT", "altium", DBLOGIN, DBPSWD});
+    DBMap.insert(DB_CON, {QSqlDatabase(), "CON", "constructives", DBLOGIN, DBPSWD});
+    DBMap.insert(DB_DEV, {QSqlDatabase(), "DEV", "devices", DBLOGIN, DBPSWD});
+    DBMap.insert(DB_ENT, {QSqlDatabase(), "ENT", "enterprise", DBLOGIN, DBPSWD});
+    DBMap.insert(DB_SCH, {QSqlDatabase(), "SCH", "schemagee", DBLOGIN, DBPSWD});
+    DBMap.insert(DB_SOL, {QSqlDatabase(), "SOL", "solidworks", DBLOGIN, DBPSWD});
+    DBMap.insert(DB_SUP, {QSqlDatabase(), "SUP", "supik", DBLOGIN, DBPSWD});
+    DBMap.insert(DB_TB, {QSqlDatabase(), "TB", "tb", DBLOGIN, DBPSWD});
+    DBMap.insert(DB_SADM, {QSqlDatabase(), "SADM", "sysadm", DBLOGIN, DBPSWD});
+    DBMap.insert(DB_OK, {QSqlDatabase(), "OK", "ok", DBLOGIN, DBPSWD});
+    for (int i=0; i<DBMap.keys().size(); ++i)
+    {
+        DbConnections dbc = DBMap.value(DBMap.keys().at(i));
+        dbc.db = dbs_array[i];
+        DBMap[DBMap.keys().at(i)] = dbc;
+    }
     symfind = "LIBREFERENCE=";
     footfind = "PATTERN=";
     idRecord = -1;
@@ -88,15 +95,6 @@ bool PublicClass::OpenAndCheckDBs()
         openBD(DBMap.keys().at(i));
     if (DbNotOpened != 0x0000)
         return false;
-    db["alt"]=alt;
-    db["sup"]=sup;
-    db["ent"]=ent;
-    db["dev"]=dev;
-    db["sol"]=sol;
-    db["sch"]=sch;
-    db["con"]=con;
-    db["tb"]=tb;
-    db["sadm"]=sadm;
     return true;
 }
 

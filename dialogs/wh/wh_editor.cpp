@@ -6,10 +6,8 @@
 #include "../../widgets/s_tqgroupbox.h"
 #include "../../widgets/s_tqwidget.h"
 #include "../../widgets/s_tqchoosewidget.h"
-#include "../../widgets/s_tqtableview.h"
 #include "../../gen/s_tablefields.h"
 #include "../../gen/publicclass.h"
-#include "../../models/placedelegate.h"
 #include "../messagebox.h"
 #include "../s_2cdialog.h"
 

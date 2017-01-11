@@ -1,10 +1,11 @@
 #include "s_2ctdialog.h"
 #include "s_2cdialog.h"
 #include "../models/s_duniversal.h"
-#include "../widgets/s_tqtreeview.h"
+#include "../widgets/treeview.h"
 #include "../widgets/s_tqpushbutton.h"
 #include "../widgets/s_tqlabel.h"
 #include "../widgets/s_tqlineedit.h"
+#include "../widgets/wd_func.h"
 #include "../gen/s_sql.h"
 #include "../gen/publicclass.h"
 #include "../gen/s_tablefields.h"
@@ -31,7 +32,7 @@ void s_2ctdialog::setupUI()
 {
     QVBoxLayout *mainLayout = new QVBoxLayout;
     QHBoxLayout *pbLayout = new QHBoxLayout;
-    s_tqTreeView *mainTV = new s_tqTreeView;
+    TreeView *mainTV = new TreeView(TreeView::TV_PROXY);
     mainTV->setObjectName("mainTV");
     s_duniversal *uniDelegate = new s_duniversal;
     s_tqPushButton *pbOk = new s_tqPushButton("Ага");
@@ -54,10 +55,8 @@ void s_2ctdialog::setupUI()
     mainTV->setModel(pmainmodel);
     mainTV->setSortingEnabled(true);
     mainTV->setEditTriggers(QAbstractItemView::AllEditTriggers);
-    mainTV->header()->setVisible(false);
     mainTV->setItemDelegate(uniDelegate);
-    mainTV->setIndentation(2);
-    connect(pmainmodel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(resizemainTV(QModelIndex,QModelIndex)));
+    connect(pmainmodel, SIGNAL(dataChanged(QModelIndex,QModelIndex)), this, SLOT(resizemainTV()));
     mainLayout->addWidget(lbl, 0, Qt::AlignRight);
     QHBoxLayout *hlyout = new QHBoxLayout;
     s_tqPushButton *pb = new s_tqPushButton;
@@ -83,9 +82,9 @@ void s_2ctdialog::setupUI()
     if (RootNeeded)
         mainLayout->addWidget(rootpb);
     mainLayout->addLayout(pbLayout);
-    ExpandHandle = connect(mainTV, SIGNAL(expanded(QModelIndex)), this, SLOT(SetExpandIndex(QModelIndex)));
-    CollapseHandle = connect(mainTV, SIGNAL(collapsed(QModelIndex)), this, SLOT(UnsetExpandIndex(QModelIndex)));
-    connect(mainTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(accepted(QModelIndex)));
+/*    ExpandHandle = connect(mainTV, SIGNAL(expanded(QModelIndex)), this, SLOT(SetExpandIndex(QModelIndex)));
+    CollapseHandle = connect(mainTV, SIGNAL(collapsed(QModelIndex)), this, SLOT(UnsetExpandIndex(QModelIndex))); */
+    connect(mainTV, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(accepted()));
     setLayout(mainLayout);
 }
 
@@ -98,22 +97,21 @@ void s_2ctdialog::setup(QString tble, bool RootNeeded)
     mainmodel->Setup(tble);
     this->RootNeeded = RootNeeded;
     setupUI();
-    resizemainTV(QModelIndex(),QModelIndex());
+    resizemainTV();
 }
 
-void s_2ctdialog::resizemainTV(QModelIndex index1, QModelIndex index2)
+void s_2ctdialog::resizemainTV()
 {
-    int i;
-    Q_UNUSED(index1);
-    Q_UNUSED(index2);
-    s_tqTreeView *tv = this->findChild<s_tqTreeView *>("mainTV");
+//    int i;
+    WDFunc::TVAutoResize(this, "mainTV");
+/*    s_tqTreeView *tv = this->findChild<s_tqTreeView *>("mainTV");
     if (tv == 0)
     {
         DBGMSG;
         return;
     }
     for (i = 0; i < tv->header()->count(); i++)
-        tv->resizeColumnToContents(i);
+        tv->resizeColumnToContents(i); */
 }
 
 void s_2ctdialog::paintEvent(QPaintEvent *e)
@@ -123,15 +121,9 @@ void s_2ctdialog::paintEvent(QPaintEvent *e)
     e->accept();
 }
 
-void s_2ctdialog::accepted(QModelIndex idx)
-{
-    Q_UNUSED(idx);
-    accepted();
-}
-
 void s_2ctdialog::accepted()
 {
-    s_tqTreeView *tv = this->findChild<s_tqTreeView *>("mainTV");
+/*    s_tqTreeView *tv = this->findChild<s_tqTreeView *>("mainTV");
     if (tv == 0)
     {
         DBGMSG;
@@ -142,7 +134,8 @@ void s_2ctdialog::accepted()
     curIndex = tv->currentIndex();
     parIndex = tv->currentIndex().parent();
     QModelIndex index = pmainmodel->index(curIndex.row(), 0, parIndex); // 0-я колонка - это всегда должен быть ИД, по нему потом выбираются значения из таблиц
-    QString tmpString = index.data(Qt::DisplayRole).toString();
+    QString tmpString = index.data(Qt::DisplayRole).toString(); */
+    QString tmpString = WDFunc::TVField(this, "mainTV", 0);
     emit changeshasbeenMade(tmpString);
     this->close();
 }
@@ -162,7 +155,7 @@ void s_2ctdialog::setTvCurrentText(QString text)
 {
     if (text.isEmpty())
         return;
-    s_tqTreeView *tv = this->findChild<s_tqTreeView *>("mainTV");
+    TreeView *tv = this->findChild<TreeView *>("mainTV");
     if (tv == 0)
     {
         DBGMSG;
@@ -175,7 +168,7 @@ void s_2ctdialog::setTvCurrentText(QString text)
 
 void s_2ctdialog::Filter()
 {
-    s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("filterle");
+/*    s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("filterle");
     if (le == 0)
     {
         DBGMSG;
@@ -199,11 +192,11 @@ void s_2ctdialog::Filter()
         }
         ExpandHandle = connect(tv, SIGNAL(expanded(QModelIndex)), this, SLOT(SetExpandIndex(QModelIndex)));
         CollapseHandle = connect(tv, SIGNAL(collapsed(QModelIndex)), this, SLOT(UnsetExpandIndex(QModelIndex)));
-    }
-    pmainmodel->setFilterWildcard("*"+le->text()+"*");
+    } */
+    pmainmodel->setFilterWildcard("*"+WDFunc::LEData(this, "filterle")+"*");
 }
 
-void s_2ctdialog::SetExpandIndex(QModelIndex idx)
+/*void s_2ctdialog::SetExpandIndex(QModelIndex idx)
 {
     s_tqTreeView *tv = this->findChild<s_tqTreeView *>("mainTV");
     if (tv == 0)
@@ -225,13 +218,13 @@ void s_2ctdialog::UnsetExpandIndex(QModelIndex idx)
     }
     QModelIndex ModelIndex = tv->model()->index(idx.row(),idx.column(), QModelIndex());
 //    pmainmodel->removeExpandedIndex(ModelIndex);
-}
+} */
 
 void s_2ctdialog::ShowFilterLineEdit()
 {
     QDialog *dlg = new QDialog(this);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
-    QPushButton *pb = qobject_cast<QPushButton *>(sender());
+    s_tqPushButton *pb = qobject_cast<s_tqPushButton *>(sender());
     dlg->move(pb->mapToGlobal(pb->pos()));
     QHBoxLayout *hlyout = new QHBoxLayout;
     s_tqLabel *lbl = new s_tqLabel("Фильтр:");
@@ -295,5 +288,5 @@ void s_2ctdialog::Update()
         WARNMSG("");
         return;
     }
-    resizemainTV(QModelIndex(),QModelIndex());
+    resizemainTV();
 }

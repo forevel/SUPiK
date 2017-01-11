@@ -19,7 +19,6 @@
 #include "dialogs/tb/tb_examdialog.h"
 #include "widgets/s_tqlabel.h"
 #include "widgets/s_colortabwidget.h"
-#include "widgets/s_tqtableview.h"
 #include "widgets/portactivity.h"
 #include "threads/checkthread.h"
 #include "gen/publiclang.h"

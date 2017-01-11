@@ -13,7 +13,7 @@
 #include "../../gen/s_sql.h"
 #include "../../models/errorprotocolmodel.h"
 #include "../../widgets/s_tqlabel.h"
-#include "../../widgets/s_tqtableview.h"
+#include "../../widgets/treeview.h"
 #include "../../widgets/s_tqpushbutton.h"
 #include "../../widgets/s_tqcombobox.h"
 
@@ -38,7 +38,7 @@ SysErDialog::SysErDialog(QWidget *parent) :
     hlyout->addWidget(lbl, 0);
     hlyout->setAlignment(lbl, Qt::AlignRight);
     lyout->addLayout(hlyout);
-    s_tqTableView *tv = new s_tqTableView;
+    TreeView *tv = new TreeView;
     ErrorProtocolModel *erm = new ErrorProtocolModel;
     erm->setHeaderData(0, Qt::Horizontal, "Номер",Qt::EditRole);
     erm->setHeaderData(1, Qt::Horizontal, "Дата/время",Qt::EditRole);
@@ -102,7 +102,7 @@ void SysErDialog::NewProblemsDetected()
 
 void SysErDialog::AddRowToProt(PublicClass::ermsg ermsg)
 {
-    s_tqTableView *tv = this->findChild<s_tqTableView *>("ertv");
+    TreeView *tv = this->findChild<TreeView *>("ertv");
     if (tv == 0)
     {
         return;

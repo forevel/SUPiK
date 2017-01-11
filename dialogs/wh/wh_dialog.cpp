@@ -18,7 +18,6 @@
 #include "../../widgets/s_tqlabel.h"
 #include "../../widgets/s_tqlineedit.h"
 #include "../../widgets/s_tqpushbutton.h"
-#include "../../widgets/s_tqtableview.h"
 #include "../../gen/publicclass.h"
 #include "../../gen/s_sql.h"
 #include "../../models/s_duniversal.h"
@@ -41,7 +40,7 @@ wh_dialog::wh_dialog(int Reason, QString id, QWidget *parent) :
     ml1 = new QHBoxLayout;
     ml2 = new QHBoxLayout;
     firstShow = true;
-    mainTV = new s_tqTableView;
+    mainTV = new TreeView;
     this->Reason = Reason;
     needtorefresh = false;
     ReasonTable << "Ввод остатков_полн" << "Приём на склад_полн" << "Приём на склад_полн";

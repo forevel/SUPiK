@@ -47,6 +47,8 @@
 #define DB_CON      0x0040
 #define DB_TB       0x0080
 #define DB_SADM     0x0100
+#define DB_OK       0x0200
+#define DB_COUNT    10
 
 #define ACC_SYS_RO      0x0001
 #define ACC_SYS_WR      0x0002
@@ -257,7 +259,7 @@ public:
         QString pswd;
     };
 
-    QSqlDatabase ent, alt, sup, con, sol, sch, dev, tb, sadm;
+    QSqlDatabase dbs_array[DB_COUNT];
 
     QMap<int, DbConnections> DBMap;
 
@@ -276,7 +278,6 @@ public:
 //    bool ErWidgetShowing;
     bool AutonomousMode; // если сервер СУПиК (становится) недоступен, признак автономного режима становится равен true
     QString LastError;
-    QMap<QString, QSqlDatabase> db;
     quint16 DbNotOpened;
 //    QString Date; // Сегодняшняя дата
     QString DateTime; // Сегодняшнее время

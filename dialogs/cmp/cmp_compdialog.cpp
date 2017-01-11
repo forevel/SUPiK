@@ -17,8 +17,7 @@
 #include "../../widgets/s_tqcombobox.h"
 #include "../../widgets/s_tqpushbutton.h"
 #include "../../widgets/s_tqcheckbox.h"
-#include "../../widgets/s_tqtreeview.h"
-#include "../../widgets/s_tqtableview.h"
+#include "../../widgets/treeview.h"
 #include "../../widgets/s_tqframe.h"
 #include "../../widgets/s_tqsplitter.h"
 #include "../../widgets/s_colortabwidget.h"
@@ -103,7 +102,7 @@ void cmp_compdialog::SetupUI()
 
     lyout->addLayout(hlyout);
 
-    s_tqTableView *MainTV = new s_tqTableView;
+    TreeView *MainTV = new TreeView;
     s_duniversal *GridItemDelegate = new s_duniversal;
     MainTV->setItemDelegate(GridItemDelegate);
     MainTV->setObjectName("mtv");
@@ -135,7 +134,7 @@ void cmp_compdialog::SetupUI()
     spl->addWidget(left);
     s_tqFrame *right = new s_tqFrame;
     QVBoxLayout *rlyout = new QVBoxLayout;
-    s_tqTableView *SlaveTV = new s_tqTableView;
+    TreeView *SlaveTV = new TreeView;
     SlaveTV->setItemDelegate(GridItemDelegate);
     SlaveModel = new TreeModel;
     ProxyModel *SlaveProxyModel = new ProxyModel;

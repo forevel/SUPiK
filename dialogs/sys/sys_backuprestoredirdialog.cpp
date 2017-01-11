@@ -14,7 +14,7 @@
 #include "../../widgets/s_tqlabel.h"
 #include "../../widgets/s_tqlineedit.h"
 #include "../../widgets/s_tqpushbutton.h"
-#include "../../widgets/s_tqtableview.h"
+#include "../../widgets/treeview.h"
 #include "../../widgets/s_tqcombobox.h"
 #include "../../gen/publicclass.h"
 #include "../../gen/s_sql.h"
@@ -42,7 +42,7 @@ void sys_backuprestoredirdialog::SetupUI()
     QVBoxLayout *mainbl = new QVBoxLayout;
     QHBoxLayout *upperLayout = new QHBoxLayout;
     QHBoxLayout *midLayout = new QHBoxLayout;
-    s_tqTableView *mainTV = new s_tqTableView;
+    TreeView *mainTV = new TreeView;
     mainTV->setObjectName("mainTV");
     mainTV->verticalHeader()->setVisible(false);
     s_tqPushButton *ImpExpPB = new s_tqPushButton;
@@ -279,7 +279,7 @@ void sys_backuprestoredirdialog::LoadFilePBPressed()
         if (!Finished)
             mainmodel->addRow(fieldValuesStringList);
     }
-    s_tqTableView *tv = this->findChild<s_tqTableView *>("mainTV");
+    TreeView *tv = this->findChild<TreeView *>("mainTV");
     tv->setModel(mainmodel);
     tv->setColumnWidth(0, 100);
     tv->resizeColumnsToContents();

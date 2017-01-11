@@ -1,5 +1,6 @@
 #include "sysdireditor.h"
-#include "../../widgets/s_tqtableview.h"
+#include "../../widgets/treeview.h"
+#include "../../widgets/wd_func.h"
 #include "../../gen/s_sql.h"
 #include "../../gen/publicclass.h"
 #include "../../models/s_duniversal.h"
@@ -22,7 +23,7 @@ SysDirEditor::SysDirEditor(QWidget *parent) :
 
 void SysDirEditor::SetupUI()
 {
-    s_tqTableView *tv = new s_tqTableView;
+    TreeView *tv = new TreeView;
     TreeModel *mdl = new TreeModel;
     tv->setModel(mdl);
     tv->setObjectName("tv");
@@ -39,7 +40,7 @@ void SysDirEditor::SetupUI()
 
 void SysDirEditor::FillTable()
 {
-    s_tqTableView *tv = this->findChild<s_tqTableView *>("tv");
+    TreeView *tv = this->findChild<TreeView *>("tv");
     if (tv == 0)
     {
         DBGMSG;
@@ -82,19 +83,19 @@ void SysDirEditor::TvMenu(QPoint p)
 
 void SysDirEditor::EditDir()
 {
-    s_tqTableView *tv = this->findChild<s_tqTableView *>("tv");
+/*    TreeView *tv = this->findChild<TreeView *>("tv");
     if (tv == 0)
     {
         WARNMSG("");
         return;
     }
     QString tmpString;
-    QStringList tmpStringList = tv->model()->index(tv->currentIndex().row(), 0, QModelIndex()).data(Qt::DisplayRole).toString().split(".");
+    QStringList tmpStringList = tv->model()->index(tv->currentIndex().row(), 0, QModelIndex()).data(Qt::DisplayRole).toString().split("."); */
+    QString tmpString = WDFunc::TVField(this, "tv", 0, true);
+/*    QStringList tmpStringList = tmpString.split(".");
     if (tmpStringList.size() > 1)
         tmpString = tmpStringList.at(1);
-    else
-        tmpString = tv->model()->index(tv->currentIndex().row(), 0, QModelIndex()).data(Qt::DisplayRole).toString();
-    tmpString = QString::number(tmpString.toInt(0));
+    tmpString = QString::number(tmpString.toInt(0)); */
     if (tmpString.isEmpty())
     {
         WARNMSG("");
@@ -111,13 +112,14 @@ void SysDirEditor::EditDir()
 
 void SysDirEditor::DeleteDir()
 {
-    s_tqTableView *tv = this->findChild<s_tqTableView *>("tv");
+/*    TreeView *tv = this->findChild<TreeView *>("tv");
     if (tv == 0)
     {
         DBGMSG;
         return;
     }
-    QString dirname = tv->model()->data(tv->model()->index(tv->currentIndex().row(),1,QModelIndex()),Qt::DisplayRole).toString();
+    QString dirname = tv->model()->data(tv->model()->index(tv->currentIndex().row(),1,QModelIndex()),Qt::DisplayRole).toString(); */
+    QString dirname = WDFunc::TVField(this, "tv", 1);
     if (!(MessageBox2::question(this, "Уверены?", "Вы уверены, что хотите удалить все сведения о справочнике?")))
         return;
     QStringList fl = QStringList() << "dirlist";

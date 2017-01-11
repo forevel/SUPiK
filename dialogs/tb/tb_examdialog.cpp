@@ -21,7 +21,6 @@
 #include "../../widgets/s_tqpushbutton.h"
 #include "../../widgets/s_tqradiobutton.h"
 #include "../../widgets/s_tqcheckbox.h"
-#include "../../widgets/s_tqtableview.h"
 #include "../../widgets/s_tqtextedit.h"
 #include "../../widgets/s_tqwidget.h"
 #include "../../widgets/s_tqstackedwidget.h"

@@ -67,8 +67,8 @@ void dir_maindialog::SetupUI()
     hlyout->setAlignment(lbl, Qt::AlignRight);
     lyout->addLayout(hlyout);
 
-    TreeView *SlaveTV = new TreeView(TreeView::TV_PLAIN);
-    TreeView *MainTV = new TreeView(TreeView::TV_PLAIN);
+    TreeView *SlaveTV = new TreeView;
+    TreeView *MainTV = new TreeView;
     MainTableModel = new TreeModel;
     SlaveTreeModel = new TreeModel;
     MainTV->setObjectName("MainTV");

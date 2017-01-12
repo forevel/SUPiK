@@ -53,7 +53,7 @@ bool ChooseItemDialog::SetupFile(QString Filename, QString StringToFind, QString
 void ChooseItemDialog::SetupUI()
 {
     QVBoxLayout *mainLayout = new QVBoxLayout;
-    TreeView *MainTV = new TreeView(TreeView::TV_PROXY);
+    TreeView *MainTV = new TreeView(TreeView::TV_EXPANDABLE, TreeView::TV_PROXY);
     MainTV->setObjectName("MainTV");
     s_tqLabel *lbl = new s_tqLabel;
     lbl->setText(hdr);

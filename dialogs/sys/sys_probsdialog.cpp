@@ -53,7 +53,7 @@ void SysProblemsDialog::SetupUI()
     hlyout->addWidget(lbl, 0);
     hlyout->setAlignment(lbl, Qt::AlignRight);
     mainLayout->addLayout(hlyout);
-    TreeView *mainTV = new TreeView(TreeView::TV_PLAIN);
+    TreeView *mainTV = new TreeView;
     mainTV->setObjectName("mainTV");
     mainTV->setContextMenuPolicy(Qt::CustomContextMenu);
     connect (mainTV, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(MainTvContextMenu(QPoint)));

@@ -32,7 +32,7 @@ void s_2ctdialog::setupUI()
 {
     QVBoxLayout *mainLayout = new QVBoxLayout;
     QHBoxLayout *pbLayout = new QHBoxLayout;
-    TreeView *mainTV = new TreeView(TreeView::TV_PROXY);
+    TreeView *mainTV = new TreeView(TreeView::TV_EXPANDABLE, TreeView::TV_PROXY);
     mainTV->setObjectName("mainTV");
     s_duniversal *uniDelegate = new s_duniversal;
     s_tqPushButton *pbOk = new s_tqPushButton("Ага");

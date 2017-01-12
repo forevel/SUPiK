@@ -155,7 +155,7 @@ void tb_examdialog::SetupUI()
         WARNMSG("");
         return;
     }
-    vlyout->addWidget(gbw, 0);
+    vlyout->addWidget(gbw);
     gb->setLayout(vlyout);
     lyout->addWidget(gb);
 
@@ -175,7 +175,8 @@ void tb_examdialog::SetupUI()
     lyout->addStretch(300);
     setLayout(lyout);
     QApplication::restoreOverrideCursor();
-    gbw->SetItem(0, GoodBadTableModel::GBIT_NEUTRAL); // принудительный ресайз
+//    gbw->SetItem(0, GoodBadTableModel::GBIT_NEUTRAL); // принудительный ресайз
+//    gbw->Resize();
 }
 
 void tb_examdialog::ExTypeExChoosed()
@@ -190,14 +191,14 @@ void tb_examdialog::ExTypeTestChoosed()
 
 void tb_examdialog::GroupChoosed()
 {
-    WaitWidget *ww = new WaitWidget;
-    ww->Start();
+/*    WaitWidget *ww = new WaitWidget;
+    ww->Start(); */
     s_tqStackedWidget *stw = this->findChild<s_tqStackedWidget *>("groupstw");
     if (stw == 0)
     {
         DBGMSG;
-        ww->Stop();
-        delete ww;
+//        ww->Stop();
+//        delete ww;
         return;
     }
     s_tqRadioButton *rb3 = this->findChild<s_tqRadioButton *>("rb3");
@@ -206,8 +207,8 @@ void tb_examdialog::GroupChoosed()
     if ((rb3 == 0) || (rb4 == 0) || (rb5 == 0))
     {
         DBGMSG;
-        ww->Stop();
-        delete ww;
+//        ww->Stop();
+//        delete ww;
         return;
     }
     QString tmps;
@@ -245,8 +246,8 @@ void tb_examdialog::GroupChoosed()
     if (!PrepareQuestions())
     {
         WARNMSG("");
-        ww->Stop();
-        delete ww;
+//        ww->Stop();
+//        delete ww;
         return;
     }
     s_tqGroupBox *questiongb = this->findChild<s_tqGroupBox *>("questiongb");
@@ -254,13 +255,13 @@ void tb_examdialog::GroupChoosed()
     if ((questiongb == 0) || (goodbadgb == 0))
     {
         DBGMSG;
-        ww->Stop();
-        delete ww;
+ //       ww->Stop();
+ //       delete ww;
         return;
     }
     questiongb->setVisible(true);
     goodbadgb->setVisible(true);
-    ww->Stop();
+//    ww->Stop();
 }
 
 bool tb_examdialog::PrepareQuestions()
@@ -271,6 +272,7 @@ bool tb_examdialog::PrepareQuestions()
         DBGMSG;
         return false;
     }
+    stw->setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     Questions.clear();
     Answers.clear();
     AnswerCount = 0; // номер текущего ответа

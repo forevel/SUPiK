@@ -73,7 +73,7 @@ void sys_systemdialog::SetupUI()
     hlyout->addWidget(lbl, 0);
     hlyout->setAlignment(lbl, Qt::AlignRight);
     lyout->addLayout(hlyout);
-    TreeView *MainTV = new TreeView;
+    TreeView *MainTV = new TreeView(TreeView::TV_EXPANDABLE);
     s_tqStackedWidget *wdgt = new s_tqStackedWidget;
     connect(this,SIGNAL(closeslvdlg()),this,SLOT(RemoveWidget()));
     MainTV->setObjectName("MainTV");

@@ -91,7 +91,7 @@ void dev_devdialog::SetupUI()
     hlyout->setAlignment(lbl, Qt::AlignRight);
 
     lyout->addLayout(hlyout);
-    TreeView *MainTV = new TreeView(TreeView::TV_PROXY, true);
+    TreeView *MainTV = new TreeView(TreeView::TV_EXPANDABLE, TreeView::TV_PROXY, true);
     GridDelegate *gridItemDelegate = new GridDelegate;
     MainTV->setItemDelegate(gridItemDelegate);
     MainTV->setObjectName("mtv");

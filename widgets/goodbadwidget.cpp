@@ -4,14 +4,15 @@
 
 GoodBadWidget::GoodBadWidget(QWidget *parent) : QWidget(parent)
 {
+    setAttribute(Qt::WA_DeleteOnClose);
     tm = new GoodBadTableModel;
     tv = new TreeView;
     tv->horizontalHeader()->setVisible(false);
     tv->verticalHeader()->setVisible(false);
     tv->setModel(tm);
-    connect(tm,SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)),tv, SLOT(resizeColumnsToContents()));
-    tv->resizeColumnsToContents();
-    tv->resizeRowsToContents();
+//    connect(tm,SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)),tv, SLOT(resizeColumnsToContents()));
+//    tv->resizeColumnsToContents();
+//    tv->resizeRowsToContents();
     QVBoxLayout *lyout = new QVBoxLayout;
     lyout->addWidget(tv);
     setLayout(lyout);
@@ -32,8 +33,15 @@ bool GoodBadWidget::SetItem(int ItemNum, int ItemType)
     return tm->SetItem(ItemNum, ItemType);
 }
 
+void GoodBadWidget::Resize()
+{
+    tv->resizeColumnsToContents();
+    tv->resizeRowsToContents();
+}
+
 GoodBadTableModel::GoodBadTableModel(QObject *parent) : QAbstractTableModel(parent)
 {
+//    ClearModel();
     Items.clear();
     Icons[GBIT_GOOD] = QIcon(":/res/ans_good.gif");
     Icons[GBIT_BAD] = QIcon(":/res/ans_bad.gif");
@@ -92,7 +100,27 @@ bool GoodBadTableModel::removeColumns(int position, int columns, const QModelInd
         Items.removeAt(position);
     return true;
 }
+/*
+bool GoodBadTableModel::insertRows(int row, int count, const QModelIndex &parent)
+{
+    Q_UNUSED(parent);
+    beginInsertRows(QModelIndex(), row, row+count-1);
+    if ((row+count) < 2)
+        ++Rows;
+    endInsertRows();
+    return true;
+}
 
+bool GoodBadTableModel::removeRows(int row, int count, const QModelIndex &parent)
+{
+    Q_UNUSED(parent);
+    beginRemoveRows(QModelIndex(), row, row+count-1);
+    if ((row+count) <= Rows)
+        --Rows;
+    endRemoveRows();
+    return true;
+}
+*/
 int GoodBadTableModel::rowCount(const QModelIndex &index) const
 {
     Q_UNUSED(index);
@@ -107,6 +135,8 @@ int GoodBadTableModel::columnCount(const QModelIndex &index) const
 
 bool GoodBadTableModel::Setup(int NumItems)
 {
+//    ClearModel();
+//    insertRows(0, 1, QModelIndex());
     return insertColumns(0, NumItems, QModelIndex());
 }
 
@@ -116,3 +146,14 @@ bool GoodBadTableModel::SetItem(int ItemNum, int ItemType)
         return false;
     return setData(index(0, ItemNum), QVariant(ItemType), Qt::EditRole);
 }
+/*
+void GoodBadTableModel::ClearModel()
+{
+    Rows = 0;
+    beginResetModel();
+    while (rowCount() > 0)
+        removeRows(0, 1, QModelIndex());
+    Items.clear();
+    endResetModel();
+}
+*/

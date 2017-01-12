@@ -26,6 +26,8 @@ public:
     int columnCount(const QModelIndex &index = QModelIndex()) const;
     bool insertColumns(int position, int columns, const QModelIndex &index = QModelIndex());
     bool removeColumns(int position, int columns, const QModelIndex &index = QModelIndex());
+/*    bool insertRows(int row, int count, const QModelIndex &parent);
+    bool removeRows(int row, int count, const QModelIndex &parent); */
     bool Setup(int NumItems);
     bool SetItem(int ItemNum, int ItemType);
 
@@ -36,6 +38,9 @@ public slots:
 private:
     QList<int> Items;
     QIcon Icons[3];
+/*    int Rows;
+
+    void ClearModel(); */
 };
 
 class GoodBadWidget : public QWidget
@@ -51,12 +56,14 @@ public:
 signals:
 
 public slots:
+    void Resize();
 
 private slots:
 
 private:
     TreeView *tv;
     GoodBadTableModel *tm;
+
 };
 
 #endif // GOODBADWIDGET_H

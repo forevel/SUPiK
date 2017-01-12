@@ -54,8 +54,8 @@ void s_2tdialog::SetupUI(QStringList links, QString hdr, QString MainSlaveItemId
     lbl->setFont(font);
     lyout->addWidget(lbl, 0);
     lyout->setAlignment(lbl, Qt::AlignRight);
-    TreeView *MainTV = new TreeView(TreeView::TV_PLAIN);
-    TreeView *SlaveTV = new TreeView(TreeView::TV_PLAIN);
+    TreeView *MainTV = new TreeView(TreeView::TV_EXPANDABLE, TreeView::TV_PLAIN);
+    TreeView *SlaveTV = new TreeView(TreeView::TV_EXPANDABLE, TreeView::TV_PLAIN);
     MainModel = new TreeModel;
     SlaveModel = new TreeModel;
     MainTV->setObjectName("MainTV");

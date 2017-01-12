@@ -7,7 +7,7 @@
 #include <QDialog>
 #include <QScrollBar>
 
-TreeView::TreeView(int Proxy, bool HeaderVisible, QWidget *parent) :
+TreeView::TreeView(int Mode, int Proxy, bool HeaderVisible, QWidget *parent) :
     QTableView(parent)
 {
     IsProxyModel = (Proxy == TV_PLAIN) ? false : true;
@@ -16,13 +16,14 @@ TreeView::TreeView(int Proxy, bool HeaderVisible, QWidget *parent) :
     setFrameStyle(QFrame::NoFrame);
     setStyleSheet("QTableView {background-color: rgba(0,0,0,0);}");
     setShowGrid(false);
-/*    horizontalScrollBar()->setStyleSheet("QScrollBar {background-color: rgba(0,0,0,0);}");
+    horizontalScrollBar()->setStyleSheet("QScrollBar {background-color: rgba(0,0,0,0);}");
     verticalScrollBar()->setStyleSheet("QScrollBar {background-color: rgba(0,0,0,0);}");
     horizontalScrollBar()->setAttribute(Qt::WA_TranslucentBackground, true);
-    verticalScrollBar()->setAttribute(Qt::WA_TranslucentBackground, true); */
+    verticalScrollBar()->setAttribute(Qt::WA_TranslucentBackground, true);
     horizontalHeader()->setVisible(HeaderVisible);
     verticalHeader()->setVisible(false);
-    connect(this, SIGNAL(clicked(QModelIndex)), this, SLOT(setTVexpanded(QModelIndex)));
+    if (Mode == TV_EXPANDABLE)
+        connect(this, SIGNAL(clicked(QModelIndex)), this, SLOT(setTVexpanded(QModelIndex)));
 }
 
 void TreeView::setTVexpanded(QModelIndex index)

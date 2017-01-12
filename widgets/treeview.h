@@ -9,13 +9,19 @@ class TreeView : public QTableView
 {
     Q_OBJECT
 public:
-    explicit TreeView(int Proxy=TV_PLAIN, bool HeaderVisible=false, QWidget *parent = 0);
-
     enum tv_proxies
     {
         TV_PROXY,
         TV_PLAIN
     };
+
+    enum expandables
+    {
+        TV_EXPANDABLE,
+        TV_EPLAIN
+    };
+
+    explicit TreeView(int Mode=TV_EPLAIN, int Proxy=TV_PLAIN, bool HeaderVisible=false, QWidget *parent = 0);
 
 signals:
     void datachanged();

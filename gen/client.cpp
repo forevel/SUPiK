@@ -273,8 +273,6 @@ void Client::SendCmd(int Command, QStringList &Args)
     case M_QUIT:
     {
         CommandString = "M1\n";
-        TimeoutTimer->setInterval(1000);
-        TimeoutTimer->start();
         break;
     }
     case M_ANSLOGIN:

@@ -124,7 +124,7 @@ void dir_maindialog::SetupUI()
 void dir_maindialog::paintEvent(QPaintEvent *e)
 {
     QPainter painter(this);
-    painter.drawPixmap(rect(), QPixmap(":/res/directory.jpg"));
+    painter.drawPixmap(rect(), QPixmap(":/res/directory.png"));
 
     e->accept();
 }

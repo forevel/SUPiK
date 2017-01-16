@@ -32,7 +32,6 @@
         <file>res/book-open.png</file>
         <file>res/CompWallpaper.jpg</file>
         <file>res/Deldoc.png</file>
-        <file>res/directory.jpg</file>
         <file>res/editdoc.png</file>
         <file>res/lupa.gif</file>
         <file>res/settings.png</file>
@@ -73,11 +72,12 @@
         <file>res/ErNo.png</file>
         <file>res/ErYes.png</file>
         <file>res/TBWallpaper.png</file>
-        <file>res/ans_bad.gif</file>
-        <file>res/ans_good.gif</file>
-        <file>res/ans_neutral.gif</file>
         <file>res/2.x.png</file>
         <file>res/PersWallPaper.png</file>
         <file>res/Einstein.png</file>
+        <file>res/ans_bad.png</file>
+        <file>res/ans_good.png</file>
+        <file>res/ans_neutral.png</file>
+        <file>res/directory.png</file>
     </qresource>
 </RCC>

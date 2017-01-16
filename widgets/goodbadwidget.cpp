@@ -5,10 +5,11 @@
 GoodBadWidget::GoodBadWidget(QWidget *parent) : QWidget(parent)
 {
     setAttribute(Qt::WA_DeleteOnClose);
+//    setSizePolicy(QSizePolicy::Maximum, QSizePolicy::Maximum);
     tm = new GoodBadTableModel;
     tv = new TreeView;
-    tv->horizontalHeader()->setVisible(false);
-    tv->verticalHeader()->setVisible(false);
+//    tv->horizontalHeader()->setVisible(false);
+//    tv->verticalHeader()->setVisible(false);
     tv->setModel(tm);
 //    connect(tm,SIGNAL(dataChanged(QModelIndex,QModelIndex,QVector<int>)),tv, SLOT(resizeColumnsToContents()));
 //    tv->resizeColumnsToContents();
@@ -43,9 +44,9 @@ GoodBadTableModel::GoodBadTableModel(QObject *parent) : QAbstractTableModel(pare
 {
 //    ClearModel();
     Items.clear();
-    Icons[GBIT_GOOD] = QIcon(":/res/ans_good.gif");
-    Icons[GBIT_BAD] = QIcon(":/res/ans_bad.gif");
-    Icons[GBIT_NEUTRAL] = QIcon(":/res/ans_neutral.gif");
+    Icons[GBIT_GOOD] = QIcon(":/res/ans_good.png");
+    Icons[GBIT_BAD] = QIcon(":/res/ans_bad.png");
+    Icons[GBIT_NEUTRAL] = QIcon(":/res/ans_neutral.png");
 }
 
 QVariant GoodBadTableModel::data(const QModelIndex &index, int role) const
@@ -56,7 +57,7 @@ QVariant GoodBadTableModel::data(const QModelIndex &index, int role) const
         {
             int tmpi = Items.at(index.column());
             if (tmpi < 3)
-                return Icons[Items.at(index.column())];
+                return Icons[tmpi];
         }
     }
     return QVariant();

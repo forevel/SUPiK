@@ -10,9 +10,7 @@ QMAKE_TARGET_PRODUCT = SUPiK
 RC_ICONS = res/SUPiK.ico
 VERSION = 2.1.4
 
-QT       += core gui sql xlsx network printsupport
-
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QT       += widgets core gui sql xlsx network printsupport
 
 TARGET = SUPiK
 TEMPLATE = app

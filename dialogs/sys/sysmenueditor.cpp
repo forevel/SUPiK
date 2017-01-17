@@ -25,7 +25,7 @@ void SysmenuEditor::SetupUI(QString tble) // tble - имя таблицы, из 
 {
     this->tble = tble;
     QVBoxLayout *lyout = new QVBoxLayout;
-    TreeView *tv = new TreeView;
+    TreeView *tv = new TreeView(TreeView::TV_EXPANDABLE);
     tv->setObjectName("tv");
     QApplication::setOverrideCursor(Qt::WaitCursor);
     TreeModel *treemodel = new TreeModel;
@@ -59,9 +59,6 @@ void SysmenuEditor::Context(QPoint pt)
     connect (AddRoot, SIGNAL(triggered()), this, SLOT(AddRoot()));
     QAction *Separator2Child = new QAction ("", this);
     Separator2Child->setSeparator(1);
-/*    QAction *ChangeChild = new QAction("Изменить имя элемента", this);
-    ChangeChild->setSeparator(0);
-    connect (ChangeChild, SIGNAL(triggered()), this, SLOT(ChangeName())); */
     QAction *DeleteChild = new QAction("Удалить элемент", this);
     DeleteChild->setSeparator(0);
     connect(DeleteChild, SIGNAL(triggered()), this, SLOT(Delete()));
@@ -76,7 +73,6 @@ void SysmenuEditor::Context(QPoint pt)
     ContextMenu->addAction(AddRoot);
     ContextMenu->addAction(AddChild);
     ContextMenu->addAction(Separator2Child);
-//    ContextMenu->addAction(ChangeChild);
     ContextMenu->addAction(DeleteChild);
     ContextMenu->addAction(SeparatorChild);
     ContextMenu->addAction(ChangeDataChild);

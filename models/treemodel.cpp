@@ -478,7 +478,7 @@ int TreeModel::PrepareTable(QString Table)
     }
     if (idpos == -1)
     {
-        INFOMSG("Не найдены ключевые поля в таблице "+Table);
+        INFOMSG("Не найдено поле ИД в таблице "+Table);
         return TM_BADRESULT;
     }
     if (!IsIdAliasExist)

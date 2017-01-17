@@ -515,15 +515,14 @@ void tb_examdialog::ProcessResultsAndExit()
         tfl.Update(table, fl, vl);
         if (tfl.result == TFRESULT_ERROR)
         {
-            WARNMSG("");
+            WARNMSG("Ошибка при записи результатов экзамена в БД");
             this->close();
             return;
         }
         // отправим протокол на сервер
         if (Cli->PutFile(FullFilename, FLT_TB, FLST_PROT, Filename) != Client::CLIER_NOERROR)
         {
-            WARNMSG("");
-            return;
+            WARNMSG("Ошибка отправки файла с протоколом экзамена на сервер");
         }
     }
     MessageBox2::information(this, "Информация", "По результатам экзамена Вы получаете оценку\n" + QString::number(Mark, 'f', 2) + " баллов из " + \

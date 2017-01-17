@@ -357,7 +357,7 @@ void Client::ParseReply(QByteArray *ba)
             Busy = false;
             TimeoutTimer->stop();
             if (fp.isOpen())
-                fp.remove();
+                fp.close();
             return;
         }
         if (ServerResponse == SERVEMPSTR)

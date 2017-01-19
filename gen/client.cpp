@@ -76,13 +76,13 @@ int Client::Connect(QString Host, QString Port, int ClientMode)
     }
     Busy = Connected = CmdOk = false;
     TimeoutTimer = new QTimer;
-    TimeoutTimer->setInterval(5000);
+    TimeoutTimer->setInterval(MAINTIMEOUT);
     connect(TimeoutTimer,SIGNAL(timeout()),this,SLOT(Timeout()));
     GetComReplyTimer = new QTimer;
-    GetComReplyTimer->setInterval(1000); // таймер на получение данных, если за 1 сек ничего не принято, считаем, что посылка закончена, и можно её обрабатывать
+    GetComReplyTimer->setInterval(DATATIMEOUT); // таймер на получение данных, если за 3 сек ничего не принято, считаем, что посылка закончена, и можно её обрабатывать
     connect(GetComReplyTimer,SIGNAL(timeout()),this,SLOT(ComReplyTimeout()));
     GetFileTimer = new QTimer;
-    GetFileTimer->setInterval(500); // таймер на получение файлов, если за 500 мс ничего не принято, считаем, что файл окончен
+    GetFileTimer->setInterval(GETTIMEOUT); // таймер на получение файлов, если за 2 с ничего не принято, считаем, что файл окончен
     connect(GetFileTimer,SIGNAL(timeout()),this,SLOT(GetFileTimerTimeout()));
     MainEthernet = new Ethernet(Host, Port.toInt(), Ethernet::ETH_SSL);
     QThread *thr = new QThread;
@@ -94,8 +94,8 @@ int Client::Connect(QString Host, QString Port, int ClientMode)
     connect(MainEthernet, SIGNAL(finished()),thr, SLOT(quit()));
     connect(MainEthernet,SIGNAL(connected()),this,SLOT(ClientConnected()));
     connect(MainEthernet,SIGNAL(disconnected()),this,SLOT(ClientDisconnected()));
-    connect(MainEthernet,SIGNAL(newdataarrived(QByteArray *)),this,SLOT(ParseReply(QByteArray *)));
-    connect(this,SIGNAL(ClientSend(QByteArray *)),MainEthernet,SLOT(InitiateWriteDataToPort(QByteArray *)));
+    connect(MainEthernet,SIGNAL(newdataarrived(QByteArray)),this,SLOT(ParseReply(QByteArray)));
+    connect(this,SIGNAL(ClientSend(QByteArray)),MainEthernet,SLOT(InitiateWriteDataToPort(QByteArray)));
 #ifndef TIMERSOFF
     TimeoutTimer->start();
 #endif
@@ -105,7 +105,7 @@ int Client::Connect(QString Host, QString Port, int ClientMode)
     thr->start();
     while (!LoginOk && (DetectedError == CLIER_NOERROR))
     {
-        QThread::msleep(50);
+        QThread::msleep(MAINSLEEP);
         qApp->processEvents(QEventLoop::AllEvents);
     }
     if (!Connected)
@@ -133,7 +133,7 @@ void Client::Disconnect()
         SendCmd(M_QUIT);
         while ((Busy == true) && (DetectedError == CLIER_NOERROR))
         {
-            QThread::msleep(50);
+            QThread::msleep(MAINSLEEP);
             qApp->processEvents(QEventLoop::AllEvents);
         }
         MainEthernet->Busy = false;
@@ -260,7 +260,7 @@ void Client::SendCmd(int Command, QStringList &Args)
         emit ClientSend(WrData);
         while (MainEthernet->Busy)
             qApp->processEvents(QEventLoop::AllEvents, 10);
-        delete WrData;
+//        delete WrData;
         return;
     }
         // ANS_GETFILE - второй и последующие ответы на принятую информацию (с записью блока в файл)
@@ -292,18 +292,18 @@ void Client::SendCmd(int Command, QStringList &Args)
         CliLog->info(">********");
     else
         CliLog->info(">"+CommandString); //+codec->fromUnicode(CommandString));
-    QByteArray *ba = new QByteArray(CommandString.toUtf8());//codec->fromUnicode(CommandString));
+    QByteArray ba = CommandString.toUtf8();//codec->fromUnicode(CommandString));
     ComReplyTimeoutIsSet = false;
     MainEthernet->Busy = true;
     emit ClientSend(ba);
-    while (MainEthernet->Busy)
+    while ((MainEthernet->Busy) && (DetectedError == CLIER_NOERROR))
         qApp->processEvents(QEventLoop::AllEvents, 10);
-    delete ba;
+//    delete ba;
 }
 
 // ############################################ ОБРАБОТКА ОТВЕТА ##############################################
 
-void Client::ParseReply(QByteArray *ba)
+void Client::ParseReply(QByteArray ba)
 {
 #ifndef TIMERSOFF
     if (!ComReplyTimeoutIsSet)
@@ -321,7 +321,7 @@ void Client::ParseReply(QByteArray *ba)
         case true:
         {
             RcvData.clear();
-            RcvData.append(codec->fromUnicode(*ba));
+            RcvData.append(codec->fromUnicode(ba));
             if (RcvData.right(1) == "\n") // очередная посылка закончена, надо передать её на обработку
             {
                 while (RcvData.right(1) == "\n") // убираем все переводы строки
@@ -333,7 +333,7 @@ void Client::ParseReply(QByteArray *ba)
         }
         case false:
         {
-            RcvData.append(codec->fromUnicode(*ba));
+            RcvData.append(codec->fromUnicode(ba));
             if (RcvData.right(1) == "\n") // очередная посылка закончена, надо передать её на обработку
             {
                 while (RcvData.right(1) == "\n") // убираем все переводы строки
@@ -644,15 +644,15 @@ void Client::ParseReply(QByteArray *ba)
             {
                 if (fp.isOpen())
                 {
-                    WrData = new QByteArray(fp.read(BytesToSend));
-                    if (WrData->isEmpty())
+                    WrData = QByteArray(fp.read(BytesToSend));
+                    if (WrData.isEmpty())
                     {
-                        delete WrData;
+//                        delete WrData;
                         DetectedError = CLIER_PUTFER;
                         Busy = false;
                         return;
                     }
-                    WrittenBytes += WrData->size();
+                    WrittenBytes += WrData.size();
                     Busy = false;
                     SendCmd(M_APUTFILE);
                     return;
@@ -725,8 +725,8 @@ void Client::ParseReply(QByteArray *ba)
                 fp.remove();
             break;
         }
-        CliLog->info("< ...binary data "+QString::number(ba->size())+" size...");
-        if (ba->data() == SERVERRSTR)
+        CliLog->info("< ...binary data "+QString::number(ba.size())+" size...");
+        if (ba.data() == SERVERRSTR)
         {
             CliLog->error("Server error response");
             DetectedError = CLIER_SERVER;
@@ -737,7 +737,7 @@ void Client::ParseReply(QByteArray *ba)
             Busy = false;
             return;
         }
-        if (ba->data() == "IDLE\n") // закончили передачу
+        if (ba.data() == "IDLE\n") // закончили передачу
         {
             if (fp.isOpen())
                 fp.close();
@@ -745,8 +745,8 @@ void Client::ParseReply(QByteArray *ba)
             CmdOk = true;
             break;
         }
-        ReadBytes += ba->size();
-        qint64 rb = fp.write(*ba);
+        ReadBytes += ba.size();
+        qint64 rb = fp.write(ba);
         emit BytesRead(ReadBytes);
         CliLog->info(QString::number(rb)+" bytes written to file");
         if (ReadBytes >= RcvDataSize)
@@ -820,9 +820,8 @@ void Client::Timeout()
 void Client::ComReplyTimeout()
 {
     ComReplyTimeoutIsSet = true;
-    QByteArray *ba = new QByteArray;
+    QByteArray ba;
     ParseReply(ba); // принудительная обработка принятой посылки
-    delete ba;
     GetComReplyTimer->stop();
 }
 

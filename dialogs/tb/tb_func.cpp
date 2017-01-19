@@ -1,64 +1,57 @@
 #include "tb_func.h"
-#include <QDateTime>
-#include "../../gen/publicclass.h"
+#include <QMap>
+//#include "../../gen/publicclass.h"
 #include "../../gen/s_tablefields.h"
 
-TBFunc::TBFunc()
-{
+static QMap<int, TypesStruct> TypesMap;
 
+void TBFunc_Initialize()
+{
+    TypesMap[DT_MED].months = TypesMap[DT_OT].months = TypesMap[DT_PB].months = TypesMap[DT_TB].months = 0;
+    TypesMap[DT_MED].TypeString = "int-po";
+    TypesMap[DT_OT].TypeString = "int-ot";
+    TypesMap[DT_PB].TypeString = "int-pb";
+    TypesMap[DT_TB].TypeString = "int-eb";
 }
 
-int TBFunc::CheckDate(int type, const QString &date)
+int TBFunc_CheckDate(int type, const QString &date)
 {
     QDateTime dtme = QDateTime::fromString(date, "dd-MM-yyyy");
-    return Check(type, dtme);
+    return TBFunc_Check(type, dtme);
 }
 
-int TBFunc::CheckDateTime(int type, const QString &datetime)
+int TBFunc_CheckDateTime(int type, const QString &datetime)
 {
     QDateTime dtme = QDateTime::fromString(datetime, "dd-MM-yyyy hh:mm:ss");
-    return Check(type, dtme);
+    return TBFunc_Check(type, dtme);
 }
 
-int TBFunc::Check(int type, const QDateTime &dtm)
+int TBFunc_Check(int type, const QDateTime &dtm)
 {
     if (!dtm.isValid())
         return TBDATE_BAD;
     QDateTime CurDateTime = QDateTime::currentDateTime();
-    QString periodstr, table, field;
     QStringList fl, vl;
-    switch (type)
-    {
-    case DT_MED:
-        periodstr = "int-po";
-        break;
-    case DT_OT:
-        periodstr = "int-ot";
-        break;
-    case DT_PB:
-        periodstr = "int-pb";
-        break;
-    case DT_TB:
-        periodstr = "int-eb";
-        break;
-    default:
+    if (TypesMap.find(type) == TypesMap.end())
         return TBDATE_BAD;
-    }
-    table = "Настройки_ТБ_полн";
-    field = "Обозначение";
-    fl << "Значение";
-    tfl.valuesbyfield(table, fl, field, periodstr, vl); // в vl - значение в месяцах периода проверок
-    if ((tfl.result != TFRESULT_NOERROR) || (vl.isEmpty()))
+    int months = TypesMap[type].months;
+    if (months == 0)
     {
-        WARNMSG("");
-        return TBDATE_BAD;
-    }
-    bool ok;
-    int months = vl.at(0).toInt(&ok);
-    if (!ok)
-    {
-        WARNMSG("");
-        return TBDATE_BAD;
+        fl << "Значение";
+        tfl.valuesbyfield("Настройки_ТБ_полн", fl, "Обозначение", TypesMap[type].TypeString, vl); // в vl - значение в месяцах периода проверок
+        if ((tfl.result != TFRESULT_NOERROR) || (vl.isEmpty()))
+        {
+            WARNMSG("");
+            return TBDATE_BAD;
+        }
+        bool ok;
+        months = vl.at(0).toInt(&ok);
+        if (!ok)
+        {
+            WARNMSG("");
+            return TBDATE_BAD;
+        }
+        TypesMap[type].months = months;
     }
     QDateTime newdtm = dtm.addMonths(months);
     qint64 SubDays = newdtm.daysTo(CurDateTime);

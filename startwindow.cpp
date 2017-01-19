@@ -14,6 +14,7 @@
 #include "gen/client.h"
 #include "gen/log.h"
 #include "widgets/wd_func.h"
+#include "widgets/s_tqradiobutton.h"
 
 Log *SupLog;
 
@@ -101,6 +102,10 @@ void StartWindow::SetupUI()
     pb = new s_tqPushButton("Вход с помощью кода активации");
     connect(pb,SIGNAL(clicked(bool)),this,SLOT(ActivatedEnter()));
     StartWindowLayout->addWidget(pb, 5, 0, 1, 3);
+
+/*    s_tqRadioButton *rb = new s_tqRadioButton;
+    rb->setText("Он же тебе прямо пишет, что у тебя не в порядке и где. Ты вчитайся и подумай.");
+    StartWindowLayout->addWidget(rb, 6, 0, 1, 3); */
 
     CentralWidget->setLayout(StartWindowLayout);
     setCentralWidget(CentralWidget);

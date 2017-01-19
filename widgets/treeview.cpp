@@ -11,17 +11,17 @@ TreeView::TreeView(int Mode, int Proxy, bool HeaderVisible, QWidget *parent) :
     QTableView(parent)
 {
     IsProxyModel = (Proxy == TV_PLAIN) ? false : true;
-    setAttribute(Qt::WA_TranslucentBackground, true);
-    setAttribute(Qt::WA_NoSystemBackground, true);
-    setFrameStyle(QFrame::NoFrame);
-    setStyleSheet("QTableView {background-color: rgba(0,0,0,0);}");
-    setShowGrid(false);
     horizontalScrollBar()->setStyleSheet("QScrollBar {background-color: rgba(0,0,0,0);}");
     verticalScrollBar()->setStyleSheet("QScrollBar {background-color: rgba(0,0,0,0);}");
-    horizontalScrollBar()->setAttribute(Qt::WA_TranslucentBackground, true);
-    verticalScrollBar()->setAttribute(Qt::WA_TranslucentBackground, true);
+//    horizontalScrollBar()->setAttribute(Qt::WA_TranslucentBackground, true);
+//    verticalScrollBar()->setAttribute(Qt::WA_TranslucentBackground, true);
     horizontalHeader()->setVisible(HeaderVisible);
+    horizontalHeader()->setStyleSheet("QHeaderView {background-color: transparent};"\
+                                      "QHeaderView::section {background-color: transparent};");
     verticalHeader()->setVisible(false);
+    setAttribute(Qt::WA_TranslucentBackground, true);
+    setFrameStyle(QFrame::NoFrame);
+    setShowGrid(false);
     if (Mode == TV_EXPANDABLE)
         connect(this, SIGNAL(clicked(QModelIndex)), this, SLOT(setTVexpanded(QModelIndex)));
 }

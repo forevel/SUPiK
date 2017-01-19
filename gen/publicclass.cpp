@@ -7,6 +7,7 @@
 #include <QDir>
 #include "s_sql.h"
 #include "log.h"
+#include "../dialogs/tb/tb_func.h"
 
 PublicClass pc;
 Log *PCLog;
@@ -31,6 +32,7 @@ PublicClass::PublicClass()
     PCLog = new Log;
     PCLog->Init(HomeDir+"sup.log");
     ErNum = 1;
+    TBFunc_Initialize();
 }
 
 PublicClass::~PublicClass()

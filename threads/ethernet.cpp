@@ -194,21 +194,21 @@ void Ethernet::SendData()
     OutDataBuf.clear();
 }
 
-void Ethernet::InitiateWriteDataToPort(QByteArray *ba)
+void Ethernet::InitiateWriteDataToPort(QByteArray ba)
 {
     OutDataBufMtx.lock();
-    OutDataBuf = *ba;
+    OutDataBuf = ba;
     OutDataBufMtx.unlock();
     Busy = false;
 }
 
 void Ethernet::CheckForData()
 {
-    QByteArray *ba;
+    QByteArray ba;
     if (EthType == ETH_PLAIN)
-        ba = new QByteArray(sock->readAll());
+        ba = sock->readAll();
     else if (EthType == ETH_SSL)
-        ba = new QByteArray(sslsock->readAll());
+        ba = sslsock->readAll();
 //    EthLog->info("Bytes received: ");
 //    EthLog->info(ba->data());
     emit newdataarrived(ba);

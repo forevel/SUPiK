@@ -75,20 +75,20 @@ void tb_maindialog::SetupUI()
     lyout->addLayout(hlyout);
 
     SetupModel();
-    TreeView *tv = new TreeView;
+    TreeView *tv = new TreeView(TreeView::TV_EPLAIN, TreeView::TV_PLAIN, true);
     tv->setObjectName("maintv");
     tv->setModel(MainModel);
     GridDelegate *dlgt = new GridDelegate;
     tv->setItemDelegate(dlgt);
     tv->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    tv->verticalHeader()->setVisible(false);
     tv->setContextMenuPolicy(Qt::CustomContextMenu);
     connect(tv,SIGNAL(customContextMenuRequested(QPoint)),this,SLOT(TvContext(QPoint)));
     connect(tv,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(ShowPers()));
     tv->resizeColumnsToContents();
+    tv->resizeRowsToContents();
     lyout->addWidget(tv);
 
-    lyout->addStretch(300);
+//    lyout->addStretch(300);
     setLayout(lyout);
     QApplication::restoreOverrideCursor();
 }
@@ -231,11 +231,11 @@ void tb_maindialog::SetupModel()
         QString TBGroup = (!TBGroups.at(i).isEmpty()) ? TBGroups.at(i) : TB_NODATA;
         SetMainModelData(row, 1, TBGroup, Qt::black);
         tfl.idtov("2.18..", POs.at(i), vls);
-        SetMainModelData(row, 5, vls.Value, CList.at(TBFunc::CheckDate(TBFunc::DT_MED, vls.Value)));
+        SetMainModelData(row, 5, vls.Value, CList.at(TBFunc_CheckDate(DT_MED, vls.Value)));
         tfl.idtov("2.18..", PBs.at(i), vls);
-        SetMainModelData(row, 4, vls.Value, CList.at(TBFunc::CheckDate(TBFunc::DT_PB, vls.Value)));
+        SetMainModelData(row, 4, vls.Value, CList.at(TBFunc_CheckDate(DT_PB, vls.Value)));
         tfl.idtov("2.18..", OTs.at(i), vls);
-        SetMainModelData(row, 3, vls.Value, CList.at(TBFunc::CheckDate(TBFunc::DT_OT, vls.Value)));
+        SetMainModelData(row, 3, vls.Value, CList.at(TBFunc_CheckDate(DT_OT, vls.Value)));
         QStringList Dates, fl, vl;
         fl << "idpers" << "section";
         if (TBGroup == TB_NODATA)
@@ -244,7 +244,7 @@ void tb_maindialog::SetupModel()
             vl << PersIds.at(i) << TBGroup;
         Dates = sqlc.GetValuesFromTableByColumnAndFields("tb", "examresults", "date", fl, vl, "date", false); // Dates - дата последнего экзамена
         if (Dates.size())
-            SetMainModelData(row, 2, Dates.at(0), CList.at(TBFunc::CheckDateTime(TBFunc::DT_TB, Dates.at(0))));
+            SetMainModelData(row, 2, Dates.at(0), CList.at(TBFunc_CheckDateTime(DT_TB, Dates.at(0))));
         else
             SetMainModelData(row, 2, TB_NODATA, CList.at(TBDATE_BAD));
     }
@@ -259,7 +259,7 @@ void tb_maindialog::SetMainModelData(int row, int column, const QString &data, c
     MainModel->SetModelData(row, column, color, Qt::ForegroundRole);
 }
 
-// контекстное меню основного дерева
+// контекстное меню основного дерева-
 
 void tb_maindialog::TvContext(QPoint)
 {

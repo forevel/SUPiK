@@ -98,6 +98,12 @@
 
 #define READBUFMAX  16384
 
+#define GETTIMEOUT  3000 // таймаут на приём файла - 3 секунды
+#define MAINTIMEOUT 5000 // таймаут на ответ от сервера - 5 секунд
+#define DATATIMEOUT 2000 // таймаут на приём - 3 секунды
+
+#define MAINSLEEP   50  // количество мс сна в процессах
+
 class Client : public QObject
 {
     Q_OBJECT
@@ -188,8 +194,7 @@ public slots:
     void StopThreads();
 
 signals:
-    void ClientSend(QByteArray *);
-    void FileSend(QByteArray *);
+    void ClientSend(QByteArray);
     void BytesOverall(qint64 bytes);
     void BytesRead(qint64 bytes);
     void BytesWritten(qint64 bytes);
@@ -198,7 +203,7 @@ signals:
 
 private:
 
-    QByteArray RcvData, *WrData;
+    QByteArray RcvData, WrData;
     Ethernet *MainEthernet, *FileEthernet;
     QTimer *TimeoutTimer, *GetComReplyTimer, *GetFileTimer;
     bool FileBusy, Connected, FileConnected, CmdOk, LoginOk, FirstReplyPass, ComReplyTimeoutIsSet, FieldsLeast;
@@ -223,7 +228,7 @@ private slots:
     void ClientDisconnected();
     void Timeout();
     void ClientErr(int error);
-    void ParseReply(QByteArray *ba);
+    void ParseReply(QByteArray ba);
     void GetFileTimerTimeout();
     void ComReplyTimeout();
 };

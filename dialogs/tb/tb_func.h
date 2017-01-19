@@ -12,26 +12,25 @@
 
 #define TB_NODATA   "N/A"
 
-class TBFunc
+struct TypesStruct
 {
-
-public:
-
-    enum DateTypes
-    {
-        DT_MED,
-        DT_OT,
-        DT_PB,
-        DT_TB
-    };
-
-    TBFunc();
-
-    static int CheckDate(int type, const QString &date);
-    static int CheckDateTime(int type, const QString &datetime);
-
-private:
-    static int Check(int type, const QDateTime &dtm);
+    int months;
+    QString TypeString;
 };
+
+enum DateTypes
+{
+    DT_MED,
+    DT_OT,
+    DT_PB,
+    DT_TB
+};
+
+extern void TBFunc_Initialize();
+
+extern int TBFunc_CheckDate(int type, const QString &date);
+extern int TBFunc_CheckDateTime(int type, const QString &datetime);
+
+extern int TBFunc_Check(int type, const QDateTime &dtm);
 
 #endif // TB_FUNC_H

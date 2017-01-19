@@ -85,14 +85,14 @@ public:
 public slots:
     void Run();
     void Stop();
-    void InitiateWriteDataToPort(QByteArray *);
+    void InitiateWriteDataToPort(QByteArray);
 
 signals:
     void error(int);
     void connected();
     void disconnected();
     void finished();
-    void newdataarrived(QByteArray *);
+    void newdataarrived(QByteArray);
     void byteswritten(qint64 bytes);
 
 private slots:

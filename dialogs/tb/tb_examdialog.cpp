@@ -93,11 +93,13 @@ void tb_examdialog::SetupUI()
     hlyout->addWidget(lbl);
     hlyout->addStretch(20);
     QButtonGroup *gbg1 = new QButtonGroup;
-    s_tqRadioButton *rb = new s_tqRadioButton("Хочу экзамен");
+    s_tqRadioButton *rb = new s_tqRadioButton;
+    rb->setText("Хочу экзамен");
     connect(rb,SIGNAL(clicked(bool)),this,SLOT(ExTypeExChoosed()));
     hlyout->addWidget(rb);
     gbg1->addButton(rb);
-    rb = new s_tqRadioButton("Хочу потренироваться");
+    rb = new s_tqRadioButton;
+    rb->setText("Хочу потренироваться");
     connect(rb,SIGNAL(clicked(bool)),this,SLOT(ExTypeTestChoosed()));
     hlyout->addWidget(rb);
     gbg1->addButton(rb);
@@ -130,7 +132,7 @@ void tb_examdialog::SetupUI()
     vlyout->addLayout(hlyout);
     gb->setLayout(vlyout);
     stw->addWidget(gb);
-    lyout->addWidget(stw);
+    lyout->addWidget(stw, 10);
 
     stw = new s_tqStackedWidget;
     stw->setObjectName("questionstw");
@@ -142,7 +144,7 @@ void tb_examdialog::SetupUI()
     gb->setLayout(hlyout);
 //    gb->setVisible(false);
 //    stw->addWidget(gb);
-    lyout->addWidget(gb);
+    lyout->addWidget(gb, 75);
 
     gb = new s_tqGroupBox;
     gb->setObjectName("goodbadgb");
@@ -157,7 +159,7 @@ void tb_examdialog::SetupUI()
     }
     vlyout->addWidget(gbw);
     gb->setLayout(vlyout);
-    lyout->addWidget(gb);
+    lyout->addWidget(gb, 5);
 
     gb = new s_tqGroupBox;
     gb->setTitle("Комментарий");
@@ -170,9 +172,8 @@ void tb_examdialog::SetupUI()
     stw->setCurrentIndex(0);
     vlyout->addWidget(stw);
     gb->setLayout(vlyout);
-    lyout->addWidget(gb);
+    lyout->addWidget(gb, 10);
 
-    lyout->addStretch(300);
     setLayout(lyout);
     QApplication::restoreOverrideCursor();
     gbw->SetItem(0, GoodBadTableModel::GBIT_NEUTRAL); // принудительный ресайз
@@ -193,12 +194,12 @@ void tb_examdialog::GroupChoosed()
 {
     WaitWidget *ww = new WaitWidget;
     ww->Start();
+    ww->SetMessage("Подготовка...");
     s_tqStackedWidget *stw = this->findChild<s_tqStackedWidget *>("groupstw");
     if (stw == 0)
     {
         DBGMSG;
         ww->Stop();
-        delete ww;
         return;
     }
     s_tqRadioButton *rb3 = this->findChild<s_tqRadioButton *>("rb3");
@@ -208,7 +209,6 @@ void tb_examdialog::GroupChoosed()
     {
         DBGMSG;
         ww->Stop();
-        delete ww;
         return;
     }
     QString tmps;
@@ -230,6 +230,7 @@ void tb_examdialog::GroupChoosed()
     if (tmps.isEmpty()) // не выбрана ни одна группа
     {
         MessageBox2::information(this,"Предупреждение","Чтобы продолжить, требуется выбрать одну из групп");
+        ww->Stop();
         return;
     }
     s_tqLabel *lbl = new s_tqLabel("Тестирование на знание правил по электробезопасности, охране труда группы " + tmps);
@@ -247,7 +248,6 @@ void tb_examdialog::GroupChoosed()
     {
         WARNMSG("");
         ww->Stop();
-        delete ww;
         return;
     }
     s_tqGroupBox *questiongb = this->findChild<s_tqGroupBox *>("questiongb");
@@ -256,7 +256,6 @@ void tb_examdialog::GroupChoosed()
     {
         DBGMSG;
         ww->Stop();
-        delete ww;
         return;
     }
     questiongb->setVisible(true);

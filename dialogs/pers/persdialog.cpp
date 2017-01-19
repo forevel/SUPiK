@@ -207,7 +207,7 @@ void PersDialog::SetupUI()
 bool PersDialog::Fill()
 {
     QStringList fl = QStringList() << "Полные ФИО" << "Дата рождения" << "Должность";
-    QStringList sl, vl;
+    QStringList vl;
     tfl.valuesbyfield("Персонал_полн", fl, "ИД", idPers, vl);
     if ((tfl.result != TFRESULT_NOERROR) || (vl.size() < 3))
     {
@@ -270,7 +270,7 @@ bool PersDialog::Fill()
             else
             {
                 EBDate = sl.at(0);
-                WDFunc::SetLEColor(this, "le.32", CList.at(TBFunc::CheckDateTime(TBFunc::DT_TB, sl.at(0))));
+                WDFunc::SetLEColor(this, "le.32", CList.at(TBFunc_CheckDateTime(DT_TB, sl.at(0))));
             }
             WDFunc::SetLEData(this, "le.32", EBDate);
             sl = sqlc.GetValuesFromTableByColumnAndFields("tb", "examresults", "examresults", fl, vl, "date", false);
@@ -378,7 +378,7 @@ void PersDialog::AcceptEBData()
     QString tmps = WDFunc::CWData(this, "EBdate");
     WDFunc::SetLEData(this, "le.32", tmps);
     EBDate = tmps;
-    WDFunc::SetLEColor(this, "le.32", CList.at(TBFunc::CheckDateTime(TBFunc::DT_TB, tmps)));
+    WDFunc::SetLEColor(this, "le.32", CList.at(TBFunc_CheckDateTime(DT_TB, tmps)));
     WDFunc::SetLEData(this, "le.33", WDFunc::LEData(this, "EBmark"));
     dlg->close();
 }
@@ -386,6 +386,17 @@ void PersDialog::AcceptEBData()
 void PersDialog::Accept()
 {
     QString ID;
+    // запишем сначала общие поля - полные ФИО, Дата рождения, Должность
+    QStringList fl = QStringList() << "Полные ФИО" << "Дата рождения" << "Должность";
+    QStringList vl;
+    for (int i=0; i<fl.size(); ++i)
+        vl.append(WDFunc::LEData(this, "le."+QString::number(i+1)));
+    fl << "ИД";
+    vl << idPers;
+    tfl.Update("Персонал_полн", fl, vl);
+    if (tfl.result != TFRESULT_NOERROR)
+        WARNMSG("");
+    // теперь надо записать конкретные параметры, зависящие от типа диалога редактирования сотрудника
     switch (DialogType)
     {
     case PDT_TB:

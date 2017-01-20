@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include "../../models/baseitemmodel.h"
+#include "../../models/proxymodel.h"
 
 class tb_maindialog : public QDialog
 {
@@ -44,6 +45,7 @@ private:
 
     QList<PersTB> TBList;
     BaseItemModel *MainModel;
+    ProxyModel *PModel;
     QString Pers;
     int Mode;
 };

@@ -75,9 +75,12 @@ void tb_maindialog::SetupUI()
     lyout->addLayout(hlyout);
 
     SetupModel();
-    TreeView *tv = new TreeView(TreeView::TV_EPLAIN, TreeView::TV_PLAIN, true);
+    PModel = new ProxyModel;
+    PModel->setSourceModel(MainModel);
+    TreeView *tv = new TreeView(TreeView::TV_EPLAIN, TreeView::TV_PROXY, true);
     tv->setObjectName("maintv");
-    tv->setModel(MainModel);
+    tv->setModel(PModel);
+    tv->setSortingEnabled(true);
     GridDelegate *dlgt = new GridDelegate;
     tv->setItemDelegate(dlgt);
     tv->setEditTriggers(QAbstractItemView::NoEditTriggers);

@@ -157,9 +157,12 @@ void Client::SendCmd(int Command, QStringList &Args)
         DetectedError = CLIER_CMDER;
         return;
     }
-    Result.clear(); // очищаем результаты
-    FieldsLeast = false;
-    FieldsLeastToAdd = 0;
+    if (Command != M_NEXT)
+    {
+        FieldsLeast = false;
+        FieldsLeastToAdd = 0;
+        Result.clear(); // очищаем результаты
+    }
     DetectedError = CLIER_NOERROR;
     CurrentCommand = Command;
     Busy = true;
@@ -562,7 +565,7 @@ void Client::ParseReply(QByteArray ba)
         if (ResultType == RESULT_VECTOR)
         {
             if (Result.size() > 0)
-                sl = Result.takeFirst();
+                sl = Result.takeFirst(); // берём нулевую строку (для RESULT_VECTOR единственную)
             Result.clear();
         }
         while ((MsgNum) && (ArgList.size()))

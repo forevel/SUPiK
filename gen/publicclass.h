@@ -107,7 +107,8 @@
 #define FD_CHOOSE_X 6 // поле ввода с кнопкой выбора по ссылке с возможностью редактирования
 #define FD_SIMGRID  7 // простой делегат с рамкой
 #define FD_CHECK    8 // поле бинарного выбора
-#define DELEGNUM    9 // количество делегатов
+#define FD_TEXTEDIT 9 //
+#define DELEGNUM    10 // количество делегатов
 
 // тип арифм операции
 #define OP_PLUS     1

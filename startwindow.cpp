@@ -172,7 +172,7 @@ void StartWindow::ChangePassword()
         code.fill((qrand()%26)+0x40); // rand(A-Z)
         QStringList fl = QStringList() << "ИД" << "Строка активации";
         QStringList vl = QStringList() << idPers << code;
-        tfl.Update("Пароли_полн", fl, vl);
+        tfl.Update("Персонал_полн", fl, vl);
         if (tfl.result != TFRESULT_NOERROR)
         {
             MessageBox2::error(this,"Ошибка!","Ошибка при смене пароля");

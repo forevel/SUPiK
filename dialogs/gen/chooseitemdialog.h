@@ -2,8 +2,8 @@
 #define CHOOSEITEMDIALOG_H
 
 #include <QDialog>
-#include "../models/proxymodel.h"
-#include "../models/treemodel.h"
+#include "../../models/proxymodel.h"
+#include "../../models/treemodel.h"
 
 class ChooseItemDialog : public QDialog
 {

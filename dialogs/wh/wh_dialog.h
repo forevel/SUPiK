@@ -21,7 +21,7 @@
 #include <QDialog>
 #include <QSqlDatabase>
 #include <QDate>
-#include "../../models/s_ncmodel.h"
+#include "../../models/treemodel.h"
 #include "../../widgets/treeview.h"
 
 QT_BEGIN_NAMESPACE
@@ -49,7 +49,7 @@ private:
     QString Supplier, Consumer, DocNum;
     int Reason;
     QStringList Reasons, ReasonTable, MainText;
-    s_ncmodel *mainmodel;
+    TreeModel *mainmodel;
     TreeView *mainTV;
     float widths[W_SIZE];
     QList<QString> CTypes;

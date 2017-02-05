@@ -14,10 +14,10 @@
 #include "s_tqlabel.h"
 #include "../gen/s_sql.h"
 #include "../gen/s_tablefields.h"
-#include "../dialogs/s_2cdialog.h"
-#include "../dialogs/chooseitemdialog.h"
-#include "../dialogs/s_2tdialog.h"
-#include "../dialogs/s_accessdialog.h"
+#include "../dialogs/gen/twocoldialog.h"
+#include "../dialogs/gen/chooseitemdialog.h"
+#include "../dialogs/gen/specialdialog.h"
+#include "../dialogs/gen/accessdialog.h"
 
 // универсальный класс для организации списков выбора из таблиц БД СУПиК
 // правила его использования:
@@ -166,7 +166,7 @@ void s_tqChooseWidget::pbclicked()
         int count = ff.link.size(); // в поле link - имена таблиц
         if (count == 0)
             break;
-        s_2cdialog *dlg = new s_2cdialog(hdr);
+        TwoColDialog *dlg = new TwoColDialog(hdr);
         dlg->setup(ff.link.at(0),MODE_CHOOSE,"");
         for (int i = 1; i < count; i++)
             dlg->AddTable(ff.link.at(i));
@@ -178,7 +178,7 @@ void s_tqChooseWidget::pbclicked()
     case FW_RIGHTS:
     {
         // вызов диалога редактирования прав доступа
-        s_accessdialog *dlg = new s_accessdialog;
+        AccessDialog *dlg = new AccessDialog;
         dlg->SetupUI(le->text());
         connect(dlg, SIGNAL(acceptChanges(QString)), this, SLOT(accepted(QString)));
         dlg->exec();
@@ -221,7 +221,7 @@ void s_tqChooseWidget::pbclicked()
     case FW_SPECIAL:
     {
         QStringList tmpsl = QStringList() << ff.link.at(0) << ff.link.at(1);
-        s_2tdialog *dlg = new s_2tdialog(tmpsl, le->text());
+        SpecialDialog *dlg = new SpecialDialog(tmpsl, le->text());
         connect(dlg,SIGNAL(finished(QString)),this,SLOT(accepted(QString)));
         dlg->exec();
         break;
@@ -418,9 +418,9 @@ PublicClass::ValueStruct s_tqChooseWidget::Data()
         if (cb != 0)
         {
             if (cb->isChecked())
-                vs.Value = ":/res/ok.png";
+                vs.Value = "1";
             else
-                vs.Value = ":/res/cross.png";
+                vs.Value = "0";
         }
         break;
     }

@@ -25,7 +25,7 @@
 #include "../../widgets/wd_func.h"
 #include "../../gen/publicclass.h"
 #include "../../gen/s_tablefields.h"
-#include "../messagebox.h"
+#include "../gen/messagebox.h"
 #include "cmp_maindialog.h"
 #include "cmp_newsubsection.h"
 

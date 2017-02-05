@@ -20,12 +20,6 @@ TEMPLATE = app
 SOURCES += main.cpp\
     startwindow.cpp \
     supik.cpp \
-    dialogs/chooseitemdialog.cpp \
-    dialogs/messagebox.cpp \
-    dialogs/s_2cdialog.cpp \
-    dialogs/s_2ctdialog.cpp \
-    dialogs/s_2tdialog.cpp \
-    dialogs/s_accessdialog.cpp \
     dialogs/cmp/cmp_compdialog.cpp \
     dialogs/cmp/cmp_maindialog.cpp \
     dialogs/cmp/cmp_newsubsection.cpp \
@@ -34,6 +28,11 @@ SOURCES += main.cpp\
     dialogs/dev/dev_maindialog.cpp \
     dialogs/dir/dir_adddialog.cpp \
     dialogs/dir/dir_maindialog.cpp \
+    dialogs/gen/accessdialog.cpp \
+    dialogs/gen/chooseitemdialog.cpp \
+    dialogs/gen/messagebox.cpp \
+    dialogs/gen/specialdialog.cpp \
+    dialogs/gen/twocoldialog.cpp \
     dialogs/pers/persdialog.cpp \
     dialogs/sys/sys_backuprestoredirdialog.cpp \
     dialogs/sys/sys_erdialog.cpp \
@@ -62,18 +61,11 @@ SOURCES += main.cpp\
     models/baseitemmodel.cpp \
     models/editmodel.cpp \
     models/errorprotocolmodel.cpp \
-    models/flowmodel.cpp \
     models/griddelegate.cpp \
     models/proxymodel.cpp \
     models/s_duniversal.cpp \
-    models/s_ncitem.cpp \
-    models/s_ncmodel.cpp \
-    models/s_ntitem.cpp \
-    models/s_ntmodel.cpp \
     models/treeitem.cpp \
     models/treemodel.cpp \
-    models/whplacestreemodel.cpp \
-    threads/checkthread.cpp \
     threads/ethernet.cpp \
     threads/sys_importclass_t.cpp \
     threads/waitthread.cpp \
@@ -98,8 +90,6 @@ SOURCES += main.cpp\
     widgets/s_tqstackedwidget.cpp \
     widgets/s_tqtextedit.cpp \
     widgets/s_tqtoolbar.cpp \
-    widgets/s_tqtreeview.cpp \
-    widgets/s_tqtreewidget.cpp \
     widgets/s_tqwidget.cpp \
     widgets/treeview.cpp \
     widgets/waitwidget.cpp \
@@ -107,12 +97,6 @@ SOURCES += main.cpp\
 
 HEADERS  += startwindow.h \
     supik.h \
-    dialogs/s_2cdialog.h \
-    dialogs/s_2ctdialog.h \
-    dialogs/s_2tdialog.h \
-    dialogs/s_accessdialog.h \
-    dialogs/chooseitemdialog.h \
-    dialogs/messagebox.h \
     dialogs/cmp/cmp_compdialog.h \
     dialogs/cmp/cmp_maindialog.h \
     dialogs/cmp/cmp_newsubsection.h \
@@ -121,6 +105,11 @@ HEADERS  += startwindow.h \
     dialogs/dev/dev_maindialog.h \
     dialogs/dir/dir_adddialog.h \
     dialogs/dir/dir_maindialog.h \
+    dialogs/gen/accessdialog.h \
+    dialogs/gen/chooseitemdialog.h \
+    dialogs/gen/messagebox.h \
+    dialogs/gen/specialdialog.h \
+    dialogs/gen/twocoldialog.h \
     dialogs/pers/persdialog.h \
     dialogs/sys/sys_backuprestoredirdialog.h \
     dialogs/sys/sys_erdialog.h \
@@ -149,18 +138,11 @@ HEADERS  += startwindow.h \
     models/baseitemmodel.h \
     models/editmodel.h \
     models/errorprotocolmodel.h \
-    models/flowmodel.h \
     models/griddelegate.h \
     models/proxymodel.h \
     models/s_duniversal.h \
-    models/s_ncitem.h \
-    models/s_ncmodel.h \
-    models/s_ntitem.h \
-    models/s_ntmodel.h \
     models/treeitem.h \
     models/treemodel.h \
-    models/whplacestreemodel.h \
-    threads/checkthread.h \
     threads/ethernet.h \
     threads/sys_importclass_t.h \
     threads/waitthread.h \
@@ -185,8 +167,6 @@ HEADERS  += startwindow.h \
     widgets/s_tqstackedwidget.h \
     widgets/s_tqtextedit.h \
     widgets/s_tqtoolbar.h \
-    widgets/s_tqtreeview.h \
-    widgets/s_tqtreewidget.h \
     widgets/s_tqwidget.h \
     widgets/treeview.h \
     widgets/waitwidget.h \

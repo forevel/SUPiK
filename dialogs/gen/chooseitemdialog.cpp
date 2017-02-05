@@ -1,14 +1,14 @@
 #include "chooseitemdialog.h"
-#include "../widgets/treeview.h"
-#include "../widgets/s_tqpushbutton.h"
-#include "../widgets/s_tqlabel.h"
-#include "../widgets/s_tqlineedit.h"
-#include "../widgets/waitwidget.h"
-#include "../gen/s_sql.h"
-#include "../gen/publicclass.h"
-#include "../gen/s_tablefields.h"
-#include "../models/griddelegate.h"
-#include "s_2cdialog.h"
+#include "../../widgets/treeview.h"
+#include "../../widgets/s_tqpushbutton.h"
+#include "../../widgets/s_tqlabel.h"
+#include "../../widgets/s_tqlineedit.h"
+#include "../../widgets/waitwidget.h"
+#include "../../gen/s_sql.h"
+#include "../../gen/publicclass.h"
+#include "../../gen/s_tablefields.h"
+#include "../../models/griddelegate.h"
+#include "twocoldialog.h"
 
 #include <QHBoxLayout>
 #include <QPaintEvent>
@@ -221,7 +221,7 @@ void ChooseItemDialog::AddItem()
     tfl.Update(tmptble,QStringList("ИД"),QStringList(newID)); // добавление полей idpers, deleted, date
     if (tfl.result != TFRESULT_ERROR)
     {
-        s_2cdialog *newdialog = new s_2cdialog(Caption);
+        TwoColDialog *newdialog = new TwoColDialog(Caption);
         newdialog->setup(tmptble, MODE_EDITNEW, newID);
         if (!newdialog->result)
         {

@@ -23,7 +23,7 @@
 #include "../../gen/publicclass.h"
 #include "../../gen/s_tablefields.h"
 #include "../pers/persdialog.h"
-#include "../messagebox.h"
+#include "../gen/messagebox.h"
 
 // --------------------------------------
 // Конструктор

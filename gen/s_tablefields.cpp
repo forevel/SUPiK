@@ -7,7 +7,7 @@
 // класс s_tablefields предназначен для облегчения работы с таблицей tablefields БД supik и содержит в себе высокоуровневые процедуры работы с данной таблицей:
 // 1. GetValuesByColumn ([table:header] to value list) - взять все значения по ссылке table:tablefields из таблицы tablename для данного поля header
 // 2. toid - то же, что и 1, но возвращает только одно значение по заданному id<tble>
-// 3. tbtovll - взять все значения по всем полям таблицы tble и вернуть их в QList<QStringList> - полезно для заполнения таблиц s_2cdialog, s_ncdialog
+// 3. tbtovll - взять все значения по всем полям таблицы tble и вернуть их в QList<QStringList> - полезно для заполнения таблиц twocoldialog
 // 4. idtov - по заданному ИД и строке links вытащить значение
 // 5. vtoid - найти по имени и строке links ИД записи
 // id во всех процедурах имеет смысл значения, получаемого по полю table:tablefields, т.е. значения ИД, получаемого по данному полю, которое ссылается на id записи другой таблицы, указанной в поле links
@@ -242,7 +242,7 @@ void s_tablefields::tov(const QString &tble, const QString &header, const QStrin
     if (pc.AutonomousMode)
     {
         tablefields(tble, header, sl); // sl.at(0) = <table>, sl.at(1) = <tablefields>
-        if (result)
+        if (result != TFRESULT_NOERROR)
         {
             WARNMSG("");
             return;
@@ -267,9 +267,15 @@ void s_tablefields::tov(const QString &tble, const QString &header, const QStrin
             qApp->processEvents(QEventLoop::AllEvents);
         }
         if (Cli->DetectedError == Client::CLIER_EMPTY)
+        {
+            WARNMSG("tov: Empty result");
             result = TFRESULT_EMPTY;
+        }
         else if (Cli->DetectedError != Client::CLIER_NOERROR)
+        {
+            WARNMSG("tov: Error result");
             result = TFRESULT_ERROR;
+        }
         else
             out = Cli->ResultStr;
     }

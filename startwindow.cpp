@@ -10,7 +10,7 @@
 #include "gen/s_sql.h"
 #include "gen/s_tablefields.h"
 #include "widgets/s_tqcheckbox.h"
-#include "dialogs/messagebox.h"
+#include "dialogs/gen/messagebox.h"
 #include "gen/client.h"
 #include "gen/log.h"
 #include "widgets/wd_func.h"

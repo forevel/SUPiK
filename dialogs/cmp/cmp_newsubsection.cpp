@@ -13,7 +13,7 @@
 #include "../../widgets/s_tqpushbutton.h"
 #include "../../widgets/s_tqlabel.h"
 #include "../../widgets/s_tqlineedit.h"
-#include "../messagebox.h"
+#include "../gen/messagebox.h"
 
 cmp_newsubsection::cmp_newsubsection(int CompType, QWidget *parent) : QDialog(parent)
 {

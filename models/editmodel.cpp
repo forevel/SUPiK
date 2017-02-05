@@ -253,7 +253,7 @@ QString EditModel::Value(int Row, int Column)
 }
 
 // процедура заполнения модели значениями headers и по table:tablefields из таблицы tble в sup.tablefields по одному id
-// предназначена для диалога редактирования справочников (s_2cdialog)
+// предназначена для диалога редактирования справочников (twocoldialog)
 
 int EditModel::Setup(QString Table, QString Id)
 {
@@ -343,7 +343,7 @@ int EditModel::Setup(QString Table, QString Id)
 }
 
 // процедура заполнения модели значениями полей из таблицы db:tble по одному id
-// предназначена для диалога редактирования справочников (s_2cdialog)
+// предназначена для диалога редактирования справочников (twocoldialog)
 
 int EditModel::SetupRaw(QString Db, QString Tble, QString Id)
 {

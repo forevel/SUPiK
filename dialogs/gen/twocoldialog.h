@@ -1,17 +1,17 @@
-#ifndef S_GENERAL2COLUMNSDIALOG_H
-#define S_GENERAL2COLUMNSDIALOG_H
+#ifndef TWOCOLDIALOG_H
+#define TWOCOLDIALOG_H
 
 #include <QDialog>
 #include <QSortFilterProxyModel>
-#include "../models/editmodel.h"
+#include "../../models/editmodel.h"
 
 #define CD_ERROR    0x0200
 
-class s_2cdialog : public QDialog
+class TwoColDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit s_2cdialog(QString caption, QWidget *parent = 0);
+    explicit TwoColDialog(QString caption, QWidget *parent = 0);
     // sl1 - надписи, sl2 - поля для заполнения, links - формат полей sl2
     void SetupFile(QString Filename, QString StringToFind, QString str);
     // tble - имя таблицы из tablefields, Mode - список выбора или редактор полей, caption - заголовок в окне, matchtext - текущее значение
@@ -53,4 +53,4 @@ protected:
     void closeEvent(QCloseEvent *e);
 };
 
-#endif // S_GENERAL2COLUMNSDIALOG_H
+#endif // TWOCOLDIALOG_H

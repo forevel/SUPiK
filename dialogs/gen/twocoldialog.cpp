@@ -1,13 +1,13 @@
-#include "s_2cdialog.h"
-#include "../models/s_duniversal.h"
-#include "../widgets/treeview.h"
-#include "../widgets/s_tqpushbutton.h"
-#include "../widgets/s_tqlineedit.h"
-#include "../widgets/s_tqlabel.h"
-#include "../widgets/s_tqwidget.h"
-#include "../gen/s_sql.h"
-#include "../gen/publicclass.h"
-#include "../gen/s_tablefields.h"
+#include "twocoldialog.h"
+#include "../../models/s_duniversal.h"
+#include "../../widgets/treeview.h"
+#include "../../widgets/s_tqpushbutton.h"
+#include "../../widgets/s_tqlineedit.h"
+#include "../../widgets/s_tqlabel.h"
+#include "../../widgets/s_tqwidget.h"
+#include "../../gen/s_sql.h"
+#include "../../gen/publicclass.h"
+#include "../../gen/s_tablefields.h"
 
 #include <QSortFilterProxyModel>
 #include <QHBoxLayout>
@@ -22,7 +22,7 @@
 
 // Диалог, состоящий из двух столбцов
 // Предназначен для организации списков выбора либо для редактирования полей различных таблиц
-// Списки выбора представляют собой таблицы (не деревья! для деревьев есть s_2ctdialog)
+// Списки выбора представляют собой таблицы или деревья
 // Режим задаётся в Mode (MODE_CHOOSE для режима выбора, MODE_EDIT - для режима редактирования и MODE_EDITNEW для режима редактирования нового элемента)
 // В режиме выбора пользователь имеет возможность только выбрать из предлагаемой таблицы одно значение (строку), и слот
 // accepted() вернёт в сигнале "datachanged" значение нулевой колонки по выбранной строке
@@ -31,7 +31,7 @@
 // В режиме MODE_EDITNEW при закрытии диалога удаляется новосозданный элемент, если была нажата кнопка отмены
 // режим редактирования карантинных таблиц - особый, для него accepted() должен вызывать специальный обработчик
 
-s_2cdialog::s_2cdialog(QString caption, QWidget *parent) :
+TwoColDialog::TwoColDialog(QString caption, QWidget *parent) :
     QDialog(parent)
 {
     Cancelled = false;
@@ -39,7 +39,7 @@ s_2cdialog::s_2cdialog(QString caption, QWidget *parent) :
     setAttribute(Qt::WA_DeleteOnClose);
 }
 
-void s_2cdialog::setup(QString tble, int Mode, QString id, bool isQuarantine)
+void TwoColDialog::setup(QString tble, int Mode, QString id, bool isQuarantine)
 {
     QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
     this->tble.clear();
@@ -61,7 +61,7 @@ void s_2cdialog::setup(QString tble, int Mode, QString id, bool isQuarantine)
     QApplication::restoreOverrideCursor();
 }
 
-void s_2cdialog::SetupRaw(QString db, QString tble, int Mode, QString id)
+void TwoColDialog::SetupRaw(QString db, QString tble, int Mode, QString id)
 {
     QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
     this->tble.clear();
@@ -83,11 +83,11 @@ void s_2cdialog::SetupRaw(QString db, QString tble, int Mode, QString id)
     QApplication::restoreOverrideCursor();
 }
 
-void s_2cdialog::SetupFile(QString Filename, QString StringToFind, QString str)
+void TwoColDialog::SetupFile(QString Filename, QString StringToFind, QString str)
 {
 }
 
-bool s_2cdialog::setupUI()
+bool TwoColDialog::setupUI()
 {
     QVBoxLayout *mainLayout = new QVBoxLayout;
     QHBoxLayout *hlyout = new QHBoxLayout;
@@ -151,7 +151,7 @@ bool s_2cdialog::setupUI()
     return true;
 }
 
-void s_2cdialog::AddItem()
+void TwoColDialog::AddItem()
 {
     if (Mode == MODE_CHOOSE)
     {
@@ -170,7 +170,7 @@ void s_2cdialog::AddItem()
         tfl.Update(tmptble,QStringList("ИД"),QStringList(newID)); // добавление полей idpers, deleted, date
         if (tfl.result != TFRESULT_ERROR)
         {
-            s_2cdialog *newdialog = new s_2cdialog(Caption);
+            TwoColDialog *newdialog = new TwoColDialog(Caption);
             newdialog->setup(tmptble, MODE_EDITNEW, newID);
             if (!newdialog->result)
             {
@@ -203,7 +203,7 @@ void s_2cdialog::AddItem()
             WARNMSG("");
             return;
         }
-        s_2cdialog *newdialog = new s_2cdialog("");
+        TwoColDialog *newdialog = new TwoColDialog("");
         newdialog->SetupRaw(Db, tble.at(0), MODE_EDITNEW_RAW, newid);
         if (!newdialog->result)
         {
@@ -219,7 +219,7 @@ void s_2cdialog::AddItem()
     }
 }
 
-void s_2cdialog::Update()
+void TwoColDialog::Update()
 {
 /*    MainModel->Setup(tble.at(0));
     if (mainmodel->result)
@@ -229,7 +229,7 @@ void s_2cdialog::Update()
     } */
 }
 
-void s_2cdialog::AddTable(QString tble)
+void TwoColDialog::AddTable(QString tble)
 {
 /*    this->tble.append(tble);
     MainModel->Add(tble);
@@ -242,7 +242,7 @@ void s_2cdialog::AddTable(QString tble)
     return; */
 }
 
-void s_2cdialog::resizemainTV()
+void TwoColDialog::resizemainTV()
 {
     TreeView *tv = this->findChild<TreeView *>("mainTV");
     if (tv == 0)
@@ -254,21 +254,21 @@ void s_2cdialog::resizemainTV()
     tv->resizeRowsToContents();
 }
 
-void s_2cdialog::paintEvent(QPaintEvent *e)
+void TwoColDialog::paintEvent(QPaintEvent *e)
 {
     QPainter painter(this);
     painter.drawPixmap(rect(), QPixmap(":/res/2cWallPaper.png"));
     e->accept();
 }
 
-void s_2cdialog::accepted(QModelIndex idx)
+void TwoColDialog::accepted(QModelIndex idx)
 {
     Q_UNUSED(idx);
     if ((Mode == MODE_CHOOSE) || (Mode == MODE_CHOOSE_RAW))
         accepted();
 }
 
-void s_2cdialog::accepted()
+void TwoColDialog::accepted()
 {
     QStringList headers = MainModel->Headers();
     QStringList values = MainModel->Values();
@@ -320,13 +320,13 @@ void s_2cdialog::accepted()
     this->close();
 }
 
-void s_2cdialog::cancelled()
+void TwoColDialog::cancelled()
 {
     Cancelled = true;
     this->close();
 }
 
-void s_2cdialog::closeEvent(QCloseEvent *e)
+void TwoColDialog::closeEvent(QCloseEvent *e)
 {
     if (Cancelled && (Mode == MODE_EDITNEW)) // для ввода нового при нажатии отмены - удалить из БД текущую запись
     {
@@ -336,7 +336,7 @@ void s_2cdialog::closeEvent(QCloseEvent *e)
     e->accept();
 }
 
-void s_2cdialog::FillHeaderData()
+void TwoColDialog::FillHeaderData()
 {
     if ((Mode == MODE_CHOOSE_RAW) || (Mode == MODE_EDITNEW_RAW) || (Mode == MODE_EDIT_RAW))
         return;

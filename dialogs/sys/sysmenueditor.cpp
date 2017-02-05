@@ -11,8 +11,8 @@
 #include "../../gen/s_tablefields.h"
 #include "../../gen/publicclass.h"
 #include "../../gen/s_sql.h"
-#include "../messagebox.h"
-#include "../s_2cdialog.h"
+#include "../gen/messagebox.h"
+#include "../gen/twocoldialog.h"
 
 SysmenuEditor::SysmenuEditor(QWidget *parent) :
     QDialog(parent)
@@ -104,7 +104,7 @@ void SysmenuEditor::ChangeFields()
 
 void SysmenuEditor::ChangeFields(QString str)
 {
-    s_2cdialog *newdialog = new s_2cdialog(tble);
+    TwoColDialog *newdialog = new TwoColDialog(tble);
     newdialog->setup(tble+"_полн", MODE_EDIT, str);
     if (!newdialog->result)
     {

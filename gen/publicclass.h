@@ -133,7 +133,7 @@
 #define SQLPORT 3306
 //#define SQLPORT 3333 // временно для отладки с виртуальной машиной
 
-enum s_2cdialog_modes
+enum twocoldialog_modes
 {
     MODE_CHOOSE,
     MODE_EDIT,

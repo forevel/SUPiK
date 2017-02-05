@@ -14,17 +14,17 @@
 #include <QPaintEvent>
 #include <QDesktopWidget>
 #include <QFileSystemModel>
-#include "s_2tdialog.h"
-#include "../widgets/s_tqpushbutton.h"
-#include "../widgets/s_tqlabel.h"
-#include "../widgets/s_tqsplitter.h"
-#include "../widgets/s_tqframe.h"
-#include "../gen/s_sql.h"
-#include "../gen/publicclass.h"
-#include "../gen/s_tablefields.h"
-#include "../models/griddelegate.h"
+#include "specialdialog.h"
+#include "../../widgets/s_tqpushbutton.h"
+#include "../../widgets/s_tqlabel.h"
+#include "../../widgets/s_tqsplitter.h"
+#include "../../widgets/s_tqframe.h"
+#include "../../gen/s_sql.h"
+#include "../../gen/publicclass.h"
+#include "../../gen/s_tablefields.h"
+#include "../../models/griddelegate.h"
 
-s_2tdialog::s_2tdialog(QStringList links, QString MainSlaveItemId, QString hdr, QWidget *parent) :
+SpecialDialog::SpecialDialog(QStringList links, QString MainSlaveItemId, QString hdr, QWidget *parent) :
     QDialog(parent)
 {
     FirstRun = true;
@@ -37,7 +37,7 @@ s_2tdialog::s_2tdialog(QStringList links, QString MainSlaveItemId, QString hdr, 
 }
 
 // в MainSlaveItemId находится совмещённый индекс элемента в виде <T1>.<T2>, где T1 - индекс по первой таблице, T2 - по второй
-void s_2tdialog::SetupUI(QStringList links, QString hdr, QString MainSlaveItemId)
+void SpecialDialog::SetupUI(QStringList links, QString hdr, QString MainSlaveItemId)
 {
     QString TableName = links.at(0); // имя таблицы на русском (Компоненты_описание_полн)
     QString TableField = links.at(1); // имя поля на русском (Описание)
@@ -130,7 +130,7 @@ void s_2tdialog::SetupUI(QStringList links, QString hdr, QString MainSlaveItemId
     QApplication::restoreOverrideCursor();
 }
 
-void s_2tdialog::FindAndSetId(TreeView *tv, QString id)
+void SpecialDialog::FindAndSetId(TreeView *tv, QString id)
 {
     int IdFound = -1, CurRow = 0;
     TreeModel *mdl = static_cast<TreeModel *>(tv->model());
@@ -145,7 +145,7 @@ void s_2tdialog::FindAndSetId(TreeView *tv, QString id)
     tv->setCurrentIndex(mdl->index(IdFound, 0, QModelIndex()));
 }
 
-QString s_2tdialog::TvData(TreeView *tv, int row, int column)
+QString SpecialDialog::TvData(TreeView *tv, int row, int column)
 {
     QString tmpString = tv->model()->index(row, column, QModelIndex()).data(Qt::DisplayRole).toString();
     QStringList tmpsl = tmpString.split(".");
@@ -158,7 +158,7 @@ QString s_2tdialog::TvData(TreeView *tv, int row, int column)
 
 }
 
-void s_2tdialog::Refresh()
+void SpecialDialog::Refresh()
 {
     TreeView *MainTV = this->findChild<TreeView *>("MainTV");
     TreeView *SlaveTV = this->findChild<TreeView *>("SlaveTV");
@@ -171,19 +171,19 @@ void s_2tdialog::Refresh()
     ResizeTv(SlaveTV);
 }
 
-void s_2tdialog::Setup()
+void SpecialDialog::Setup()
 {
 //    QStringList tmpsl = tfl.tablefields(links.at(0),links.at(1));
 }
 
-void s_2tdialog::paintEvent(QPaintEvent *e)
+void SpecialDialog::paintEvent(QPaintEvent *e)
 {
     QPainter painter(this);
     painter.drawPixmap(rect(), QPixmap(":/res/2cWallPaper.png"));
     e->accept();
 }
 
-void s_2tdialog::showEvent(QShowEvent *e)
+void SpecialDialog::showEvent(QShowEvent *e)
 {
     if (FirstRun)
     {
@@ -193,7 +193,7 @@ void s_2tdialog::showEvent(QShowEvent *e)
     e->accept();
 }
 
-void s_2tdialog::MainItemChoosed()
+void SpecialDialog::MainItemChoosed()
 {
     TreeView *MainTV = this->findChild<TreeView *>("MainTV");
     TreeView *SlaveTV = this->findChild<TreeView *>("SlaveTV");
@@ -223,7 +223,7 @@ void s_2tdialog::MainItemChoosed()
     QApplication::restoreOverrideCursor();
 }
 
-void s_2tdialog::SlaveItemChoosed()
+void SpecialDialog::SlaveItemChoosed()
 {
     TreeView *MainTV = this->findChild<TreeView *>("MainTV");
     TreeView *SlaveTV = this->findChild<TreeView *>("SlaveTV");
@@ -239,7 +239,7 @@ void s_2tdialog::SlaveItemChoosed()
     this->close();
 }
 
-void s_2tdialog::ResizeTv(TreeView *tv)
+void SpecialDialog::ResizeTv(TreeView *tv)
 {
     tv->resizeRowsToContents();
     tv->resizeColumnsToContents();

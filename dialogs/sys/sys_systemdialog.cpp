@@ -1,6 +1,5 @@
 #include "sys_systemdialog.h"
-#include "../s_2cdialog.h"
-#include "../messagebox.h"
+#include "../gen/messagebox.h"
 #include "../dir/dir_maindialog.h"
 #include "../dir/dir_adddialog.h"
 #include "../../gen/s_sql.h"

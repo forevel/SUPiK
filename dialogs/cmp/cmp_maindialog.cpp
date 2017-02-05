@@ -13,8 +13,8 @@
 #include "../../gen/s_sql.h"
 #include "../../gen/publicclass.h"
 #include "../../gen/s_tablefields.h"
-#include "../s_2cdialog.h"
-#include "../messagebox.h"
+#include "../gen/twocoldialog.h"
+#include "../gen/messagebox.h"
 #include <QVBoxLayout>
 #include <QFont>
 
@@ -835,7 +835,7 @@ void cmp_maindialog::AddManuf()
     QString newID, tmps;
     tmps = "Производители_полн";
     tfl.Insert(tmps, newID);
-    s_2cdialog *newdialog = new s_2cdialog("Производители:добавить");
+    TwoColDialog *newdialog = new TwoColDialog("Производители:добавить");
     newdialog->setup("Производители_полн",MODE_EDITNEW,newID);
     if (newdialog->result)
         WARNMSG("");

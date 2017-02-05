@@ -2,7 +2,6 @@
 #define DEV_DEVDIALOG_H
 
 #include <QDialog>
-#include "../../models/s_ncmodel.h"
 
 class dev_devdialog : public QDialog
 {

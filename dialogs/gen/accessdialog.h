@@ -1,13 +1,13 @@
-#ifndef S_ACCESSDIALOG_H
-#define S_ACCESSDIALOG_H
+#ifndef ACCESSDIALOG_H
+#define ACCESSDIALOG_H
 
 #include <QDialog>
 
-class s_accessdialog : public QDialog
+class AccessDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit s_accessdialog(QWidget *parent = 0);
+    explicit AccessDialog(QWidget *parent = 0);
     void SetupUI(QString rights);
 
 signals:
@@ -21,4 +21,4 @@ private slots:
     void OkPressed();
 };
 
-#endif // S_ACCESSDIALOG_H
+#endif // ACCESSDIALOG_H

@@ -38,7 +38,6 @@ private:
     QStringList Tables;
     int SlaveTVAccess;
     TreeModel *SlaveTreeModel;
-//    s_ncmodel *MainTableModel;
     TreeModel *MainTableModel;
     ProxyModel *MainProxyModel, *SlaveProxyModel;
     quint32 result;

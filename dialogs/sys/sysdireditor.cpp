@@ -5,8 +5,8 @@
 #include "../../gen/publicclass.h"
 #include "../../models/s_duniversal.h"
 #include "../../models/treemodel.h"
-#include "../s_2cdialog.h"
-#include "../messagebox.h"
+#include "../gen/twocoldialog.h"
+#include "../gen/messagebox.h"
 
 #include <QVBoxLayout>
 #include <QHeaderView>
@@ -101,7 +101,7 @@ void SysDirEditor::EditDir()
         WARNMSG("");
         return;
     }
-    s_2cdialog *newdialog = new s_2cdialog("Справочники:"+tmpString);
+    TwoColDialog *newdialog = new TwoColDialog("Справочники:"+tmpString);
     newdialog->setup("Справочники_полн",MODE_EDIT,tmpString);
     if (newdialog->result)
         WARNMSG("");

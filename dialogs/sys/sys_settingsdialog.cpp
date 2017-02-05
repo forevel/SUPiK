@@ -14,7 +14,7 @@
 #include "sys_settingsdialog.h"
 #include "../../widgets/s_tqchoosewidget.h"
 #include "../../widgets/s_tqcheckbox.h"
-#include "../messagebox.h"
+#include "../gen/messagebox.h"
 
 sys_settingsdialog::sys_settingsdialog(QWidget *parent) :
     QDialog(parent)

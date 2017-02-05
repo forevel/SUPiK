@@ -1,20 +1,20 @@
 #include <QtWidgets>
 
-#include "s_accessdialog.h"
-#include "../widgets/s_tqcheckbox.h"
-#include "../widgets/s_tqpushbutton.h"
-#include "../widgets/s_tqlabel.h"
-#include "../gen/s_tablefields.h"
-#include "../gen/publicclass.h"
+#include "accessdialog.h"
+#include "../../widgets/s_tqcheckbox.h"
+#include "../../widgets/s_tqpushbutton.h"
+#include "../../widgets/s_tqlabel.h"
+#include "../../gen/s_tablefields.h"
+#include "../../gen/publicclass.h"
 
-s_accessdialog::s_accessdialog(QWidget *parent) :
+AccessDialog::AccessDialog(QWidget *parent) :
     QDialog(parent)
 {
     setStyleSheet("QDialog {background-color: rgba(204,204,153);}");
     setAttribute(Qt::WA_DeleteOnClose);
 }
 
-void s_accessdialog::SetupUI(QString rights)
+void AccessDialog::SetupUI(QString rights)
 {
     int i, j, k;
     QStringList msg, lblm;
@@ -80,7 +80,7 @@ void s_accessdialog::SetupUI(QString rights)
     setLayout(MainLayout);
 }
 
-void s_accessdialog::OkPressed()
+void AccessDialog::OkPressed()
 {
     int i, j;
     long one = 0x0001;

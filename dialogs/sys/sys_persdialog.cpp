@@ -2,7 +2,7 @@
 #include "../../models/treemodel.h"
 #include "../../widgets/treeview.h"
 #include "../../models/griddelegate.h"
-#include "../s_2cdialog.h"
+#include "../gen/twocoldialog.h"
 #include <QVBoxLayout>
 #include <QApplication>
 
@@ -53,7 +53,7 @@ void sys_persdialog::ChangePers(QModelIndex idx)
 
     QString tmpString = index.data(Qt::DisplayRole).toString();
     pc.ConvertId(true, tmpString);
-    s_2cdialog *newdialog = new s_2cdialog("");
+    TwoColDialog *newdialog = new TwoColDialog("");
     newdialog->SetupRaw("sup", "perspsw", MODE_EDIT_RAW, tmpString);
     if (!newdialog->result)
     {

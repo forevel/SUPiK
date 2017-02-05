@@ -20,20 +20,11 @@
 #include "widgets/s_tqlabel.h"
 #include "widgets/s_colortabwidget.h"
 #include "widgets/portactivity.h"
-#include "threads/checkthread.h"
 #include "gen/publiclang.h"
 #include "gen/s_sql.h"
 
 supik::supik()
 {
-    CheckThread *CThread = new CheckThread;
-    QThread *thr = new QThread;
-    CThread->moveToThread(thr);
-    connect(thr,SIGNAL(started()),CThread,SLOT(Start()));
-    connect(thr,SIGNAL(finished()),CThread,SLOT(deleteLater()));
-    connect(thr,SIGNAL(finished()),thr,SLOT(deleteLater()));
-    connect(this,SIGNAL(stopall()),CThread,SLOT(Finish()));
-    thr->start();
     IsProblemsDetected = false;
     PeriodicOddSecond = true;
     SetSupikWindow();

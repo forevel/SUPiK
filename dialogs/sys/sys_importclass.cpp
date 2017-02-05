@@ -22,7 +22,7 @@
 #include "../../gen/publicclass.h"
 #include "../../gen/s_sql.h"
 #include "../../gen/s_tablefields.h"
-#include "../messagebox.h"
+#include "../gen/messagebox.h"
 
 sys_ImportClass::sys_ImportClass(QWidget *parent) : QDialog(parent)
 {

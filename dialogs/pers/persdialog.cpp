@@ -17,7 +17,7 @@
 #include "../../widgets/wd_func.h"
 #include "../../gen/publicclass.h"
 #include "../../gen/s_tablefields.h"
-#include "../messagebox.h"
+#include "../gen/messagebox.h"
 #include "../../gen/client.h"
 #include "../tb/tb_func.h"
 

@@ -8,8 +8,8 @@
 #include "../../widgets/s_tqchoosewidget.h"
 #include "../../gen/s_tablefields.h"
 #include "../../gen/publicclass.h"
-#include "../messagebox.h"
-#include "../s_2cdialog.h"
+#include "../gen/messagebox.h"
+#include "../gen/twocoldialog.h"
 
 #include <QMessageBox>
 #include <QHBoxLayout>
@@ -24,7 +24,7 @@
 Wh_Editor::Wh_Editor(QWidget *parent) : QDialog(parent)
 {
     SomethingChanged = false;
-    WhModel = 0;
+//    WhModel = 0;
     setAttribute(Qt::WA_DeleteOnClose);
     SetupUI();
 }
@@ -106,7 +106,7 @@ void Wh_Editor::AddNewWh()
     QStringList fl = QStringList() << "ИД" << "ИД_а" << "Склад" << "Тип размещения";
     QStringList vl = QStringList() << newID << "0" << newID << "4";
     tfl.Update(table, fl, vl);
-    s_2cdialog *dlg = new s_2cdialog("Склады::Добавить");
+    TwoColDialog *dlg = new TwoColDialog("Склады::Добавить");
     dlg->setup(table, MODE_EDITNEW, newID);
     if (dlg->result)
         WARNMSG("");
@@ -135,23 +135,23 @@ void Wh_Editor::UpdateWhComboBox()
 
 void Wh_Editor::WriteAndClose()
 {
-    if (WhModel->Save())
+/*    if (WhModel->Save())
         return;
     else
         MessageBox2::information(this, "Внимание", "Записано успешно!");
-    emit CloseAllWidgets();
+    emit CloseAllWidgets(); */
 }
 
 void Wh_Editor::CancelAndClose()
 {
     // удалим новосозданные элементы из таблицы
-    if (WhModel->DeleteNew())
+/*    if (WhModel->DeleteNew())
     {
         WARNMSG("");
         return;
     }
     emit CloseAllWidgets();
-    this->close();
+    this->close(); */
 }
 
 void Wh_Editor::AddNewPlace()
@@ -159,7 +159,7 @@ void Wh_Editor::AddNewPlace()
     QString newID;
     QString table = "Склады типы размещения_полн";
     tfl.Insert(table, newID);
-    s_2cdialog *dlg = new s_2cdialog("Склады::Размещения::Добавить");
+    TwoColDialog *dlg = new TwoColDialog("Склады::Размещения::Добавить");
     dlg->setup("Склады типы размещения_полн", MODE_EDITNEW, newID);
     if (dlg->result)
         WARNMSG("");
@@ -169,7 +169,7 @@ void Wh_Editor::AddNewPlace()
 
 void Wh_Editor::ChangeWh(QString str)
 {
-    // достанем индекс склада по имени str из whplaces
+/*    // достанем индекс склада по имени str из whplaces
     QStringList PlaceID;
     QString table = "Склады размещение_полн";
     QStringList fields = QStringList("ИД");
@@ -206,12 +206,12 @@ void Wh_Editor::ChangeWh(QString str)
     IDs.push(ID);
     SomethingChanged = false;
     // создадим новый корневой виджет и положим его в stw, вызовем SetCells для нового ID
-    BuildWorkspace(ID, true);
+    BuildWorkspace(ID, true); */
 }
 
 void Wh_Editor::BuildWorkspace(int ID, bool IsWarehouse)
 {
-    CloseAllWidgets();
+/*    CloseAllWidgets();
     s_tqStackedWidget *stw = this->findChild<s_tqStackedWidget *>("stw");
     if (stw == 0)
     {
@@ -291,12 +291,12 @@ void Wh_Editor::BuildWorkspace(int ID, bool IsWarehouse)
     stw->addWidget(wdgt);
     // взять по ID наименование места размещения
     UpdatePlace(); // принудительное обновление данных в рабочем пространстве
-    stw->repaint();
+    stw->repaint(); */
 }
 
 void Wh_Editor::UpdatePlace()
 {
-    WhPlacesTreeModel::WhPlacesTreeItem *item = WhModel->Data(CurID);
+/*    WhPlacesTreeModel::WhPlacesTreeItem *item = WhModel->Data(CurID);
     if (item == NULL)
         return;
     if (item->UpdIns == WHP_CREATENEW) // новый элемент, его ещё нет в базе данных и по нему не заполнена модель
@@ -352,12 +352,12 @@ void Wh_Editor::UpdatePlace()
     }
     QLayout *l = w->layout();
     ClearLayout(l);
-    SetCells(w);
+    SetCells(w); */
 }
 
 void Wh_Editor::ClearLayout(QLayout *lyout)
 {
-    if (lyout == 0)
+/*    if (lyout == 0)
         return;
     QLayoutItem *item;
     while((item = lyout->takeAt(0)))
@@ -367,12 +367,12 @@ void Wh_Editor::ClearLayout(QLayout *lyout)
             ClearLayout(item->layout());
             delete item->layout();
         }
-    }
+    } */
 }
 
 void Wh_Editor::SetCells(QWidget *w)
 {
-    QStringList sl;
+/*    QStringList sl;
     QList<int> Children = WhModel->Children(CurID);
     int ChildrenSize = Children.size();
     int ChildrenIndex = 0;
@@ -429,7 +429,7 @@ void Wh_Editor::SetCells(QWidget *w)
         lyout->addLayout(hlyout);
     }
     lyout->addSpacing(50);
-    w->setLayout(lyout);
+    w->setLayout(lyout); */
 }
 
 void Wh_Editor::GoToPlace()
@@ -464,7 +464,7 @@ void Wh_Editor::GoBack()
 
 void Wh_Editor::ChangePlace(QVariant PlaceName)
 {
-    if (PlaceName == CurIDProperties.ChoosePlaceString) // если ничего не поменялось, выход
+/*    if (PlaceName == CurIDProperties.ChoosePlaceString) // если ничего не поменялось, выход
         return;
     if (!CheckPriorities(PlaceName.toString()))
     {
@@ -522,14 +522,14 @@ void Wh_Editor::ChangePlace(QVariant PlaceName)
     item->WhPlaceTypeID = vl.at(0).toInt();
     SomethingChanged = true;
     UpdatePlace();
-    return;
+    return; */
 }
 
 // проверка возможности создания в размещении CurID->idalias элемента с именем PlaceName
 
 bool Wh_Editor::CheckPriorities(QString PlaceName)
 {
-    // вытаскиваем по PlaceName приоритет размещения PrNew
+/*    // вытаскиваем по PlaceName приоритет размещения PrNew
     QStringList vl;
     QString table = "Склады типы размещения_полн";
     QStringList fields = QStringList("Тип размещения");
@@ -588,6 +588,7 @@ bool Wh_Editor::CheckPriorities(QString PlaceName)
     if (PrNew = 0) // склад создаётся другими способами
         return false;
     // в противном случае можно
+    return true; */
     return true;
 }
 
@@ -604,7 +605,7 @@ void Wh_Editor::Disband(int ID)
 
 QStringList Wh_Editor::NameAndPicture(int ID)
 {
-    WhPlacesTreeModel::WhPlacesTreeItem *item = WhModel->Data(ID);
+/*    WhPlacesTreeModel::WhPlacesTreeItem *item = WhModel->Data(ID);
     if (item == NULL)
         return QStringList();
 //    QStringList fl = QStringList() << "Наименование" << "Обозначение" << "Тип размещения";
@@ -640,5 +641,6 @@ QStringList Wh_Editor::NameAndPicture(int ID)
     }
     tmps = ":/res/"+PlacePicture.at(0)+".png";
     sl << tmps;
-    return sl;
+    return sl; */
+    return QStringList();
 }

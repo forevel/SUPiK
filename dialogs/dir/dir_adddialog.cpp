@@ -12,13 +12,11 @@
 #include "../../widgets/s_tqcheckbox.h"
 #include "../../widgets/s_tqspinbox.h"
 #include "../../widgets/s_tqstackedwidget.h"
-#include "../s_accessdialog.h"
-#include "../messagebox.h"
+#include "../gen/accessdialog.h"
+#include "../gen/messagebox.h"
 #include "../../gen/s_sql.h"
 #include "../../gen/publicclass.h"
 #include "../../gen/s_tablefields.h"
-#include "../../models/s_ntmodel.h"
-#include "../../models/s_ncmodel.h"
 #include "../../models/s_duniversal.h"
 
 dir_adddialog::dir_adddialog(bool update, QString dirtype, QString dir, QWidget *parent) :
@@ -542,7 +540,7 @@ void dir_adddialog::updateTWFields(double dfn)
 
 void dir_adddialog::setAccessRights()
 {
-    s_accessdialog *accessdialog = new s_accessdialog;
+    AccessDialog *accessdialog = new AccessDialog;
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("dirAccess");
     accessdialog->SetupUI(le->text());
     connect(accessdialog, SIGNAL(acceptChanges(QString)), this, SLOT(acceptAccess(QString)));

@@ -21,7 +21,7 @@
 #include "../../gen/publicclass.h"
 #include "../../gen/s_sql.h"
 #include "../../models/s_duniversal.h"
-#include "../s_2cdialog.h"
+#include "../gen/twocoldialog.h"
 
 wh_dialog::wh_dialog(int Reason, QString id, QWidget *parent) :
     QDialog(parent)
@@ -33,7 +33,7 @@ wh_dialog::wh_dialog(int Reason, QString id, QWidget *parent) :
         WARNMSG("");
         this->close();
     }
-    mainmodel = new s_ncmodel;
+    mainmodel = new TreeModel;
     bl1 = new QGridLayout;
     bl2 = new QGridLayout;
     mainbl = new QVBoxLayout;
@@ -217,11 +217,11 @@ int wh_dialog::SetupUI(QString id)
         delegates[i] = 0;
     for (i = 0; i < lsl.size(); i++)
     {
-        mainmodel->setcolumnlinks(i, lsl.at(i).at(1));
+/*        mainmodel->setcolumnlinks(i, lsl.at(i).at(1));
         int dlg = lsl.at(i).at(1).split(".").at(0).toInt();
         if ((dlg >= 0) && (dlg < DELEGNUM))
             delegates[dlg]++;
-        mainmodel->addColumn(lsl.at(i).at(0));
+        mainmodel->addColumn(lsl.at(i).at(0)); */
     }
     mainTV->setModel(mainmodel);
     // расчёт удельной ширины для каждого столбца
@@ -285,7 +285,7 @@ void wh_dialog::updateDialog()
 
 void wh_dialog::resizeMainTV(QModelIndex index1, QModelIndex index2)
 {
-    Q_UNUSED(index1);
+/*    Q_UNUSED(index1);
     Q_UNUSED(index2);
     float realwidths[W_SIZE];
     QStringList sl;
@@ -301,12 +301,12 @@ void wh_dialog::resizeMainTV(QModelIndex index1, QModelIndex index2)
         int links = mainmodel->getCellType(0, i).toInt();
         mainTV->setColumnWidth(i, realwidths[links]);
     }
-    needtorefresh = true;
+    needtorefresh = true; */
 }
 
 void wh_dialog::chooseConsumer()
 {
-    s_2cdialog *dlg = new s_2cdialog("Выбор контрагента");
+    TwoColDialog *dlg = new TwoColDialog("Выбор контрагента");
     dlg->setup("Контрагенты_сокращ", MODE_CHOOSE, Consumer);
     if (dlg->result)
         return;
@@ -322,7 +322,7 @@ void wh_dialog::consumerChoosed(QString str)
 
 void wh_dialog::chooseSupplier()
 {
-    s_2cdialog *dlg = new s_2cdialog("Выбор контрагента");
+    TwoColDialog *dlg = new TwoColDialog("Выбор контрагента");
     dlg->setup("Контрагенты_сокращ", MODE_CHOOSE, Supplier);
     if (dlg->result)
         return;
@@ -489,7 +489,7 @@ void wh_dialog::acceptandclose()
                 tmpString = sqlc.InsertValuesToTable("ent", "nkwh", tmpsl1, tmpsl2);
                 if (sqlc.result)
                     throw 0x2b;
-                s_2cdialog *dlg = new s_2cdialog("");
+                TwoColDialog *dlg = new TwoColDialog("");
                 dlg->setup("Расположение на складе_полн", MODE_EDIT, tmpString);
                 dlg->exec();
             }
@@ -647,7 +647,7 @@ int wh_dialog::fillNullFlow()
     ll->setText("Автор: " + pc.Pers);
     DocNum = "";
     ScanPath = "";
-    mainmodel->addRow();
+//    mainmodel->addRow();
     return 0;
 }
 
@@ -674,14 +674,14 @@ void wh_dialog::dateChoosed(QDate dte)
 
 void wh_dialog::CBChanged(QWidget *wdgt)
 {
-    QComboBox *cb = static_cast<QComboBox *>(wdgt);
+/*    QComboBox *cb = static_cast<QComboBox *>(wdgt);
     if (mainmodel->headerData(mainTV->currentIndex().column(), Qt::Horizontal, Qt::DisplayRole) == "Валюта")
     {
         int tmpInt = mainmodel->getHeaderPosition("Курс", Qt::Horizontal, Qt::DisplayRole);
         QString tmpString = sqlc.GetLastValueFromTableByField("ent", "periodic", "value", "periodic", \
                                                               cb->currentText());
         mainmodel->setData(mainmodel->index(mainTV->currentIndex().row(), tmpInt, QModelIndex()), QVariant(tmpString), Qt::EditRole);
-    }
+    } */
 }
 
 // процедура возвращает tmpfl.at(0)=<db>.<tble> и tmpfl.at(1)=<column>

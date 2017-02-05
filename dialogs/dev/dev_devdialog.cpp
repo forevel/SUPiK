@@ -11,7 +11,6 @@
 #include <QMessageBox>
 #include <QPaintEvent>
 #include <QApplication>
-#include "../s_2cdialog.h"
 #include "../../models/proxymodel.h"
 #include "../../models/griddelegate.h"
 #include "../../models/treemodel.h"
@@ -28,7 +27,7 @@
 #include "../../widgets/s_tqwidget.h"
 #include "../../gen/publicclass.h"
 #include "../../gen/s_tablefields.h"
-#include "../messagebox.h"
+#include "../gen/messagebox.h"
 
 dev_devdialog::dev_devdialog(QWidget *parent) : QDialog(parent)
 {

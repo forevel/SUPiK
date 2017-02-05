@@ -10,7 +10,6 @@
 #include <QPainter>
 #include <QPaintEvent>
 #include <QApplication>
-#include "../s_2cdialog.h"
 #include "../../models/proxymodel.h"
 #include "../../models/griddelegate.h"
 #include "../../models/treemodel.h"
@@ -29,7 +28,7 @@
 #include "../../gen/publicclass.h"
 #include "../../gen/s_tablefields.h"
 #include "../../gen/ftp.h"
-#include "../messagebox.h"
+#include "../gen/messagebox.h"
 
 DevMainDialog::DevMainDialog(QString DevID, QWidget *parent) : QDialog(parent)
 {

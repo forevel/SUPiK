@@ -29,7 +29,7 @@
 #include "../../gen/publicclass.h"
 #include "../../gen/s_tablefields.h"
 #include "../../gen/pdfout.h"
-#include "../messagebox.h"
+#include "../gen/messagebox.h"
 #include "../../gen/client.h"
 
 // --------------------------------------

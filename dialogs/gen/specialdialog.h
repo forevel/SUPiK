@@ -1,18 +1,18 @@
-#ifndef S_2TDIALOG_H
-#define S_2TDIALOG_H
+#ifndef SPECIALDIALOG_H
+#define SPECIALDIALOG_H
 
 // диалог с двумя таблицами - для выбора сначала из одной, потом на основании первого выбора выбора из другой таблицы
 
 #include <QDialog>
-#include "../models/proxymodel.h"
-#include "../models/treemodel.h"
-#include "../widgets/treeview.h"
+#include "../../models/proxymodel.h"
+#include "../../models/treemodel.h"
+#include "../../widgets/treeview.h"
 
-class s_2tdialog : public QDialog
+class SpecialDialog : public QDialog
 {
     Q_OBJECT
 public:
-    explicit s_2tdialog(QStringList links, QString MainSlaveItemId, QString hdr="", QWidget *parent = 0);
+    explicit SpecialDialog(QStringList links, QString MainSlaveItemId, QString hdr="", QWidget *parent = 0);
     void SetupUI(QStringList links, QString, QString MainSlaveItemId);
     void Setup();
 
@@ -39,4 +39,4 @@ private:
     void ResizeTv(TreeView *tv);
 };
 
-#endif // S_2TDIALOG_H
+#endif // SPECIALDIALOG_H

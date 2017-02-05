@@ -1,6 +1,6 @@
 #include "dir_maindialog.h"
 #include "dir_adddialog.h"
-#include "../s_2cdialog.h"
+#include "../gen/twocoldialog.h"
 #include "../../gen/s_sql.h"
 #include "../../gen/s_tablefields.h"
 #include "../../gen/publicclass.h"
@@ -11,7 +11,7 @@
 #include "../../models/griddelegate.h"
 #include "../../widgets/s_tqstackedwidget.h"
 #include "../../widgets/s_tqwidget.h"
-#include "../messagebox.h"
+#include "../gen/messagebox.h"
 
 #include <QApplication>
 #include <QPainter>
@@ -292,7 +292,7 @@ void dir_maindialog::EditItem(QString str)
         WARNMSG("");
         return;
     }
-    s_2cdialog *newdialog = new s_2cdialog(tmps+":"+SecondPart);
+    TwoColDialog *newdialog = new TwoColDialog(tmps+":"+SecondPart);
     int Mode = (isNewID) ? MODE_EDITNEW : MODE_EDIT;
     newdialog->setup(Table+"_полн",Mode,Id,IsQuarantine);
     if (newdialog->result)

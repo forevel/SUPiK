@@ -8,7 +8,6 @@
 
 #include "../../widgets/s_tqcombobox.h"
 #include "../../widgets/s_tqlabel.h"
-#include "../../models/whplacestreemodel.h"
 
 #define MAXROWS 2
 #define MAXCOLS 6
@@ -27,7 +26,7 @@ signals:
 private:
     QStack<int> IDs;
     int Wh;
-    WhPlacesTreeModel *WhModel;
+//    WhPlacesTreeModel *WhModel;
     int CurID;
     bool SomethingChanged;
     struct IDProperties

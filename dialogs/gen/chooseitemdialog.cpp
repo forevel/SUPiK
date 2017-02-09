@@ -43,7 +43,10 @@ bool ChooseItemDialog::SetupFile(QString Filename, QString StringToFind, QString
     QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
     SetupUI();
     if (MainModel->SetupFile(Filename, StringToFind) != 0)
+    {
+        QApplication::restoreOverrideCursor();
         return false;
+    }
     ResizeMainTV();
     SetTvCurrentText(Str);
     QApplication::restoreOverrideCursor();

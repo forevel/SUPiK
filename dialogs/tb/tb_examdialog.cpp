@@ -159,7 +159,8 @@ void tb_examdialog::SetupUI()
     }
     vlyout->addWidget(gbw);
     gb->setLayout(vlyout);
-    lyout->addWidget(gb, 5);
+    gb->setFixedHeight(70);
+    lyout->addWidget(gb);
 
     gb = new s_tqGroupBox;
     gb->setTitle("Комментарий");
@@ -172,7 +173,7 @@ void tb_examdialog::SetupUI()
     stw->setCurrentIndex(0);
     vlyout->addWidget(stw);
     gb->setLayout(vlyout);
-    lyout->addWidget(gb, 10);
+    lyout->addWidget(gb, 20);
 
     setLayout(lyout);
     QApplication::restoreOverrideCursor();
@@ -353,10 +354,15 @@ QList<s_tqWidget *> tb_examdialog::PrepareQuestionsByTheme(int theme, int questn
         {
             if (!mainvl.at(j).isEmpty())
             {
-                s_tqRadioButton *rb = new s_tqRadioButton(mainvl.at(j)); // ответ
+                QHBoxLayout *hlyout = new QHBoxLayout;
+                s_tqRadioButton *rb = new s_tqRadioButton(""); // ответ
                 rb->setObjectName(QString::number(j));
                 connect(rb,SIGNAL(clicked(bool)),this,SLOT(AnswerChoosed()));
-                lyout->addWidget(rb);
+                hlyout->addWidget(rb);
+                lbl = new s_tqLabel(mainvl.at(j));
+                lbl->setWordWrap(true);
+                hlyout->addWidget(lbl, 100);
+                lyout->addLayout(hlyout);
             }
         }
         Questions_s quest;

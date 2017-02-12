@@ -514,7 +514,7 @@ void Client::ParseReply(QByteArray ba)
             return;
         }
         bool ok;
-        MsgNum = ArgList.at(0).toInt(&ok);
+        MsgNum = ArgList.at(0).toInt(&ok); // количество записей
         if ((!ok) || (MsgNum < 0))
         {
             WriteErrorAndBreakReceiving("Некорректное количество посылок");
@@ -572,7 +572,7 @@ void Client::ParseReply(QByteArray ba)
         {
             if (ArgList.size() < FieldsNum)
             {
-                if (MsgNum == 1)
+                if (MsgNum == 1) // если это последняя посылка
                 {
                    CliLog->warning("Некратное число записей в SQL-ответе");
                    MsgNum = 0;
@@ -593,7 +593,7 @@ void Client::ParseReply(QByteArray ba)
                         sl.append(ArgList.takeFirst());
                     FieldsLeast = false;
                     FieldsLeastToAdd = 0;
-                    MsgNum--;
+                    --MsgNum;
                 }
                 else if (FieldsLeastToAdd != 0)
                 {
@@ -605,7 +605,7 @@ void Client::ParseReply(QByteArray ba)
                 {
                     for (int i=0; i<FieldsNum; i++)
                         sl.append(ArgList.takeFirst());
-                    MsgNum--;
+                    --MsgNum;
                 }
                 Result.append(sl);
             }
@@ -613,7 +613,7 @@ void Client::ParseReply(QByteArray ba)
             {
                 for (int i=0; i<FieldsNum; i++)
                     sl.append(ArgList.takeFirst());
-                MsgNum--;
+                --MsgNum;
             }
         }
         if (DetectedError != CLIER_NOERROR)

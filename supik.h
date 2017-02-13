@@ -15,7 +15,7 @@
 #define SUPIKMENU_ITEM_COLOR_SELECTED "#000000"
 #define SYS_TAB_BGCOLOR "#FF373A"
 
-#define PROGVER    "2.1.11"
+#define PROGVER    "2.1.13"
 
 #define SYSSTYLESHEET "background-image: url(:/res/SysWallpaper.png);"
 

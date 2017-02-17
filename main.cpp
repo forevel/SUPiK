@@ -2,6 +2,7 @@
 #include <QtWidgets/QApplication>
 #include <QObject>
 #include <QStyleFactory>
+#include <QStandardPaths>
 #include "gen/publicclass.h"
 
 void myMessageOutput(QtMsgType type, const QMessageLogContext &context, const QString &msg)
@@ -20,6 +21,7 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 //    a.setStyle(QStyleFactory::create("Plastique"));
+    pc.HomeDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
     StartWindow w;
 
     w.show();

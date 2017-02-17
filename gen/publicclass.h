@@ -294,7 +294,6 @@ public:
     QString HomeDir; // путь к рабочей папке пользователя с СУПиКом (Win: c:\Users\<user>\.supik, *nix: ~/.supik)
     QString SupikServer, SupikPort; // IP-адрес и порт сервера СУПиК
     QString SQLPath; // путь к SQL-серверу
-    QSettings *LandP; // переменная для работы с настройками системы в реестре
     QByteArray data, symfind, footfind; // data - массив хранения считанных из файлов библиотек бинарных данных,
                                         // symfind и footfind - строки поиска в библиотеках "LIBREFERENCE=" и "PATTERN="
     QStringList supikprocs;
@@ -403,6 +402,9 @@ public:
     void getlinksfromFF(FieldFormat &ff, QString &out);
     void InitiatePublicClass();
     QString getTranslit(QString);
+    void StartLog();
+    QString RegValue(const QString &key, const QString &defaultValue);
+    void SetRegValue(const QString &key, const QString &value);
 
     enum ermsgtype
     {

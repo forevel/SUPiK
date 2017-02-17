@@ -208,14 +208,14 @@ void sys_settingsdialog::OKPBClicked()
     }
     else
     { */
-        pc.LandP->setValue("settings/pathtolibs",pc.PathToLibs);
-        pc.LandP->setValue("settings/pathtosup",pc.PathToSup);
-        pc.LandP->setValue("settings/lang",pc.CurLang);
-        pc.LandP->setValue("settings/SQLPath",pc.SQLPath);
-        pc.LandP->setValue("settings/timerperiod",pc.timerperiod);
-        pc.LandP->setValue("settings/FtpServer",pc.FtpServer);
-        pc.LandP->setValue("settings/Server",pc.SupikServer);
-        pc.LandP->setValue("settings/Port",pc.SupikPort);
+        pc.SetRegValue("settings/pathtolibs",pc.PathToLibs);
+        pc.SetRegValue("settings/pathtosup",pc.PathToSup);
+        pc.SetRegValue("settings/lang",pc.CurLang);
+        pc.SetRegValue("settings/SQLPath",pc.SQLPath);
+        pc.SetRegValue("settings/timerperiod",QString::number(pc.timerperiod));
+        pc.SetRegValue("settings/FtpServer",pc.FtpServer);
+        pc.SetRegValue("settings/Server",pc.SupikServer);
+        pc.SetRegValue("settings/Port",pc.SupikPort);
         if (!pl.InitLang())
             pl.SetDefaultLang();
 

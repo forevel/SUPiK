@@ -34,6 +34,8 @@ private:
     void SetupUI();
     void LoadLanguage();
     void Startup();
+    void CreateDirs();
+    void StartLogs();
     int ClientConnect(int Mode);
     int EnterNewPassword(QString &newpsw);
     void Activate(const QString &code, const QString &newpsw);

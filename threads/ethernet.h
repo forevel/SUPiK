@@ -47,7 +47,7 @@ public:
 
     QTcpSocket *sock;
     QSslSocket *sslsock;
-    Ethernet(QString Host, int Port, int Type=ETH_PLAIN, QObject *parent = 0);
+    Ethernet(QObject *parent = 0);
     bool ClosePortAndFinishThread, Busy;
     static QMap<int,QString> EthernetErrors()
     {
@@ -80,7 +80,7 @@ public:
         return map;
     }
 
-//    bool SetIpAndPort(QString Host, quint16 Port);
+    void SetEthernet(const QString &Host, int Port, int Type=ETH_PLAIN);
 
 public slots:
     void Run();

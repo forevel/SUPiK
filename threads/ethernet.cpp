@@ -7,11 +7,14 @@
 
 Log *EthLog;
 
-Ethernet::Ethernet(QString Host, int Port, int Type, QObject *parent) :
-    QObject(parent)
+Ethernet::Ethernet(QObject *parent) : QObject(parent)
+{
+}
+
+void Ethernet::SetEthernet(const QString &Host, int Port, int Type)
 {
     EthLog = new Log;
-    EthLog->Init(pc.HomeDir+"/eth.log");
+    EthLog->Init("eth "+Host+"_"+QString::number(Port)+".log");
     EthLog->info("Log started");
     sock = 0;
     sslsock = 0;
@@ -135,8 +138,8 @@ void Ethernet::SocketStateChanged(QAbstractSocket::SocketState state)
          break;
      case QAbstractSocket::ConnectedState:
          EthLog->info("SSL: Socket in connected state");
-         sslsock->setPrivateKey(pc.HomeDir+"cakey.pem", QSsl::Rsa, QSsl::Pem, "Seneles2");
-         sslsock->setLocalCertificate(pc.HomeDir+"cacert.pem");
+         sslsock->setPrivateKey(pc.HomeDir+"/certs/cakey.pem", QSsl::Rsa, QSsl::Pem, "Seneles2");
+         sslsock->setLocalCertificate(pc.HomeDir+"/certs/cacert.pem");
          sslsock->startClientEncryption();
          break;
      case QAbstractSocket::BoundState:

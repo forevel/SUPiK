@@ -19,6 +19,8 @@
  */
 
 #include <QDateTime>
+#include <QDir>
+#include <QStandardPaths>
 #define LZMA_API_STATIC
 #include <lzma/lzma.h>
 
@@ -42,7 +44,13 @@ Log::~Log()
 
 void Log::Init(const QString &Filename)
 {
-    LogFile = Filename;
+/*    QString LogPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/log";
+    // http://stackoverflow.com/questions/2241808/checking-if-a-folder-exists-and-creating-folders-in-qt-c
+    QDir dir(LogPath);
+    if (!dir.exists())
+        dir.mkpath(".");
+    LogFile = LogPath + "/" + Filename; */
+    LogFile = pc.HomeDir + "/log/" + Filename;
     // тестовая проверка открытия файла на запись
     fp = new QFile(LogFile);
     if (!fp->open(QIODevice::WriteOnly | QIODevice::Append | QIODevice::Text))
@@ -80,9 +88,9 @@ void Log::intvarvalue(const QString &var, int value)
 
 void Log::WriteFile(const QString &Prepend, const QString &msg)
 {
-    QString tmps = QDateTime::currentDateTime().toString("dd-MM-yyyy hh:mm:ss");
+    QString tmps = "[" + QDateTime::currentDateTime().toString("dd-MM-yyyy hh:mm:ss") + "]";
     fp->write(tmps.toLocal8Bit());
-    tmps = " "+Prepend+": ";
+    tmps = "["+Prepend+"] ";
     fp->write(tmps.toLocal8Bit());
     fp->write(msg.toLocal8Bit());
     fp->write("\n");
@@ -92,9 +100,9 @@ void Log::WriteFile(const QString &Prepend, const QString &msg)
 
 void Log::Info(QByteArray &ba)
 {
-    QString tmps = QDateTime::currentDateTime().toString("dd-MM-yyyy hh:mm:ss");
+    QString tmps = "[" + QDateTime::currentDateTime().toString("dd-MM-yyyy hh:mm:ss") + "]";
     fp->write(tmps.toLocal8Bit());
-    tmps = " info: ";
+    tmps = "[Info] ";
     fp->write(tmps.toLocal8Bit());
     fp->write(ba);
     fp->write("\n");

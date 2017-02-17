@@ -50,13 +50,17 @@ Client::Client(QObject *parent) : QObject(parent)
     CmdMap.insert(M_PUTFILE, {"M_PUTFILE", 4, "M7", RESULT_NONE, false, false}); // 0 - local filename, 1 - type, 2 - subtype, 3 - filename, [4] - filesize, added in SendCmd
     CmdMap.insert(M_GETFILE, {"M_GETFILE", 3, "M8", RESULT_NONE, false, false}); // 0 - type, 1 - subtype, 2 - filename
     CmdMap.insert(M_ACTIVATE, {"M_ACTIVATE", 2, "M9", RESULT_STRING, false, false}); // 0 - code, 1 - newpass
-    CliLog = new Log;
-    CliLog->Init(pc.HomeDir+"/cli.log");
-    CliLog->info("=== Log started ===");
 }
 
 Client::~Client()
 {
+}
+
+void Client::StartLog()
+{
+    CliLog = new Log;
+    CliLog->Init("cli.log");
+    CliLog->info("=== Log started ===");
 }
 
 int Client::Connect(QString Host, QString Port, int ClientMode)
@@ -84,7 +88,8 @@ int Client::Connect(QString Host, QString Port, int ClientMode)
     GetFileTimer = new QTimer;
     GetFileTimer->setInterval(GETTIMEOUT); // таймер на получение файлов, если за 2 с ничего не принято, считаем, что файл окончен
     connect(GetFileTimer,SIGNAL(timeout()),this,SLOT(GetFileTimerTimeout()));
-    MainEthernet = new Ethernet(Host, Port.toInt(), Ethernet::ETH_SSL);
+    MainEthernet = new Ethernet;
+    MainEthernet->SetEthernet(Host, Port.toInt(), Ethernet::ETH_SSL);
     QThread *thr = new QThread;
     MainEthernet->moveToThread(thr);
     MainEthernet->sslsock->moveToThread(thr);

@@ -4,7 +4,6 @@
 #include <QString>
 #include <QSettings>
 #include <QDate>
-#include <QDir>
 #include "s_sql.h"
 #include "log.h"
 #include "../dialogs/tb/tb_func.h"
@@ -16,8 +15,6 @@ static const QMap<QChar, QString> RUSLAT = PublicClass::ruslat();
 
 PublicClass::PublicClass()
 {
-    HomeDir = QDir::homePath()+"/.supik/";
-    LandP = new QSettings ("EvelSoft","Supik");
     TabColors[TW_PROB] = QColor(153, 153, 153); // GENERAL
     TabColors[TW_ERPROT] = TabColors[TW_SYSBU] = TabColors[TW_SYSRS] = TabColors[TW_SYSST] = TabColors[TW_SYSDIR] = TabColors[TW_SYSIC] = QColor(194, 194, 194); // SYSTEM
     TabColors[TW_SET] = QColor(255, 204, 204); // SETTINGS
@@ -29,15 +26,13 @@ PublicClass::PublicClass()
     TabColors[TW_TB] = QColor(204, 204, 255); // TB
     TabColors[TW_PERS] = QColor(102, 204, 255); // PERS
     AutonomousMode = true; // изначально неизвестно, доступен ли сервер, поэтому на всякий случай ставим признак автономности
-    PCLog = new Log;
-    PCLog->Init(HomeDir+"sup.log");
     ErNum = 1;
     TBFunc_Initialize();
 }
 
 PublicClass::~PublicClass()
 {
-    delete LandP;
+    delete PCLog;
 }
 
 void PublicClass::InitiatePublicClass()
@@ -59,13 +54,13 @@ void PublicClass::InitiatePublicClass()
     icons[4] = QIcon(":/res/refresh.png");
     icons[5] = QIcon(":/res/TN.png");
     DateTime = QDateTime::currentDateTime().toString(DATETIMEFORMAT);
-    SQLPath = LandP->value("settings/SQLPath","localhost").toString();
-    PathToLibs = LandP->value("settings/pathtolibs","").toString();
-    PathToSup = LandP->value("settings/pathtosup","").toString();
-    timerperiod = LandP->value("settings/timerperiod","1").toInt();
-    FtpServer = LandP->value("settings/FtpServer","ftp.asu-vei.ru").toString();
-    SupikServer = LandP->value("settings/Server","supik.mycompany.ru").toString();
-    SupikPort = LandP->value("settings/Port","9687").toString();
+    SQLPath = RegValue("settings/SQLPath","localhost");
+    PathToLibs = RegValue("settings/pathtolibs","");
+    PathToSup = RegValue("settings/pathtosup","");
+    timerperiod = RegValue("settings/timerperiod","1").toInt();
+    FtpServer = RegValue("settings/FtpServer","ftp.asu-vei.ru");
+    SupikServer = RegValue("settings/Server","supik.mycompany.ru");
+    SupikPort = RegValue("settings/Port","9687");
     DBMap.insert(DB_ALT, {QSqlDatabase(), "ALT", "altium", DBLOGIN, DBPSWD});
     DBMap.insert(DB_CON, {QSqlDatabase(), "CON", "constructives", DBLOGIN, DBPSWD});
     DBMap.insert(DB_DEV, {QSqlDatabase(), "DEV", "devices", DBLOGIN, DBPSWD});
@@ -85,6 +80,12 @@ void PublicClass::InitiatePublicClass()
     symfind = "LIBREFERENCE=";
     footfind = "PATTERN=";
     idRecord = -1;
+}
+
+void PublicClass::StartLog()
+{
+    PCLog = new Log;
+    PCLog->Init("sup.log");
 }
 
 // открытие БД
@@ -233,4 +234,16 @@ void PublicClass::ConvertId(bool ColumnZero, QString &Id)
             Id = tmpsl.at(1);
         Id = QString::number(Id.toInt(0));
     }
+}
+
+QString PublicClass::RegValue(const QString &key, const QString &defaultValue)
+{
+    QSettings LandP("EvelSoft","Supik");
+    return LandP.value(key, defaultValue).toString();
+}
+
+void PublicClass::SetRegValue(const QString &key, const QString &value)
+{
+    QSettings LandP("EvelSoft", "Supik");
+    LandP.setValue(key, value);
 }

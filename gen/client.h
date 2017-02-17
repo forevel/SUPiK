@@ -189,6 +189,7 @@ public:
     int GetFile(const QString &type, const QString &subtype, const QString &filename);
     int PutFile(const QString &localfilename, const QString &type, const QString &subtype, const QString &filename);
     int SendAndGetResult(int command, QStringList &args=QStringList()); // send command with arguments and get result (only "OK" or "ERROR")
+    void StartLog();
 
 public slots:
     void StopThreads();

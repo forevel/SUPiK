@@ -17,7 +17,7 @@ bool publiclang::InitLang()
 //    QString tmpString;
 //    int i;
 
-    pc.CurLang = pc.LandP->value("settings/lang","RU").toString();
+    pc.CurLang = pc.RegValue("settings/lang","RU");
 
 /*    tmpString = QDir::currentPath();
     file.setFileName("lang\\lang." + pc.CurLang);

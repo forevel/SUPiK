@@ -21,9 +21,8 @@ Log *SupLog;
 StartWindow::StartWindow(QWidget *parent) : QMainWindow(parent)
 {
     Cli = new Client;
-    pc.HomeDir = QDir::homePath()+"/.supik/";
     SupLog = new Log;
-    SupLog->Init(pc.HomeDir+"/sup.log");
+    SupLog->Init("sup.log");
     SupLog->info("=== Log started ===");
     QPixmap StartWindowSplashPixmap(":/res/2.x.png");
     QSplashScreen *StartWindowSplashScreen = new QSplashScreen(StartWindowSplashPixmap);
@@ -37,6 +36,12 @@ StartWindow::StartWindow(QWidget *parent) : QMainWindow(parent)
 
     StartWindowSplashScreen->showMessage("Загрузка переменных окружения...", Qt::AlignRight, Qt::white);
     Startup();
+
+    StartWindowSplashScreen->showMessage("Создание необходимых каталогов...", Qt::AlignRight, Qt::white);
+    CreateDirs();
+
+    StartWindowSplashScreen->showMessage("Запуск логов...", Qt::AlignRight, Qt::white);
+    StartLogs();
 
     StartWindowSplashScreen->finish(this);
 }
@@ -102,10 +107,6 @@ void StartWindow::SetupUI()
     pb = new s_tqPushButton("Вход с помощью кода активации");
     connect(pb,SIGNAL(clicked(bool)),this,SLOT(ActivatedEnter()));
     StartWindowLayout->addWidget(pb, 5, 0, 1, 3);
-
-/*    s_tqRadioButton *rb = new s_tqRadioButton;
-    rb->setText("Он же тебе прямо пишет, что у тебя не в порядке и где. Ты вчитайся и подумай.");
-    StartWindowLayout->addWidget(rb, 6, 0, 1, 3); */
 
     CentralWidget->setLayout(StartWindowLayout);
     setCentralWidget(CentralWidget);
@@ -253,15 +254,15 @@ void StartWindow::OkPBClicked()
     {
         if (WDFunc::ChBData(this, "SaveCB"))
         {
-            pc.LandP->setValue("login/login", pc.PersLogin);
-            pc.LandP->setValue("login/psw", pc.PersPsw);
-            pc.LandP->setValue("login/ischecked", true);
+            pc.SetRegValue("login/login", pc.PersLogin);
+            pc.SetRegValue("login/psw", pc.PersPsw);
+            pc.SetRegValue("login/ischecked", "true");
         }
         else
         {
-            pc.LandP->setValue("login/login", "");
-            pc.LandP->setValue("login/psw", "");
-            pc.LandP->setValue("login/ischecked", false);
+            pc.SetRegValue("login/login", "");
+            pc.SetRegValue("login/psw", "");
+            pc.SetRegValue("login/ischecked", "false");
         }
         pc.AutonomousMode = false;
         INFOMSG("Выполнено подключение к серверу");
@@ -380,10 +381,10 @@ void StartWindow::LoadLanguage()
 
 void StartWindow::Startup()
 {
-    WDFunc::SetLEData(this, "UNameLE", pc.LandP->value("login/login","").toString());
-    WDFunc::SetLEData(this, "PasswdLE", pc.LandP->value("login/psw","").toString());
-    WDFunc::SetChBData(this, "SaveCB", pc.LandP->value("login/ischecked",false).toBool());
-    QString tmpString = pc.LandP->value("settings/lang","").toString();
+    WDFunc::SetLEData(this, "UNameLE", pc.RegValue("login/login",""));
+    WDFunc::SetLEData(this, "PasswdLE", pc.RegValue("login/psw",""));
+    WDFunc::SetChBData(this, "SaveCB", (pc.RegValue("login/ischecked",false) == "true") ? true : false);
+    QString tmpString = pc.RegValue("settings/lang","");
     if (tmpString.isEmpty())
         OpenSettingsDialog();
     pc.InitiatePublicClass();
@@ -398,3 +399,21 @@ void StartWindow::OpenSettingsDialog()
     qssd->exec();
 }
 
+void StartWindow::CreateDirs()
+{
+    QStringList sl = QStringList() << "/log" << "/pers/photo" << "/tb/prot" << "/doc/dsheet" << "/certs";
+    while (!sl.isEmpty())
+    {
+        QString Path = pc.HomeDir + sl.takeFirst();
+        // http://stackoverflow.com/questions/2241808/checking-if-a-folder-exists-and-creating-folders-in-qt-c
+        QDir dir(Path);
+        if (!dir.exists())
+            dir.mkpath(".");
+    }
+}
+
+void StartWindow::StartLogs()
+{
+    Cli->StartLog();
+    pc.StartLog();
+}

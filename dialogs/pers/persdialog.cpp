@@ -460,8 +460,8 @@ void PersDialog::Accept()
 
 void PersDialog::LoadPhoto()
 {
-    QString FileName = QFileDialog::getOpenFileName(this, "Загрузка фотографии", pc.HomeDir+"pers/photo", "Images (*.png *.jpg *.gif)");
-    QString DestFileName = pc.HomeDir+"pers/photo/"+idPers;
+    QString FileName = QFileDialog::getOpenFileName(this, "Загрузка фотографии", pc.HomeDir+"/pers/photo", "Images (*.png *.jpg *.gif)");
+    QString DestFileName = pc.HomeDir+"/pers/photo/"+idPers;
     if (FileName.isEmpty())
     {
         WARNMSG("Пустое имя файла");
@@ -490,7 +490,7 @@ void PersDialog::SetPhoto()
 {
     QFile fp;
     QPixmap pm;
-    fp.setFileName(pc.HomeDir+"pers/photo/"+idPers);
+    fp.setFileName(pc.HomeDir+"/pers/photo/"+idPers);
     if (!fp.open(QIODevice::ReadOnly))
     {
         if (Cli->GetFile(FLT_PERS, FLST_PHOTO, idPers) == Client::CLIER_NOERROR)

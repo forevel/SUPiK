@@ -497,7 +497,7 @@ void tb_examdialog::ProcessResultsAndExit()
         // сформируем протокол в pdf
         sl = QStringList() << "ИД" << "ИД вопроса" << "Номер ответа" << "Правильный ответ";
         lsl.insert(0, sl);
-        QString FullFilename = pc.HomeDir + pc.Pers+" " + pc.DateTime.replace(':','.') +".pdf";
+        QString FullFilename = pc.HomeDir + "/" + pc.Pers+" " + pc.DateTime.replace(':','.') +".pdf";
         PdfOut *PdfDoc = new PdfOut(FullFilename);
         QFont font;
         font.setPointSize(15);

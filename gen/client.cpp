@@ -13,6 +13,8 @@ Client *Cli = 0;
 
 Client::Client(QObject *parent) : QObject(parent)
 {
+    RetryActive = false;
+    RetryCount = 0;
     Connected = false;
     FirstReplyPass = true;
     ComReplyTimeoutIsSet = false;
@@ -151,6 +153,9 @@ void Client::Disconnect()
 
 void Client::SendCmd(int Command, QStringList &Args)
 {
+    if (!RetryActive) // if this send is not a retry
+        RetryCount = 0;
+    LastArgs = Args;
     if (Busy)
     {
         DetectedError = CLIER_BUSY;
@@ -320,6 +325,7 @@ void Client::ParseReply(QByteArray ba)
     QString ServerResponse, IncomingString;
     QStringList ArgList;
     CmdOk = false;
+    RetryActive = false; // if there should be a retry, set it at SERVRETSTR processing lower
     DetectedError = CLIER_NOERROR;
     QTextCodec *codec = QTextCodec::codecForName("Windows-1251");
     if (CurrentCommand != M_AGETFILE) // приём файла обрабатывается по-другому
@@ -378,7 +384,26 @@ void Client::ParseReply(QByteArray ba)
                 fp.remove();
             return;
         }
-        if (ServerResponse == "IDLE")
+        if (ServerResponse == SERVRETSTR)
+        {
+            CliLog->info("Server timeout, trying retry");
+            ++RetryCount;
+            if (RetryCount > MAXRETRCOUNT)
+            {
+                DetectedError = CLIER_SERVER;
+                Busy = false;
+                TimeoutTimer->stop();
+                if (fp.isOpen())
+                    fp.close();
+            }
+            else
+            {
+                RetryActive = true;
+                SendCmd(CurrentCommand, LastArgs);
+            }
+            return;
+        }
+        if (ServerResponse == SERVIDLSTR)
             CurrentCommand = M_IDLE;
     }
     switch (CurrentCommand)

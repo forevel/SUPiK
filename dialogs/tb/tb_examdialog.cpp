@@ -471,6 +471,11 @@ void tb_examdialog::ProcessResultsAndExit()
         QString table = "Экзамен ТБ ответы_полн";
         for (int i=0; i<TB_QUESTNUM; ++i)
         {
+            Answers_s ans;
+            if (Answers.size() != 0)
+                ans = Answers.takeFirst();
+            else
+                break;
             QString newID;
             tfl.Insert(table, newID);
             if (tfl.result == TFRESULT_ERROR)
@@ -478,11 +483,6 @@ void tb_examdialog::ProcessResultsAndExit()
                 WARNMSG("");
                 return;
             }
-            Answers_s ans;
-            if (Answers.size() != 0)
-                ans = Answers.takeFirst();
-            else
-                break;
             QStringList fl = QStringList() << "ИД" << "ИД вопроса" << "Номер ответа" << "Правильный ответ";
             QString tmps = (ans.Good) ? "1" : "0";
             QStringList vl = QStringList() << newID << QString::number(ans.Id) << QString::number(ans.Answer) << tmps;
@@ -497,7 +497,7 @@ void tb_examdialog::ProcessResultsAndExit()
         // сформируем протокол в pdf
         sl = QStringList() << "ИД" << "ИД вопроса" << "Номер ответа" << "Правильный ответ";
         lsl.insert(0, sl);
-        QString FullFilename = pc.HomeDir + "/" + pc.Pers+" " + pc.DateTime.replace(':','.') +".pdf";
+        QString FullFilename = pc.HomeDir + "/tb/prot/" + pc.Pers+" " + pc.DateTime.replace(':','.') +".pdf";
         PdfOut *PdfDoc = new PdfOut(FullFilename);
         QFont font;
         font.setPointSize(15);

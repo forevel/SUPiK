@@ -11,6 +11,8 @@
 
 #define SERVERRSTR  "ERROR"
 #define SERVEMPSTR  "EMPTY"
+#define SERVRETSTR  "RETRY"
+#define SERVIDLSTR  "IDLE"
 #define SERVEROK    "OK"
 
 //#define TIMERSOFF // если не закомментировано, таймауты отключены
@@ -103,6 +105,7 @@
 #define DATATIMEOUT 2000 // таймаут на приём - 3 секунды
 
 #define MAINSLEEP   50  // количество мс сна в процессах
+#define MAXRETRCOUNT    3 // максимальное количество попыток повторить команду
 
 class Client : public QObject
 {
@@ -177,7 +180,9 @@ public:
     bool Busy;
     QList<QStringList> Result;
     QString ResultStr;
-    int ResultInt, DetectedError;
+    int ResultInt, DetectedError, RetryCount; // returned result in int, detected error, current number of retries when server timeout,
+    QStringList LastArgs; // Args vector that was last used in SendCmd (for proper retrying)
+    bool RetryActive; // flag indicates that retrying active
     const QStringList PathPrefixes = QStringList() << "tb/" << "doc/" << "alt/" << "pers/";
     const QStringList PathSuffixes = QStringList() << "prot/" << "dsheet/" << "libs/" << "symbols/" << "footprints/" << "photo/";
 

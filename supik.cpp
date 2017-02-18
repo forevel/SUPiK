@@ -120,7 +120,11 @@ void supik::SetSupikWindow()
     QWidget *wdgt = new QWidget;
     wdgt->setLayout(mainLayout);
     setCentralWidget(wdgt);
+    WaitWidget *w = new WaitWidget;
+    w->Start();
+    w->SetMessage("Главное меню...");
     SetSupikMenuBar();
+    w->Stop();
 }
 
 void supik::SetSupikMenuBar()

@@ -20,6 +20,7 @@
 #include "../../widgets/s_tqpushbutton.h"
 #include "../../widgets/treeview.h"
 #include "../../widgets/wd_func.h"
+#include "../../widgets/waitwidget.h"
 #include "../../gen/publicclass.h"
 #include "../../gen/s_tablefields.h"
 #include "../pers/persdialog.h"
@@ -98,13 +99,6 @@ void tb_maindialog::SetupUI()
 
 void tb_maindialog::ShowPers()
 {
-/*    TreeView *tv = this->findChild<TreeView *>("maintv");
-    if (tv == 0)
-    {
-        DBGMSG;
-        return;
-    }
-    Pers = tv->model()->data(tv->model()->index(tv->currentIndex().row(), 0, QModelIndex()), Qt::DisplayRole).toString(); */
     Pers = WDFunc::TVField(this, "maintv", 0);
     Mode = MODE_EDIT;
     ShowPersDlg();
@@ -114,13 +108,6 @@ void tb_maindialog::Refresh()
 {
     SetupModel();
     WDFunc::TVAutoResize(this, "maintv");
-/*    TreeView *tv = this->findChild<TreeView *>("maintv");
-    if (tv == 0)
-    {
-        DBGMSG;
-        return;
-    }
-    tv->resizeColumnsToContents(); */
 }
 
 void tb_maindialog::ShowPersDlg()
@@ -185,6 +172,9 @@ void tb_maindialog::SetPers(const QString &pers)
 void tb_maindialog::SetupModel()
 {
     int i;
+    WaitWidget *w = new WaitWidget;
+    w->Start();
+    w->SetMessage("Подготовка таблицы: база...");
     QStringList PersIds, FIOs, TBGroups, POs, PBs, OTs;
     PublicClass::ValueStruct tmpv;
     QList<QColor> CList = {Qt::darkGreen, Qt::blue, Qt::red};
@@ -201,6 +191,8 @@ void tb_maindialog::SetupModel()
     if (PersIds.empty())
     {
         WARNMSG("Список пуст");
+        w->Stop();
+        delete w;
         return;
     }
     table = "Персонал_полн";
@@ -223,12 +215,15 @@ void tb_maindialog::SetupModel()
     if ((TBGroups.size() < PIDSize) || (POs.size() < PIDSize) || (OTs.size() < PIDSize) || (PBs.size() < PIDSize))
     {
         WARNMSG("Размеры не совпадают");
+        w->Stop();
+        delete w;
         return;
     }
     // заполняем таблицу
     PublicClass::ValueStruct vls;
     for (i=0; i<FIOs.size(); ++i)
     {
+        w->SetMessage("Подготовка таблицы: обработка "+QString::number(i)+" записей из "+QString::number(FIOs.size()));
         int row = MainModel->AddRow();
         SetMainModelData(row, 0, FIOs.at(i), Qt::black);
         QString TBGroup = (!TBGroups.at(i).isEmpty()) ? TBGroups.at(i) : TB_NODATA;
@@ -251,6 +246,8 @@ void tb_maindialog::SetupModel()
         else
             SetMainModelData(row, 2, TB_NODATA, CList.at(TBDATE_BAD));
     }
+    w->Stop();
+    delete w;
 }
 
 void tb_maindialog::SetMainModelData(int row, int column, const QString &data, const QColor &color)

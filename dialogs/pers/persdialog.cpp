@@ -75,6 +75,7 @@ void PersDialog::SetupUI()
     lbl->setObjectName("photo");
     lbl->setMinimumSize(50, 75);
     lbl->setMaximumSize(150, 200);
+    lbl->setScaledContents(true);
     lbl->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::MinimumExpanding);
     vlyout2->addWidget(lbl);
     pb = new s_tqPushButton("Загрузить другое фото");

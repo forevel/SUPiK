@@ -26,6 +26,7 @@ WaitWidget::WaitWidget(QWidget *parent) : QWidget(parent)
     vel3 = 1;
     vel4 = static_cast<float>(-0.2);
     vel5 = 3.5;
+    Seconds = 0;
 }
 
 WaitWidget::~WaitWidget()
@@ -40,6 +41,10 @@ void WaitWidget::Start()
     tmr->setInterval(10);
     connect(tmr,SIGNAL(timeout()),this,SLOT(Rotate()));
     tmr->start();
+    QTimer *tmrsec = new QTimer;
+    tmrsec->setInterval(1000);
+    connect(tmrsec,SIGNAL(timeout()),this,SLOT(SecondsPlusPlus()));
+    tmrsec->start();
 /*    QTime tme;
     while (!Finished)
     {
@@ -122,5 +127,18 @@ void WaitWidget::paintEvent(QPaintEvent *e)
     QRect mrect = QRect(0,height()-20,width(),20);
     p.drawText(mrect, Qt::AlignCenter, Message);
     p.end();
+    QPainter ps(this);
+    QPen pen(Qt::darkGreen, 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+    ps.setPen(pen);
+    QFont font("Helvetica", 20);
+    ps.setFont(font);
+    QRect srect = QRect(0,height()/2-20,width(),20);
+    ps.drawText(srect, Qt::AlignCenter, QString::number(Seconds));
+    ps.end();
     e->accept();
+}
+
+void WaitWidget::SecondsPlusPlus()
+{
+    ++Seconds;
 }

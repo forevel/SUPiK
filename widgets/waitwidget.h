@@ -22,9 +22,11 @@ public slots:
 
 private slots:
     void Rotate();
+    void SecondsPlusPlus();
 
 private:
     QString Message;
+    int Seconds;
     float gamma;
     float vel1, vel2, vel3, vel4, vel5;
 

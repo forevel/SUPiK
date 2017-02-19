@@ -152,8 +152,8 @@ void StartWindow::ActivatedEnter()
 
 void StartWindow::ChangePassword()
 {
-    pc.PersLogin = WDFunc::LEData(this, "UNameLE");
-    pc.PersPsw = WDFunc::LEData(this, "PasswdLE");
+    WDFunc::LEData(this, "UNameLE", pc.PersLogin);
+    WDFunc::LEData(this, "PasswdLE", pc.PersPsw);
     if (ClientConnect(Client::CLIMODE_WORK) != RESULTOK)
         return;
     pc.AutonomousMode = false;
@@ -226,8 +226,8 @@ void StartWindow::OkPBClicked()
 {
     QString tmpString;
 
-    pc.PersLogin = WDFunc::LEData(this, "UNameLE");
-    pc.PersPsw = WDFunc::LEData(this, "PasswdLE");
+    WDFunc::LEData(this, "UNameLE", pc.PersLogin);
+    WDFunc::LEData(this, "PasswdLE", pc.PersPsw);
     QPixmap StartWindowSplashPixmap(":/res/2.x.png");
     QSplashScreen *StartWindowSplashScreen = new QSplashScreen(StartWindowSplashPixmap);
     StartWindowSplashScreen->show();
@@ -252,7 +252,9 @@ void StartWindow::OkPBClicked()
         break;
     case Client::CLIER_NOERROR:
     {
-        if (WDFunc::ChBData(this, "SaveCB"))
+        bool chbdata;
+        WDFunc::ChBData(this, "SaveCB", chbdata);
+        if (chbdata)
         {
             pc.SetRegValue("login/login", pc.PersLogin);
             pc.SetRegValue("login/psw", pc.PersPsw);
@@ -388,8 +390,8 @@ void StartWindow::Startup()
     if (tmpString.isEmpty())
         OpenSettingsDialog();
     pc.InitiatePublicClass();
-    pc.PersLogin = WDFunc::LEData(this, "UNameLE");
-    pc.PersPsw = WDFunc::LEData(this, "PasswdLE");
+    WDFunc::LEData(this, "UNameLE", pc.PersLogin);
+    WDFunc::LEData(this, "PasswdLE", pc.PersPsw);
 }
 
 void StartWindow::OpenSettingsDialog()

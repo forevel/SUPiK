@@ -12,6 +12,8 @@
 #include "s_tqdatetimewidget.h"
 #include "s_maskedle.h"
 #include "s_tqlabel.h"
+#include "s_tqtextedit.h"
+#include "wd_func.h"
 #include "../gen/s_sql.h"
 #include "../gen/s_tablefields.h"
 #include "../dialogs/gen/twocoldialog.h"
@@ -128,6 +130,18 @@ void s_tqChooseWidget::Setup(QString links, QString hdr)
         ml2->addWidget(cb);
         break;
     }
+    case FD_TEXTEDIT:
+    {
+        s_tqTextEdit *te = new s_tqTextEdit;
+        te->setObjectName("fdcte");
+        s_tqPushButton *pb = new s_tqPushButton("...");
+        pb->setObjectName("fdcpb");
+        connect(pb, SIGNAL(clicked()), this, SLOT(pbclicked()));
+        ml2->addWidget(te, 80);
+        pb->setFixedSize(20, 20);
+        ml2->addWidget(pb, 1);
+        break;
+    }
     default:
         break;
     }
@@ -138,6 +152,24 @@ void s_tqChooseWidget::Setup(QString links, QString hdr)
 
 void s_tqChooseWidget::pbclicked()
 {
+    if (ff.delegate == FD_TEXTEDIT)
+    {
+        QDialog *dlg = new QDialog(this);
+        dlg->setObjectName("tedlg");
+        s_tqTextEdit *te = new s_tqTextEdit;
+        te->setObjectName("tedit");
+        QString tmps;
+        WDFunc::TEData(this, "fdcte", tmps);
+        te->setPlainText(tmps);
+        QVBoxLayout *vlyout = new QVBoxLayout;
+        vlyout->addWidget(te, 95);
+        s_tqPushButton *pb = new s_tqPushButton("Готово");
+        connect(pb,SIGNAL(clicked(bool)),this,SLOT(tepbclicked()));
+        vlyout->addWidget(pb, 5);
+        dlg->setLayout(vlyout);
+        dlg->show();
+        return;
+    }
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fdcle");
     if (le == 0)
         return;
@@ -262,20 +294,31 @@ void s_tqChooseWidget::pbclicked()
 
 void s_tqChooseWidget::accepted(QString str)
 {
-    s_tqLineEdit *le = this->findChild<s_tqLineEdit*>("fdcle");
+/*    s_tqLineEdit *le = this->findChild<s_tqLineEdit*>("fdcle");
     if (le == 0)
-        return;
+        return; */
     PublicClass::ValueStruct vs;
     QString tmps;
     pc.getlinksfromFF(ff, tmps);
-    tfl.idtov(tmps,str, vs);
+    tfl.idtov(tmps, str, vs);
 /*    QStringList tmpsl = vs.Value.split(".");
     if (tmpsl.size()>1) // ИД с индексом таблицы
         le->setText(QString::number(tmpsl.at(1).toInt()));
     else
         le->setText(QString::number(vs.Value.toInt())); */
-    le->setText(vs.Value);
+    WDFunc::SetLEData(this, "fdcle", vs.Value);
+//    le->setText(vs.Value);
     emit textchanged(QVariant(vs.Value));
+}
+
+void s_tqChooseWidget::tepbclicked()
+{
+    QString tmps;
+    WDFunc::TEData(this, "tedit", tmps);
+    QDialog *dlg = this->findChild<QDialog *>("tedlg");
+    if (dlg != 0)
+        dlg->close();
+    SetValue(tmps);
 }
 
 void s_tqChooseWidget::SetValue(QVariant data)
@@ -293,16 +336,18 @@ void s_tqChooseWidget::SetData(PublicClass::ValueStruct data)
     case FD_CHOOSE:
     case FD_CHOOSE_X:
     {
-        s_tqLineEdit *le = this->findChild<s_tqLineEdit*>("fdcle");
+/*        s_tqLineEdit *le = this->findChild<s_tqLineEdit*>("fdcle");
         if (le != 0)
-            le->setText(data.Value);
+            le->setText(data.Value); */
+        WDFunc::SetLEData(this, "fdcle", data.Value);
         break;
     }
     case FD_COMBO:
     {
-        s_tqComboBox *cb = this->findChild<s_tqComboBox *>("fdccb");
+/*        s_tqComboBox *cb = this->findChild<s_tqComboBox *>("fdccb");
         if (cb != 0)
-            cb->setCurrentText(data.Value);
+            cb->setCurrentText(data.Value); */
+        WDFunc::SetCBData(this, "fdccb", data.Value);
         break;
     }
     case FD_LINEEDIT:
@@ -318,9 +363,10 @@ void s_tqChooseWidget::SetData(PublicClass::ValueStruct data)
         }
         default:
         {
-            s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("lele");
+/*            s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("lele");
             if (le != 0)
-                le->setText(data.Value);
+                le->setText(data.Value); */
+            WDFunc::SetLEData(this, "lele", data.Value);
             break;
         }
         }
@@ -328,21 +374,28 @@ void s_tqChooseWidget::SetData(PublicClass::ValueStruct data)
     }
     case FD_SPIN:
     {
-        s_tqSpinBox *sb = this->findChild<s_tqSpinBox *>("fdcsb");
+/*        s_tqSpinBox *sb = this->findChild<s_tqSpinBox *>("fdcsb");
         if (sb != 0)
-            sb->setValue(data.Value.toDouble());
+            sb->setValue(data.Value.toDouble()); */
+        WDFunc::SetSPBData(this, "fdcsb", data.Value.toDouble());
         break;
     }
     case FD_CHECK:
     {
-        s_tqCheckBox *cb = this->findChild<s_tqCheckBox *>("fdcb");
+/*        s_tqCheckBox *cb = this->findChild<s_tqCheckBox *>("fdcb");
         if (cb != 0)
         {
             if (data.Value == ":/res/ok.png")
                 cb->setChecked(true);
             else
                 cb->setChecked(false);
-        }
+        } */
+        WDFunc::SetChBData(this, "fdcb", (data.Value == "1"));
+        break;
+    }
+    case FD_TEXTEDIT:
+    {
+        WDFunc::SetTEData(this, "fdcte", data.Value);
         break;
     }
     default:
@@ -368,16 +421,18 @@ PublicClass::ValueStruct s_tqChooseWidget::Data()
     case FD_CHOOSE:
     case FD_CHOOSE_X:
     {
-        s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fdcle");
+/*        s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fdcle");
         if (le != 0)
-            vs.Value = le->text();
+            vs.Value = le->text(); */
+        WDFunc::LEData(this, "fdcle", vs.Value);
         break;
     }
     case FD_COMBO:
     {
-        s_tqComboBox *cb = this->findChild<s_tqComboBox *>("fdccb");
+/*        s_tqComboBox *cb = this->findChild<s_tqComboBox *>("fdccb");
         if (cb != 0)
-            vs.Value = cb->currentText();
+            vs.Value = cb->currentText(); */
+        WDFunc::CBData(this, "fdccb", vs.Value);
         break;
     }
     case FD_LINEEDIT:
@@ -393,9 +448,10 @@ PublicClass::ValueStruct s_tqChooseWidget::Data()
         }
         default:
         {
-            s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("lele");
+/*            s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("lele");
             if (le != 0)
-                vs.Value = le->text();
+                vs.Value = le->text(); */
+            WDFunc::LEData(this, "lele", vs.Value);
             break;
         }
         }
@@ -414,14 +470,22 @@ PublicClass::ValueStruct s_tqChooseWidget::Data()
     case FD_CHECK:
     {
         vs.Type = VS_ICON;
-        s_tqCheckBox *cb = this->findChild<s_tqCheckBox *>("fdcb");
+/*        s_tqCheckBox *cb = this->findChild<s_tqCheckBox *>("fdcb");
         if (cb != 0)
         {
             if (cb->isChecked())
                 vs.Value = "1";
             else
                 vs.Value = "0";
-        }
+        } */
+        bool chbdata;
+        WDFunc::ChBData(this, "fdcb", chbdata);
+        vs.Value = (chbdata) ? "1" : "0";
+        break;
+    }
+    case FD_TEXTEDIT:
+    {
+        WDFunc::TEData(this, "fdcte", vs.Value);
         break;
     }
     default:
@@ -441,7 +505,7 @@ void s_tqChooseWidget::DateTimeEditFinished(QDateTime dtm)
     accepted(dtm.toString("dd-MM-yyyy hh:mm:ss"));
 }
 
-void s_tqChooseWidget::setAData(QVariant dat)
+/*void s_tqChooseWidget::setAData(QVariant dat)
 {
     this->adata = dat;
 }
@@ -450,3 +514,4 @@ QVariant s_tqChooseWidget::getAData()
 {
     return this->adata;
 }
+*/

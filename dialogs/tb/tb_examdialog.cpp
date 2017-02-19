@@ -12,6 +12,7 @@
 #include <QApplication>
 #include <QThread>
 #include <stdlib.h>
+#include "../../widgets/s_tqscrollarea.h"
 #include "../../models/proxymodel.h"
 #include "../../models/s_duniversal.h"
 #include "../../widgets/s_tqgroupbox.h"
@@ -139,9 +140,13 @@ void tb_examdialog::SetupUI()
     gb = new s_tqGroupBox;
     gb->setObjectName("questiongb");
     gb->setTitle("Вопрос");
-    hlyout = new QHBoxLayout;
-    hlyout->addWidget(stw);
-    gb->setLayout(hlyout);
+    s_tqScrollArea *sa = new s_tqScrollArea;
+    sa->setFrameShape(QFrame::NoFrame);
+    sa->setWidgetResizable(true);
+    sa->setWidget(stw);
+    vlyout = new QVBoxLayout;
+    vlyout->addWidget(sa);
+    gb->setLayout(vlyout);
 //    gb->setVisible(false);
 //    stw->addWidget(gb);
     lyout->addWidget(gb, 75);

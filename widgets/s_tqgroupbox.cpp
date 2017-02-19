@@ -9,7 +9,7 @@ s_tqGroupBox::s_tqGroupBox(QString Color, QWidget *parent) :
     setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
 }
 
-void s_tqGroupBox::setAData(QVariant dat)
+/*void s_tqGroupBox::setAData(QVariant dat)
 {
     this->adata = dat;
 }
@@ -18,3 +18,4 @@ QVariant s_tqGroupBox::getAData()
 {
     return this->adata;
 }
+*/

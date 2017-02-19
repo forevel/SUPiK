@@ -8,7 +8,7 @@ QMAKE_TARGET_COMPANY = EvelSoft
 QMAKE_TARGET_COPYRIGHT = EvelSoft
 QMAKE_TARGET_PRODUCT = SUPiK
 RC_ICONS = res/SUPiK.ico
-VERSION = 2.1.13
+VERSION = 2.1.16
 
 QT       += widgets core gui sql xlsx network printsupport
 
@@ -93,7 +93,8 @@ SOURCES += main.cpp\
     widgets/s_tqwidget.cpp \
     widgets/treeview.cpp \
     widgets/waitwidget.cpp \
-    widgets/wd_func.cpp
+    widgets/wd_func.cpp \
+    widgets/s_tqscrollarea.cpp
 
 HEADERS  += startwindow.h \
     supik.h \
@@ -170,7 +171,8 @@ HEADERS  += startwindow.h \
     widgets/s_tqwidget.h \
     widgets/treeview.h \
     widgets/waitwidget.h \
-    widgets/wd_func.h
+    widgets/wd_func.h \
+    widgets/s_tqscrollarea.h
 
 RESOURCES += \
     pic.qrc

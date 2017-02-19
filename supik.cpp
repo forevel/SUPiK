@@ -122,7 +122,7 @@ void supik::SetSupikWindow()
     setCentralWidget(wdgt);
     WaitWidget *w = new WaitWidget;
     w->Start();
-    w->SetMessage("Главное меню...");
+    w->SetMessage("Подготовка главного меню...");
     SetSupikMenuBar();
     w->Stop();
 }
@@ -137,7 +137,6 @@ void supik::SetSupikMenuBar()
     QMenuBar *SupikMenuBar = new QMenuBar;
     SupikMenuBar->setObjectName("MenuBar");
 //    QSqlQuery get_mainmenu (pc.sup);
-    QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
     QStringList fl = QStringList() << "idmainmenu" << "mainmenu" << "access" << "tooltip" << "method";
     QStringList cmpfl = QStringList() << "idalias";
     QStringList cmpvl = QStringList() << "0";
@@ -178,7 +177,6 @@ void supik::SetSupikMenuBar()
                                 ";} QMenuBar::item::selected {background: " + QString (SUPIKMENUBAR_ITEM_SELECTED) + ";}");
 
     setMenuBar(SupikMenuBar);
-    QApplication::restoreOverrideCursor();
 }
 
 QMenu *supik::AddChildToMenu(int id)

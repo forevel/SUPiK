@@ -15,8 +15,8 @@ public:
     void Setup(QString links, QString hdr="");
     void SetData (PublicClass::ValueStruct data);
     PublicClass::ValueStruct Data();
-    QVariant getAData();
-    void setAData(QVariant dat);
+//    QVariant getAData();
+//    void setAData(QVariant dat);
     void SetValue(QVariant data); // установить значение поля ввода в зависимости от links
     QString Value(); // выдать значение в соответствии с содержимым поля ввода и links
 
@@ -27,7 +27,7 @@ signals:
 public slots:
 
 private:
-    QVariant adata;
+//    QVariant adata;
     QString hdr, links;
     PublicClass::FieldFormat ff;
     bool Transparent;
@@ -37,6 +37,7 @@ private slots:
     void dateChoosed(QDate);
     void DateTimeEditFinished(QDateTime);
     void accepted(QString);
+    void tepbclicked();
 };
 
 #endif // S_TQCHOOSEWIDGET_H

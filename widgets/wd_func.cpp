@@ -2,8 +2,11 @@
 #include "s_tqlineedit.h"
 #include "s_tqlabel.h"
 #include "s_tqchoosewidget.h"
+#include "s_tqcombobox.h"
+#include "s_tqspinbox.h"
 #include "treeview.h"
 #include "s_tqcheckbox.h"
+#include "s_tqtextedit.h"
 #include <QPalette>
 
 bool WDFunc::SetCWData(QWidget *w, const QString &cwname, const QString &cwvalue)
@@ -13,14 +16,6 @@ bool WDFunc::SetCWData(QWidget *w, const QString &cwname, const QString &cwvalue
         return false;
     cw->SetValue(cwvalue);
     return true;
-}
-
-QString WDFunc::CWData(QWidget *w, const QString &cwname)
-{
-    s_tqChooseWidget *cw = w->findChild<s_tqChooseWidget *>(cwname);
-    if (cw == 0)
-        return QString();
-    return cw->Value();
 }
 
 bool WDFunc::SetCWColor(QWidget *w, const QString &cwname, const QColor &color)
@@ -35,6 +30,14 @@ bool WDFunc::SetCWColor(QWidget *w, const QString &cwname, const QColor &color)
     return true;
 }
 
+QString WDFunc::CWData(QWidget *w, const QString &cwname)
+{
+    s_tqChooseWidget *cw = w->findChild<s_tqChooseWidget *>(cwname);
+    if (cw == 0)
+        return QString();
+    return cw->Value();
+}
+
 bool WDFunc::SetLEData(QWidget *w, const QString &lename, const QString &levalue)
 {
     s_tqLineEdit *le = w->findChild<s_tqLineEdit *>(lename);
@@ -42,14 +45,6 @@ bool WDFunc::SetLEData(QWidget *w, const QString &lename, const QString &levalue
         return false;
     le->setText(levalue);
     return true;
-}
-
-QString WDFunc::LEData(QWidget *w, const QString &lename)
-{
-    s_tqLineEdit *le = w->findChild<s_tqLineEdit *>(lename);
-    if (le == 0)
-        return QString();
-    return le->text();
 }
 
 bool WDFunc::SetLEColor(QWidget *w, const QString &lename, const QColor &color)
@@ -61,6 +56,69 @@ bool WDFunc::SetLEColor(QWidget *w, const QString &lename, const QColor &color)
     QPalette pal = le->palette();
     pal.setColor(QPalette::Text, color);
     le->setPalette(pal);
+    return true;
+}
+
+bool WDFunc::LEData(QWidget *w, const QString &lename, QString &levalue)
+{
+    s_tqLineEdit *le = w->findChild<s_tqLineEdit *>(lename);
+    if (le == 0)
+        return false;
+    levalue = le->text();
+    return true;
+}
+
+bool WDFunc::SetTEData(QWidget *w, const QString &tename, const QString &tetext)
+{
+    s_tqTextEdit *te = w->findChild<s_tqTextEdit *>(tename);
+    if (te == 0)
+        return false;
+    te->setText(tetext);
+    return true;
+}
+
+bool WDFunc::TEData(QWidget *w, const QString &tename, QString &tevalue)
+{
+    s_tqTextEdit *te = w->findChild<s_tqTextEdit *>(tename);
+    if (te == 0)
+        return false;
+    tevalue = te->toPlainText();
+    return true;
+}
+
+bool WDFunc::CBData(QWidget *w, const QString &cbname, QString &cbvalue)
+{
+    s_tqComboBox *cb = w->findChild<s_tqComboBox *>(cbname);
+    if (cb == 0)
+        return false;
+    cbvalue = cb->currentText();
+    return true;
+}
+
+bool WDFunc::SetCBData(QWidget *w, const QString &cbname, const QString &cbvalue)
+{
+    s_tqComboBox *cb = w->findChild<s_tqComboBox *>(cbname);
+    if (cb == 0)
+        return false;
+    cb->setCurrentText(cbvalue);
+    return true;
+}
+
+bool WDFunc::SPBData(QWidget *w, const QString &spbname, double &spbvalue)
+{
+    s_tqSpinBox *spb = w->findChild<s_tqSpinBox *>(spbname);
+    if (spb == 0)
+        return false;
+    spbvalue = spb->value();
+    return true;
+}
+
+bool WDFunc::SetSPBData(QWidget *w, const QString &spbname, const double &spbvalue)
+{
+    s_tqSpinBox *spb = w->findChild<s_tqSpinBox *>(spbname);
+    if (spb == 0)
+        return false;
+    spb->setValue(spbvalue);
     return true;
 }
 
@@ -102,12 +160,13 @@ void WDFunc::TVAutoResize(QWidget *w, const QString &tvname)
     tv->resizeRowsToContents();
 }
 
-bool WDFunc::ChBData(QWidget *w, const QString &chbname)
+bool WDFunc::ChBData(QWidget *w, const QString &chbname, bool &data)
 {
     s_tqCheckBox *chb = w->findChild<s_tqCheckBox *>(chbname);
     if (chb == 0)
         return false;
-    return chb->isChecked();
+    data = chb->isChecked();
+    return true;
 }
 
 bool WDFunc::SetChBData(QWidget *w, const QString &chbname, bool data)

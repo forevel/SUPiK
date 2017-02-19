@@ -59,6 +59,7 @@ void WaitWidget::Stop()
 {
     hide();
     Finished = true;
+    close();
 }
 
 void WaitWidget::SetMessage(QString msg)

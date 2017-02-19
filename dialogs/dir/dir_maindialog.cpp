@@ -11,6 +11,7 @@
 #include "../../models/griddelegate.h"
 #include "../../widgets/s_tqstackedwidget.h"
 #include "../../widgets/s_tqwidget.h"
+#include "../../widgets/waitwidget.h"
 #include "../gen/messagebox.h"
 
 #include <QApplication>
@@ -78,11 +79,14 @@ void dir_maindialog::SetupUI()
     s_tqFrame *left = new s_tqFrame;
     QVBoxLayout *leftlyout = new QVBoxLayout;
 
-    QApplication::setOverrideCursor(Qt::WaitCursor);
+    WaitWidget *w = new WaitWidget;
+    w->Start();
+    w->SetMessage("Построение основной таблицы...");
     if (MainTableModel->Setup(MainTable+"_сокращ", true))
     {
         ERMSG("Ошибка при построении таблицы "+MainTable);
-        QApplication::restoreOverrideCursor();
+        w->Stop();
+        delete w;
         return;
     }
     MainTV->setModel(MainTableModel);
@@ -93,7 +97,7 @@ void dir_maindialog::SetupUI()
     SlaveTV->setItemDelegate(MainDelegate);
     MainTV->resizeColumnsToContents();
     MainTV->resizeRowsToContents();
-    QApplication::restoreOverrideCursor();
+    w->Stop();
     MainTV->setContextMenuPolicy(Qt::CustomContextMenu);
     SlaveTV->setContextMenuPolicy(Qt::CustomContextMenu);
     connect (MainTV, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(mainContextMenu(QPoint)));
@@ -133,8 +137,12 @@ void dir_maindialog::ShowSlave(QModelIndex idx)
 {
     Q_UNUSED(idx);
     QString tmpString = getMainIndex(1);
+    WaitWidget *w = new WaitWidget;
+    w->Start();
+    w->SetMessage("Подготовка справочника...");
     if (!tmpString.isEmpty())
         ShowSlaveTree(tmpString);
+    w->Stop();
 }
 
 // ############################################ SLOTS ####################################################
@@ -155,7 +163,6 @@ void dir_maindialog::ShowSlaveTree(QString str)
         IsQuarantine = true;
     else
         IsQuarantine = false;
-    QApplication::setOverrideCursor(Qt::WaitCursor);
     fields << "Наименование" << "Родительский справочник" << "Права доступа";
     QString table = MainTable+"_полн";
     QString cmpfield = "Наименование";
@@ -192,7 +199,6 @@ void dir_maindialog::ShowSlaveTree(QString str)
         WARNMSG("");
     SlaveTV->resizeRowsToContents();
 //     SlaveProxyModel->sort(1, Qt::AscendingOrder);
-    QApplication::restoreOverrideCursor();
 }
 
 QString dir_maindialog::getMainIndex(int column)

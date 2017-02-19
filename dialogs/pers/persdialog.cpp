@@ -334,7 +334,9 @@ void PersDialog::EnterEBData()
     hlyout = new QHBoxLayout;
     lbl = new s_tqLabel("Оценка за экзамен (0-5)");
     hlyout->addWidget(lbl);
-    s_tqLineEdit *le = new s_tqLineEdit(WDFunc::LEData(this, "le.33"));
+    QString tmps;
+    WDFunc::LEData(this, "le.33", tmps);
+    s_tqLineEdit *le = new s_tqLineEdit(tmps);
     le->setObjectName("EBmark");
     hlyout->addWidget(le);
     s_tqComboBox *cb = new s_tqComboBox;
@@ -380,18 +382,22 @@ void PersDialog::AcceptEBData()
     WDFunc::SetLEData(this, "le.32", tmps);
     EBDate = tmps;
     WDFunc::SetLEColor(this, "le.32", CList.at(TBFunc_CheckDateTime(DT_TB, tmps)));
-    WDFunc::SetLEData(this, "le.33", WDFunc::LEData(this, "EBmark"));
+    WDFunc::LEData(this, "EBmark", tmps);
+    WDFunc::SetLEData(this, "le.33", tmps);
     dlg->close();
 }
 
 void PersDialog::Accept()
 {
-    QString ID;
+    QString ID, tmps;
     // запишем сначала общие поля - полные ФИО, Дата рождения, Должность
     QStringList fl = QStringList() << "Полные ФИО" << "Дата рождения" << "Должность";
     QStringList vl;
     for (int i=0; i<fl.size(); ++i)
-        vl.append(WDFunc::LEData(this, "le."+QString::number(i+1)));
+    {
+        WDFunc::LEData(this, "le."+QString::number(i+1), tmps);
+        vl.append(tmps);
+    }
     fl << "ИД";
     vl << idPers;
     tfl.Update("Персонал_полн", fl, vl);
@@ -418,7 +424,8 @@ void PersDialog::Accept()
         OTDate = WDFunc::CWData(this, "cw.1");
         QString table = "Персонал_ТБ_полн";
         QStringList headers = QStringList() << "Группа" << "Дата профосмотра" << "Дата ПБ" << "Дата ОТ" << "ИД" << "ИД сотрудника";
-        QStringList values = QStringList() << WDFunc::LEData(this, "le.41") << MedDate << PBDate << OTDate << ID << idPers;
+        WDFunc::LEData(this, "le.41", tmps);
+        QStringList values = QStringList() << tmps << MedDate << PBDate << OTDate << ID << idPers;
         tfl.Update(table, headers, values);
         if (tfl.result != TFRESULT_NOERROR)
         {
@@ -438,8 +445,12 @@ void PersDialog::Accept()
             }
             QString EkzTypeToWrite = (EkzType == EKZ_GENERAL) ? "1" : "0";
             headers = QStringList() << "Раздел" << "Результат" << "Тип" << "ИД" << "Дата" << "ИДПольз";
-            values = QStringList() << WDFunc::LEData(this, "le.41") << WDFunc::LEData(this, "le.33") << EkzTypeToWrite << idRecEkz << \
-                                      WDFunc::LEData(this, "le.32") << idPers;
+            WDFunc::LEData(this, "le.41", tmps);
+            values = QStringList() << tmps;
+            WDFunc::LEData(this, "le.33", tmps);
+            values << tmps << EkzTypeToWrite << idRecEkz;
+            WDFunc::LEData(this, "le.32", tmps);
+            values << tmps << idPers;
             tfl.Update("Экзам рез_полн", headers, values);
             if (tfl.result != TFRESULT_NOERROR)
             {

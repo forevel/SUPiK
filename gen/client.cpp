@@ -231,9 +231,10 @@ void Client::SendCmd(int Command, QStringList &Args)
             return;
         }
         QDir *dr = new QDir;
-        dr->mkpath(pc.HomeDir+PathPrefixes.at(fltype)+PathSuffixes.at(flsubtype));
+        QString path = pc.HomeDir + "/" + PathPrefixes.at(fltype) + PathSuffixes.at(flsubtype);
+        dr->mkpath(path);
         delete dr;
-        fp.setFileName(pc.HomeDir + PathPrefixes.at(fltype) + PathSuffixes.at(flsubtype) + Args.at(2));
+        fp.setFileName(path + Args.at(2));
         if (!fp.open(QIODevice::WriteOnly))
         {
             ERMSG("Невозможно создать файл" + Args.at(2));
@@ -788,13 +789,14 @@ void Client::ParseReply(QByteArray ba)
                 fp.close();
             emit TransferComplete();
             CmdOk = true;
+        }
+        else
+        {
             Busy = false;
             SendCmd(M_AGETFILE);
-            break;
+            return;
         }
-        Busy = false;
-        SendCmd(M_AGETFILE);
-        return;
+        break;
     }
     default:
         break;

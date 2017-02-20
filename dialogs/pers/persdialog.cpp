@@ -513,8 +513,11 @@ void PersDialog::SetPhoto()
                 fp.close();
             }
         }
-        WARNMSG("Нет фотографии для сотрудника с ИД " + idPers);
-        pm.load(":/res/Einstein.png");
+        else
+        {
+            WARNMSG("Нет фотографии для сотрудника с ИД " + idPers);
+            pm.load(":/res/Einstein.png");
+        }
     }
     else
     {

@@ -102,7 +102,7 @@
 
 #define GETTIMEOUT  3000 // таймаут на приём файла - 3 секунды
 #define MAINTIMEOUT 5000 // таймаут на ответ от сервера - 5 секунд
-#define DATATIMEOUT 2000 // таймаут на приём - 3 секунды
+#define DATATIMEOUT 3000 // таймаут на приём - 3 секунды
 
 #define MAINSLEEP   50  // количество мс сна в процессах
 #define MAXRETRCOUNT    3 // максимальное количество попыток повторить команду

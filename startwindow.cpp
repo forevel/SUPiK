@@ -21,9 +21,6 @@ Log *SupLog;
 StartWindow::StartWindow(QWidget *parent) : QMainWindow(parent)
 {
     Cli = new Client;
-    SupLog = new Log;
-    SupLog->Init("sup.log");
-    SupLog->info("=== Log started ===");
     QPixmap StartWindowSplashPixmap(":/res/2.x.png");
     QSplashScreen *StartWindowSplashScreen = new QSplashScreen(StartWindowSplashPixmap);
     StartWindowSplashScreen->show();
@@ -39,6 +36,10 @@ StartWindow::StartWindow(QWidget *parent) : QMainWindow(parent)
 
     StartWindowSplashScreen->showMessage("Создание необходимых каталогов...", Qt::AlignRight, Qt::white);
     CreateDirs();
+
+    SupLog = new Log;
+    SupLog->Init("sup.log");
+    SupLog->info("=== Log started ===");
 
     StartWindowSplashScreen->showMessage("Запуск логов...", Qt::AlignRight, Qt::white);
     StartLogs();

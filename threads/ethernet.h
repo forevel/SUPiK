@@ -48,7 +48,6 @@ public:
     QTcpSocket *sock;
     QSslSocket *sslsock;
     Ethernet(QObject *parent = 0);
-    bool ClosePortAndFinishThread, Busy;
     static QMap<int,QString> EthernetErrors()
     {
         QMap<int,QString> map;
@@ -81,18 +80,19 @@ public:
     }
 
     void SetEthernet(const QString &Host, int Port, int Type=ETH_PLAIN);
+    void WriteData(QByteArray &ba);
+    void Disconnect();
 
 public slots:
-    void Run();
-    void Stop();
-    void InitiateWriteDataToPort(QByteArray);
+//    void Run();
+//    void Stop();
+//    void InitiateWriteDataToPort(QByteArray);
 
 signals:
     void error(int);
     void connected();
     void disconnected();
-    void finished();
-    void newdataarrived(QByteArray);
+    void NewDataArrived(QByteArray ba);
     void byteswritten(qint64 bytes);
 
 private slots:
@@ -102,15 +102,16 @@ private slots:
     void SslErrors(QList<QSslError> errlist);
     void SocketStateChanged(QAbstractSocket::SocketState state);
     void SslSocketEncrypted();
+    void OkToDelete();
 
 private:
-    QMutex OutDataBufMtx;
-    QByteArray *DataToSend;
-    QByteArray OutDataBuf;
     QString Host;
     quint16 Port;
-    void SendData();
     int EthType;
+    QByteArray ReadData;
+    int Level;
+
+    void SendData();
 
 protected:
 };

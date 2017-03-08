@@ -9,6 +9,8 @@ Log *EthLog;
 
 Ethernet::Ethernet(QObject *parent) : QObject(parent)
 {
+    ReadData.clear();
+    Level = 0;
 }
 
 void Ethernet::SetEthernet(const QString &Host, int Port, int Type)
@@ -26,6 +28,7 @@ void Ethernet::SetEthernet(const QString &Host, int Port, int Type)
         connect(sock,SIGNAL(error(QAbstractSocket::SocketError)),this,SLOT(SockError(QAbstractSocket::SocketError)));
         connect(sock,SIGNAL(connected()),this,SIGNAL(connected()));
         connect(sock,SIGNAL(disconnected()),this,SIGNAL(disconnected()));
+        connect(sock,SIGNAL(disconnected()),this, SLOT(OkToDelete()));
         connect(sock,SIGNAL(readyRead()),this,SLOT(CheckForData()));
         connect(sock,SIGNAL(bytesWritten(qint64)),this,SIGNAL(byteswritten(qint64)));
         EthLog->info("Connecting to host "+Host+":"+QString::number(Port)+"...");
@@ -36,6 +39,7 @@ void Ethernet::SetEthernet(const QString &Host, int Port, int Type)
         sslsock->setProtocol(QSsl::AnyProtocol);
         connect(sslsock, SIGNAL(error(QAbstractSocket::SocketError)),this,SLOT(SslError(QAbstractSocket::SocketError)));
         connect(sslsock,SIGNAL(disconnected()),this,SIGNAL(disconnected()));
+        connect(sslsock,SIGNAL(disconnected()),this,SLOT(OkToDelete()));
         connect(sslsock,SIGNAL(sslErrors(QList<QSslError>)),this,SLOT(SslErrors(QList<QSslError>)));
         connect(sslsock,SIGNAL(encrypted()),this,SLOT(SslSocketEncrypted()));
         connect(sslsock,SIGNAL(encrypted()),this,SIGNAL(connected()));
@@ -46,68 +50,57 @@ void Ethernet::SetEthernet(const QString &Host, int Port, int Type)
     default:
         break;
     }
-    OutDataBuf.clear();
-    ClosePortAndFinishThread = false;
-    Busy = false;
 }
 
-void Ethernet::Run()
+void Ethernet::Disconnect()
 {
-    switch (EthType)
+    try
     {
-    case ETH_PLAIN:
-    {
-        if (sock)
+        switch (EthType)
         {
-            while (sock->state() == QAbstractSocket::ConnectedState)
+        case ETH_PLAIN:
+        {
+            if (sock)
             {
-                OutDataBufMtx.lock();
-                if (!OutDataBuf.isEmpty()) // что-то пришло в выходной буфер для записи
-                    SendData();
-                OutDataBufMtx.unlock();
-                if (ClosePortAndFinishThread)
+                if (sock->isOpen())
                 {
-                    if (sock->isOpen())
-                    {
-                        sock->close();
-                        sock->disconnect();
-                        delete sock;
-                    }
-                    emit finished();
-                    break;
+                    sock->disconnectFromHost();
+                    QThread::msleep(10);
                 }
+            }
+            break;
+        }
+        case ETH_SSL:
+        {
+            if (sslsock->isOpen())
+            {
+                sslsock->disconnectFromHost();
                 QThread::msleep(10);
-                qApp->processEvents();
             }
         }
-        break;
+        default:
+            break;
+        }
+        emit disconnected();
     }
-    case ETH_SSL:
+    catch (...)
     {
-        while (1)
-        {
-            OutDataBufMtx.lock();
-            if (!OutDataBuf.isEmpty()) // что-то пришло в выходной буфер для записи
-                SendData();
-            OutDataBufMtx.unlock();
-            if (ClosePortAndFinishThread)
-            {
-                if (sslsock->isOpen())
-                {
-                    sslsock->close();
-                    sslsock->disconnect();
-                    delete sslsock;
-                }
-                emit finished();
-                return;
-            }
-            QThread::msleep(10);
-            qApp->processEvents();
-        }
-        break;
+        EthLog->error("Error while disconnecting");
     }
-    default:
-        break;
+}
+
+void Ethernet::OkToDelete()
+{
+    try
+    {
+        if (EthType == ETH_PLAIN)
+            sock->deleteLater();
+        else
+            sslsock->deleteLater();
+    }
+    catch(...)
+    {
+        EthLog->error("Error while deleting socket");
     }
 }
 
@@ -120,10 +113,10 @@ void Ethernet::SslSocketEncrypted()
 
 void Ethernet::SocketStateChanged(QAbstractSocket::SocketState state)
 {
-     if ((state == QAbstractSocket::UnconnectedState) || (state == QAbstractSocket::ClosingState))
+/*     if ((state == QAbstractSocket::UnconnectedState) || (state == QAbstractSocket::ClosingState))
      {
-         ClosePortAndFinishThread = true;
-     }
+         Disconnect();
+     } */
      switch (state)
      {
      case QAbstractSocket::UnconnectedState:
@@ -156,19 +149,12 @@ void Ethernet::SocketStateChanged(QAbstractSocket::SocketState state)
      }
 }
 
-void Ethernet::Stop()
-{
-    EthLog->info("Socket close pending");
-    ClosePortAndFinishThread = true;
-}
-
 void Ethernet::SslError(QAbstractSocket::SocketError err)
 {
-    if (err == QAbstractSocket::RemoteHostClosedError)
-        ClosePortAndFinishThread = true;
     EthLog->warning("SSL Error: "+sslsock->errorString());
-    ClosePortAndFinishThread = true;
-//    emit error(err+2); // до 1 другие ошибки, err от -1
+    if (err == QAbstractSocket::RemoteHostClosedError)
+        return;
+    Disconnect();
 }
 
 void Ethernet::SslErrors(QList<QSslError> errlist)
@@ -184,35 +170,36 @@ void Ethernet::SockError(QAbstractSocket::SocketError err)
     ERMSG(sock->errorString());
 }
 
-void Ethernet::SendData()
+void Ethernet::WriteData(QByteArray &ba)
 {
     qint64 res;
     if (EthType == ETH_PLAIN)
-        res = sock->write(OutDataBuf);
+        res = sock->write(ba);
     else if (EthType == ETH_SSL)
-        res = sslsock->write(OutDataBuf);
+        res = sslsock->write(ba);
     QCoreApplication::processEvents(); // по рекомендации отсюда: http://www.prog.org.ru/topic_25254_0.html
     if (res == -1)
         emit error(SKT_SENDDATAER); // ошибка
-    OutDataBuf.clear();
-}
-
-void Ethernet::InitiateWriteDataToPort(QByteArray ba)
-{
-    OutDataBufMtx.lock();
-    OutDataBuf = ba;
-    OutDataBufMtx.unlock();
-    Busy = false;
 }
 
 void Ethernet::CheckForData()
 {
-    QByteArray ba;
+    if (Level > 0) // уже что-то получаем
+        return;
+    ++Level;
     if (EthType == ETH_PLAIN)
-        ba = sock->readAll();
+    {
+        while (sock->bytesAvailable())
+            ReadData += sock->readAll();
+    }
     else if (EthType == ETH_SSL)
-        ba = sslsock->readAll();
-//    EthLog->info("Bytes received: ");
-//    EthLog->info(ba->data());
-    emit newdataarrived(ba);
+    {
+        while (sslsock->bytesAvailable())
+            ReadData += sslsock->readAll();
+    }
+/*    EthLog->info("Level: ");
+    EthLog->info(QString::number(Level)); */
+    emit NewDataArrived(ReadData);
+    ReadData.clear();
+    --Level;
 }

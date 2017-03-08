@@ -90,30 +90,26 @@ int Client::Connect(QString Host, QString Port, int ClientMode)
     GetFileTimer = new QTimer;
     GetFileTimer->setInterval(GETTIMEOUT); // таймер на получение файлов, если за 2 с ничего не принято, считаем, что файл окончен
     connect(GetFileTimer,SIGNAL(timeout()),this,SLOT(GetFileTimerTimeout()));
+
     MainEthernet = new Ethernet;
     MainEthernet->SetEthernet(Host, Port.toInt(), Ethernet::ETH_SSL);
-    QThread *thr = new QThread;
-    MainEthernet->moveToThread(thr);
-    MainEthernet->sslsock->moveToThread(thr);
-    connect(thr,SIGNAL(finished()),MainEthernet,SLOT(deleteLater()));
-    connect(thr,SIGNAL(finished()),thr,SLOT(deleteLater()));
-    connect(thr,SIGNAL(started()),MainEthernet,SLOT(Run()));
-    connect(MainEthernet, SIGNAL(finished()),thr, SLOT(quit()));
     connect(MainEthernet,SIGNAL(connected()),this,SLOT(ClientConnected()));
     connect(MainEthernet,SIGNAL(disconnected()),this,SLOT(ClientDisconnected()));
-    connect(MainEthernet,SIGNAL(newdataarrived(QByteArray)),this,SLOT(ParseReply(QByteArray)));
-    connect(this,SIGNAL(ClientSend(QByteArray)),MainEthernet,SLOT(InitiateWriteDataToPort(QByteArray)));
+    connect(MainEthernet,SIGNAL(NewDataArrived(QByteArray)),this,SLOT(ParseReply(QByteArray)));
+//    connect(this,SIGNAL(ClientSend(QByteArray)),MainEthernet,SLOT(InitiateWriteDataToPort(QByteArray)));
 #ifndef TIMERSOFF
     TimeoutTimer->start();
 #endif
     DetectedError = CLIER_NOERROR;
     LoginOk = false;
     CurrentCommand = M_LOGIN;
-    thr->start();
+//    thr->start();
     while (!LoginOk && (DetectedError == CLIER_NOERROR))
     {
-        QThread::msleep(MAINSLEEP);
-        qApp->processEvents(QEventLoop::AllEvents);
+        QTime tme;
+        tme.start();
+        while (tme.elapsed() < MAINSLEEP)
+            qApp->processEvents(QEventLoop::AllEvents);
     }
     if (!Connected)
     {
@@ -128,11 +124,6 @@ int Client::Connect(QString Host, QString Port, int ClientMode)
     return DetectedError;
 }
 
-void Client::StopThreads()
-{
-    Disconnect();
-}
-
 void Client::Disconnect()
 {
     if (Connected)
@@ -143,16 +134,18 @@ void Client::Disconnect()
             QThread::msleep(MAINSLEEP);
             qApp->processEvents(QEventLoop::AllEvents);
         }
-        MainEthernet->Busy = false;
-        MainEthernet->Stop();
+        MainEthernet->Disconnect();
         Connected = false;
     }
-    // wait 1 second to let the ethernet thread finish
-    QThread::sleep(1);
 }
 
 void Client::SendCmd(int Command, QStringList &Args)
 {
+    if (!Connected)
+    {
+        DetectedError = CLIER_CLOSED;
+        return;
+    }
     if (!RetryActive) // if this send is not a retry
         RetryCount = 0;
     LastArgs = Args;
@@ -270,11 +263,7 @@ void Client::SendCmd(int Command, QStringList &Args)
     case M_APUTFILE:
     {
         CliLog->info("> ...binary data...");
-        MainEthernet->Busy = true;
-        emit ClientSend(WrData);
-        while (MainEthernet->Busy)
-            qApp->processEvents(QEventLoop::AllEvents, 10);
-//        delete WrData;
+        MainEthernet->WriteData(WrData);
         return;
     }
         // ANS_GETFILE - второй и последующие ответы на принятую информацию (с записью блока в файл)
@@ -308,11 +297,7 @@ void Client::SendCmd(int Command, QStringList &Args)
         CliLog->info(">"+CommandString); //+codec->fromUnicode(CommandString));
     QByteArray ba = CommandString.toUtf8();//codec->fromUnicode(CommandString));
     ComReplyTimeoutIsSet = false;
-    MainEthernet->Busy = true;
-    emit ClientSend(ba);
-    while ((MainEthernet->Busy) && (DetectedError == CLIER_NOERROR))
-        qApp->processEvents(QEventLoop::AllEvents, 10);
-//    delete ba;
+    MainEthernet->WriteData(ba);
 }
 
 // ############################################ ОБРАБОТКА ОТВЕТА ##############################################
@@ -326,7 +311,7 @@ void Client::ParseReply(QByteArray ba)
     QString ServerResponse, IncomingString;
     QStringList ArgList;
     CmdOk = false;
-    RetryActive = false; // if there should be a retry, set it at SERVRETSTR processing lower
+    RetryActive = false; // if there should be a retry, set it at SERVRETSTR processing
     DetectedError = CLIER_NOERROR;
     QTextCodec *codec = QTextCodec::codecForName("Windows-1251");
     if (CurrentCommand != M_AGETFILE) // приём файла обрабатывается по-другому
@@ -783,6 +768,8 @@ void Client::ParseReply(QByteArray ba)
         qint64 rb = fp.write(ba);
         emit BytesRead(ReadBytes);
         CliLog->info(QString::number(rb)+" bytes written to file");
+        CliLog->info(QString::number(ReadBytes)+" bytes written overall");
+        CliLog->info(QString::number(RcvDataSize-ReadBytes)+" bytes least");
         if (ReadBytes >= RcvDataSize)
         {
             if (fp.isOpen())

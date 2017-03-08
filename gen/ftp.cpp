@@ -41,6 +41,7 @@ bool Ftp::Connect(QString Host)
     GetFileTimer = new QTimer;
     GetFileTimer->setInterval(500); // таймер на получение файлов, если за 500 мс ничего не принято, считаем, что файл окончен
     connect(GetFileTimer,SIGNAL(timeout()),this,SLOT(GetFileTimerTimeout()));
+
     MainEthernet = new Ethernet;
     MainEthernet->SetEthernet(Host, PORTFTP, Ethernet::ETH_PLAIN);
     QThread *thr = new QThread;
@@ -71,7 +72,7 @@ void Ftp::StopThreads()
 void Ftp::Disconnect()
 {
     SendCmd(CMD_QUIT);
-    MainEthernet->Stop();
+    MainEthernet->Disconnect();
 //    LogFile->close();
 }
 
@@ -248,14 +249,14 @@ bool Ftp::StartPASV(int Command, QString Filename, QByteArray *ba, int size)
         qApp->processEvents(QEventLoop::AllEvents);
     if (!FileConnected)
     {
-        eth->Stop();
+        eth->Disconnect();
         return false;
     }
     FileBusy = true;
     TimeoutTimer->start();
     if (!SendCmd(Command, Filename))
     {
-        eth->Stop();
+        eth->Disconnect();
         return false;
     }
     if (Command == CMD_STOR)
@@ -271,7 +272,7 @@ bool Ftp::StartPASV(int Command, QString Filename, QByteArray *ba, int size)
     }
     while (FileBusy)
         qApp->processEvents(QEventLoop::AllEvents);
-    eth->Stop();
+    eth->Disconnect();
     return true;
 }
 

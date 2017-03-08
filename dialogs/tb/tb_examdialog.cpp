@@ -323,8 +323,10 @@ QList<s_tqWidget *> tb_examdialog::PrepareQuestionsByTheme(int theme, int questn
         WARNMSG("");
         return wdgts;
     }
-    int msecs = QTime::currentTime().msecsSinceStartOfDay();
-    qsrand(msecs); // инициализация генератора случайных чисел
+    // from qt fortune server example
+    qsrand(QTime(0,0,0).secsTo(QTime::currentTime())); // инициализация генератора случайных чисел
+/*    int msecs = QTime::currentTime().msecsSinceStartOfDay();
+    qsrand(msecs); // инициализация генератора случайных чисел */
     for (int i=0; i<questnum; ++i)
     {
         s_tqWidget *w = new s_tqWidget;

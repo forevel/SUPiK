@@ -32,6 +32,7 @@
 #define M_ACTIVATE  1009 // активация пользователя
 // M-statuses
 #define M_IDLE		1000
+#define M_ANEXT     1047
 #define M_RDY		1051
 #define M_ERROR		1052
 #define M_NEXT		1053 // подтверждение готовности приёма следующей порции данных
@@ -100,6 +101,11 @@
 
 #define READBUFMAX  16384
 
+// incoming sizes
+#define SZ_RDY  4 // "RDY\n"
+#define SZ_PUTFILE  3 // "OK\n"
+#define SZ_DUMMY    1 // dummy size when we're in concern that the incoming packet size will be less than 4096 bytes long
+
 #define GETTIMEOUT  3000 // таймаут на приём файла - 3 секунды
 #define MAINTIMEOUT 5000 // таймаут на ответ от сервера - 5 секунд
 #define DATATIMEOUT 10000 // таймаут на приём - 3 секунды
@@ -119,7 +125,8 @@ public:
         RESULT_MATRIX,  // результат - таблица строк
         RESULT_VECTOR,  // результат - вектор значений
         RESULT_STRING,  // результат - одна строка
-        RESULT_NONE     // без результата
+        RESULT_NONE,    // без результата
+        RESULT_INT      // результат - целое число
     };
 
     enum ClientErrors
@@ -214,7 +221,7 @@ private:
     bool FileBusy, Connected, FileConnected, CmdOk, LoginOk, FirstReplyPass, ComReplyTimeoutIsSet, FieldsLeast;
     QString FileHost;
     quint16 FilePort;
-    quint64 WrittenBytes, ReadBytes, RcvDataSize, XmitDataSize, MsgNum;
+    quint64 WrittenBytes, ReadBytes, RcvDataSize, XmitDataSize;
     int CurrentCommand, CliMode;
     QFile fp;
     int FieldsNum;
@@ -224,9 +231,9 @@ private:
     Log *CliLog;
 
     QString RemoveSpaces(QString str);
-    void WriteErrorAndBreakReceiving(QString ErMsg);
+    void Error(QString ErMsg, int ErrorInt=CLIER_GENERAL);
     QStringList SeparateBuf(QByteArray &buf);
-    int CheckArgs(QString cmd, QStringList &Args, int argsnum, bool fieldscheck=false, bool pairscheck=false);
+    bool CheckArgs(QString cmd, QStringList &Args, int argsnum, bool fieldscheck=false, bool pairscheck=false);
 
 private slots:
     void ClientConnected();

@@ -10,6 +10,7 @@ Log *EthLog;
 Ethernet::Ethernet(QObject *parent) : QObject(parent)
 {
     ReadData.clear();
+    ReadDataSize = 0;
     Level = 0;
 }
 
@@ -203,3 +204,9 @@ void Ethernet::CheckForData()
     ReadData.clear();
     --Level;
 }
+/*
+void Ethernet::SetReadDataSize(quint64 size)
+{
+    ReadDataSize = size;
+}
+*/

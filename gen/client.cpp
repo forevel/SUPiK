@@ -27,24 +27,24 @@ Client::Client(QObject *parent) : QObject(parent)
     CmdMap.insert(S_TC, {"S_TC", 3, "S6", RESULT_NONE, false, false});
     CmdMap.insert(S_TA, {"S_TA", 5, "S7", RESULT_NONE, false, false});
     CmdMap.insert(S_TD, {"S_TD", 2, "S8", RESULT_NONE, false, false});
-    CmdMap.insert(S_INS, {"S_INS", 2, "S9", RESULT_STRING, false, false});
+    CmdMap.insert(S_INS, {"S_INS", 2, "S9", RESULT_INT, false, false});
     CmdMap.insert(S_UPD, {"S_UPD", 6, "S:", RESULT_NONE, false, false});
     CmdMap.insert(S_DEL, {"S_DEL", 4, "S;", RESULT_NONE, false, false});
     CmdMap.insert(S_RDEL, {"S_RDEL", 4, "S<", RESULT_NONE, false, false});
     CmdMap.insert(S_SRCH, {"S_SRCH", 6, "S=", RESULT_MATRIX, true, false});
-    CmdMap.insert(S_GID, {"S_GID", 2, "S>", RESULT_STRING, false, false});
+    CmdMap.insert(S_GID, {"S_GID", 2, "S>", RESULT_INT, false, false});
     CmdMap.insert(T_GVSBFS, {"T_GVSBFS", 6, "T1", RESULT_MATRIX, true, true});
     CmdMap.insert(T_GVSBC, {"T_GVSBC", 2, "T2", RESULT_VECTOR, false, false});
     CmdMap.insert(T_GVSBCF, {"T_GVSBCF", 5, "T3", RESULT_VECTOR, false, false});
     CmdMap.insert(T_GFT, {"T_GFT", 1, "T7", RESULT_MATRIX, false, false});
     CmdMap.insert(T_TV, {"T_TV", 3, "T:", RESULT_STRING, false, false});
     CmdMap.insert(T_IDTV, {"T_IDTV", 2, "T9", RESULT_VECTOR, false, false});
-    CmdMap.insert(T_INS, {"T_INS", 1, "T>", RESULT_STRING, false, false});
+    CmdMap.insert(T_INS, {"T_INS", 1, "T>", RESULT_INT, false, false});
     CmdMap.insert(T_UPD, {"T_UPD", 3, "T?", RESULT_NONE, false, false});
     CmdMap.insert(T_DEL, {"T_DEL", 2, "T5", RESULT_NONE, false, false});
     CmdMap.insert(T_RDEL, {"T_RDEL", 2, "T6", RESULT_NONE, false, false});
     CmdMap.insert(T_IDTVL, {"T_IDTVL", 1, "T;", RESULT_VECTOR, false, false});
-    CmdMap.insert(T_GID, {"T_GID", 1, "T8", RESULT_STRING, false, false});
+    CmdMap.insert(T_GID, {"T_GID", 1, "T8", RESULT_INT, false, false});
     CmdMap.insert(T_VTID, {"T_VTID", 3, "T=", RESULT_STRING, false, false});
     CmdMap.insert(T_TID, {"T_TID", 3, "T<", RESULT_STRING, false, false});
     CmdMap.insert(T_C, {"T_C", 3, "T4", RESULT_STRING, false, false});
@@ -96,14 +96,12 @@ int Client::Connect(QString Host, QString Port, int ClientMode)
     connect(MainEthernet,SIGNAL(connected()),this,SLOT(ClientConnected()));
     connect(MainEthernet,SIGNAL(disconnected()),this,SLOT(ClientDisconnected()));
     connect(MainEthernet,SIGNAL(NewDataArrived(QByteArray)),this,SLOT(ParseReply(QByteArray)));
-//    connect(this,SIGNAL(ClientSend(QByteArray)),MainEthernet,SLOT(InitiateWriteDataToPort(QByteArray)));
 #ifndef TIMERSOFF
     TimeoutTimer->start();
 #endif
     DetectedError = CLIER_NOERROR;
     LoginOk = false;
     CurrentCommand = M_LOGIN;
-//    thr->start();
     while (!LoginOk && (DetectedError == CLIER_NOERROR))
     {
         QTime tme;
@@ -148,7 +146,7 @@ void Client::SendCmd(int Command, QStringList &Args)
     }
     if (!RetryActive) // if this send is not a retry
         RetryCount = 0;
-    LastArgs = Args;
+    LastArgs = Args; // store command arguments for retrying
     if (Busy)
     {
         DetectedError = CLIER_BUSY;
@@ -178,7 +176,7 @@ void Client::SendCmd(int Command, QStringList &Args)
     {
         CmdStruct st = CmdMap[Command];
         FieldsNum = 0;
-        if (CheckArgs(st.CmdString, Args, st.ArgsNum, st.CheckForFieldsNum, st.CheckForPairsNum) != 0)
+        if (!CheckArgs(st.CmdString, Args, st.ArgsNum, st.CheckForFieldsNum, st.CheckForPairsNum))
             return;
         if (FieldsNum == 0)
             FieldsNum = 1; // если не выставлено значение поля в функции CheckArgs, выставить его принудительно в 1 (одно поле на запись)
@@ -186,7 +184,7 @@ void Client::SendCmd(int Command, QStringList &Args)
         sl << st.Prefix;
         sl.append(Args);
         QString tmps = Join(sl);
-        CommandString = tmps + "\n";
+        CommandString = tmps;// + "\n";
         ResultType = st.ResultType;
     }
     switch (Command)
@@ -257,35 +255,34 @@ void Client::SendCmd(int Command, QStringList &Args)
         emit BytesOverall(XmitDataSize);
         CommandString.chop(1); // deletes CRLF character
         CommandString.push_back(TOKEN);
-        CommandString += QString::number(XmitDataSize) + "\n"; // file length added
+        CommandString += QString::number(XmitDataSize);// + "\n"; // file length added
         break;
     }
     case M_APUTFILE:
     {
-        CliLog->info("> ...binary data...");
+        CliLog->info("> ...binary data " + QString::number(WrData.size()) + "size...");
         MainEthernet->WriteData(WrData);
         return;
     }
-        // ANS_GETFILE - второй и последующие ответы на принятую информацию (с записью блока в файл)
     case M_AGETFILE:
     case M_NEXT:
     {
-        CommandString = "RDY\n";
+        CommandString = "RDY";
         break;
     }
     case M_QUIT:
     {
-        CommandString = "M1\n";
+        CommandString = "M1";
         break;
     }
     case M_ANSLOGIN:
     {
-        CommandString = Pers+"\n";
+        CommandString = Pers;//+"\n";
         break;
     }
     case M_ANSPSW:
     {
-        CommandString = Pass+"\n";
+        CommandString = Pass;//+"\n";
         break;
     }
     default:
@@ -308,79 +305,37 @@ void Client::ParseReply(QByteArray ba)
     if (!ComReplyTimeoutIsSet)
         GetComReplyTimer->start(); // если не было таймаута, рестартуем таймер
 #endif
-    QString ServerResponse, IncomingString;
-    QStringList ArgList;
+    QString RcvDataString;
     CmdOk = false;
     RetryActive = false; // if there should be a retry, set it at SERVRETSTR processing
     DetectedError = CLIER_NOERROR;
     QTextCodec *codec = QTextCodec::codecForName("Windows-1251");
     if (CurrentCommand != M_AGETFILE) // приём файла обрабатывается по-другому
     {
-        switch (FirstReplyPass)
+        RcvDataString = QString::fromLocal8Bit(codec->fromUnicode(ba));
+        if (RcvDataString == SERVERRSTR)
         {
-        case true:
-        {
-            RcvData.clear();
-            RcvData.append(codec->fromUnicode(ba));
-            if (RcvData.right(1) == "\n") // очередная посылка закончена, надо передать её на обработку
-            {
-                while (RcvData.right(1) == "\n") // убираем все переводы строки
-                    RcvData.chop(1);
-                break;
-            }
-            FirstReplyPass = false;
-            return;
-        }
-        case false:
-        {
-            RcvData.append(codec->fromUnicode(ba));
-            if (RcvData.right(1) == "\n") // очередная посылка закончена, надо передать её на обработку
-            {
-                while (RcvData.right(1) == "\n") // убираем все переводы строки
-                    RcvData.chop(1);
-                break;
-            }
-            return;
-        }
-        }
-        FirstReplyPass = true;
-        IncomingString = QString::fromLocal8Bit(RcvData);
-        CliLog->info("<"+IncomingString);
-        ArgList = SeparateBuf(RcvData);
-        if (ArgList.isEmpty()) // ничего толкового не получено
-            return;
-        ServerResponse = ArgList.first();
-        if (ServerResponse == SERVERRSTR)
-        {
-            CliLog->error("Server error response");
-            DetectedError = CLIER_SERVER;
-            Busy = false;
-            TimeoutTimer->stop();
             if (fp.isOpen())
                 fp.close();
+            Error("Server error response", CLIER_SERVER);
             return;
         }
-        if (ServerResponse == SERVEMPSTR)
+        if (RcvDataString == SERVEMPSTR)
         {
-            CliLog->info("Server empty response");
-            DetectedError = CLIER_EMPTY;
-            Busy = false;
-            TimeoutTimer->stop();
             if (fp.isOpen())
-                fp.remove();
+                fp.close();
+            Error("Server empty response", CLIER_EMPTY);
             return;
         }
-        if (ServerResponse == SERVRETSTR)
+        if (RcvDataString == SERVRETSTR)
         {
             CliLog->info("Server timeout, trying retry");
             ++RetryCount;
             if (RetryCount > MAXRETRCOUNT)
             {
-                DetectedError = CLIER_SERVER;
-                Busy = false;
-                TimeoutTimer->stop();
                 if (fp.isOpen())
                     fp.close();
+                Error("Server timeout", CLIER_SERVER);
             }
             else
             {
@@ -389,14 +344,14 @@ void Client::ParseReply(QByteArray ba)
             }
             return;
         }
-        if (ServerResponse == SERVIDLSTR)
+        if (RcvDataString == SERVIDLSTR)
             CurrentCommand = M_IDLE;
     }
     switch (CurrentCommand)
     {
     case M_LOGIN: // по сути установление соединения, должны получить запрос LOGIN
     {
-        if (ServerResponse == "M5")
+        if (RcvDataString == "M5")
         {
             CmdOk = true;
             Busy = false;
@@ -407,7 +362,7 @@ void Client::ParseReply(QByteArray ba)
     }
     case M_ANSLOGIN:
     {
-        if (ServerResponse == "M6")
+        if (RcvDataString == "M6")
         {
             CmdOk = true;
             Busy = false;
@@ -415,13 +370,13 @@ void Client::ParseReply(QByteArray ba)
             return;
         }
         else
-            DetectedError = CLIER_LOGIN;
+            Error("Bad login", CLIER_LOGIN);
         break;
     }
     case M_ANSPSW:
     {
         // если получили в ответ "GROUP <access>", значит, всё в порядке, иначе ошибка пароля
-        if ((CliMode == CLIMODE_TEST) && (ServerResponse == SERVEROK))
+        if ((CliMode == CLIMODE_TEST) && (RcvDataString == SERVEROK))
         {
             LoginOk = true;
             CmdOk = true;
@@ -429,17 +384,21 @@ void Client::ParseReply(QByteArray ba)
         }
         else
         {
-            if (ServerResponse == "M2")
+            QStringList sl = SeparateBuf(ba);
+            if (sl.size() < 2) // GROUP <access>
+            {
+                Error("Bad password", CLIER_PSW);
+                break;
+            }
+            if (sl.at(0) == "M2")
             {
                 LoginOk = true;
                 bool ok;
-                pc.access = ArgList.at(1).toLong(&ok,16);
+                pc.access = sl.at(1).toLong(&ok,16);
                 if (!ok)
                 {
-                    CliLog->warning("Group access undefined: "+ArgList.at(1));
                     pc.access = 0x0; // нет доступа никуда
-                    DetectedError = CLIER_GROUP;
-                    Busy = false;
+                    Error("Group access undefined: "+sl.at(1), CLIER_GROUP);
                     return;
                 }
                 CliLog->info("Group access: "+QString::number(pc.access));
@@ -447,13 +406,13 @@ void Client::ParseReply(QByteArray ba)
                 CurrentCommand = M_IDLE;
             }
             else
-                DetectedError = CLIER_PSW;
+                Error("Bad password", CLIER_PSW);
         }
         break;
     }
     case M_QUIT:
     {
-        if (ServerResponse == "BYE")
+        if (RcvDataString == "BYE")
             CmdOk = true;
         break;
     }
@@ -468,39 +427,20 @@ void Client::ParseReply(QByteArray ba)
     case T_RDEL:
     case T_UPD:
     case T_UPDV:
-        if (ServerResponse == "OK")
+    {
+        if (RcvDataString == "OK")
             CmdOk = true;
         else
         {
-            DetectedError = CLIER_CMDER;
+            Error("Error while command processing", CLIER_CMDER);
             return;
         }
-        break;
+    }
     // commands with int reply
     case S_GID:
     case S_INS:
     case T_GID:
     case T_INS:
-    {
-        bool ok;
-        if (ArgList.size()<1) // нет количества записей
-        {
-            WriteErrorAndBreakReceiving("Некорректное количество аргументов");
-            DetectedError = CLIER_WRANSW;
-            Busy = false;
-            return;
-        }
-        ResultInt = ArgList.at(0).toInt(&ok);
-        if (!ok)
-        {
-            CliLog->warning("It's not possible to convert to integer: "+ArgList.at(0));
-            DetectedError = CLIER_WRANSW;
-            Busy = false;
-            return;
-        }
-        CmdOk = true;
-        break;
-    }
     // commands with vector reply
     case S_GVSBC:
     case S_GVSBCF:
@@ -517,42 +457,6 @@ void Client::ParseReply(QByteArray ba)
     case T_TF:
     case T_TH:
     case T_TL:
-    {
-        // Формат ответа на запрос:
-        //      <number_of_records>\n
-        //      value[0][0] value[1][0] ... value[n][0] value[0][1] value[1][1] ... value[n][1] ... value[0][k] value[1][k] ... value[n][k]\n
-
-        if (ArgList.size()<1) // нет количества записей
-        {
-            WriteErrorAndBreakReceiving("Некорректное количество аргументов");
-            DetectedError = CLIER_WRANSW;
-            Busy = false;
-            return;
-        }
-        bool ok;
-        MsgNum = ArgList.at(0).toInt(&ok); // количество записей
-        if ((!ok) || (MsgNum < 0))
-        {
-            WriteErrorAndBreakReceiving("Некорректное количество посылок");
-            DetectedError = CLIER_WRANSW;
-            Busy = false;
-            return;
-        }
-        if (MsgNum == 0)
-        {
-            CliLog->info("Пустой ответ");
-            Busy = false;
-            DetectedError = CLIER_EMPTY;
-            break;
-        }
-#ifndef TIMERSOFF
-        TimeoutTimer->start();
-#endif
-        Busy = false;
-        SendCmd(M_NEXT);
-        return;
-        break;
-    }
     // commands with string reply
     case M_ACTIVATE:
     case T_TV:
@@ -560,85 +464,19 @@ void Client::ParseReply(QByteArray ba)
     case T_VTID:
     case T_C:
     {
-        if (ArgList.size()<1) // нет количества записей
+        // Формат ответа на запрос:
+        //      <number_of_records>
+        //      value[0]<0x7F>value[1]...
+        bool ok;
+        RcvDataSize = RcvDataString.toInt(&ok); // количество байт
+        if ((!ok) || (RcvDataSize < 0))
         {
-            WriteErrorAndBreakReceiving("Некорректное количество аргументов");
-            DetectedError = CLIER_WRANSW;
+            Error("Некорректное количество байт", CLIER_WRANSW);
             return;
         }
-        ResultStr = ArgList.at(0);
-        CmdOk = true;
-        break;
-    }
-    case M_NEXT:
-    {
-        if (MsgNum == 0) // конец передачи, пришёл IDLE
+        if (RcvDataSize == 0)
         {
-            CmdOk = true;
-            break;
-        }
-        QStringList sl;
-        if (ResultType == RESULT_VECTOR)
-        {
-            if (Result.size() > 0)
-                sl = Result.takeFirst(); // берём нулевую строку (для RESULT_VECTOR единственную)
-            Result.clear();
-        }
-        while ((MsgNum) && (ArgList.size()))
-        {
-            if (ArgList.size() < FieldsNum)
-            {
-                if (MsgNum == 1) // если это последняя посылка
-                {
-                   CliLog->warning("Некратное число записей в SQL-ответе");
-                   MsgNum = 0;
-                   ArgList.clear();
-                   DetectedError = CLIER_EMPTY;
-                   break;
-                }
-                else // блок из READBUFMAX символов был считан, будет следующий
-                    FieldsLeastToAdd = FieldsNum - ArgList.size();
-            }
-            if (ResultType == RESULT_MATRIX)
-            {
-                sl.clear();
-                if (FieldsLeast) // осталось с предыдущего раза
-                {
-                    sl = Result.takeLast(); // берём предыдущий считанный кусок
-                    for (int i=0; i<FieldsLeastToAdd; i++)
-                        sl.append(ArgList.takeFirst());
-                    FieldsLeast = false;
-                    FieldsLeastToAdd = 0;
-                    --MsgNum;
-                }
-                else if (FieldsLeastToAdd != 0)
-                {
-                    FieldsLeast = true;
-                    for (int i=0; i<ArgList.size(); i++)
-                        sl.append(ArgList.takeFirst());
-                }
-                else
-                {
-                    for (int i=0; i<FieldsNum; i++)
-                        sl.append(ArgList.takeFirst());
-                    --MsgNum;
-                }
-                Result.append(sl);
-            }
-            else // ResultType == RESULT_VECTOR
-            {
-                for (int i=0; i<FieldsNum; i++)
-                    sl.append(ArgList.takeFirst());
-                --MsgNum;
-            }
-        }
-        if (DetectedError != CLIER_NOERROR)
-            break;
-        if (MsgNum == 0) // кончились ответы, можно выходить
-        {
-            if (ResultType == RESULT_VECTOR)
-                Result.append(sl);
-            CmdOk = true;
+            Error("Empty answer", CLIER_EMPTY);
             break;
         }
 #ifndef TIMERSOFF
@@ -649,69 +487,160 @@ void Client::ParseReply(QByteArray ba)
         return;
         break;
     }
+    case M_NEXT:
+    {
+        RcvDataSize -= RcvDataString.size();
+        QStringList sl;
+
+        if (RcvDataString.isEmpty()) // нет ничего в принятой посылке (0 байт)
+        {
+            Error("Wrong answer", CLIER_WRANSW);
+            return;
+        }
+        switch (ResultType)
+        {
+        case RESULT_STRING:
+        {
+            ResultStr += RcvDataString;
+            break;
+        }
+        case RESULT_INT:
+        {
+            bool ok;
+            ResultInt = RcvDataString.toInt(&ok);
+            if (!ok)
+            {
+                Error("It's not possible to convert to integer: "+RcvDataString, CLIER_WRANSW);
+                return;
+            }
+            CmdOk = true;
+            TimeoutTimer->stop();
+            CurrentCommand = M_IDLE;
+            Busy = false;
+            return;
+        }
+        case RESULT_MATRIX:
+        {
+            QStringList RcvList = SeparateBuf(codec->fromUnicode(ba));
+            QString sllast;
+            if (!Result.isEmpty()) // дополняем последний элемент
+            {
+                sl = Result.takeLast(); // берём предыдущий считанный кусок
+                sllast = sl.last();
+                sllast += RcvList.takeFirst();
+                sl.replace(sl.size()-1, sllast);
+            }
+            while ((sl.size() < FieldsNum) && !(RcvList.isEmpty()))
+                sl.append(RcvList.takeFirst());
+            if (Result.isEmpty())
+                Result.append(sl);
+            else
+                Result.replace(Result.size()-1, sl);
+            while (RcvList.size())
+            {
+                Result.append(QStringList());
+                sl.clear();
+                while ((sl.size() < FieldsNum) && !(RcvList.isEmpty()))
+                    sl.append(RcvList.takeFirst());
+                Result.replace(Result.size()-1, sl);
+            }
+            break;
+        }
+        case RESULT_VECTOR:
+        {
+            QStringList RcvList = SeparateBuf(codec->fromUnicode(ba));
+            QString sllast;
+            if (Result.isEmpty())
+                Result.append(QStringList());
+            sl = Result.at(0);
+            if (!sl.isEmpty())
+            {
+                sllast = sl.last() + RcvList.takeFirst();
+                sl.replace(sl.size()-1, sllast);
+            }
+            sl.append(RcvList);
+            Result.replace(0, sl);
+            break;
+        }
+        default:
+            Error("Bad result type", CLIER_WRANSW);
+            return;
+            break;
+        }
+        if (RcvDataSize == 0) // последний фрагмент обработан
+        {
+            CmdOk = true;
+            TimeoutTimer->stop();
+            CurrentCommand = M_IDLE;
+            Busy = false;
+            return;
+        }
+#ifndef TIMERSOFF
+        TimeoutTimer->start();
+#endif
+        Busy = false;
+        return;
+    }
     case M_PUTFILE:
+    {
+        if (RcvDataString != "OK")
+        {
+            Error("Not ok answer", CLIER_PUTFER);
+            return;
+        }
+    }
     case M_APUTFILE:
     {
-        if (ServerResponse == "OK")
+        emit BytesWritten(WrittenBytes);
+        CliLog->info(QString::number(WrittenBytes)+" bytes written to file");
+        qint64 BytesToSend = XmitDataSize - WrittenBytes;
+        if (BytesToSend > READBUFMAX)
+            BytesToSend = READBUFMAX;
+        if (BytesToSend > 0)
         {
-            emit BytesWritten(WrittenBytes);
-            CliLog->info(QString::number(WrittenBytes)+" bytes written to file");
-            qint64 BytesToSend = XmitDataSize - WrittenBytes;
-            if (BytesToSend > READBUFMAX)
-                BytesToSend = READBUFMAX;
-            if (BytesToSend > 0)
+            if (fp.isOpen())
             {
-                if (fp.isOpen())
+                WrData = QByteArray(fp.read(BytesToSend));
+                if (WrData.isEmpty())
                 {
-                    WrData = QByteArray(fp.read(BytesToSend));
-                    if (WrData.isEmpty())
-                    {
-//                        delete WrData;
-                        DetectedError = CLIER_PUTFER;
-                        Busy = false;
-                        return;
-                    }
-                    WrittenBytes += WrData.size();
-                    Busy = false;
-                    SendCmd(M_APUTFILE);
+                    Error("Error while reading file", CLIER_PUTFER);
                     return;
                 }
-                else
-                {
-                    DetectedError = CLIER_PUTFER;
-                    return;
-                }
+                WrittenBytes += WrData.size();
+                Busy = false;
+                SendCmd(M_APUTFILE);
+#ifndef TIMERSOFF
+                TimeoutTimer->start();
+#endif
+                return;
             }
             else
             {
-                if (fp.isOpen())
-                    fp.close();
-                emit TransferComplete();
-                CmdOk = true;
-                break;
+                Error("File error", CLIER_PUTFER);
+                return;
             }
         }
         else
         {
-            DetectedError = CLIER_PUTFER;
-            Busy = false;
-            return;
+            if (fp.isOpen())
+                fp.close();
+            emit TransferComplete();
+            CmdOk = true;
+            break;
         }
         break;
     }
-        // первый приём после команды
+    // первый приём после команды
     case M_GETFILE:
     {
         CmdOk = true;
         bool ok;
-        RcvDataSize = ServerResponse.toLong(&ok,10);
+        RcvDataSize = RcvDataString.toLong(&ok,10);
         if (!ok)
         {
-            CliLog->warning("Not a decimal value detected");
-            DetectedError = CLIER_GETFER;
             if (fp.isOpen())
                 fp.remove();
-            Busy = false;
+            Error("Not a decimal value detected", CLIER_GETFER);
             return;
         }
         emit BytesOverall(RcvDataSize);
@@ -724,52 +653,36 @@ void Client::ParseReply(QByteArray ba)
     {
         if (!fp.isOpen())
         {
-            CliLog->error("File error");
-            DetectedError = CLIER_GETFER;
-            Busy = false;
+            Error("File error", CLIER_GETFER);
             return;
         }
         if (ComReplyTimeoutIsSet)
         {
             emit TransferComplete();
-            CliLog->error("GetFile read timeout");
             QString tmpString = "ReadBytes = " + QString::number(ReadBytes);
             CliLog->info(tmpString);
             tmpString = "RcvDataSize = " + QString::number(RcvDataSize);
             CliLog->info(tmpString);
-            DetectedError = CLIER_GETFTOUT;
-            Busy = false;
-            TimeoutTimer->stop();
             if (fp.isOpen())
                 fp.remove();
+            Error("GetFile read timeout", CLIER_GETFTOUT);
             break;
         }
         CliLog->info("< ...binary data "+QString::number(ba.size())+" size...");
         if (ba.data() == SERVERRSTR)
         {
-            CliLog->error("Server error response");
-            DetectedError = CLIER_SERVER;
-            Busy = false;
-            TimeoutTimer->stop();
             if (fp.isOpen())
                 fp.remove();
-            Busy = false;
+            Error("Server error response", CLIER_SERVER);
             return;
-        }
-        if (ba.data() == "IDLE\n") // закончили передачу
-        {
-            if (fp.isOpen())
-                fp.close();
-            emit TransferComplete();
-            CmdOk = true;
-            break;
         }
         ReadBytes += ba.size();
         qint64 rb = fp.write(ba);
         emit BytesRead(ReadBytes);
         CliLog->info(QString::number(rb)+" bytes written to file");
         CliLog->info(QString::number(ReadBytes)+" bytes written overall");
-        CliLog->info(QString::number(RcvDataSize-ReadBytes)+" bytes least");
+        quint64 ReadRemains = RcvDataSize - ReadBytes;
+        CliLog->info(QString::number(ReadRemains)+" bytes least");
         if (ReadBytes >= RcvDataSize)
         {
             if (fp.isOpen())
@@ -779,8 +692,10 @@ void Client::ParseReply(QByteArray ba)
         }
         else
         {
+#ifndef TIMERSOFF
+            TimeoutTimer->start();
+#endif
             Busy = false;
-            SendCmd(M_AGETFILE);
             return;
         }
         break;
@@ -794,9 +709,10 @@ void Client::ParseReply(QByteArray ba)
     Busy = false;
 }
 
-void Client::WriteErrorAndBreakReceiving(QString ErMsg)
+void Client::Error(QString ErMsg, int ErrorInt)
 {
     CliLog->warning(ErMsg);
+    DetectedError = ErrorInt;
     TimeoutTimer->stop();
     Busy = false;
     CurrentCommand = M_IDLE;
@@ -851,7 +767,7 @@ void Client::ComReplyTimeout()
 
 QStringList Client::SeparateBuf(QByteArray &buf)
 {
-    return QString::fromLocal8Bit(buf).split(0x7F);
+    return QString::fromLocal8Bit(buf).split(TOKEN);
 }
 
 // объединение списка строк в одну строку через разделитель
@@ -863,7 +779,7 @@ QString Client::Join(QStringList &sl)
 
 // проверка аргументов
 
-int Client::CheckArgs(QString cmd, QStringList &Args, int argsnum, bool fieldscheck, bool pairscheck)
+bool Client::CheckArgs(QString cmd, QStringList &Args, int argsnum, bool fieldscheck, bool pairscheck)
 {
     int pnum;
     if (Args.size() < argsnum)
@@ -871,14 +787,14 @@ int Client::CheckArgs(QString cmd, QStringList &Args, int argsnum, bool fieldsch
         CliLog->error(cmd + ": Number of arguments is less than " + QString::number(argsnum));
         DetectedError = CLIER_WRARGS;
         Busy = false;
-        return 1;
+        return false;
     }
     if (fieldscheck)
     {
         if (Args.size()<1)
         {
             ERMSG("DBG: Fieldscheck");
-            return 5;
+            return false;
         }
         QString fieldsnum = Args.at(0);
         bool ok;
@@ -888,7 +804,7 @@ int Client::CheckArgs(QString cmd, QStringList &Args, int argsnum, bool fieldsch
             CliLog->error(cmd + ": argument is not a number");
             DetectedError = CLIER_WRARGS;
             Busy = false;
-            return 2;
+            return false;
         }
     }
     if (pairscheck)
@@ -897,7 +813,7 @@ int Client::CheckArgs(QString cmd, QStringList &Args, int argsnum, bool fieldsch
         if (Args.size()<(pidx+1))
         {
             ERMSG("DBG: Pairscheck");
-            return 5;
+            return false;
         }
         QString pairsnum = Args.at(pidx);
         bool ok;
@@ -907,7 +823,7 @@ int Client::CheckArgs(QString cmd, QStringList &Args, int argsnum, bool fieldsch
             CliLog->error(cmd + ": argument is not a number");
             DetectedError = CLIER_WRARGS;
             Busy = false;
-            return 3;
+            return false;
         }
     }
     if (fieldscheck && pairscheck)
@@ -917,10 +833,10 @@ int Client::CheckArgs(QString cmd, QStringList &Args, int argsnum, bool fieldsch
             CliLog->error(cmd + ": Number of fields is less than mentioned in header: "+QString::number(Args.size())+" "+QString::number(FieldsNum+2*pnum+1));
             DetectedError = CLIER_WRARGS;
             Busy = false;
-            return 4;
+            return false;
         }
     }
-    return 0;
+    return true;
 }
 
 int Client::GetFile(const QString &type, const QString &subtype, const QString &filename)

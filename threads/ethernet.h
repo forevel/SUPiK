@@ -82,6 +82,7 @@ public:
     void SetEthernet(const QString &Host, int Port, int Type=ETH_PLAIN);
     void WriteData(QByteArray &ba);
     void Disconnect();
+//    void SetReadDataSize(quint64 size);
 
 public slots:
 //    void Run();
@@ -109,6 +110,7 @@ private:
     quint16 Port;
     int EthType;
     QByteArray ReadData;
+    quint64 ReadDataSize;
     int Level;
 
     void SendData();

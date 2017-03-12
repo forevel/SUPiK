@@ -361,7 +361,6 @@ void StartWindow::OkPBClicked()
     StartWindowSplashScreen->finish(this);
 
     supik *supik_main_window = new supik;
-    connect(supik_main_window,SIGNAL(stopall()),Cli,SLOT(StopThreads()));
     supik_main_window->setVisible(true);
     supik_main_window->setEnabled(true);
 }

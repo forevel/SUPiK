@@ -16,7 +16,6 @@ Client::Client(QObject *parent) : QObject(parent)
     RetryActive = false;
     RetryCount = 0;
     Connected = false;
-    FirstReplyPass = true;
     ComReplyTimeoutIsSet = false;
     ResultType = RESULT_NONE;
     CmdMap.insert(S_GVBFS, {"S_GVBFS", 7, "S5", RESULT_VECTOR, true, true});
@@ -160,9 +159,8 @@ void Client::SendCmd(int Command, QStringList &Args)
     }
     if (Command != M_NEXT)
     {
-        FieldsLeast = false;
-        FieldsLeastToAdd = 0;
         Result.clear(); // очищаем результаты
+        ResultStr.clear();
     }
     DetectedError = CLIER_NOERROR;
     CurrentCommand = Command;
@@ -323,7 +321,7 @@ void Client::ParseReply(QByteArray ba)
         if (RcvDataString == SERVEMPSTR)
         {
             if (fp.isOpen())
-                fp.close();
+                fp.remove(); // remove empty created in files.cpp file
             Error("Server empty response", CLIER_EMPTY);
             return;
         }
@@ -346,6 +344,7 @@ void Client::ParseReply(QByteArray ba)
         }
         if (RcvDataString == SERVIDLSTR)
             CurrentCommand = M_IDLE;
+        CliLog->info("<"+RcvDataString);
     }
     switch (CurrentCommand)
     {
@@ -695,7 +694,7 @@ void Client::ParseReply(QByteArray ba)
 #ifndef TIMERSOFF
             TimeoutTimer->start();
 #endif
-            Busy = false;
+            Busy = true;
             return;
         }
         break;
@@ -844,8 +843,8 @@ int Client::GetFile(const QString &type, const QString &subtype, const QString &
     QStringList sl;
     sl.clear();
     sl << type << subtype << filename;
-    Cli->SendCmd(M_GETFILE, sl);
-    while (Cli->Busy)
+    SendCmd(M_GETFILE, sl);
+    while (Busy)
     {
         QThread::msleep(10);
         qApp->processEvents(QEventLoop::AllEvents);
@@ -857,8 +856,8 @@ int Client::PutFile(const QString &localfilename, const QString &type, const QSt
 {
     QStringList sl;
     sl << localfilename << type << subtype << filename;
-    Cli->SendCmd(M_PUTFILE, sl);
-    while (Cli->Busy)
+    SendCmd(M_PUTFILE, sl);
+    while (Busy)
     {
         QThread::msleep(10);
         qApp->processEvents(QEventLoop::AllEvents);

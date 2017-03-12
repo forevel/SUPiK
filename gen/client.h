@@ -218,7 +218,7 @@ private:
     QByteArray RcvData, WrData;
     Ethernet *MainEthernet, *FileEthernet;
     QTimer *TimeoutTimer, *GetComReplyTimer, *GetFileTimer;
-    bool FileBusy, Connected, FileConnected, CmdOk, LoginOk, FirstReplyPass, ComReplyTimeoutIsSet, FieldsLeast;
+    bool FileBusy, Connected, CmdOk, LoginOk, ComReplyTimeoutIsSet;
     QString FileHost;
     quint16 FilePort;
     quint64 WrittenBytes, ReadBytes, RcvDataSize, XmitDataSize;
@@ -226,7 +226,6 @@ private:
     QFile fp;
     int FieldsNum;
     int ResultType;
-    int FieldsLeastToAdd;
     QString Pers, Pass;
     Log *CliLog;
 

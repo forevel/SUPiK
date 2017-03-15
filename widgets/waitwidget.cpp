@@ -126,6 +126,7 @@ void WaitWidget::paintEvent(QPaintEvent *e)
     p5.end();
     QPainter p(this);
     QRect mrect = QRect(0,height()-20,width(),20);
+    p.fillRect(mrect, Qt::lightGray);
     p.drawText(mrect, Qt::AlignCenter, Message);
     p.end();
     QPainter ps(this);

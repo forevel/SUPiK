@@ -251,9 +251,8 @@ void Client::SendCmd(int Command, QStringList &Args)
         WrittenBytes = 0;
         XmitDataSize = fp.size();
         emit BytesOverall(XmitDataSize);
-        CommandString.chop(1); // deletes CRLF character
         CommandString.push_back(TOKEN);
-        CommandString += QString::number(XmitDataSize);// + "\n"; // file length added
+        CommandString += QString::number(XmitDataSize); // file length added
         break;
     }
     case M_APUTFILE:
@@ -275,12 +274,12 @@ void Client::SendCmd(int Command, QStringList &Args)
     }
     case M_ANSLOGIN:
     {
-        CommandString = Pers;//+"\n";
+        CommandString = Pers;
         break;
     }
     case M_ANSPSW:
     {
-        CommandString = Pass;//+"\n";
+        CommandString = Pass;
         break;
     }
     default:
@@ -434,6 +433,7 @@ void Client::ParseReply(QByteArray ba)
             Error("Error while command processing", CLIER_CMDER);
             return;
         }
+        break;
     }
     // commands with int reply
     case S_GID:

@@ -8,14 +8,12 @@ QMAKE_TARGET_COMPANY = EvelSoft
 QMAKE_TARGET_COPYRIGHT = EvelSoft
 QMAKE_TARGET_PRODUCT = SUPiK
 RC_ICONS = res/SUPiK.ico
-VERSION = 2.1.16
+VERSION = 2.1.22
 
-QT       += widgets core gui sql xlsx network printsupport
+QT       += widgets core gui sql network printsupport
 
 TARGET = SUPiK
 TEMPLATE = app
-
-# RC_FILE = SUPiK.rc
 
 SOURCES += main.cpp\
     startwindow.cpp \
@@ -186,11 +184,5 @@ else:unix: LIBS += -LD:/mysql/lib/ -llibmysql
 INCLUDEPATH += D:/mysql/include
 DEPENDPATH += D:/mysql/include
 
-INCLUDEPATH += $$PWD/../xlsxwriter/src/xlsx
-DEPENDPATH += $$PWD/../xlsxwriter/src/xlsx
-
 LIBS += -llibeay32 -lssleay32
-LIBS += -lliblzma
-
-#DISTFILES += \
-#    res/Einstein.jpg
+LIBS += -lliblzma -lQt5Xlsx

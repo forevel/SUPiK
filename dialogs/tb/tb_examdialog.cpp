@@ -475,6 +475,9 @@ void tb_examdialog::ProcessResultsAndExit()
     QStringList sl;
     if (ExType == EXTYPE_EX)
     {
+        WaitWidget *ww = new WaitWidget;
+        ww->Start();
+        ww->SetMessage("Запись результатов...");
         QString table = "Экзамен ТБ ответы_полн";
         for (int i=0; i<TB_QUESTNUM; ++i)
         {
@@ -487,7 +490,8 @@ void tb_examdialog::ProcessResultsAndExit()
             tfl.Insert(table, newID);
             if (tfl.result == TFRESULT_ERROR)
             {
-                WARNMSG("");
+                WARNMSG("Ошибка добавления нового элемента в базу ответов");
+                ww->Stop();
                 return;
             }
             QStringList fl = QStringList() << "ИД" << "ИД вопроса" << "Номер ответа" << "Правильный ответ";
@@ -496,11 +500,14 @@ void tb_examdialog::ProcessResultsAndExit()
             tfl.Update(table, fl, vl);
             if (tfl.result == TFRESULT_ERROR)
             {
-                WARNMSG("");
+                WARNMSG("Ошибка обновления очередного ответа в БД");
+                ww->Stop();
+                this->close();
                 return;
             }
             lsl.append(vl);
         }
+        ww->SetMessage("Формирование протокола...");
         // сформируем протокол в pdf
         sl = QStringList() << "ИД" << "ИД вопроса" << "Номер ответа" << "Правильный ответ";
         lsl.insert(0, sl);
@@ -518,7 +525,8 @@ void tb_examdialog::ProcessResultsAndExit()
         tfl.Insert(table, newID);
         if (tfl.result == TFRESULT_ERROR)
         {
-            WARNMSG("");
+            WARNMSG("Ошибка добавления нового элемента в базу результатов");
+            ww->Stop();
             this->close();
             return;
         }
@@ -529,14 +537,15 @@ void tb_examdialog::ProcessResultsAndExit()
         if (tfl.result == TFRESULT_ERROR)
         {
             WARNMSG("Ошибка при записи результатов экзамена в БД");
+            ww->Stop();
             this->close();
             return;
         }
         // отправим протокол на сервер
+        ww->SetMessage("Отправка протокола на сервер...");
         if (Cli->PutFile(FullFilename, FLT_TB, FLST_PROT, Filename) != Client::CLIER_NOERROR)
-        {
             WARNMSG("Ошибка отправки файла с протоколом экзамена на сервер");
-        }
+        ww->Stop();
     }
     MessageBox2::information(this, "Информация", "По результатам экзамена Вы получаете оценку\n" + QString::number(Mark, 'f', 2) + " баллов из " + \
                              QString::number(MAX_MARK) + " возможных!");

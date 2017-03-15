@@ -15,7 +15,7 @@
 #define SERVIDLSTR  "IDLE"
 #define SERVEROK    "OK"
 
-#define TIMERSOFF // если не закомментировано, таймауты отключены
+//#define TIMERSOFF // если не закомментировано, таймауты отключены
 #define SLNUMMAX    10 // максимальное число полей в запросе по столбцам
 #define TOKEN       0x7F // разделитель
 

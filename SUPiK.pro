@@ -92,7 +92,8 @@ SOURCES += main.cpp\
     widgets/treeview.cpp \
     widgets/waitwidget.cpp \
     widgets/wd_func.cpp \
-    widgets/s_tqscrollarea.cpp
+    widgets/s_tqscrollarea.cpp \
+    widgets/clevertimer.cpp
 
 HEADERS  += startwindow.h \
     supik.h \
@@ -170,7 +171,8 @@ HEADERS  += startwindow.h \
     widgets/treeview.h \
     widgets/waitwidget.h \
     widgets/wd_func.h \
-    widgets/s_tqscrollarea.h
+    widgets/s_tqscrollarea.h \
+    widgets/clevertimer.h
 
 RESOURCES += \
     pic.qrc

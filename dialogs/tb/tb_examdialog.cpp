@@ -367,6 +367,8 @@ QList<s_tqWidget *> tb_examdialog::PrepareQuestionsByTheme(int theme, int questn
                 connect(rb,SIGNAL(clicked(bool)),this,SLOT(AnswerChoosed()));
                 hlyout->addWidget(rb);
                 lbl = new s_tqLabel(mainvl.at(j));
+                font.setPointSize(16);
+                lbl->setFont(font);
                 lbl->setWordWrap(true);
                 hlyout->addWidget(lbl, 100);
                 lyout->addLayout(hlyout);

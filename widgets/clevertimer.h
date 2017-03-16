@@ -2,14 +2,14 @@
  * It's an implementation of label presenting the value of timer with such functionality as two count direction,
  * boundaries, signal emitting when reaching the boundary, several output format of timer value and much more.
  * Usage:
- *          CleverTimer *tmr = new CleverTimer;
- *          tmr->Init(TIMER_SIMPLE);
- *          tmr->SetDirection(COUNT_UP);
- *          tmr->SetBoundaries(0, 1000);
+ *          CleverTimer *Tmr = new CleverTimer;
+ *          Tmr->SetDirection(COUNT_UP);
+ *          Tmr->Init(TIMER_SIMPLE);
+ *          Tmr->SetBoundaries(0, 1000);
  *          QHBoxLayout *hlyout = new QHBoxLayout;
- *          hlyout->addWidget(tmr);
+ *          hlyout->addWidget(Tmr);
  *          setLayout(hlyout);
- *          tmr->Start();
+ *          Tmr->Start();
  * */
 
 #ifndef CLEVERTIMER_H
@@ -17,6 +17,14 @@
 
 #include <QLabel>
 #include <QTimer>
+#include <QTime>
+
+#define FONT_NORMAL 0
+#define FONT_BOLD   1
+#define FONT_ITALIC 2
+#define FONT_UNDERLINE  4
+
+#define FONT_MAXPIXELSIZE   72
 
 class CleverTimer : public QLabel
 {
@@ -45,18 +53,38 @@ public:
         TIMER_RUNNING // timer is running and counting
     };
 
+    enum TimerColors
+    {
+        COLOR_NORMAL, // normal black color
+        COLOR_WARN, // yellow warning color
+        COLOR_ALARM, // red warning color
+        COLOR_GREEN // green color
+    };
+
     void SetDirection(int dir);
     void Init(int type);
     void SetBoundaries(quint64 min, quint64 max); // min & max in milliseconds
+    void SetFont(int type, int size); // set font of timer output
+    void SetColor(int color); // set color of timer output foreground
+    void SetThreshold(quint64 threshold);
+    int Status(); // returns timer status
+
+public slots:
     void Start();
     void Stop();
+    void Clear(); // reset TimerCounter to initial value
+
+signals:
+    void Finished(); // timer finished counting
 
 private:
     int CountDirection;
     int TimerType;
-    quint64 Min, Max;
-    QTimer *tmr;
+    QTime Min, Max, Thr;
+    QTimer *Tmr;
     int TimerState;
+    QTime Tme;
+    bool ThresholdActivated;
 
 private slots:
     void TextUpdate();

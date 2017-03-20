@@ -16,6 +16,8 @@
 
 #define MAX_MARK    5 // максимальная оценка
 
+#define TB_EX_TIME  10 // minutes to finish exam
+
 #include <QDialog>
 #include "../../models/treemodel.h"
 #include "../../widgets/s_tqwidget.h"
@@ -35,6 +37,8 @@ public:
     ~tb_examdialog();
 
 signals:
+    void StartCleverTimer();
+    void StopCleverTimer();
 
 public slots:
 
@@ -44,6 +48,7 @@ private slots:
     void GroupChoosed();
     void NextQuestion();
     void AnswerChoosed();
+    void ProcessResultsAndExit();
 
 protected:
     void paintEvent(QPaintEvent *);
@@ -70,7 +75,6 @@ private:
     bool PrepareQuestions();
     QList<s_tqWidget *> PrepareQuestionsByTheme(int theme, int questnum); // подготовка набора виджетов по теме theme в количестве questnum
     void SetupUI();
-    void ProcessResultsAndExit();
 };
 
 #endif // tb_examdialog_H

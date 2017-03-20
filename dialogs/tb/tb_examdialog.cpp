@@ -27,6 +27,7 @@
 #include "../../widgets/s_tqstackedwidget.h"
 #include "../../widgets/goodbadwidget.h"
 #include "../../widgets/waitwidget.h"
+#include "../../widgets/clevertimer.h"
 #include "../../gen/publicclass.h"
 #include "../../gen/s_tablefields.h"
 #include "../../gen/pdfout.h"
@@ -74,7 +75,19 @@ void tb_examdialog::SetupUI()
     connect(pb, SIGNAL(clicked()), this, SLOT(close()));
     pb->setToolTip("Закрыть вкладку");
     hlyout->addWidget(pb);
-    hlyout->addStretch(300);
+    hlyout->addStretch(160);
+    CleverTimer *Tmr = new CleverTimer;
+    Tmr->SetDirection(CleverTimer::COUNT_DOWN);
+    Tmr->Init(CleverTimer::TIMER_SIMPLIM);
+    Tmr->SetBoundaries(0, TB_EX_TIME*60000); // 10 mins
+    Tmr->SetFont(FONT_BOLD | FONT_ITALIC, 16);
+    Tmr->SetThreshold(60000); // 60 sec
+    connect(this,SIGNAL(destroyed(QObject*)),Tmr,SLOT(deleteLater()));
+    connect(this,SIGNAL(StartCleverTimer()),Tmr,SLOT(Start()));
+    connect(this,SIGNAL(StopCleverTimer()),Tmr,SLOT(Stop()));
+    connect(Tmr,SIGNAL(Finished()),this,SLOT(ProcessResultsAndExit()));
+    hlyout->addWidget(Tmr);
+    hlyout->addStretch(100);
     s_tqLabel *lbl = new s_tqLabel("Экзамен ОТ и ТБ");
     QFont font;
     font.setPointSize(15);
@@ -298,6 +311,7 @@ bool tb_examdialog::PrepareQuestions()
     while (tmplw.size() != 0)
         stw->addWidget(tmplw.takeFirst());
     stw->setCurrentIndex(0);
+    emit StartCleverTimer();
     return true;
 }
 
@@ -367,7 +381,7 @@ QList<s_tqWidget *> tb_examdialog::PrepareQuestionsByTheme(int theme, int questn
                 connect(rb,SIGNAL(clicked(bool)),this,SLOT(AnswerChoosed()));
                 hlyout->addWidget(rb);
                 lbl = new s_tqLabel(mainvl.at(j));
-                font.setPointSize(16);
+                font.setPointSize(13);
                 lbl->setFont(font);
                 lbl->setWordWrap(true);
                 hlyout->addWidget(lbl, 100);
@@ -469,6 +483,7 @@ void tb_examdialog::NextQuestion()
 
 void tb_examdialog::ProcessResultsAndExit()
 {
+    emit StopCleverTimer();
     // сначала запишем в базу данных результаты
     // потом выдадим окно с результатами
     // потом закроем этот диалог

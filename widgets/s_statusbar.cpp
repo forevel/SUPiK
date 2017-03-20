@@ -1,27 +1,48 @@
-#include "portactivity.h"
+#include "s_statusbar.h"
 #include <QPixmap>
-#include <QVBoxLayout>
-#include <QLabel>
+#include <QHBoxLayout>
+#include "s_tqlabel.h"
+#include "wd_func.h"
 
-PortActivity::PortActivity(QWidget *parent) : QWidget(parent)
+s_StatusBar::s_StatusBar(QWidget *parent) : QWidget(parent)
 {
     setAttribute(Qt::WA_DeleteOnClose);
 //    setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
-    QVBoxLayout *vlyout = new QVBoxLayout;
-    QPixmap pmap (":/res/2off.png");
-    QLabel *lbl = new QLabel;
-    lbl->setPixmap(pmap);
-    lbl->setObjectName("portactivitylabel");
-    vlyout->addWidget(lbl);
-    setLayout(vlyout);
+    QHBoxLayout *hlyout = new QHBoxLayout;
+    hlyout->addStretch(300);
+    s_tqLabel *lbl = new s_tqLabel;
+    lbl->setObjectName("incbytes");
+    lbl->SetColor(Qt::darkGreen);
+    hlyout->addWidget(lbl, 10);
+    lbl = new s_tqLabel(" / ");
+    hlyout->addWidget(lbl, 10);
+    lbl = new s_tqLabel;
+    lbl->setObjectName("outbytes");
+    lbl->SetColor(Qt::darkYellow);
+    hlyout->addWidget(lbl, 10);
+    setLayout(hlyout);
+    IncBytes = OutBytes = 0;
 }
 
-PortActivity::~PortActivity()
+s_StatusBar::~s_StatusBar()
 {
 
 }
 
-void PortActivity::Start()
+void s_StatusBar::UpdateIncomeBytes(quint64 bytes)
+{
+    IncBytes += bytes;
+    WDFunc::SetLBLText(this, "incbytes", "Х: " + QString::number(IncBytes));
+}
+
+void s_StatusBar::UpdateOutgoingBytes(quint64 bytes)
+{
+    OutBytes += bytes;
+    WDFunc::SetLBLText(this, "outbytes", "Ы: " + QString::number(OutBytes));
+}
+
+/*
+void s_StatusBar::Start()
 {
     UTmr = new QTimer;
     UTmr->setInterval(1000);
@@ -31,12 +52,12 @@ void PortActivity::Start()
     connect(DTmr,SIGNAL(timeout()),this,SLOT(ClearDownload()));
 }
 
-void PortActivity::UploadActive()
+void s_StatusBar::UploadActive()
 {
     if (UploadIsActive)
         return;
     UploadIsActive = true;
-    QLabel *lbl = this->findChild<QLabel *>("portactivitylabel");
+    QLabel *lbl = this->findChild<QLabel *>("s_StatusBarlabel");
     if (lbl == 0)
         return;
     if (DownloadIsActive)
@@ -52,12 +73,12 @@ void PortActivity::UploadActive()
     UTmr->start();
 }
 
-void PortActivity::DownloadActive()
+void s_StatusBar::DownloadActive()
 {
     if (DownloadIsActive)
         return;
     DownloadIsActive = true;
-    QLabel *lbl = this->findChild<QLabel *>("portactivitylabel");
+    QLabel *lbl = this->findChild<QLabel *>("s_StatusBarlabel");
     if (lbl == 0)
         return;
     if (UploadIsActive)
@@ -73,11 +94,11 @@ void PortActivity::DownloadActive()
     DTmr->start();
 }
 
-void PortActivity::ClearUpload()
+void s_StatusBar::ClearUpload()
 {
     UTmr->stop();
     UploadIsActive = false;
-    QLabel *lbl = this->findChild<QLabel *>("portactivitylabel");
+    QLabel *lbl = this->findChild<QLabel *>("s_StatusBarlabel");
     if (lbl == 0)
         return;
     if (DownloadIsActive)
@@ -92,11 +113,11 @@ void PortActivity::ClearUpload()
     }
 }
 
-void PortActivity::ClearDownload()
+void s_StatusBar::ClearDownload()
 {
     DTmr->stop();
     DownloadIsActive = false;
-    QLabel *lbl = this->findChild<QLabel *>("portactivitylabel");
+    QLabel *lbl = this->findChild<QLabel *>("s_StatusBarlabel");
     if (lbl == 0)
         return;
     if (UploadIsActive)
@@ -110,3 +131,4 @@ void PortActivity::ClearDownload()
         lbl->setPixmap(UpOnPmap);
     }
 }
+*/

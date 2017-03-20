@@ -19,8 +19,9 @@
 #include "dialogs/tb/tb_examdialog.h"
 #include "widgets/s_tqlabel.h"
 #include "widgets/s_colortabwidget.h"
-#include "widgets/portactivity.h"
+#include "widgets/s_statusbar.h"
 #include "gen/publiclang.h"
+#include "gen/client.h"
 #include "gen/s_sql.h"
 
 supik::supik()
@@ -28,7 +29,6 @@ supik::supik()
     IsProblemsDetected = false;
     PeriodicOddSecond = true;
     SetSupikWindow();
-    SetSupikStatusBar();
     pc.supikprocs << "ExitSupik" << "SysStructEdit" << "SettingsEdit" << "Components" << "Directories" << "BackupDir" << "RestoreDir" << "ProbCheck";
     pc.supikprocs << "WhIncome" << "WhOutgoing" << "WhSearch" << "DevDoc" << "DevDev" << "Quarantine" << "" << "SysImportClass" << "TBExam";
     pf["ExitSupik"] = &supik::ExitSupik;
@@ -117,6 +117,11 @@ void supik::SetSupikWindow()
     MainTW->setObjectName("MainTW");
     mainLayout->addWidget(MainTW, 100);
 
+    s_StatusBar *SB = new s_StatusBar;
+    connect(Cli,SIGNAL(BytesRead(quint64)),SB,SLOT(UpdateIncomeBytes(quint64)));
+    connect(Cli,SIGNAL(BytesWritten(quint64)),SB,SLOT(UpdateOutgoingBytes(quint64)));
+    mainLayout->addWidget(SB, 1);
+
     QWidget *wdgt = new QWidget;
     wdgt->setLayout(mainLayout);
     setCentralWidget(wdgt);
@@ -124,6 +129,7 @@ void supik::SetSupikWindow()
     w->Start();
     w->SetMessage("Подготовка главного меню...");
     SetSupikMenuBar();
+    SetSupikStatusBar();
     w->Stop();
 }
 
@@ -270,8 +276,6 @@ void supik::SetSupikStatusBar()
                                   " background-color: rgb(234, 234, 214);"
                                   " font: bold");
     SupikStatusBar->showMessage("Готов");
-    PortActivity *PA = new PortActivity;
-    SupikStatusBar->addWidget(PA);
     setStatusBar(SupikStatusBar);
 }
 

@@ -15,8 +15,8 @@ class s_tqLabel : public QLabel
 public:
     explicit s_tqLabel(QWidget *parent = 0);
     s_tqLabel(QString txt, QWidget *parent = 0);
-    void setData(QVariant);
-    QVariant getData();
+
+    void SetColor(QColor color);
 
 signals:
     void clicked();
@@ -24,7 +24,6 @@ signals:
 public slots:
 
 private:
-    QVariant data;
 
 private slots:
 

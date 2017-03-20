@@ -207,9 +207,9 @@ public slots:
 
 signals:
     void ClientSend(QByteArray);
-    void BytesOverall(qint64 bytes);
-    void BytesRead(qint64 bytes);
-    void BytesWritten(qint64 bytes);
+    void BytesOverall(quint64 bytes);
+    void BytesRead(quint64 bytes);
+    void BytesWritten(quint64 bytes);
     void DataReady(QStringList &); // очередная порция данных готова
     void TransferComplete(); // окончание приёма/передачи файла
 

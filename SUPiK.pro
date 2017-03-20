@@ -67,8 +67,8 @@ SOURCES += main.cpp\
     threads/ethernet.cpp \
     threads/sys_importclass_t.cpp \
     threads/waitthread.cpp \
+    widgets/clevertimer.cpp \
     widgets/goodbadwidget.cpp \
-    widgets/portactivity.cpp \
     widgets/s_colortabbar.cpp \
     widgets/s_colortabwidget.cpp \
     widgets/s_maskedle.cpp \
@@ -83,6 +83,7 @@ SOURCES += main.cpp\
     widgets/s_tqlineedit.cpp \
     widgets/s_tqpushbutton.cpp \
     widgets/s_tqradiobutton.cpp \
+    widgets/s_tqscrollarea.cpp \
     widgets/s_tqspinbox.cpp \
     widgets/s_tqsplitter.cpp \
     widgets/s_tqstackedwidget.cpp \
@@ -92,8 +93,7 @@ SOURCES += main.cpp\
     widgets/treeview.cpp \
     widgets/waitwidget.cpp \
     widgets/wd_func.cpp \
-    widgets/s_tqscrollarea.cpp \
-    widgets/clevertimer.cpp
+    widgets/s_statusbar.cpp
 
 HEADERS  += startwindow.h \
     supik.h \
@@ -146,8 +146,8 @@ HEADERS  += startwindow.h \
     threads/ethernet.h \
     threads/sys_importclass_t.h \
     threads/waitthread.h \
+    widgets/clevertimer.h \
     widgets/goodbadwidget.h \
-    widgets/portactivity.h \
     widgets/s_colortabbar.h \
     widgets/s_colortabwidget.h \
     widgets/s_maskedle.h \
@@ -162,6 +162,7 @@ HEADERS  += startwindow.h \
     widgets/s_tqlineedit.h \
     widgets/s_tqpushbutton.h \
     widgets/s_tqradiobutton.h \
+    widgets/s_tqscrollarea.h \
     widgets/s_tqspinbox.h \
     widgets/s_tqsplitter.h \
     widgets/s_tqstackedwidget.h \
@@ -171,20 +172,19 @@ HEADERS  += startwindow.h \
     widgets/treeview.h \
     widgets/waitwidget.h \
     widgets/wd_func.h \
-    widgets/s_tqscrollarea.h \
-    widgets/clevertimer.h
+    widgets/s_statusbar.h
 
 RESOURCES += \
     pic.qrc
 
 CONFIG += embed_manifest_exe
 
-win32:CONFIG(release, debug|release): LIBS += -LD:/mysql/lib/ -llibmysql
-else:win32:CONFIG(debug, debug|release): LIBS += -LD:/mysql/lib/ -llibmysqld
+win32:CONFIG(release, debug|release): LIBS += -LD:/mysql/lib/ -llibmysql -lqt5xlsx
+else:win32:CONFIG(debug, debug|release): LIBS += -LD:/mysql/lib/ -llibmysqld -lqt5xlsxd
 else:unix: LIBS += -LD:/mysql/lib/ -llibmysql
 
 INCLUDEPATH += D:/mysql/include
 DEPENDPATH += D:/mysql/include
 
 LIBS += -llibeay32 -lssleay32
-LIBS += -lliblzma -lQt5Xlsx
+LIBS += -lliblzma

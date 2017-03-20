@@ -14,6 +14,13 @@ s_tqLabel::s_tqLabel(QString txt, QWidget *parent) : QLabel(parent)
     setAttribute(Qt::WA_TranslucentBackground);
 }
 
+void s_tqLabel::SetColor(QColor color)
+{
+    QPalette pal = this->palette();
+    pal.setColor(QPalette::Text , color);
+    this->setPalette(pal);
+}
+
 void s_tqLabel::paintEvent(QPaintEvent *event)
 {
     /*QPainter paint;
@@ -32,16 +39,6 @@ void s_tqLabel::resizeEvent(QResizeEvent *e)
     if (pixmap() != 0)
         setPixmap(pixmap()->scaled(width(), height(), Qt::KeepAspectRatio));
     e->accept();
-}
-
-void s_tqLabel::setData(QVariant dat)
-{
-    this->data = dat;
-}
-
-QVariant s_tqLabel::getData()
-{
-    return this->data;
 }
 
 void s_tqLabel::mousePressEvent (QMouseEvent *event)

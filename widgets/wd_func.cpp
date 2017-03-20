@@ -131,6 +131,15 @@ bool WDFunc::SetLBLImage(QWidget *w, const QString &lblname, QPixmap *pm)
     return true;
 }
 
+bool WDFunc::SetLBLText(QWidget *w, const QString &lblname, const QString &lbltext)
+{
+    s_tqLabel *lbl = w->findChild<s_tqLabel *>(lblname);
+    if (lbl == 0)
+        return false;
+    lbl->setText(lbltext);
+    return true;
+}
+
 QString WDFunc::TVField(QWidget *w, const QString &tvname, int column, bool isid)
 {
     TreeView *tv = w->findChild<TreeView *>(tvname);

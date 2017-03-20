@@ -20,6 +20,7 @@ public:
     static bool SPBData(QWidget *w, const QString &spbname, double &spbvalue);
     static bool SetLEColor(QWidget *w, const QString &lename, const QColor &color);
     static bool SetLBLImage(QWidget *w, const QString &lblname, QPixmap *pm);
+    static bool SetLBLText(QWidget *w, const QString &lblname, const QString &lbltext);
     static QString TVField(QWidget *w, const QString &tvname, int column, bool isid=false);
     static void TVAutoResize(QWidget *w, const QString &tvname);
     static bool ChBData(QWidget *w, const QString &chbname, bool &data);

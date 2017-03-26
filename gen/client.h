@@ -15,7 +15,7 @@
 #define SERVIDLSTR  "IDLE"
 #define SERVEROK    "OK"
 
-//#define TIMERSOFF // если не закомментировано, таймауты отключены
+#define TIMERSOFF // если не закомментировано, таймауты отключены
 #define SLNUMMAX    10 // максимальное число полей в запросе по столбцам
 #define TOKEN       0x7F // разделитель
 
@@ -190,6 +190,7 @@ public:
     int ResultInt, DetectedError, RetryCount; // returned result in int, detected error, current number of retries when server timeout,
     QStringList LastArgs; // Args vector that was last used in SendCmd (for proper retrying)
     bool RetryActive; // flag indicates that retrying active
+    bool NextActive; // flag indicates that we have already a result size and this is a 2,3... chunks
     const QStringList PathPrefixes = QStringList() << "tb/" << "doc/" << "alt/" << "pers/";
     const QStringList PathSuffixes = QStringList() << "prot/" << "dsheet/" << "libs/" << "symbols/" << "footprints/" << "photo/";
 
@@ -227,6 +228,7 @@ private:
     int FieldsNum;
     int ResultType;
     QString Pers, Pass;
+    QByteArray PrevLastBA; // last string in previous ethernet received chunk to be concatenated with the first string from the next chunk
     Log *CliLog;
 
     QString RemoveSpaces(QString str);

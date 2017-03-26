@@ -13,6 +13,7 @@ Client *Cli = 0;
 
 Client::Client(QObject *parent) : QObject(parent)
 {
+    NextActive = false;
     RetryActive = false;
     RetryCount = 0;
     Connected = false;
@@ -138,6 +139,8 @@ void Client::Disconnect()
 
 void Client::SendCmd(int Command, QStringList &Args)
 {
+    NextActive = false;
+    PrevLastBA.clear();
     if (!Connected)
     {
         DetectedError = CLIER_CLOSED;
@@ -274,20 +277,15 @@ void Client::SendCmd(int Command, QStringList &Args)
     }
     case M_ANSLOGIN:
     {
-        CommandString = Pers;
-        break;
-    }
-    case M_ANSPSW:
-    {
-        CommandString = Pass;
+        CommandString = Pers + TOKEN + Pass;
         break;
     }
     default:
         break;
     }
-    if (Command == M_ANSPSW)
-        CliLog->info(">********");
-    else
+/*    if (Command == M_ANSLOGIN)
+        CliLog->info(">"+Pers);
+    else */
         CliLog->info(">"+CommandString); //+codec->fromUnicode(CommandString));
     QByteArray ba = CommandString.toUtf8();//codec->fromUnicode(CommandString));
     ComReplyTimeoutIsSet = false;
@@ -360,19 +358,6 @@ void Client::ParseReply(QByteArray ba)
     }
     case M_ANSLOGIN:
     {
-        if (RcvDataString == "M6")
-        {
-            CmdOk = true;
-            Busy = false;
-            SendCmd(M_ANSPSW);
-            return;
-        }
-        else
-            Error("Bad login", CLIER_LOGIN);
-        break;
-    }
-    case M_ANSPSW:
-    {
         // если получили в ответ "GROUP <access>", значит, всё в порядке, иначе ошибка пароля
         if ((CliMode == CLIMODE_TEST) && (RcvDataString == SERVEROK))
         {
@@ -385,7 +370,7 @@ void Client::ParseReply(QByteArray ba)
             QStringList sl = SeparateBuf(ba);
             if (sl.size() < 2) // GROUP <access>
             {
-                Error("Bad password", CLIER_PSW);
+                Error("Bad group answer", CLIER_PSW);
                 break;
             }
             if (sl.at(0) == "M2")
@@ -464,21 +449,33 @@ void Client::ParseReply(QByteArray ba)
     case T_C:
     {
         // Формат ответа на запрос:
-        //      <number_of_records>
-        //      value[0]<0x7F>value[1]...
+        //      <number_of_records><0x7F>value[0]<0x7F>value[1]...
         bool ok;
-        RcvDataSize = RcvDataString.toInt(&ok); // количество байт
-        if ((!ok) || (RcvDataSize < 0))
+        QList<QByteArray> RcvList = ba.split(TOKEN);
+//        QStringList RcvList = SeparateBuf(codec->fromUnicode(ba));
+        if (RcvList.isEmpty()) // нет ничего в принятой посылке (0 байт)
         {
-            Error("Некорректное количество байт", CLIER_WRANSW);
+            Error("Wrong answer", CLIER_WRANSW);
             return;
         }
-        if (RcvDataSize == 0)
+        if (!NextActive)
         {
-            Error("Empty answer", CLIER_EMPTY);
-            break;
+            QString tmps = QString::fromUtf8(RcvList.takeFirst());
+            RcvDataSize = tmps.toInt(&ok); // количество байт
+            if ((!ok) || (RcvDataSize < 0))
+            {
+                Error("Некорректное количество байт", CLIER_WRANSW);
+                return;
+            }
+            if (RcvDataSize == 0)
+            {
+                Error("Empty answer", CLIER_EMPTY);
+                break;
+            }
+            RcvDataSize += tmps.size() + 1; // to substract the size with token at the following line
+            NextActive = true;
         }
-#ifndef TIMERSOFF
+/*#ifndef TIMERSOFF
         TimeoutTimer->start();
 #endif
         Busy = false;
@@ -487,26 +484,27 @@ void Client::ParseReply(QByteArray ba)
         break;
     }
     case M_NEXT:
-    {
-        RcvDataSize -= RcvDataString.size();
-        QStringList sl;
-
-        if (RcvDataString.isEmpty()) // нет ничего в принятой посылке (0 байт)
+    { */
+        if (RcvList.isEmpty()) // нет ничего после размера
         {
             Error("Wrong answer", CLIER_WRANSW);
             return;
         }
+//        RcvDataSize -= RcvDataString.size();
+        RcvDataSize -= ba.size();
+        QStringList sl;
+
         switch (ResultType)
         {
         case RESULT_STRING:
         {
-            ResultStr += RcvDataString;
+            ResultStr += QString::fromUtf8(RcvList.at(0));
             break;
         }
         case RESULT_INT:
         {
             bool ok;
-            ResultInt = RcvDataString.toInt(&ok);
+            ResultInt = QString::fromUtf8(RcvList.at(0)).toInt(&ok);
             if (!ok)
             {
                 Error("It's not possible to convert to integer: "+RcvDataString, CLIER_WRANSW);
@@ -520,44 +518,53 @@ void Client::ParseReply(QByteArray ba)
         }
         case RESULT_MATRIX:
         {
-            QStringList RcvList = SeparateBuf(codec->fromUnicode(ba));
-            QString sllast;
+//            QStringList RcvList = SeparateBuf(codec->fromUnicode(ba));
+//            QString sllast;
             if (!Result.isEmpty()) // дополняем последний элемент
             {
+                PrevLastBA += RcvList.takeFirst();
                 sl = Result.takeLast(); // берём предыдущий считанный кусок
-                sllast = sl.last();
-                sllast += RcvList.takeFirst();
-                sl.replace(sl.size()-1, sllast);
+//                sllast = sl.last();
+//                QByteArray tmpba = sl.last().toUtf8();
+//                tmpba.append(RcvList.takeFirst());
+//                sllast += RcvList.takeFirst();
+//                sl.replace(sl.size()-1, QString::fromUtf8(tmpba));
+                sl.replace(sl.size()-1, QString::fromUtf8(PrevLastBA));
             }
+            PrevLastBA = RcvList.last(); // prepare for the next chunk
             while ((sl.size() < FieldsNum) && !(RcvList.isEmpty()))
-                sl.append(RcvList.takeFirst());
-            if (Result.isEmpty())
+                sl.append(QString::fromUtf8(RcvList.takeFirst()));
+//            if (Result.isEmpty())
                 Result.append(sl);
-            else
-                Result.replace(Result.size()-1, sl);
+/*            else
+                Result.replace(Result.size()-1, sl);*/
             while (RcvList.size())
             {
                 Result.append(QStringList());
                 sl.clear();
                 while ((sl.size() < FieldsNum) && !(RcvList.isEmpty()))
-                    sl.append(RcvList.takeFirst());
+                    sl.append(QString::fromUtf8(RcvList.takeFirst()));
                 Result.replace(Result.size()-1, sl);
             }
             break;
         }
         case RESULT_VECTOR:
         {
-            QStringList RcvList = SeparateBuf(codec->fromUnicode(ba));
-            QString sllast;
+//            QStringList RcvList = SeparateBuf(codec->fromUnicode(ba));
+//            QString sllast;
             if (Result.isEmpty())
                 Result.append(QStringList());
             sl = Result.at(0);
             if (!sl.isEmpty())
             {
-                sllast = sl.last() + RcvList.takeFirst();
-                sl.replace(sl.size()-1, sllast);
+                PrevLastBA += RcvList.takeFirst();
+                sl.replace(sl.size()-1, QString::fromUtf8(PrevLastBA));
+//                sllast = sl.last() + RcvList.takeFirst();
+//                sl.replace(sl.size()-1, sllast);
             }
-            sl.append(RcvList);
+            PrevLastBA = RcvList.last();
+            while (!RcvList.isEmpty())
+                sl.append(QString::fromUtf8(RcvList.takeFirst()));
             Result.replace(0, sl);
             break;
         }
@@ -577,7 +584,7 @@ void Client::ParseReply(QByteArray ba)
 #ifndef TIMERSOFF
         TimeoutTimer->start();
 #endif
-        Busy = false;
+//        Busy = false;
         return;
     }
     case M_PUTFILE:

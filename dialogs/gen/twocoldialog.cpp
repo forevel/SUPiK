@@ -120,6 +120,10 @@ bool TwoColDialog::setupUI()
     mainTV->setSortingEnabled(true);
     mainTV->setEditTriggers(QAbstractItemView::AllEditTriggers);
     mainTV->setItemDelegate(uniDelegate);
+    mainTV->setWordWrap(true);
+    mainTV->setTextElideMode(Qt::ElideLeft);
+    mainTV->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+//    mainTV->verticalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
     connect (mainTV,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(accepted(QModelIndex)));
     if ((Mode == MODE_CHOOSE) || (Mode == MODE_CHOOSE_RAW))
     {

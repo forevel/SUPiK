@@ -98,6 +98,11 @@ bool TwoColDialog::setupUI()
     hlyout->addWidget(pb);
     hlyout->addStretch(300);
     s_tqLabel *lbl = new s_tqLabel;
+    if (caption.size() > MAX_CAPTION_SIZE)
+    {
+        caption.truncate(MAX_CAPTION_SIZE);
+        caption.append("...");
+    }
     lbl->setText(caption);
     QFont font;
     font.setPointSize(15);
@@ -122,8 +127,8 @@ bool TwoColDialog::setupUI()
     mainTV->setItemDelegate(uniDelegate);
     mainTV->setWordWrap(true);
     mainTV->setTextElideMode(Qt::ElideLeft);
-    mainTV->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-//    mainTV->verticalHeader()->setSectionResizeMode(1, QHeaderView::ResizeToContents);
+//    mainTV->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    mainTV->verticalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     connect (mainTV,SIGNAL(doubleClicked(QModelIndex)),this,SLOT(accepted(QModelIndex)));
     if ((Mode == MODE_CHOOSE) || (Mode == MODE_CHOOSE_RAW))
     {
@@ -146,7 +151,7 @@ bool TwoColDialog::setupUI()
         hlyout->addStretch(1);
         mainLayout->addLayout(hlyout);
     }
-    mainTV->resizeColumnsToContents();
+//    mainTV->resizeColumnsToContents();
     mainTV->resizeRowsToContents();
     mainLayout->addWidget(mainTV);
     mainLayout->addLayout(pbLayout);
@@ -248,14 +253,14 @@ void TwoColDialog::AddTable(QString tble)
 
 void TwoColDialog::resizemainTV()
 {
-    TreeView *tv = this->findChild<TreeView *>("mainTV");
+/*    TreeView *tv = this->findChild<TreeView *>("mainTV");
     if (tv == 0)
     {
         DBGMSG;
         return;
     }
     tv->resizeColumnsToContents();
-    tv->resizeRowsToContents();
+    tv->resizeRowsToContents(); */
 }
 
 void TwoColDialog::paintEvent(QPaintEvent *e)

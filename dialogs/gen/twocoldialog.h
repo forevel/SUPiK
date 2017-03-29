@@ -7,6 +7,8 @@
 
 #define CD_ERROR    0x0200
 
+#define MAX_CAPTION_SIZE    40
+
 class TwoColDialog : public QDialog
 {
     Q_OBJECT

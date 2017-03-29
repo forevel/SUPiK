@@ -37,6 +37,12 @@ private slots:
 
 
 protected:
+    void resizeEvent(QResizeEvent * event)
+    {
+        if(model() && model()->columnCount())
+            for(int column = 0; column < model()->columnCount(); column++)
+                setColumnWidth(column, event->size().width() / model()->columnCount());
+    }
 
 };
 

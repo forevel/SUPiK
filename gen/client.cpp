@@ -184,7 +184,7 @@ void Client::SendCmd(int Command, QStringList &Args)
         QStringList sl;
         sl << st.Prefix;
         sl.append(Args);
-        QString tmps = Join(sl);
+        QString tmps = sl.join(TOKEN);
         CommandString = tmps;// + "\n";
         ResultType = st.ResultType;
     }
@@ -283,9 +283,9 @@ void Client::SendCmd(int Command, QStringList &Args)
     default:
         break;
     }
-/*    if (Command == M_ANSLOGIN)
+    if (Command == M_ANSLOGIN)
         CliLog->info(">"+Pers);
-    else */
+    else
         CliLog->info(">"+CommandString); //+codec->fromUnicode(CommandString));
     QByteArray ba = CommandString.toUtf8();//codec->fromUnicode(CommandString));
     ComReplyTimeoutIsSet = false;
@@ -367,7 +367,7 @@ void Client::ParseReply(QByteArray ba)
         }
         else
         {
-            QStringList sl = SeparateBuf(ba);
+            QStringList sl = QString::fromLocal8Bit(ba).split(TOKEN); // разделение буфера на подстроки по пробелу. Значения в кавычках берутся целиком
             if (sl.size() < 2) // GROUP <access>
             {
                 Error("Bad group answer", CLIER_PSW);
@@ -452,7 +452,6 @@ void Client::ParseReply(QByteArray ba)
         //      <number_of_records><0x7F>value[0]<0x7F>value[1]...
         bool ok;
         QList<QByteArray> RcvList = ba.split(TOKEN);
-//        QStringList RcvList = SeparateBuf(codec->fromUnicode(ba));
         if (RcvList.isEmpty()) // нет ничего в принятой посылке (0 байт)
         {
             Error("Wrong answer", CLIER_WRANSW);
@@ -475,22 +474,11 @@ void Client::ParseReply(QByteArray ba)
             RcvDataSize += tmps.size() + 1; // to substract the size with token at the following line
             NextActive = true;
         }
-/*#ifndef TIMERSOFF
-        TimeoutTimer->start();
-#endif
-        Busy = false;
-        SendCmd(M_NEXT);
-        return;
-        break;
-    }
-    case M_NEXT:
-    { */
         if (RcvList.isEmpty()) // нет ничего после размера
         {
             Error("Wrong answer", CLIER_WRANSW);
             return;
         }
-//        RcvDataSize -= RcvDataString.size();
         RcvDataSize -= ba.size();
         QStringList sl;
 
@@ -518,26 +506,16 @@ void Client::ParseReply(QByteArray ba)
         }
         case RESULT_MATRIX:
         {
-//            QStringList RcvList = SeparateBuf(codec->fromUnicode(ba));
-//            QString sllast;
             if (!Result.isEmpty()) // дополняем последний элемент
             {
                 PrevLastBA += RcvList.takeFirst();
                 sl = Result.takeLast(); // берём предыдущий считанный кусок
-//                sllast = sl.last();
-//                QByteArray tmpba = sl.last().toUtf8();
-//                tmpba.append(RcvList.takeFirst());
-//                sllast += RcvList.takeFirst();
-//                sl.replace(sl.size()-1, QString::fromUtf8(tmpba));
                 sl.replace(sl.size()-1, QString::fromUtf8(PrevLastBA));
             }
             PrevLastBA = RcvList.last(); // prepare for the next chunk
             while ((sl.size() < FieldsNum) && !(RcvList.isEmpty()))
                 sl.append(QString::fromUtf8(RcvList.takeFirst()));
-//            if (Result.isEmpty())
                 Result.append(sl);
-/*            else
-                Result.replace(Result.size()-1, sl);*/
             while (RcvList.size())
             {
                 Result.append(QStringList());
@@ -550,8 +528,6 @@ void Client::ParseReply(QByteArray ba)
         }
         case RESULT_VECTOR:
         {
-//            QStringList RcvList = SeparateBuf(codec->fromUnicode(ba));
-//            QString sllast;
             if (Result.isEmpty())
                 Result.append(QStringList());
             sl = Result.at(0);
@@ -559,8 +535,6 @@ void Client::ParseReply(QByteArray ba)
             {
                 PrevLastBA += RcvList.takeFirst();
                 sl.replace(sl.size()-1, QString::fromUtf8(PrevLastBA));
-//                sllast = sl.last() + RcvList.takeFirst();
-//                sl.replace(sl.size()-1, sllast);
             }
             PrevLastBA = RcvList.last();
             while (!RcvList.isEmpty())
@@ -584,7 +558,6 @@ void Client::ParseReply(QByteArray ba)
 #ifndef TIMERSOFF
         TimeoutTimer->start();
 #endif
-//        Busy = false;
         return;
     }
     case M_PUTFILE:
@@ -767,20 +740,6 @@ void Client::ComReplyTimeout()
     QByteArray ba;
     ParseReply(ba); // принудительная обработка принятой посылки
     GetComReplyTimer->stop();
-}
-
-// разделение буфера на подстроки по пробелу. Значения в кавычках берутся целиком
-
-QStringList Client::SeparateBuf(QByteArray &buf)
-{
-    return QString::fromLocal8Bit(buf).split(TOKEN);
-}
-
-// объединение списка строк в одну строку через разделитель
-
-QString Client::Join(QStringList &sl)
-{
-    return sl.join(TOKEN);
 }
 
 // проверка аргументов

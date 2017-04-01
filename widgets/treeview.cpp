@@ -46,3 +46,13 @@ void TreeView::setTVexpanded(QModelIndex index)
     resizeColumnsToContents();
     resizeRowsToContents();
 }
+
+void TreeView::SetColumnWidthInPercent(int column, int percent)
+{
+    if (column < model()->columnCount())
+    {
+        while (Percents.size() <= column)
+            Percents.append(0);
+        Percents.replace(column, percent);
+    }
+}

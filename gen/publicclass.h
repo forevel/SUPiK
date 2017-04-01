@@ -23,7 +23,7 @@
 
 // Макросы для выдачи сообщений
 
-#define WARNMSG(a)  pc.AddErrMsg(PublicClass::ER_MSG, __FILE__, __LINE__, a)
+#define WARNMSG(a)  pc.AddErrMsg(PublicClass::WARN_MSG, __FILE__, __LINE__, a)
 #define DBGMSG      pc.AddErrMsg(PublicClass::DBG_MSG, __FILE__, __LINE__, "")
 #define INFOMSG(a)  pc.AddErrMsg(PublicClass::INFO_MSG, __FILE__, __LINE__, a)
 #define ERMSG(a)    pc.AddErrMsg(PublicClass::ER_MSG, __FILE__, __LINE__, a)

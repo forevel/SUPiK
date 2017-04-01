@@ -364,7 +364,7 @@ QList<s_tqWidget *> tb_examdialog::PrepareQuestionsByTheme(int theme, int questn
             WARNMSG("");
             return wdgts;
         }
-        QString tmps = AnotherID + ". " + mainvl.at(0);
+        QString tmps = mainvl.at(0);
         s_tqLabel *lbl = new s_tqLabel(tmps); // содержание вопроса
         QFont font;
         font.setPointSize(12);

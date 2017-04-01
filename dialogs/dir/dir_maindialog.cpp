@@ -137,12 +137,8 @@ void dir_maindialog::ShowSlave(QModelIndex idx)
 {
     Q_UNUSED(idx);
     QString tmpString = getMainIndex(1);
-    WaitWidget *w = new WaitWidget;
-    w->Start();
-    w->SetMessage("Подготовка справочника...");
     if (!tmpString.isEmpty())
         ShowSlaveTree(tmpString);
-    w->Stop();
 }
 
 // ############################################ SLOTS ####################################################
@@ -151,9 +147,13 @@ void dir_maindialog::ShowSlave(QModelIndex idx)
 
 void dir_maindialog::ShowSlaveTree(QString str)
 {
+    WaitWidget *w = new WaitWidget;
+    w->Start();
+    w->SetMessage("Подготовка справочника...");
     TreeView *SlaveTV = this->findChild<TreeView *>("SlaveTV");
     if (SlaveTV == 0)
     {
+        w->Stop();
         DBGMSG;
         return;
     }
@@ -171,6 +171,7 @@ void dir_maindialog::ShowSlaveTree(QString str)
     {
         if (values.size() < 3)
         {
+            w->Stop();
             WARNMSG("");
             return;
         }
@@ -193,11 +194,15 @@ void dir_maindialog::ShowSlaveTree(QString str)
             SlaveTVAccess = values.at(2).toLongLong(0, 16);
         }
         else
+        {
+            w->Stop();
             MessageBox2::error(this, "Ошибка", "Недостаточно прав для работы со справочником!");
+        }
     }
     else
         WARNMSG("");
     SlaveTV->resizeRowsToContents();
+    w->Stop();
 //     SlaveProxyModel->sort(1, Qt::AscendingOrder);
 }
 

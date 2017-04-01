@@ -22,6 +22,7 @@ public:
     };
 
     explicit TreeView(int Mode=TV_EPLAIN, int Proxy=TV_PLAIN, bool HeaderVisible=false, QWidget *parent = 0);
+    void SetColumnWidthInPercent(int column, int percent);
 
 signals:
     void datachanged();
@@ -32,6 +33,7 @@ public slots:
 
 private:
     bool IsProxyModel;
+    QList<int> Percents;
 
 private slots:
 

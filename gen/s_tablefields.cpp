@@ -69,49 +69,6 @@ void s_tablefields::GetValuesByColumn(const QString &tble, const QString &header
 void s_tablefields::GetValuesByColumnAndField(const QString &tble, const QString &header, const QString &cheader, const QString &value, QStringList &out)
 {
     GetValuesByColumnAndFields(tble, header, QStringList(cheader), QStringList(value), out);
-/*    QStringList sl, cl;
-    out.clear();
-    result = TFRESULT_NOERROR;
-    if (pc.AutonomousMode)
-    {
-        tablefields(tble, header, sl); // sl.at(0) = <table>, sl.at(1) = <tablefields>
-        if (result)
-        {
-            WARNMSG("");
-            return;
-        }
-        tablefields(tble, cheader, cl); // cl.at(1) = <tablefields>
-        if (result)
-        {
-            WARNMSG("");
-            return;
-        }
-        QString db = sl.at(0).split(".").at(0);
-        tble = sl.at(0).split(".").at(1);
-        out = sqlc.GetValuesFromTableByColumnAndFields(db, tble, sl.at(1), QStringList(cl.at(1)), QStringList(value));
-        if (sqlc.result) // || tmpsl.isEmpty())
-        {
-            result = TFRESULT_ERROR;
-            WARNMSG(sqlc.LastError);
-            return;
-        }
-    }
-    else
-    {
-        sl << tble << header << cheader << value;
-        Cli->SendCmd(T_GVSBCF, sl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
-        if (Cli->DetectedError == Client::CLIER_EMPTY)
-            result = TFRESULT_EMPTY;
-        else if ((Cli->DetectedError != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
-            result = TFRESULT_ERROR;
-        else
-            out = Cli->Result.at(0);
-    } */
 }
 
 void s_tablefields::GetValuesByColumnAndFields(const QString &tble, const QString &header, QStringList &cmpfl, QStringList &cmpvl, QStringList &out)

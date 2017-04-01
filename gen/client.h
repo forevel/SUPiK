@@ -198,7 +198,6 @@ public:
     bool isConnected();
     void Disconnect();
     void SendCmd(int Command, QStringList &Args=QStringList());
-    QString Join(QStringList &sl);
     int GetFile(const QString &type, const QString &subtype, const QString &filename);
     int PutFile(const QString &localfilename, const QString &type, const QString &subtype, const QString &filename);
     int SendAndGetResult(int command, QStringList &args=QStringList()); // send command with arguments and get result (only "OK" or "ERROR")
@@ -233,7 +232,6 @@ private:
 
     QString RemoveSpaces(QString str);
     void Error(QString ErMsg, int ErrorInt=CLIER_GENERAL);
-    QStringList SeparateBuf(QByteArray &buf);
     bool CheckArgs(QString cmd, QStringList &Args, int argsnum, bool fieldscheck=false, bool pairscheck=false);
 
 private slots:

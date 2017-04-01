@@ -43,8 +43,16 @@ void TreeView::setTVexpanded(QModelIndex index)
         TreeModel *model = static_cast<TreeModel *>(this->model());
         model->GoIntoIndex(index);
     }
-    resizeColumnsToContents();
+//    resizeColumnsToContents();
     resizeRowsToContents();
+}
+
+void TreeView::SetTreeType(int Type)
+{
+    if (Type == TV_EXPANDABLE)
+        connect(this, SIGNAL(clicked(QModelIndex)), this, SLOT(setTVexpanded(QModelIndex)));
+    else
+        disconnect(this, SIGNAL(clicked(QModelIndex)));
 }
 
 void TreeView::SetColumnWidthInPercent(int column, int percent)

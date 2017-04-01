@@ -111,7 +111,15 @@
 #define DATATIMEOUT 10000 // таймаут на приём - 3 секунды
 
 #define MAINSLEEP   50  // количество мс сна в процессах
-#define MAXRETRCOUNT    3 // максимальное количество попыток повторить команду
+#define CL_MAXRETRCOUNT    3 // максимальное количество попыток повторить команду
+#define CL_RETR1       1
+#define CL_RETR2       2
+#define CL_RETR3       4
+#define CL_RETR4       8
+#define CL_RETR5       16
+#define CL_RETR6       32
+#define CL_RETR7       64 // 64 seconds is the maximum time period between two connection retries
+#define CL_MAXRETR     7 // maximum number of retry time periods
 
 class Client : public QObject
 {
@@ -183,24 +191,17 @@ public:
         bool CheckForPairsNum;
     };
 
-    QMap<int, CmdStruct> CmdMap;
-    bool Busy;
     QList<QStringList> Result;
     QString ResultStr;
-    int ResultInt, DetectedError, RetryCount; // returned result in int, detected error, current number of retries when server timeout,
-    QStringList LastArgs; // Args vector that was last used in SendCmd (for proper retrying)
-    bool RetryActive; // flag indicates that retrying active
-    bool NextActive; // flag indicates that we have already a result size and this is a 2,3... chunks
-    const QStringList PathPrefixes = QStringList() << "tb/" << "doc/" << "alt/" << "pers/";
-    const QStringList PathSuffixes = QStringList() << "prot/" << "dsheet/" << "libs/" << "symbols/" << "footprints/" << "photo/";
+    int ResultInt;
 
-    int Connect(QString Host, QString Port, int ClientMode);
+    int Connect(QString host, QString port, int clientmode);
     bool isConnected();
     void Disconnect();
-    void SendCmd(int Command, QStringList &Args=QStringList());
+    void SendCmd(int command, QStringList &args=QStringList());
     int GetFile(const QString &type, const QString &subtype, const QString &filename);
     int PutFile(const QString &localfilename, const QString &type, const QString &subtype, const QString &filename);
-    int SendAndGetResult(int command, QStringList &args=QStringList()); // send command with arguments and get result (only "OK" or "ERROR")
+    int SendAndGetResult(int command, QStringList &args=QStringList()); // send command with arguments and wait for result
     void StartLog();
 
 public slots:
@@ -214,25 +215,38 @@ signals:
     void TransferComplete(); // окончание приёма/передачи файла
 
 private:
-
+    QMap<int, CmdStruct> CmdMap;
+    const QStringList PathPrefixes = QStringList() << "tb/" << "doc/" << "alt/" << "pers/";
+    const QStringList PathSuffixes = QStringList() << "prot/" << "dsheet/" << "libs/" << "symbols/" << "footprints/" << "photo/";
+    int RetryTimePeriods[CL_MAXRETR];
     QByteArray RcvData, WrData;
     Ethernet *MainEthernet, *FileEthernet;
-    QTimer *TimeoutTimer, *GetComReplyTimer, *GetFileTimer;
+    QTimer *TimeoutTimer, *GetComReplyTimer, *GetFileTimer, *RetrTimer; // general timeout, timer for server reply, getfile timer and timer to retry connection
     bool FileBusy, Connected, CmdOk, LoginOk, ComReplyTimeoutIsSet;
-    QString FileHost;
+    QString Host, Port, FileHost;
     quint16 FilePort;
     quint64 WrittenBytes, ReadBytes, RcvDataSize, XmitDataSize;
-    int CurrentCommand, CliMode;
+    int CurrentCommand, CliMode, LastCommand;
     QFile fp;
+    int ClientMode; // mode = CLIMODE_TEST or CLIMODE_WORK
     int FieldsNum;
     int ResultType;
     QString Pers, Pass;
     QByteArray PrevLastBA; // last string in previous ethernet received chunk to be concatenated with the first string from the next chunk
     Log *CliLog;
+    int TimeoutCounter; // counter of timeouts, when it equals 3 the connection is forced reconnected
+    int RetryCount; // counter of retry reply from server to make disconnection
+    int CurRetrPeriod; // index of current retry time period from RetryTimePeriods array
+    QStringList LastArgs; // Args vector that was last used in SendCmd (for proper retrying)
+    bool RetryActive; // flag indicates that retrying active
+    bool NextActive; // flag indicates that we have already a result size and this is a 2,3... chunks
+    bool Busy;
+    int DetectedError;
 
     QString RemoveSpaces(QString str);
     void Error(QString ErMsg, int ErrorInt=CLIER_GENERAL);
-    bool CheckArgs(QString cmd, QStringList &Args, int argsnum, bool fieldscheck=false, bool pairscheck=false);
+    bool CheckArgs(QString cmd, QStringList &args, int argsnum, bool fieldscheck=false, bool pairscheck=false);
+    void InitiateTimers();
 
 private slots:
     void ClientConnected();
@@ -242,6 +256,7 @@ private slots:
     void ParseReply(QByteArray ba);
     void GetFileTimerTimeout();
     void ComReplyTimeout();
+    void RetrTimeout();
 };
 
 extern Client *Cli;

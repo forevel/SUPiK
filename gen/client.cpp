@@ -19,6 +19,18 @@ Client::Client(QObject *parent) : QObject(parent)
     Connected = false;
     ComReplyTimeoutIsSet = false;
     ResultType = RESULT_NONE;
+    TimeoutCounter = 0;
+    CurRetrPeriod = 0;
+    LastArgs.clear();
+    LastCommand = M_IDLE;
+    MainEthernet = 0;
+    RetryTimePeriods[0] = CL_RETR1;
+    RetryTimePeriods[1] = CL_RETR2;
+    RetryTimePeriods[2] = CL_RETR3;
+    RetryTimePeriods[3] = CL_RETR4;
+    RetryTimePeriods[4] = CL_RETR5;
+    RetryTimePeriods[5] = CL_RETR6;
+    RetryTimePeriods[6] = CL_RETR7;
     CmdMap.insert(S_GVBFS, {"S_GVBFS", 7, "S5", RESULT_VECTOR, true, true});
     CmdMap.insert(S_GVSBFS, {"S_GVSBFS", 7, "S1", RESULT_MATRIX, true, true});
     CmdMap.insert(S_GVSBC, {"S_GVSBC", 3, "S2", RESULT_VECTOR, false, false});
@@ -65,11 +77,13 @@ void Client::StartLog()
     CliLog->info("=== Log started ===");
 }
 
-int Client::Connect(QString Host, QString Port, int ClientMode)
+int Client::Connect(QString host, QString port, int clientmode)
 {
+    Host = host;
+    Port = port;
+    ClientMode = clientmode;
     if (Connected) // если уже подсоединены, не надо по второму разу
         return CLIER_NOERROR;
-    CliMode = ClientMode;
     if (ClientMode == CLIMODE_TEST)
     {
         Pers = "test";
@@ -81,15 +95,7 @@ int Client::Connect(QString Host, QString Port, int ClientMode)
         Pass = pc.PersPsw;
     }
     Busy = Connected = CmdOk = false;
-    TimeoutTimer = new QTimer;
-    TimeoutTimer->setInterval(MAINTIMEOUT);
-    connect(TimeoutTimer,SIGNAL(timeout()),this,SLOT(Timeout()));
-    GetComReplyTimer = new QTimer;
-    GetComReplyTimer->setInterval(DATATIMEOUT); // таймер на получение данных, если за 3 сек ничего не принято, считаем, что посылка закончена, и можно её обрабатывать
-    connect(GetComReplyTimer,SIGNAL(timeout()),this,SLOT(ComReplyTimeout()));
-    GetFileTimer = new QTimer;
-    GetFileTimer->setInterval(GETTIMEOUT); // таймер на получение файлов, если за 2 с ничего не принято, считаем, что файл окончен
-    connect(GetFileTimer,SIGNAL(timeout()),this,SLOT(GetFileTimerTimeout()));
+    InitiateTimers();
 
     MainEthernet = new Ethernet;
     MainEthernet->SetEthernet(Host, Port.toInt(), Ethernet::ETH_SSL);
@@ -122,73 +128,100 @@ int Client::Connect(QString Host, QString Port, int ClientMode)
     return DetectedError;
 }
 
+void Client::InitiateTimers()
+{
+    TimeoutTimer = new QTimer;
+    TimeoutTimer->setInterval(MAINTIMEOUT);
+    connect(TimeoutTimer,SIGNAL(timeout()),this,SLOT(Timeout()));
+    GetComReplyTimer = new QTimer;
+    GetComReplyTimer->setInterval(DATATIMEOUT); // таймер на получение данных, если за 3 сек ничего не принято, считаем, что посылка закончена, и можно её обрабатывать
+    connect(GetComReplyTimer,SIGNAL(timeout()),this,SLOT(ComReplyTimeout()));
+    GetFileTimer = new QTimer;
+    GetFileTimer->setInterval(GETTIMEOUT); // таймер на получение файлов, если за 2 с ничего не принято, считаем, что файл окончен
+    connect(GetFileTimer,SIGNAL(timeout()),this,SLOT(GetFileTimerTimeout()));
+    RetrTimer = new QTimer;
+    RetrTimer->setInterval(RetryTimePeriods[CurRetrPeriod]);
+    connect(RetrTimer,SIGNAL(timeout()),this,SLOT(RetrTimeout()));
+}
+
 void Client::Disconnect()
 {
-    if (Connected)
+    try
     {
-        SendCmd(M_QUIT);
-        while ((Busy == true) && (DetectedError == CLIER_NOERROR))
+        if (Connected)
         {
-            QThread::msleep(MAINSLEEP);
-            qApp->processEvents(QEventLoop::AllEvents);
+            SendCmd(M_QUIT);
+            while ((Busy == true) && (DetectedError == CLIER_NOERROR))
+            {
+                QThread::msleep(MAINSLEEP);
+                qApp->processEvents(QEventLoop::AllEvents);
+            }
+            MainEthernet->Disconnect();
+            Connected = false;
         }
-        MainEthernet->Disconnect();
-        Connected = false;
+        if (MainEthernet != 0)
+            delete MainEthernet;
+    }
+    catch(...)
+    {
+        ERMSG("Exception in Client::Disconnect()");
     }
 }
 
-void Client::SendCmd(int Command, QStringList &Args)
+void Client::SendCmd(int command, QStringList &args)
 {
+    CurrentCommand = command;
     NextActive = false;
     PrevLastBA.clear();
-    if (!Connected)
+    if ((!Connected) || (TimeoutCounter > CL_MAXRETRCOUNT)) // if we're disconnected or there was max timouts count try to restart connection
     {
+        LastArgs = args; // store command arguments for retrying
+        LastCommand = command;
+        RetrTimer->start();
         DetectedError = CLIER_CLOSED;
         return;
     }
     if (!RetryActive) // if this send is not a retry
         RetryCount = 0;
-    LastArgs = Args; // store command arguments for retrying
     if (Busy)
     {
         DetectedError = CLIER_BUSY;
         return;
     }
-    if ((CliMode == CLIMODE_TEST) && (Command != M_ACTIVATE) && (Command != M_ANSLOGIN) && (Command != M_ANSPSW) && (Command != M_QUIT))
+    if ((ClientMode == CLIMODE_TEST) && (command != M_ACTIVATE) && (command != M_ANSLOGIN) && (command != M_ANSPSW) && (command != M_QUIT))
     {
         CliLog->warning("illegal test command");
         DetectedError = CLIER_CMDER;
         return;
     }
-    if (Command != M_NEXT)
+    if (command != M_NEXT)
     {
         Result.clear(); // очищаем результаты
         ResultStr.clear();
     }
     DetectedError = CLIER_NOERROR;
-    CurrentCommand = Command;
     Busy = true;
 #ifndef TIMERSOFF
     TimeoutTimer->start();
 #endif
     QString CommandString;
 
-    if (CmdMap.keys().contains(Command))
+    if (CmdMap.keys().contains(command))
     {
-        CmdStruct st = CmdMap[Command];
+        CmdStruct st = CmdMap[command];
         FieldsNum = 0;
-        if (!CheckArgs(st.CmdString, Args, st.ArgsNum, st.CheckForFieldsNum, st.CheckForPairsNum))
+        if (!CheckArgs(st.CmdString, args, st.ArgsNum, st.CheckForFieldsNum, st.CheckForPairsNum))
             return;
         if (FieldsNum == 0)
             FieldsNum = 1; // если не выставлено значение поля в функции CheckArgs, выставить его принудительно в 1 (одно поле на запись)
         QStringList sl;
         sl << st.Prefix;
-        sl.append(Args);
+        sl.append(args);
         QString tmps = sl.join(TOKEN);
         CommandString = tmps;// + "\n";
         ResultType = st.ResultType;
     }
-    switch (Command)
+    switch (command)
     {
 /*    case CMD_MESSAGES:
     {
@@ -213,9 +246,9 @@ void Client::SendCmd(int Command, QStringList &Args)
     {
         bool ok;
         int fltype, flsubtype;
-        fltype = Args.at(0).toInt(&ok);
+        fltype = args.at(0).toInt(&ok);
         if (ok)
-            flsubtype = Args.at(1).toInt(&ok);
+            flsubtype = args.at(1).toInt(&ok);
         if ((!ok) || (fltype >= PathPrefixes.size()) || (flsubtype >= PathSuffixes.size()))
         {
             ERMSG("GETFILE: Ошибка в параметрах");
@@ -226,10 +259,10 @@ void Client::SendCmd(int Command, QStringList &Args)
         QString path = pc.HomeDir + "/" + PathPrefixes.at(fltype) + PathSuffixes.at(flsubtype);
         dr->mkpath(path);
         delete dr;
-        fp.setFileName(path + Args.at(2));
+        fp.setFileName(path + args.at(2));
         if (!fp.open(QIODevice::WriteOnly))
         {
-            ERMSG("Невозможно создать файл" + Args.at(2));
+            ERMSG("Невозможно создать файл" + args.at(2));
             DetectedError = CLIER_GETFER;
             return;
         }
@@ -244,10 +277,10 @@ void Client::SendCmd(int Command, QStringList &Args)
     // 3 - имя файла на сервере
     case M_PUTFILE:
     {
-        fp.setFileName(Args.at(0));
+        fp.setFileName(args.at(0));
         if (!fp.open(QIODevice::ReadOnly))
         {
-            ERMSG("Невозможно открыть файл "+Args.at(0));
+            ERMSG("Невозможно открыть файл "+args.at(0));
             DetectedError = CLIER_PUTFER;
             return;
         }
@@ -283,7 +316,7 @@ void Client::SendCmd(int Command, QStringList &Args)
     default:
         break;
     }
-    if (Command == M_ANSLOGIN)
+    if (command == M_ANSLOGIN)
         CliLog->info(">"+Pers);
     else
         CliLog->info(">"+CommandString); //+codec->fromUnicode(CommandString));
@@ -322,11 +355,11 @@ void Client::ParseReply(QByteArray ba)
             Error("Server empty response", CLIER_EMPTY);
             return;
         }
-        if (RcvDataString == SERVRETSTR)
+        if (RcvDataString == SERVRETSTR) // for file operations
         {
-            CliLog->info("Server timeout, trying retry");
+            CliLog->info("Server wants retry, trying retry");
             ++RetryCount;
-            if (RetryCount > MAXRETRCOUNT)
+            if (RetryCount > CL_MAXRETRCOUNT)
             {
                 if (fp.isOpen())
                     fp.close();
@@ -359,7 +392,7 @@ void Client::ParseReply(QByteArray ba)
     case M_ANSLOGIN:
     {
         // если получили в ответ "GROUP <access>", значит, всё в порядке, иначе ошибка пароля
-        if ((CliMode == CLIMODE_TEST) && (RcvDataString == SERVEROK))
+        if ((ClientMode == CLIMODE_TEST) && (RcvDataString == SERVEROK))
         {
             LoginOk = true;
             CmdOk = true;
@@ -700,6 +733,7 @@ void Client::Error(QString ErMsg, int ErrorInt)
 void Client::GetFileTimerTimeout()
 {
     FileBusy = false;
+    ++TimeoutCounter;
 }
 
 void Client::ClientConnected()
@@ -715,6 +749,7 @@ void Client::ClientDisconnected()
     Busy = false;
     Connected = false;
     DetectedError = CLIER_CLOSED;
+    Disconnect(); // delete MainEthernet to try connect later if needed
 }
 
 void Client::ClientErr(int error)
@@ -732,6 +767,7 @@ void Client::Timeout()
     FileBusy = false;
     DetectedError = CLIER_TIMEOUT;
     TimeoutTimer->stop();
+    ++TimeoutCounter;
 }
 
 void Client::ComReplyTimeout()
@@ -740,14 +776,15 @@ void Client::ComReplyTimeout()
     QByteArray ba;
     ParseReply(ba); // принудительная обработка принятой посылки
     GetComReplyTimer->stop();
+    ++TimeoutCounter;
 }
 
 // проверка аргументов
 
-bool Client::CheckArgs(QString cmd, QStringList &Args, int argsnum, bool fieldscheck, bool pairscheck)
+bool Client::CheckArgs(QString cmd, QStringList &args, int argsnum, bool fieldscheck, bool pairscheck)
 {
     int pnum;
-    if (Args.size() < argsnum)
+    if (args.size() < argsnum)
     {
         CliLog->error(cmd + ": Number of arguments is less than " + QString::number(argsnum));
         DetectedError = CLIER_WRARGS;
@@ -756,12 +793,12 @@ bool Client::CheckArgs(QString cmd, QStringList &Args, int argsnum, bool fieldsc
     }
     if (fieldscheck)
     {
-        if (Args.size()<1)
+        if (args.size()<1)
         {
             ERMSG("DBG: Fieldscheck");
             return false;
         }
-        QString fieldsnum = Args.at(0);
+        QString fieldsnum = args.at(0);
         bool ok;
         FieldsNum = fieldsnum.toInt(&ok);
         if (!ok)
@@ -775,12 +812,12 @@ bool Client::CheckArgs(QString cmd, QStringList &Args, int argsnum, bool fieldsc
     if (pairscheck)
     {
         int pidx = (fieldscheck) ? 1 : 0;
-        if (Args.size()<(pidx+1))
+        if (args.size()<(pidx+1))
         {
             ERMSG("DBG: Pairscheck");
             return false;
         }
-        QString pairsnum = Args.at(pidx);
+        QString pairsnum = args.at(pidx);
         bool ok;
         pnum = pairsnum.toInt(&ok);
         if (!ok)
@@ -793,9 +830,9 @@ bool Client::CheckArgs(QString cmd, QStringList &Args, int argsnum, bool fieldsc
     }
     if (fieldscheck && pairscheck)
     {
-        if (Args.size() < FieldsNum+2*pnum+2) // +1 - db, table
+        if (args.size() < FieldsNum+2*pnum+2) // +1 - db, table
         {
-            CliLog->error(cmd + ": Number of fields is less than mentioned in header: "+QString::number(Args.size())+" "+QString::number(FieldsNum+2*pnum+1));
+            CliLog->error(cmd + ": Number of fields is less than mentioned in header: "+QString::number(args.size())+" "+QString::number(FieldsNum+2*pnum+1));
             DetectedError = CLIER_WRARGS;
             Busy = false;
             return false;
@@ -845,4 +882,17 @@ int Client::SendAndGetResult(int command, QStringList &args)
 bool Client::isConnected()
 {
     return Connected;
+}
+
+void Client::RetrTimeout()
+{
+    if (CurRetrPeriod < CL_MAXRETR)
+        ++CurRetrPeriod;
+    RetrTimer->setInterval(RetryTimePeriods[CurRetrPeriod]);
+    RetrTimer->stop();
+    Disconnect();
+    if (Connect(Host, Port, ClientMode) == CLIER_NOERROR) // if the connection was successful send previous command with previous arguments
+        SendCmd(LastCommand, LastArgs);
+    else // else try again later
+        RetrTimer->start();
 }

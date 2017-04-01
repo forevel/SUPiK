@@ -190,13 +190,8 @@ void StartWindow::Activate(const QString &code, const QString &newpsw)
     sl << code << newpsw;
     if (!Cli->isConnected())
         return;
-    Cli->SendCmd(M_ACTIVATE, sl);
-    while (Cli->Busy)
-    {
-        QThread::msleep(10);
-        qApp->processEvents(QEventLoop::AllEvents);
-    }
-    if (Cli->DetectedError != Client::CLIER_NOERROR)
+    int res = Cli->SendAndGetResult(M_ACTIVATE, sl);
+    if (res != Client::CLIER_NOERROR)
         MessageBox2::error(this,"Ошибка!","Ошибка при активации, обратитесь к администратору СУПиК");
     else
     {

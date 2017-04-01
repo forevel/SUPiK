@@ -23,6 +23,7 @@ public:
 
     explicit TreeView(int Mode=TV_EPLAIN, int Proxy=TV_PLAIN, bool HeaderVisible=false, QWidget *parent = 0);
     void SetColumnWidthInPercent(int column, int percent);
+    void SetTreeType(int Type);
 
 signals:
     void datachanged();

@@ -48,15 +48,10 @@ void s_tablefields::GetValuesByColumn(const QString &tble, const QString &header
     else
     {
         sl << tble << header;
-        Cli->SendCmd(T_GVSBC, sl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
-        if (Cli->DetectedError == Client::CLIER_EMPTY)
+        int res = Cli->SendAndGetResult(T_GVSBC, sl);
+        if (res == Client::CLIER_EMPTY)
             result = TFRESULT_EMPTY;
-        else if ((Cli->DetectedError != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
+        else if ((res != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
             result = TFRESULT_ERROR;
         else
             out = Cli->Result.at(0);
@@ -124,15 +119,10 @@ void s_tablefields::GetValuesByColumnAndFields(const QString &tble, const QStrin
             sl << cmpfl.at(i);
             sl << cmpvl.at(i);
         }
-        Cli->SendCmd(T_GVSBCF, sl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
-        if (Cli->DetectedError == Client::CLIER_EMPTY)
+        int res = Cli->SendAndGetResult(T_GVSBCF, sl);
+        if (res == Client::CLIER_EMPTY)
             result = TFRESULT_EMPTY;
-        else if ((Cli->DetectedError != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
+        else if ((res != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
             result = TFRESULT_ERROR;
         else
             out = Cli->Result.at(0);
@@ -174,15 +164,10 @@ void s_tablefields::GetAllValuesFromTable(const QString &tble, QList<QStringList
     else
     {
         sl << tble;
-        Cli->SendCmd(T_GFT, sl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
-        if (Cli->DetectedError == Client::CLIER_EMPTY)
+        int res = Cli->SendAndGetResult(T_GFT, sl);
+        if (res == Client::CLIER_EMPTY)
             result = TFRESULT_EMPTY;
-        else if ((Cli->DetectedError != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
+        else if ((res != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
             result = TFRESULT_ERROR;
         else
             out = Cli->Result;
@@ -217,18 +202,13 @@ void s_tablefields::tov(const QString &tble, const QString &header, const QStrin
     else
     {
         sl << tble << header << tbleid;
-        Cli->SendCmd(T_TV, sl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
-        if (Cli->DetectedError == Client::CLIER_EMPTY)
+        int res = Cli->SendAndGetResult(T_TV, sl);
+        if (res == Client::CLIER_EMPTY)
         {
             WARNMSG("tov: Empty result");
             result = TFRESULT_EMPTY;
         }
-        else if (Cli->DetectedError != Client::CLIER_NOERROR)
+        else if (res != Client::CLIER_NOERROR)
         {
             WARNMSG("tov: Error result");
             result = TFRESULT_ERROR;
@@ -394,13 +374,8 @@ void s_tablefields::idtov(const QString &links, const QString &id, PublicClass::
             else
             {
                 sl << links << id;
-                Cli->SendCmd(T_IDTV, sl);
-                while (Cli->Busy)
-                {
-                    QThread::msleep(10);
-                    qApp->processEvents(QEventLoop::AllEvents);
-                }
-                if ((Cli->DetectedError != Client::CLIER_NOERROR) || Cli->Result.isEmpty())
+                int res = Cli->SendAndGetResult(T_IDTV, sl);
+                if ((res != Client::CLIER_NOERROR) || Cli->Result.isEmpty())
                 {
                     result = 1;
                     return;
@@ -428,13 +403,8 @@ void s_tablefields::idtov(const QString &links, const QString &id, PublicClass::
     else
     {
         sl << links << id;
-        Cli->SendCmd(T_IDTV, sl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
-        if ((Cli->DetectedError != Client::CLIER_NOERROR) || Cli->Result.isEmpty())
+        int res = Cli->SendAndGetResult(T_IDTV, sl);
+        if ((res != Client::CLIER_NOERROR) || Cli->Result.isEmpty())
         {
             result = 1;
             return;
@@ -507,13 +477,8 @@ void s_tablefields::idtovl(const QString &links, QStringList &out)
     {
         QStringList sl;
         sl << links;
-        Cli->SendCmd(T_IDTVL, sl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
-        if ((Cli->DetectedError != Client::CLIER_NOERROR) || Cli->Result.isEmpty())
+        int res = Cli->SendAndGetResult(T_IDTVL, sl);
+        if ((res != Client::CLIER_NOERROR) || Cli->Result.isEmpty())
         {
             result = 1;
             return;
@@ -676,15 +641,10 @@ void s_tablefields::vtoid(PublicClass::ValueStruct &vl, QString &out)
             {
                 QStringList sl;
                 sl << QString::number(vl.Type) << vl.Value << vl.Links;
-                Cli->SendCmd(T_VTID, sl);
-                while (Cli->Busy)
-                {
-                    QThread::msleep(10);
-                    qApp->processEvents(QEventLoop::AllEvents);
-                }
-                if (Cli->DetectedError == Client::CLIER_EMPTY)
+                int res = Cli->SendAndGetResult(T_VTID, sl);
+                if (res == Client::CLIER_EMPTY)
                     result = TFRESULT_EMPTY;
-                else if (Cli->DetectedError != Client::CLIER_NOERROR)
+                else if (res != Client::CLIER_NOERROR)
                     result = TFRESULT_ERROR;
                 else
                     out = Cli->ResultStr;
@@ -717,13 +677,8 @@ void s_tablefields::vtoid(PublicClass::ValueStruct &vl, QString &out)
     {
         QStringList sl;
         sl << QString::number(vl.Type) << vl.Value << vl.Links;
-        Cli->SendCmd(T_VTID, sl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
-        if ((Cli->DetectedError != Client::CLIER_NOERROR) || Cli->Result.isEmpty())
+        int res = Cli->SendAndGetResult(T_VTID, sl);
+        if ((res != Client::CLIER_NOERROR) || Cli->Result.isEmpty())
         {
             result = 1;
             out.clear();
@@ -769,15 +724,10 @@ void s_tablefields::toid(const QString &tble, const QString &header, const QStri
     else
     {
         sl << tble << header << value;
-        Cli->SendCmd(T_TID, sl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
-        if (Cli->DetectedError == Client::CLIER_EMPTY)
+        int res = Cli->SendAndGetResult(T_TID, sl);
+        if (res == Client::CLIER_EMPTY)
             result = TFRESULT_EMPTY;
-        else if (Cli->DetectedError != Client::CLIER_NOERROR)
+        else if (res != Client::CLIER_NOERROR)
             result = TFRESULT_ERROR;
         else
             out = Cli->ResultStr;
@@ -895,13 +845,8 @@ void s_tablefields::Update(const QString &tble, QStringList &headers, QStringLis
             if (i < values.size())
                 sl << values.at(i);
         }
-        Cli->SendCmd(T_UPD, sl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
-        if (Cli->DetectedError != Client::CLIER_NOERROR)
+        int res = Cli->SendAndGetResult(T_UPD, sl);
+        if (res != Client::CLIER_NOERROR)
             result = TFRESULT_ERROR;
     }
 }
@@ -1007,13 +952,8 @@ void s_tablefields::Updatev(const QString &tble, QStringList &headers, QStringLi
             if (i < values.size())
                 sl << values.at(i);
         }
-        Cli->SendCmd(T_UPDV, sl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
-        if (Cli->DetectedError != Client::CLIER_NOERROR)
+        int res = Cli->SendAndGetResult(T_UPDV, sl);
+        if (res != Client::CLIER_NOERROR)
             result = TFRESULT_ERROR;
 //    }
 }
@@ -1048,15 +988,10 @@ void s_tablefields::Insert(const QString tble, QString &out)
     {
         QStringList sl;
         sl << tble;
-        Cli->SendCmd(T_INS, sl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
-        if (Cli->DetectedError == Client::CLIER_EMPTY)
+        int res = Cli->SendAndGetResult(T_INS, sl);
+        if (res == Client::CLIER_EMPTY)
             result = TFRESULT_EMPTY;
-        else if (Cli->DetectedError != Client::CLIER_NOERROR)
+        else if (res != Client::CLIER_NOERROR)
             result = TFRESULT_ERROR;
         else
             out = QString::number(Cli->ResultInt);
@@ -1094,15 +1029,10 @@ void s_tablefields::NewID(const QString &tble, QString &out)
     {
         QStringList sl;
         sl << tble;
-        Cli->SendCmd(T_GID, sl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
-        if (Cli->DetectedError == Client::CLIER_EMPTY)
+        int res = Cli->SendAndGetResult(T_GID, sl);
+        if (res == Client::CLIER_EMPTY)
             result = TFRESULT_EMPTY;
-        else if (Cli->DetectedError != Client::CLIER_NOERROR)
+        else if (res != Client::CLIER_NOERROR)
             result = TFRESULT_ERROR;
         else
             out = QString::number(Cli->ResultInt);
@@ -1139,13 +1069,8 @@ void s_tablefields::Remove(const QString &tble, const QString &id)
     {
         QStringList sl;
         sl << tble << id;
-        Cli->SendCmd(T_DEL, sl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
-        if (Cli->DetectedError != Client::CLIER_NOERROR)
+        int res = Cli->SendAndGetResult(T_DEL, sl);
+        if (res != Client::CLIER_NOERROR)
             result = TFRESULT_ERROR;
     }
 }
@@ -1180,13 +1105,8 @@ void s_tablefields::Delete(const QString &tble, const QString &id)
     {
         QStringList sl;
         sl << tble << id;
-        Cli->SendCmd(T_RDEL, sl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
-        if (Cli->DetectedError != Client::CLIER_NOERROR)
+        int res = Cli->SendAndGetResult(T_RDEL, sl);
+        if (res != Client::CLIER_NOERROR)
         {
             result = TFRESULT_ERROR;
             return;
@@ -1223,15 +1143,10 @@ bool s_tablefields::Check(const QString &tble, const QString &cmpfield, const QS
     {
         QStringList sl;
         sl << tble << cmpfield << cmpvalue;
-        Cli->SendCmd(T_C, sl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
-        if (Cli->DetectedError == Client::CLIER_EMPTY)
+        int res = Cli->SendAndGetResult(T_C, sl);
+        if (res == Client::CLIER_EMPTY)
             result = TFRESULT_EMPTY;
-        else if (Cli->DetectedError != Client::CLIER_NOERROR)
+        else if (res != Client::CLIER_NOERROR)
             result = TFRESULT_ERROR;
         else
         {
@@ -1283,15 +1198,10 @@ void s_tablefields::valuesbyfield(const QString &tble, QStringList &fl, const QS
     else
     {
         sl << QString::number(fl.size()) << "1" << tble << fl << cmpfield << cmpvalue;
-        Cli->SendCmd(T_GVSBFS, sl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
-        if (Cli->DetectedError == Client::CLIER_EMPTY)
+        int res = Cli->SendAndGetResult(T_GVSBFS, sl);
+        if (res == Client::CLIER_EMPTY)
             result = TFRESULT_EMPTY;
-        else if ((Cli->DetectedError != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
+        else if ((res != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
             result = TFRESULT_ERROR;
         else
             out = Cli->Result.at(0);
@@ -1357,15 +1267,10 @@ void s_tablefields::valuesbyfields(const QString &tble, QStringList &fl, QString
             sl << cmpfields.at(i);
             sl << cmpvalues.at(i);
         }
-        Cli->SendCmd(T_GVSBFS, sl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
-        if (Cli->DetectedError == Client::CLIER_EMPTY)
+        int res = Cli->SendAndGetResult(T_GVSBFS, sl);
+        if (res == Client::CLIER_EMPTY)
             result = TFRESULT_EMPTY;
-        else if ((Cli->DetectedError != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
+        else if ((res != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
             result = TFRESULT_ERROR;
         else
             out = Cli->Result.at(0);

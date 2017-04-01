@@ -127,13 +127,8 @@ QStringList s_sql::GetColumnsFromTable(QString db, QString tble)
     else
     {
         QStringList fl = QStringList() << db << tble;
-        Cli->SendCmd(S_GCS, fl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
-        if (Cli->DetectedError != Client::CLIER_NOERROR)
+        int res = Cli->SendAndGetResult(S_GCS, fl);
+        if (res != Client::CLIER_NOERROR)
         {
             result = 1;
             return QStringList();
@@ -180,13 +175,8 @@ void s_sql::CreateTable(QString db, QString tble, QStringList fl, bool Simple)
         tmpString = (Simple) ? "id" : "id"+tble;
         QStringList sl = QStringList() << db << tble << tmpString;
         sl << fl;
-        Cli->SendCmd(S_TC, sl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
-        if (Cli->DetectedError != Client::CLIER_NOERROR)
+        int res = Cli->SendAndGetResult(S_TC, sl);
+        if (res != Client::CLIER_NOERROR)
             result = 1;
         else
             result = 0;
@@ -256,13 +246,8 @@ void s_sql::AlterTable(QString db, QString tble, QStringList DeleteList, QString
     {
         QStringList sl;
         sl << QString::number(AddList.size()) << QString::number(DeleteList.size()) << db << tble << AddList << DeleteList;
-        Cli->SendCmd(S_TA, sl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
-        if (Cli->DetectedError != Client::CLIER_NOERROR)
+        int res = Cli->SendAndGetResult(S_TA, sl);
+        if (res != Client::CLIER_NOERROR)
             result = 1;
         else
             result = 0;
@@ -291,13 +276,8 @@ void s_sql::DropTable(QString db, QString tble)
     {
         QStringList sl;
         sl << db << tble;
-        Cli->SendCmd(S_TD, sl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
-        if (Cli->DetectedError != Client::CLIER_NOERROR)
+        int res = Cli->SendAndGetResult(S_TD, sl);
+        if (res != Client::CLIER_NOERROR)
             result = 1;
         else
             result = 0;
@@ -352,13 +332,8 @@ int s_sql::GetNextFreeIndex(QString db, QString tble)
     {
         QStringList sl;
         sl << db << tble;
-        Cli->SendCmd(S_GID, sl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
-        if (Cli->DetectedError != Client::CLIER_NOERROR)
+        int res = Cli->SendAndGetResult(S_GID, sl);
+        if (res != Client::CLIER_NOERROR)
         {
             result = 1;
             return -1;
@@ -520,12 +495,7 @@ QStringList s_sql::GetValuesFromTableByColumn(QString db, QString tble, QString 
             else
                 fl << "DESC";
         }
-        Cli->SendCmd(S_GVSBC, fl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
+        Cli->SendAndGetResult(S_GVSBC, fl);
         if (Cli->Result.size())
         {
             vl = Cli->Result.at(0);
@@ -642,12 +612,7 @@ QStringList s_sql::GetValuesFromTableByColumnAndFields(QString db, QString tble,
             else
                 sl << "DESC";
         }
-        Cli->SendCmd(S_GVSBCF, sl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
+        Cli->SendAndGetResult(S_GVSBCF, sl);
         if (!Cli->Result.size())
         {
             result = 1;
@@ -699,12 +664,7 @@ QString s_sql::GetValueFromTableByField (QString db, QString tble, QString field
     else // server mode
     {
         QStringList sl = QStringList() << "1" << "1" << db << tble << field << cmpfield << cmpvalue;
-        Cli->SendCmd(S_GVBFS, sl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
+        int res = Cli->SendAndGetResult(S_GVBFS, sl);
         if (Cli->Result.size() > 0)
         {
             result = SQLC_OK;
@@ -712,7 +672,7 @@ QString s_sql::GetValueFromTableByField (QString db, QString tble, QString field
             if (sl.size() > 0)
                 return sl.at(0);
         }
-        if (Cli->DetectedError == Client::CLIER_EMPTY)
+        if (res == Client::CLIER_EMPTY)
         {
             result = SQLC_EMPTY;
             return QString();
@@ -777,12 +737,7 @@ QString s_sql::GetValueFromTableByFields (QString db, QString tble, QString fiel
             sl << cmpfields.at(i);
             sl << cmpvalues.at(i);
         }
-        Cli->SendCmd(S_GVBFS, sl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
+        int res = Cli->SendAndGetResult(S_GVBFS, sl);
         if (Cli->Result.size() > 0)
         {
             result = SQLC_OK;
@@ -790,7 +745,7 @@ QString s_sql::GetValueFromTableByFields (QString db, QString tble, QString fiel
             if (sl.size() > 0)
                 return sl.at(0);
         }
-        if (Cli->DetectedError == Client::CLIER_EMPTY)
+        if (res == Client::CLIER_EMPTY)
         {
             result = SQLC_EMPTY;
             return QString();
@@ -918,12 +873,7 @@ QString s_sql::InsertValuesToTable(QString db, QString tble, QStringList fl, QSt
             sl << fl.at(i);
             sl << vl.at(i);
         }
-        Cli->SendCmd(S_INS, sl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
+        Cli->SendAndGetResult(S_INS, sl);
         if (Cli->ResultInt > 0)
         {
             result = 0;
@@ -967,13 +917,8 @@ int s_sql::UpdateValuesInTable(QString db, QString tble, QStringList fl, QString
             sl << vl.at(i);
         }
         sl << field << value;
-        Cli->SendCmd(S_UPD, sl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
-        if (Cli->DetectedError == Client::CLIER_NOERROR)
+        int res = Cli->SendAndGetResult(S_UPD, sl);
+        if (res == Client::CLIER_NOERROR)
         {
             result = 0;
             return 0;
@@ -1057,13 +1002,8 @@ int s_sql::DeleteFromDB(QString db, QString tble, QString field, QString value)
     {
         QStringList sl;
         sl << db << tble << field << value;
-        Cli->SendCmd(S_DEL, sl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
-        if (Cli->DetectedError == Client::CLIER_NOERROR)
+        int res = Cli->SendAndGetResult(S_DEL, sl);
+        if (res == Client::CLIER_NOERROR)
         {
             result = 0;
             return 0;
@@ -1114,13 +1054,8 @@ int s_sql::RealDeleteFromDB(QString db, QString tble, QStringList fields, QStrin
             sl << fields.at(i);
             sl << values.at(i);
         }
-        Cli->SendCmd(S_RDEL, sl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
-        if (Cli->DetectedError == Client::CLIER_NOERROR)
+        int res = Cli->SendAndGetResult(S_RDEL, sl);
+        if (res == Client::CLIER_NOERROR)
         {
             result = 0;
             return 0;
@@ -1200,13 +1135,8 @@ QList<QStringList> s_sql::SearchInTableLike(QString &db, QString &tble, QStringL
         sl << QString::number(fields.size()) << db << tble;
         sl.append(fields);
         sl << cmpfield << cmpvalue;
-        Cli->SendCmd(S_SRCH, sl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
-        if (Cli->DetectedError == Client::CLIER_NOERROR)
+        int res = Cli->SendAndGetResult(S_SRCH, sl);
+        if (res == Client::CLIER_NOERROR)
         {
             QueryResult = Cli->Result;
             result = 0;
@@ -1290,12 +1220,7 @@ QList<QStringList> s_sql::GetMoreValuesFromTableByFields(QString db, QString tbl
             else
                 sl << "DESC";
         }
-        Cli->SendCmd(S_GVSBFS, sl);
-        while (Cli->Busy)
-        {
-            QThread::msleep(10);
-            qApp->processEvents(QEventLoop::AllEvents);
-        }
+        Cli->SendAndGetResult(S_GVSBFS, sl);
         QueryResult = Cli->Result;
         result = 0;
         return QueryResult;

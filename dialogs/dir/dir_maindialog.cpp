@@ -190,7 +190,8 @@ void dir_maindialog::ShowSlaveTree(QString str)
                 sl << values.at(0) + "_сокращ";
             }
             res = SlaveTreeModel->Setup(sl);
-            SlaveTV->resizeColumnsToContents();
+            SlaveTV->SetTreeType(TreeView::TV_EXPANDABLE);
+//            SlaveTV->resizeColumnsToContents();
             SlaveTVAccess = values.at(2).toLongLong(0, 16);
         }
         else

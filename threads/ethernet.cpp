@@ -12,11 +12,16 @@ Ethernet::Ethernet(QObject *parent) : QObject(parent)
     ReadData.clear();
     ReadDataSize = 0;
     Level = 0;
+    EthLog = new Log;
+}
+
+Ethernet::~Ethernet()
+{
+    delete EthLog;
 }
 
 void Ethernet::SetEthernet(const QString &Host, int Port, int Type)
 {
-    EthLog = new Log;
     EthLog->Init("eth "+Host+"_"+QString::number(Port)+".log");
     EthLog->info("Log started");
     sock = 0;

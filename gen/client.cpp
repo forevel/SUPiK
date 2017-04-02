@@ -1,4 +1,4 @@
-#define _CRT_SECURE_NO_WARNINGS
+﻿#define _CRT_SECURE_NO_WARNINGS
 
 #include <QThread>
 #include <QCoreApplication>
@@ -323,12 +323,14 @@ void Client::SendCmd(int command, QStringList &args)
     QByteArray ba = CommandString.toUtf8();//codec->fromUnicode(CommandString));
     ComReplyTimeoutIsSet = false;
     MainEthernet->WriteData(ba);
+    emit BytesWritten(ba.size());
 }
 
 // ############################################ ОБРАБОТКА ОТВЕТА ##############################################
 
 void Client::ParseReply(QByteArray ba)
 {
+    emit BytesRead(ba.size());
 #ifndef TIMERSOFF
     if (!ComReplyTimeoutIsSet)
         GetComReplyTimer->start(); // если не было таймаута, рестартуем таймер
@@ -603,7 +605,7 @@ void Client::ParseReply(QByteArray ba)
     }
     case M_APUTFILE:
     {
-        emit BytesWritten(WrittenBytes);
+//        emit BytesWritten(WrittenBytes);
         CliLog->info(QString::number(WrittenBytes)+" bytes written to file");
         qint64 BytesToSend = XmitDataSize - WrittenBytes;
         if (BytesToSend > READBUFMAX)
@@ -690,7 +692,7 @@ void Client::ParseReply(QByteArray ba)
         }
         ReadBytes += ba.size();
         qint64 rb = fp.write(ba);
-        emit BytesRead(ReadBytes);
+//        emit BytesRead(ReadBytes);
         CliLog->info(QString::number(rb)+" bytes written to file");
         CliLog->info(QString::number(ReadBytes)+" bytes written overall");
         quint64 ReadRemains = RcvDataSize - ReadBytes;
@@ -749,7 +751,7 @@ void Client::ClientDisconnected()
     Busy = false;
     Connected = false;
     DetectedError = CLIER_CLOSED;
-    Disconnect(); // delete MainEthernet to try connect later if needed
+//    Disconnect(); // delete MainEthernet to try connect later if needed
 }
 
 void Client::ClientErr(int error)
@@ -886,7 +888,7 @@ bool Client::isConnected()
 
 void Client::RetrTimeout()
 {
-    if (CurRetrPeriod < CL_MAXRETR)
+/*    if (CurRetrPeriod < CL_MAXRETR)
         ++CurRetrPeriod;
     RetrTimer->setInterval(RetryTimePeriods[CurRetrPeriod]);
     RetrTimer->stop();
@@ -894,5 +896,5 @@ void Client::RetrTimeout()
     if (Connect(Host, Port, ClientMode) == CLIER_NOERROR) // if the connection was successful send previous command with previous arguments
         SendCmd(LastCommand, LastArgs);
     else // else try again later
-        RetrTimer->start();
+        RetrTimer->start();*/
 }

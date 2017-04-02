@@ -14,7 +14,7 @@ s_StatusBar::s_StatusBar(QWidget *parent) : QWidget(parent)
     lbl->setObjectName("incbytes");
     lbl->SetColor(Qt::darkGreen);
     hlyout->addWidget(lbl, 10);
-    lbl = new s_tqLabel(" / ");
+    lbl = new s_tqLabel("/");
     hlyout->addWidget(lbl, 10);
     lbl = new s_tqLabel;
     lbl->setObjectName("outbytes");

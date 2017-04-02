@@ -48,6 +48,7 @@ public:
     QTcpSocket *sock;
     QSslSocket *sslsock;
     Ethernet(QObject *parent = 0);
+    ~Ethernet();
     static QMap<int,QString> EthernetErrors()
     {
         QMap<int,QString> map;

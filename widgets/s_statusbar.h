@@ -27,11 +27,11 @@ private slots:
     void ClearDownload(); */
 
 private:
-
     quint64 IncBytes, OutBytes;
-//    QTimer *UTmr, *DTmr;
+    //    QTimer *UTmr, *DTmr;
 
 protected:
+    void paintEvent(QPaintEvent *e);
 };
 
 #endif // S_STATUSBAR_H

@@ -6,19 +6,22 @@
 
 s_StatusBar::s_StatusBar(QWidget *parent) : QWidget(parent)
 {
+    this->setStyleSheet(" border: 1px black;"
+                                  " background-color: rgb(234, 234, 214);"
+                                  " font: bold");
     setAttribute(Qt::WA_DeleteOnClose);
 //    setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
     QHBoxLayout *hlyout = new QHBoxLayout;
-    hlyout->addStretch(300);
+    hlyout->addStretch(600);
     s_tqLabel *lbl = new s_tqLabel;
     lbl->setObjectName("incbytes");
-    lbl->SetColor(Qt::darkGreen);
+    lbl->setStyleSheet("QLabel {color: green;}");
     hlyout->addWidget(lbl, 10);
     lbl = new s_tqLabel("/");
     hlyout->addWidget(lbl, 10);
     lbl = new s_tqLabel;
     lbl->setObjectName("outbytes");
-    lbl->SetColor(Qt::darkYellow);
+    lbl->setStyleSheet("QLabel {color: #999933;}");
     hlyout->addWidget(lbl, 10);
     setLayout(hlyout);
     IncBytes = OutBytes = 0;
@@ -27,6 +30,11 @@ s_StatusBar::s_StatusBar(QWidget *parent) : QWidget(parent)
 s_StatusBar::~s_StatusBar()
 {
 
+}
+
+void s_StatusBar::paintEvent(QPaintEvent *e)
+{
+    e->accept();
 }
 
 void s_StatusBar::UpdateIncomeBytes(quint64 bytes)

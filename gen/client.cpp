@@ -160,7 +160,10 @@ void Client::Disconnect()
             Connected = false;
         }
         if (MainEthernet != 0)
+        {
             delete MainEthernet;
+            MainEthernet = 0;
+        }
     }
     catch(...)
     {
@@ -175,6 +178,7 @@ void Client::SendCmd(int command, QStringList &args)
     PrevLastBA.clear();
     if ((!Connected) || (TimeoutCounter > CL_MAXRETRCOUNT)) // if we're disconnected or there was max timouts count try to restart connection
     {
+        Disconnect();
         LastArgs = args; // store command arguments for retrying
         LastCommand = command;
         RetrTimer->start();
@@ -888,13 +892,13 @@ bool Client::isConnected()
 
 void Client::RetrTimeout()
 {
-/*    if (CurRetrPeriod < CL_MAXRETR)
+    if (CurRetrPeriod < CL_MAXRETR)
         ++CurRetrPeriod;
     RetrTimer->setInterval(RetryTimePeriods[CurRetrPeriod]);
     RetrTimer->stop();
-    Disconnect();
+//    Disconnect();
     if (Connect(Host, Port, ClientMode) == CLIER_NOERROR) // if the connection was successful send previous command with previous arguments
         SendCmd(LastCommand, LastArgs);
     else // else try again later
-        RetrTimer->start();*/
+        RetrTimer->start();
 }

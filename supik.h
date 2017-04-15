@@ -65,6 +65,7 @@ private:
     void UpdateErStatus();
     void TBExam();
     void TBMain();
+    void ShowServerStatus();
 
 private slots:
     void ExecuteSub();
@@ -80,6 +81,7 @@ private slots:
 protected:
     void showEvent(QShowEvent *event);
     void closeEvent(QCloseEvent *e);
+    void keyPressEvent(QKeyEvent *event);
 };
 
 #endif // SUPIK_H

@@ -5,6 +5,8 @@
 #include <QProxyStyle>
 #include <QPaintEvent>
 
+#define TV_MIN_COL_SIZE 20  // minimum size of stretchable column
+
 class TreeView : public QTableView
 {
     Q_OBJECT
@@ -34,17 +36,21 @@ public slots:
 
 private:
     bool IsProxyModel;
-    QList<int> Percents;
+    int StretchableColumn, StretchableColumnSize;
+    bool StretchableColumnIsSet;
+
+    void SetStretchableColumn(int column);
 
 private slots:
-
+    void UpdateStretchableColumn();
 
 protected:
     void resizeEvent(QResizeEvent * event)
     {
-        if(model() && model()->columnCount())
-            for(int column = 0; column < model()->columnCount(); column++)
-                setColumnWidth(column, event->size().width() / model()->columnCount());
+        UpdateStretchableColumn();
+        setColumnWidth(StretchableColumn, StretchableColumnSize);
+        resizeRowsToContents();
+        event->accept();
     }
 
 };

@@ -22,8 +22,13 @@ TreeView::TreeView(int Mode, int Proxy, bool HeaderVisible, QWidget *parent) :
     setAttribute(Qt::WA_TranslucentBackground, true);
     setFrameStyle(QFrame::NoFrame);
     setShowGrid(false);
+    StretchableColumn = -1;
+    StretchableColumnSize = 0;
+    StretchableColumnIsSet = false;
     if (Mode == TV_EXPANDABLE)
         connect(this, SIGNAL(clicked(QModelIndex)), this, SLOT(setTVexpanded(QModelIndex)));
+    connect(this->model(),SIGNAL(columnsInserted(QModelIndex,int,int)),this,SLOT(UpdateStretchableColumn()));
+    connect(this->model(),SIGNAL(columnsRemoved(QModelIndex,int,int)),this,SLOT(UpdateStretchableColumn()));
 }
 
 void TreeView::setTVexpanded(QModelIndex index)
@@ -55,12 +60,26 @@ void TreeView::SetTreeType(int Type)
         disconnect(this, SIGNAL(clicked(QModelIndex)));
 }
 
-void TreeView::SetColumnWidthInPercent(int column, int percent)
+void TreeView::UpdateStretchableColumn()
 {
-    if (column < model()->columnCount())
+    if(model() && model()->columnCount())
     {
-        while (Percents.size() <= column)
-            Percents.append(0);
-        Percents.replace(column, percent);
+        if (!StretchableColumnIsSet)
+            StretchableColumn = this->model()->columnCount() - 1; // set the last column to be stretched
+        StretchableColumnSize = this->size().width()-TV_MIN_COL_SIZE;
+        for(int column = 0; column < model()->columnCount(); ++column)
+        {
+            if (column == StretchableColumn)
+                continue;
+            StretchableColumnSize -= columnWidth(column);
+        }
+        if (StretchableColumnSize < TV_MIN_COL_SIZE)
+            StretchableColumnSize = TV_MIN_COL_SIZE;
     }
+}
+
+void TreeView::SetStretchableColumn(int column)
+{
+    StretchableColumnIsSet = true;
+    StretchableColumn = column;
 }

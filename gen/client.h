@@ -15,7 +15,7 @@
 #define SERVIDLSTR  "IDLE"
 #define SERVEROK    "OK"
 
-#define TIMERSOFF // если не закомментировано, таймауты отключены
+//#define TIMERSOFF // если не закомментировано, таймауты отключены
 #define SLNUMMAX    10 // максимальное число полей в запросе по столбцам
 #define TOKEN       0x7F // разделитель
 
@@ -112,13 +112,13 @@
 
 #define MAINSLEEP   50  // количество мс сна в процессах
 #define CL_MAXRETRCOUNT    3 // максимальное количество попыток повторить команду
-#define CL_RETR1       1
-#define CL_RETR2       2
-#define CL_RETR3       4
-#define CL_RETR4       8
-#define CL_RETR5       16
-#define CL_RETR6       32
-#define CL_RETR7       64 // 64 seconds is the maximum time period between two connection retries
+#define CL_RETR1       1000
+#define CL_RETR2       2000
+#define CL_RETR3       4000
+#define CL_RETR4       8000
+#define CL_RETR5       16000
+#define CL_RETR6       32000
+#define CL_RETR7       64000 // 64 seconds is the maximum time period between two connection retries
 #define CL_MAXRETR     7 // maximum number of retry time periods
 
 class Client : public QObject
@@ -218,11 +218,11 @@ private:
     QMap<int, CmdStruct> CmdMap;
     const QStringList PathPrefixes = QStringList() << "tb/" << "doc/" << "alt/" << "pers/";
     const QStringList PathSuffixes = QStringList() << "prot/" << "dsheet/" << "libs/" << "symbols/" << "footprints/" << "photo/";
-    int RetryTimePeriods[CL_MAXRETR];
+    qint32 RetryTimePeriods[CL_MAXRETR];
     QByteArray RcvData, WrData;
     Ethernet *MainEthernet, *FileEthernet;
-    QTimer *TimeoutTimer, *GetComReplyTimer, *GetFileTimer, *RetrTimer; // general timeout, timer for server reply, getfile timer and timer to retry connection
-    bool FileBusy, Connected, CmdOk, LoginOk, ComReplyTimeoutIsSet;
+    QTimer *TimeoutTimer, *GetFileTimer, *RetrTimer; // general timeout, timer for server reply, getfile timer and timer to retry connection
+    bool FileBusy, Connected, CmdOk, LoginOk;
     QString Host, Port, FileHost;
     quint16 FilePort;
     quint64 WrittenBytes, ReadBytes, RcvDataSize, XmitDataSize;
@@ -255,7 +255,6 @@ private slots:
     void ClientErr(int error);
     void ParseReply(QByteArray ba);
     void GetFileTimerTimeout();
-    void ComReplyTimeout();
     void RetrTimeout();
 };
 

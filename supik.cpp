@@ -1,6 +1,7 @@
 #include <QtWidgets>
 #include <QTimer>
 #include <QThread>
+#include <QTextEdit>
 #include <QPropertyAnimation>
 #include "supik.h"
 #include "dialogs/dev/dev_docdialog.h"
@@ -67,6 +68,19 @@ void supik::closeEvent(QCloseEvent *e)
 {
     emit stopall();
     e->accept();
+}
+
+void supik::keyPressEvent(QKeyEvent *event)
+{
+    switch(event->key()){
+    case Qt::Key_S:
+    {
+        if (event->modifiers() == Qt::AltModifier) // "Alt + S" => Status window
+            ShowServerStatus();
+        break;
+    }
+    }
+    QMainWindow::keyPressEvent(event);
 }
 
 void supik::SetSupikWindow()
@@ -614,5 +628,29 @@ void supik::UpdateProblemsNumberInTab()
                 ClearProblems();
             }
         }
+    }
+}
+
+void supik::ShowServerStatus()
+{
+    int res = Cli->SendAndGetResult(M_STATUS);
+    if (res == Client::CLIER_EMPTY)
+        WARNMSG("Empty response");
+    else if (res != Client::CLIER_NOERROR)
+        ERMSG("Error response");
+    else
+    {
+        QDialog *dlg = new QDialog;
+        dlg->setAttribute(Qt::WA_DeleteOnClose);
+        QVBoxLayout *lyout = new QVBoxLayout;
+        s_tqPushButton *pb = new s_tqPushButton("Ага");
+        connect(pb,SIGNAL(clicked(bool)),dlg,SLOT(close()));
+        QTextEdit *te = new QTextEdit;
+        te->setPlainText(Cli->ResultStr);
+        te->setEnabled(false);
+        lyout->addWidget(te);
+        lyout->addWidget(pb);
+        dlg->setLayout(lyout);
+        dlg->exec();
     }
 }

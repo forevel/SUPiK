@@ -17,7 +17,6 @@ Client::Client(QObject *parent) : QObject(parent)
     RetryActive = false;
     RetryCount = 0;
     Connected = false;
-    ComReplyTimeoutIsSet = false;
     ResultType = RESULT_NONE;
     TimeoutCounter = 0;
     CurRetrPeriod = 0;
@@ -64,6 +63,7 @@ Client::Client(QObject *parent) : QObject(parent)
     CmdMap.insert(M_PUTFILE, {"M_PUTFILE", 4, "M7", RESULT_NONE, false, false}); // 0 - local filename, 1 - type, 2 - subtype, 3 - filename, [4] - filesize, added in SendCmd
     CmdMap.insert(M_GETFILE, {"M_GETFILE", 3, "M8", RESULT_NONE, false, false}); // 0 - type, 1 - subtype, 2 - filename
     CmdMap.insert(M_ACTIVATE, {"M_ACTIVATE", 2, "M9", RESULT_STRING, false, false}); // 0 - code, 1 - newpass
+    CmdMap.insert(M_STATUS, {"M_STATUS", 0, "M3", RESULT_STRING, false, false}); // 0 - code, 1 - newpass
 }
 
 Client::~Client()
@@ -133,9 +133,6 @@ void Client::InitiateTimers()
     TimeoutTimer = new QTimer;
     TimeoutTimer->setInterval(MAINTIMEOUT);
     connect(TimeoutTimer,SIGNAL(timeout()),this,SLOT(Timeout()));
-    GetComReplyTimer = new QTimer;
-    GetComReplyTimer->setInterval(DATATIMEOUT); // таймер на получение данных, если за 3 сек ничего не принято, считаем, что посылка закончена, и можно её обрабатывать
-    connect(GetComReplyTimer,SIGNAL(timeout()),this,SLOT(ComReplyTimeout()));
     GetFileTimer = new QTimer;
     GetFileTimer->setInterval(GETTIMEOUT); // таймер на получение файлов, если за 2 с ничего не принято, считаем, что файл окончен
     connect(GetFileTimer,SIGNAL(timeout()),this,SLOT(GetFileTimerTimeout()));
@@ -178,6 +175,7 @@ void Client::SendCmd(int command, QStringList &args)
     PrevLastBA.clear();
     if ((!Connected) || (TimeoutCounter > CL_MAXRETRCOUNT)) // if we're disconnected or there was max timouts count try to restart connection
     {
+        TimeoutCounter = 0;
         Disconnect();
         LastArgs = args; // store command arguments for retrying
         LastCommand = command;
@@ -227,6 +225,8 @@ void Client::SendCmd(int command, QStringList &args)
     }
     switch (command)
     {
+    case M_STATUS:
+        break; // no operands
 /*    case CMD_MESSAGES:
     {
         break;
@@ -325,7 +325,6 @@ void Client::SendCmd(int command, QStringList &args)
     else
         CliLog->info(">"+CommandString); //+codec->fromUnicode(CommandString));
     QByteArray ba = CommandString.toUtf8();//codec->fromUnicode(CommandString));
-    ComReplyTimeoutIsSet = false;
     MainEthernet->WriteData(ba);
     emit BytesWritten(ba.size());
 }
@@ -334,11 +333,9 @@ void Client::SendCmd(int command, QStringList &args)
 
 void Client::ParseReply(QByteArray ba)
 {
+    if (ba.isEmpty())
+        return;
     emit BytesRead(ba.size());
-#ifndef TIMERSOFF
-    if (!ComReplyTimeoutIsSet)
-        GetComReplyTimer->start(); // если не было таймаута, рестартуем таймер
-#endif
     QString RcvDataString;
     CmdOk = false;
     RetryActive = false; // if there should be a retry, set it at SERVRETSTR processing
@@ -352,6 +349,7 @@ void Client::ParseReply(QByteArray ba)
             if (fp.isOpen())
                 fp.close();
             Error("Server error response", CLIER_SERVER);
+            TimeoutTimer->stop();
             return;
         }
         if (RcvDataString == SERVEMPSTR)
@@ -359,6 +357,7 @@ void Client::ParseReply(QByteArray ba)
             if (fp.isOpen())
                 fp.remove(); // remove empty created in files.cpp file
             Error("Server empty response", CLIER_EMPTY);
+            TimeoutTimer->stop();
             return;
         }
         if (RcvDataString == SERVRETSTR) // for file operations
@@ -376,6 +375,7 @@ void Client::ParseReply(QByteArray ba)
                 RetryActive = true;
                 SendCmd(CurrentCommand, LastArgs);
             }
+            TimeoutTimer->stop();
             return;
         }
         if (RcvDataString == SERVIDLSTR)
@@ -384,6 +384,10 @@ void Client::ParseReply(QByteArray ba)
     }
     switch (CurrentCommand)
     {
+    case M_STATUS:
+        ResultStr = RcvDataString;
+        CmdOk = true;
+        break;
     case M_LOGIN: // по сути установление соединения, должны получить запрос LOGIN
     {
         if (RcvDataString == "M5")
@@ -589,10 +593,7 @@ void Client::ParseReply(QByteArray ba)
         if (RcvDataSize == 0) // последний фрагмент обработан
         {
             CmdOk = true;
-            TimeoutTimer->stop();
-            CurrentCommand = M_IDLE;
-            Busy = false;
-            return;
+            break;
         }
 #ifndef TIMERSOFF
         TimeoutTimer->start();
@@ -674,18 +675,6 @@ void Client::ParseReply(QByteArray ba)
             Error("File error", CLIER_GETFER);
             return;
         }
-        if (ComReplyTimeoutIsSet)
-        {
-            emit TransferComplete();
-            QString tmpString = "ReadBytes = " + QString::number(ReadBytes);
-            CliLog->info(tmpString);
-            tmpString = "RcvDataSize = " + QString::number(RcvDataSize);
-            CliLog->info(tmpString);
-            if (fp.isOpen())
-                fp.remove();
-            Error("GetFile read timeout", CLIER_GETFTOUT);
-            break;
-        }
         CliLog->info("< ...binary data "+QString::number(ba.size())+" size...");
         if (ba.data() == SERVERRSTR)
         {
@@ -721,8 +710,8 @@ void Client::ParseReply(QByteArray ba)
     default:
         break;
     }
-    if (CmdOk)
-        TimeoutTimer->stop();
+//    if (CmdOk)
+    TimeoutTimer->stop();
     CurrentCommand = M_IDLE;
     Busy = false;
 }
@@ -773,15 +762,6 @@ void Client::Timeout()
     FileBusy = false;
     DetectedError = CLIER_TIMEOUT;
     TimeoutTimer->stop();
-    ++TimeoutCounter;
-}
-
-void Client::ComReplyTimeout()
-{
-    ComReplyTimeoutIsSet = true;
-    QByteArray ba;
-    ParseReply(ba); // принудительная обработка принятой посылки
-    GetComReplyTimer->stop();
     ++TimeoutCounter;
 }
 

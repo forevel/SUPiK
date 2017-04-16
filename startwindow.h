@@ -7,6 +7,7 @@
 #include "dialogs/sys/sys_settingsdialog.h"
 #include "gen/publicclass.h"
 #include "gen/publiclang.h"
+#include "widgets/waitwidget.h"
 
 class StartWindow : public QMainWindow
 {
@@ -26,9 +27,12 @@ private slots:
     void OpenSettingsDialog();
     void ChangePassword();
     void ActivatedEnter();
+    void StartWaitWidget();
+    void StopWaitWidget();
 
 private:
     sys_settingsdialog qssd;
+    WaitWidget *ww;
 
     void showEvent(QShowEvent *event);
     void SetupUI();

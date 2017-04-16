@@ -15,6 +15,7 @@ Client::Client(QObject *parent) : QObject(parent)
 {
     NextActive = false;
     RetryActive = false;
+    WaitActive = false;
     RetryCount = 0;
     Connected = false;
     ResultType = RESULT_NONE;
@@ -350,6 +351,11 @@ void Client::ParseReply(QByteArray ba)
                 fp.close();
             Error("Server error response", CLIER_SERVER);
             TimeoutTimer->stop();
+            if (WaitActive)
+            {
+                WaitActive = false;
+                emit WaitEnded();
+            }
             return;
         }
         if (RcvDataString == SERVEMPSTR)
@@ -358,6 +364,11 @@ void Client::ParseReply(QByteArray ba)
                 fp.remove(); // remove empty created in files.cpp file
             Error("Server empty response", CLIER_EMPTY);
             TimeoutTimer->stop();
+            if (WaitActive)
+            {
+                WaitActive = false;
+                emit WaitEnded();
+            }
             return;
         }
         if (RcvDataString == SERVRETSTR) // for file operations
@@ -376,11 +387,38 @@ void Client::ParseReply(QByteArray ba)
                 SendCmd(CurrentCommand, LastArgs);
             }
             TimeoutTimer->stop();
+            if (WaitActive)
+            {
+                WaitActive = false;
+                emit WaitEnded();
+            }
             return;
         }
         if (RcvDataString == SERVIDLSTR)
+        {
             CurrentCommand = M_IDLE;
+            if (WaitActive)
+            {
+                WaitActive = false;
+                emit WaitEnded();
+            }
+        }
+        if (RcvDataString == SERVWAIT)
+        {
+            TimeoutTimer->start();
+            if (!WaitActive)
+            {
+                emit WaitStarted();
+                WaitActive = true;
+            }
+            return;
+        }
         CliLog->info("<"+RcvDataString);
+    }
+    if (WaitActive)
+    {
+        WaitActive = false;
+        emit WaitEnded();
     }
     switch (CurrentCommand)
     {

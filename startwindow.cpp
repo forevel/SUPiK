@@ -20,6 +20,7 @@ Log *SupLog;
 
 StartWindow::StartWindow(QWidget *parent) : QMainWindow(parent)
 {
+    ww = 0;
     Cli = new Client;
     QPixmap StartWindowSplashPixmap(":/res/2.x.png");
     QSplashScreen *StartWindowSplashScreen = new QSplashScreen(StartWindowSplashPixmap);
@@ -120,6 +121,8 @@ void StartWindow::SetupUI()
     connect (SystemPB, SIGNAL(clicked()), this, SLOT(OpenSettingsDialog()));
     connect (UNameLE, SIGNAL(returnPressed()), this, SLOT(UNameLEReturnPressed()));
     connect (PasswdLE, SIGNAL(returnPressed()), this, SLOT(PasswdLEReturnPressed()));
+    connect(Cli,SIGNAL(WaitStarted()),this,SLOT(StartWaitWidget()));
+    connect(Cli,SIGNAL(WaitEnded()),this,SLOT(StopWaitWidget()));
 }
 
 int StartWindow::ClientConnect(int Mode)
@@ -413,4 +416,21 @@ void StartWindow::StartLogs()
 {
     Cli->StartLog();
     pc.StartLog();
+}
+
+void StartWindow::StartWaitWidget()
+{
+    ww = new WaitWidget;
+    ww->SetMessage("Пожалуйста, подождите...");
+    ww->Start();
+}
+
+void StartWindow::StopWaitWidget()
+{
+    if (ww != 0)
+    {
+        ww->Stop();
+        delete ww;
+        ww = 0;
+    }
 }

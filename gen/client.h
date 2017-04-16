@@ -12,6 +12,7 @@
 #define SERVERRSTR  "ERROR"
 #define SERVEMPSTR  "EMPTY"
 #define SERVRETSTR  "RETRY"
+#define SERVWAIT    "WAIT"
 #define SERVIDLSTR  "IDLE"
 #define SERVEROK    "OK"
 
@@ -108,7 +109,6 @@
 
 #define GETTIMEOUT  3000 // таймаут на приём файла - 3 секунды
 #define MAINTIMEOUT 5000 // таймаут на ответ от сервера - 5 секунд
-#define DATATIMEOUT 10000 // таймаут на приём - 3 секунды
 
 #define MAINSLEEP   50  // количество мс сна в процессах
 #define CL_MAXRETRCOUNT    3 // максимальное количество попыток повторить команду
@@ -213,6 +213,8 @@ signals:
     void BytesWritten(quint64 bytes);
     void DataReady(QStringList &); // очередная порция данных готова
     void TransferComplete(); // окончание приёма/передачи файла
+    void WaitStarted(); // сервер чем-то долго занимается, требуется подождать
+    void WaitEnded(); // сервер закончил длительную процедуру
 
 private:
     QMap<int, CmdStruct> CmdMap;
@@ -240,6 +242,7 @@ private:
     QStringList LastArgs; // Args vector that was last used in SendCmd (for proper retrying)
     bool RetryActive; // flag indicates that retrying active
     bool NextActive; // flag indicates that we have already a result size and this is a 2,3... chunks
+    bool WaitActive; // flag indicates that the server is doing long lasts work and we should wait a bit
     bool Busy;
     int DetectedError;
 

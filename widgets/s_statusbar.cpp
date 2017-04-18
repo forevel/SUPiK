@@ -1,28 +1,27 @@
 #include "s_statusbar.h"
 #include <QPixmap>
 #include <QHBoxLayout>
+#include <QStyleOptionFrameV2>
 #include "s_tqlabel.h"
 #include "wd_func.h"
 
 s_StatusBar::s_StatusBar(QWidget *parent) : QWidget(parent)
 {
-    this->setStyleSheet(" border: 1px black;"
-                                  " background-color: rgb(234, 234, 214);"
-                                  " font: bold");
+//    setStyleSheet("QWidget {border: 1px black; background-color: rgb(234, 234, 214); \
+//                                  font: bold;}");
     setAttribute(Qt::WA_DeleteOnClose);
-//    setWindowFlags(Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
     QHBoxLayout *hlyout = new QHBoxLayout;
     hlyout->addStretch(600);
     s_tqLabel *lbl = new s_tqLabel;
     lbl->setObjectName("incbytes");
     lbl->setStyleSheet("QLabel {color: green;}");
-    hlyout->addWidget(lbl, 10);
+    hlyout->addWidget(lbl);
     lbl = new s_tqLabel("/");
-    hlyout->addWidget(lbl, 10);
+    hlyout->addWidget(lbl);
     lbl = new s_tqLabel;
     lbl->setObjectName("outbytes");
     lbl->setStyleSheet("QLabel {color: #999933;}");
-    hlyout->addWidget(lbl, 10);
+    hlyout->addWidget(lbl);
     setLayout(hlyout);
     IncBytes = OutBytes = 0;
 }
@@ -49,94 +48,22 @@ void s_StatusBar::UpdateOutgoingBytes(quint64 bytes)
     WDFunc::SetLBLText(this, "outbytes", "Ы: " + QString::number(OutBytes));
 }
 
-/*
-void s_StatusBar::Start()
+void s_StatusBar::SetRetrCounter(int value)
 {
-    UTmr = new QTimer;
-    UTmr->setInterval(1000);
-    connect(UTmr,SIGNAL(timeout()),this,SLOT(ClearUpload()));
-    DTmr = new QTimer;
-    DTmr->setInterval(1000);
-    connect(DTmr,SIGNAL(timeout()),this,SLOT(ClearDownload()));
+
 }
 
-void s_StatusBar::UploadActive()
+void s_StatusBar::DisableRetrCounter()
 {
-    if (UploadIsActive)
-        return;
-    UploadIsActive = true;
-    QLabel *lbl = this->findChild<QLabel *>("s_StatusBarlabel");
-    if (lbl == 0)
-        return;
-    if (DownloadIsActive)
-    {
-        QPixmap OnPmap(":/res/2on.png");
-        lbl->setPixmap(OnPmap);
-    }
-    else
-    {
-        QPixmap UpOnPmap(":/res/1ud.png");
-        lbl->setPixmap(UpOnPmap);
-    }
-    UTmr->start();
+
 }
 
-void s_StatusBar::DownloadActive()
+void s_StatusBar::SetServerStatusOffline()
 {
-    if (DownloadIsActive)
-        return;
-    DownloadIsActive = true;
-    QLabel *lbl = this->findChild<QLabel *>("s_StatusBarlabel");
-    if (lbl == 0)
-        return;
-    if (UploadIsActive)
-    {
-        QPixmap OnPmap(":/res/2on.png");
-        lbl->setPixmap(OnPmap);
-    }
-    else
-    {
-        QPixmap UpOnPmap(":/res/1dd.png");
-        lbl->setPixmap(UpOnPmap);
-    }
-    DTmr->start();
+
 }
 
-void s_StatusBar::ClearUpload()
+void s_StatusBar::SetServerStatusOnline()
 {
-    UTmr->stop();
-    UploadIsActive = false;
-    QLabel *lbl = this->findChild<QLabel *>("s_StatusBarlabel");
-    if (lbl == 0)
-        return;
-    if (DownloadIsActive)
-    {
-        QPixmap OnPmap(":/res/1dd.png");
-        lbl->setPixmap(OnPmap);
-    }
-    else
-    {
-        QPixmap UpOnPmap(":/res/2off.png");
-        lbl->setPixmap(UpOnPmap);
-    }
-}
 
-void s_StatusBar::ClearDownload()
-{
-    DTmr->stop();
-    DownloadIsActive = false;
-    QLabel *lbl = this->findChild<QLabel *>("s_StatusBarlabel");
-    if (lbl == 0)
-        return;
-    if (UploadIsActive)
-    {
-        QPixmap OnPmap(":/res/1ud.png");
-        lbl->setPixmap(OnPmap);
-    }
-    else
-    {
-        QPixmap UpOnPmap(":/res/2off.png");
-        lbl->setPixmap(UpOnPmap);
-    }
 }
-*/

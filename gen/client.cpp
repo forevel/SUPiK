@@ -14,9 +14,9 @@ Client *Cli = 0;
 Client::Client(QObject *parent) : QObject(parent)
 {
     NextActive = false;
-    RetryActive = false;
+    ServRetryActive = false;
     WaitActive = false;
-    RetryCount = 0;
+    ServRetryCount = 0;
     Connected = false;
     ResultType = RESULT_NONE;
     TimeoutCounter = 0;
@@ -154,11 +154,12 @@ void Client::Disconnect()
                 QThread::msleep(MAINSLEEP);
                 qApp->processEvents(QEventLoop::AllEvents);
             }
-            MainEthernet->Disconnect();
-            Connected = false;
         }
+        Connected = false;
         if (MainEthernet != 0)
         {
+            MainEthernet->Disconnect();
+            QThread::msleep(MAINSLEEP);
             delete MainEthernet;
             MainEthernet = 0;
         }
@@ -174,18 +175,21 @@ void Client::SendCmd(int command, QStringList &args)
     CurrentCommand = command;
     NextActive = false;
     PrevLastBA.clear();
-    if ((!Connected) || (TimeoutCounter > CL_MAXRETRCOUNT)) // if we're disconnected or there was max timouts count try to restart connection
+    if ((command != M_LOGIN) && (command != M_ANSLOGIN))
     {
-        TimeoutCounter = 0;
-        Disconnect();
-        LastArgs = args; // store command arguments for retrying
         LastCommand = command;
+        LastArgs = args; // store command arguments for retrying
+    }
+    if (!Connected) // if we're disconnected
+    {
+        Disconnect();
         RetrTimer->start();
+        emit RetrStarted(RetrTimer->interval());
         DetectedError = CLIER_CLOSED;
         return;
     }
-    if (!RetryActive) // if this send is not a retry
-        RetryCount = 0;
+    if (!ServRetryActive) // if this send is not a retry
+        ServRetryCount = 0;
     if (Busy)
     {
         DetectedError = CLIER_BUSY;
@@ -339,7 +343,7 @@ void Client::ParseReply(QByteArray ba)
     emit BytesRead(ba.size());
     QString RcvDataString;
     CmdOk = false;
-    RetryActive = false; // if there should be a retry, set it at SERVRETSTR processing
+    ServRetryActive = false; // if there should be a retry, set it at SERVRETSTR processing
     DetectedError = CLIER_NOERROR;
     QTextCodec *codec = QTextCodec::codecForName("Windows-1251");
     if (CurrentCommand != M_AGETFILE) // приём файла обрабатывается по-другому
@@ -374,8 +378,8 @@ void Client::ParseReply(QByteArray ba)
         if (RcvDataString == SERVRETSTR) // for file operations
         {
             CliLog->info("Server wants retry, trying retry");
-            ++RetryCount;
-            if (RetryCount > CL_MAXRETRCOUNT)
+            ++ServRetryCount;
+            if (ServRetryCount > CL_MAXRETRCOUNT)
             {
                 if (fp.isOpen())
                     fp.close();
@@ -383,7 +387,7 @@ void Client::ParseReply(QByteArray ba)
             }
             else
             {
-                RetryActive = true;
+                ServRetryActive = true;
                 SendCmd(CurrentCommand, LastArgs);
             }
             TimeoutTimer->stop();
@@ -914,9 +918,14 @@ void Client::RetrTimeout()
         ++CurRetrPeriod;
     RetrTimer->setInterval(RetryTimePeriods[CurRetrPeriod]);
     RetrTimer->stop();
-//    Disconnect();
+    Disconnect();
     if (Connect(Host, Port, ClientMode) == CLIER_NOERROR) // if the connection was successful send previous command with previous arguments
+    {
         SendCmd(LastCommand, LastArgs);
-    else // else try again later
-        RetrTimer->start();
+        emit RetrEnded();
+        return;
+    }
+    // else try again later
+    RetrTimer->start();
+    emit RetrStarted(RetrTimer->interval());
 }

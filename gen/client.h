@@ -194,6 +194,7 @@ public:
     QList<QStringList> Result;
     QString ResultStr;
     int ResultInt;
+    QTimer *RetrTimer;
 
     int Connect(QString host, QString port, int clientmode);
     bool isConnected();
@@ -215,6 +216,8 @@ signals:
     void TransferComplete(); // окончание приёма/передачи файла
     void WaitStarted(); // сервер чем-то долго занимается, требуется подождать
     void WaitEnded(); // сервер закончил длительную процедуру
+    void RetrStarted(int); // начаты попытки восстановить связь с сервером
+    void RetrEnded(); // связь восстановлена
 
 private:
     QMap<int, CmdStruct> CmdMap;
@@ -223,7 +226,7 @@ private:
     qint32 RetryTimePeriods[CL_MAXRETR];
     QByteArray RcvData, WrData;
     Ethernet *MainEthernet, *FileEthernet;
-    QTimer *TimeoutTimer, *GetFileTimer, *RetrTimer; // general timeout, timer for server reply, getfile timer and timer to retry connection
+    QTimer *TimeoutTimer, *GetFileTimer; // general timeout, timer for server reply, getfile timer
     bool FileBusy, Connected, CmdOk, LoginOk;
     QString Host, Port, FileHost;
     quint16 FilePort;
@@ -237,10 +240,10 @@ private:
     QByteArray PrevLastBA; // last string in previous ethernet received chunk to be concatenated with the first string from the next chunk
     Log *CliLog;
     int TimeoutCounter; // counter of timeouts, when it equals 3 the connection is forced reconnected
-    int RetryCount; // counter of retry reply from server to make disconnection
+    int ServRetryCount; // counter of retry reply from server to make disconnection
     int CurRetrPeriod; // index of current retry time period from RetryTimePeriods array
     QStringList LastArgs; // Args vector that was last used in SendCmd (for proper retrying)
-    bool RetryActive; // flag indicates that retrying active
+    bool ServRetryActive; // flag indicates that retrying active
     bool NextActive; // flag indicates that we have already a result size and this is a 2,3... chunks
     bool WaitActive; // flag indicates that the server is doing long lasts work and we should wait a bit
     bool Busy;

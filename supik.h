@@ -15,7 +15,7 @@
 #define SUPIKMENU_ITEM_COLOR_SELECTED "#000000"
 #define SYS_TAB_BGCOLOR "#FF373A"
 
-#define PROGVER    "2.1.24"
+#define PROGVER    "2.1.33"
 
 #define SYSSTYLESHEET "background-image: url(:/res/SysWallpaper.png);"
 
@@ -28,11 +28,13 @@ public:
 signals:
     void newnotify();
     void stopall();
+    void SetRetrCounterInSB(int);
+    void DisableRetrCounterInSB();
 
 public slots:
 
 private:
-    bool IsProblemsDetected, PeriodicOddSecond;
+    bool IsProblemsDetected, PeriodicOddSecond, RetrCounterEnabled;
     int WarningActionIndex;
     QHash <QString, void (supik::*)()> pf;
     int ErMsgNum;
@@ -73,6 +75,8 @@ private slots:
     void UpdateProblemsNumberInTab();
     void periodic1s();
     void ErrorProtocol();
+    void StartRetrCounter(int initialvalue);
+    void StopRetrCounter();
 
     void Components();
     void Directories();

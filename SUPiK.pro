@@ -8,7 +8,7 @@ QMAKE_TARGET_COMPANY = EvelSoft
 QMAKE_TARGET_COPYRIGHT = EvelSoft
 QMAKE_TARGET_PRODUCT = SUPiK
 RC_ICONS = res/SUPiK.ico
-VERSION = 2.1.24
+VERSION = 2.1.33
 
 QT       += widgets core gui sql network printsupport
 

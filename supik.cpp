@@ -29,6 +29,7 @@ supik::supik()
 {
     IsProblemsDetected = false;
     PeriodicOddSecond = true;
+    PeriodicFifthSecond = 0;
     SetSupikWindow();
     pc.supikprocs << "ExitSupik" << "SysStructEdit" << "SettingsEdit" << "Components" << "Directories" << "BackupDir" << "RestoreDir" << "ProbCheck";
     pc.supikprocs << "WhIncome" << "WhOutgoing" << "WhSearch" << "DevDoc" << "DevDev" << "Quarantine" << "" << "SysImportClass" << "TBExam";
@@ -117,16 +118,15 @@ void supik::SetSupikWindow()
     pb->setToolTip("Протокол ошибок");
     pb->setObjectName("errorprotpb");
     upperLayout->addWidget(pb);
+    upperLayout->addStretch(99);
+    s_tqLabel *datetime = new s_tqLabel;
+    datetime->setObjectName("datetime");
+    upperLayout->addWidget(datetime, 0);
     pb = new s_tqPushButton;
     pb->setIcon(QIcon(":/res/cross.png"));
     connect(pb, SIGNAL(clicked()), this, SLOT(close()));
     pb->setToolTip("Выход из программы");
     upperLayout->addWidget(pb);
-
-    upperLayout->addStretch(99);
-    s_tqLabel *datetime = new s_tqLabel;
-    datetime->setObjectName("datetime");
-    upperLayout->addWidget(datetime, 0);
     mainLayout->addLayout(upperLayout, 0);
     S_ColorTabWidget *MainTW = new S_ColorTabWidget;
     MainTW->setObjectName("MainTW");
@@ -567,6 +567,12 @@ void supik::executeDirDialog()
 
 void supik::periodic1s()
 {
+    ++PeriodicFifthSecond;
+    if (PeriodicFifthSecond > 4)
+    {
+        PeriodicFifthSecond = 0;
+        Cli->SendCmd(M_PING); // проверка связи
+    }
     PeriodicOddSecond = !PeriodicOddSecond;
     pc.DateTime = QDateTime::currentDateTime().toString(DATETIMEFORMAT);
     s_tqLabel *le = this->findChild<s_tqLabel *>("datetime");

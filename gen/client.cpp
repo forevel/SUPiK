@@ -8,6 +8,7 @@
 #include <QDir>
 
 #include "client.h"
+#include "supik.h"
 
 Client *Cli = 0;
 
@@ -64,7 +65,8 @@ Client::Client(QObject *parent) : QObject(parent)
     CmdMap.insert(M_PUTFILE, {"M_PUTFILE", 4, "M7", RESULT_NONE, false, false}); // 0 - local filename, 1 - type, 2 - subtype, 3 - filename, [4] - filesize, added in SendCmd
     CmdMap.insert(M_GETFILE, {"M_GETFILE", 3, "M8", RESULT_NONE, false, false}); // 0 - type, 1 - subtype, 2 - filename
     CmdMap.insert(M_ACTIVATE, {"M_ACTIVATE", 2, "M9", RESULT_STRING, false, false}); // 0 - code, 1 - newpass
-    CmdMap.insert(M_STATUS, {"M_STATUS", 0, "M3", RESULT_STRING, false, false}); // 0 - code, 1 - newpass
+    CmdMap.insert(M_STATUS, {"M_STATUS", 0, "M3", RESULT_STRING, false, false});
+    CmdMap.insert(M_PING, {"M_PING", 0, "M4", RESULT_STRING, false, false});
 }
 
 Client::~Client()
@@ -156,13 +158,6 @@ void Client::Disconnect()
             }
         }
         Connected = false;
-/*        if (MainEthernet != 0)
-        {
-            MainEthernet->Disconnect();
-            QThread::msleep(MAINSLEEP);
-            delete MainEthernet;
-            MainEthernet = 0;
-        } */
     }
     catch(...)
     {
@@ -180,7 +175,7 @@ void Client::SendCmd(int command, QStringList &args)
         LastCommand = command;
         LastArgs = args; // store command arguments for retrying
     }
-    if (!Connected) // if we're disconnected
+    if ((!Connected) || (TimeoutCounter > 3)) // if we're disconnected
     {
         Disconnect();
         RetrTimer->start();
@@ -231,7 +226,9 @@ void Client::SendCmd(int command, QStringList &args)
     switch (command)
     {
     case M_STATUS:
-        break; // no operands
+    case M_PING:
+    case M_ACTIVATE:
+        break; // no operands or all is already included in CommandString
 /*    case CMD_MESSAGES:
     {
         break;
@@ -240,11 +237,6 @@ void Client::SendCmd(int command, QStringList &args)
     {
         break;
     } */
-    // ACTIVATE активировать учётную запись пользователя
-    // 0 - код активации
-    // 1 - новый пароль
-    case M_ACTIVATE:
-        break; // all is already included in CommandString
     // GETF получить файл с сервера
     // 0 - тип файла
     // 1 - подтип файла
@@ -319,7 +311,7 @@ void Client::SendCmd(int command, QStringList &args)
     }
     case M_ANSLOGIN:
     {
-        CommandString = Pers + TOKEN + Pass;
+        CommandString = Pers + TOKEN + Pass + TOKEN + PROGVER;
         break;
     }
     default:
@@ -429,6 +421,10 @@ void Client::ParseReply(QByteArray ba)
     case M_STATUS:
         ResultStr = RcvDataString;
         CmdOk = true;
+        break;
+    case M_PING:
+        if (ResultStr == SERVEROK)
+            CmdOk = true;
         break;
     case M_LOGIN: // по сути установление соединения, должны получить запрос LOGIN
     {

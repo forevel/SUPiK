@@ -25,7 +25,7 @@
 #define M_QUIT		1001 // подтверждение завершения сеанса связи
 #define M_GROUP		1002 // группа доступа
 #define M_STATUS	1003
-#define M_STATS		1004
+#define M_PING		1004
 #define M_LOGIN		1005 // запрос имени пользователя
 #define M_PSW		1006 // запрос пароля (зарез.)
 #define M_PUTFILE   1007 // отправка файла на сервер

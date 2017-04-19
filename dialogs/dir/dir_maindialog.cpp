@@ -87,6 +87,7 @@ void dir_maindialog::SetupUI()
         ERMSG("Ошибка при построении таблицы "+MainTable);
         w->Stop();
         delete w;
+        this->close();
         return;
     }
     MainTV->setModel(MainTableModel);

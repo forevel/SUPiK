@@ -10,7 +10,7 @@ public:
     static bool SetCWData(QWidget *w, const QString &cwname, const QString &cwvalue);
     static QString CWData(QWidget *w, const QString &cwname);
     static bool SetCWColor(QWidget *w, const QString &cwname, const QColor &color);
-    static bool SetLEData(QWidget *w, const QString &lename, const QString &levalue);
+    static bool SetLEData(QWidget *w, const QString &lename, const QString &levalue, bool enabled=true);
     static bool LEData(QWidget *w, const QString &lename, QString &levalue);
     static bool SetTEData(QWidget *w, const QString &tename, const QString &tetext);
     static bool TEData(QWidget *w, const QString &tename, QString &tevalue);

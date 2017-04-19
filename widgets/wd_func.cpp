@@ -38,12 +38,13 @@ QString WDFunc::CWData(QWidget *w, const QString &cwname)
     return cw->Value();
 }
 
-bool WDFunc::SetLEData(QWidget *w, const QString &lename, const QString &levalue)
+bool WDFunc::SetLEData(QWidget *w, const QString &lename, const QString &levalue, bool enabled)
 {
     s_tqLineEdit *le = w->findChild<s_tqLineEdit *>(lename);
     if (le == 0)
         return false;
     le->setText(levalue);
+    le->setEnabled(enabled);
     return true;
 }
 

@@ -79,5 +79,8 @@
         <file>res/ans_good.png</file>
         <file>res/ans_neutral.png</file>
         <file>res/directory.png</file>
+        <file>res/server_offline.png</file>
+        <file>res/server_online_active.png</file>
+        <file>res/server_online_passive.png</file>
     </qresource>
 </RCC>

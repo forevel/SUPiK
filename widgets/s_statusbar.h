@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QTimer>
+#include <QPixmap>
 
 #define SB_MAXHEIGHT    16
 
@@ -27,9 +28,12 @@ public slots:
     void DisableRetrCounter();
 
 private slots:
+    void ClearActiveServerState();
 
 private:
     quint64 IncBytes, OutBytes;
+    QTimer *ActiveTimer;
+    QPixmap *Sf, *Sna, *Snp;
 
 protected:
     void paintEvent(QPaintEvent *e);

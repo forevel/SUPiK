@@ -156,13 +156,13 @@ void Client::Disconnect()
             }
         }
         Connected = false;
-        if (MainEthernet != 0)
+/*        if (MainEthernet != 0)
         {
             MainEthernet->Disconnect();
             QThread::msleep(MAINSLEEP);
             delete MainEthernet;
             MainEthernet = 0;
-        }
+        } */
     }
     catch(...)
     {

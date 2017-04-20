@@ -607,7 +607,7 @@ void supik::periodic1s()
     }
     if (RetrCounterEnabled)
     {
-        emit SetRetrCounterInSB(Cli->RetrTimer->remainingTime());
+        emit SetRetrCounterInSB(Cli->RetrTimer->remainingTime()/1000);
     }
 }
 

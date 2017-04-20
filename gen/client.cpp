@@ -67,6 +67,7 @@ Client::Client(QObject *parent) : QObject(parent)
     CmdMap.insert(M_ACTIVATE, {"M_ACTIVATE", 2, "M9", RESULT_STRING, false, false}); // 0 - code, 1 - newpass
     CmdMap.insert(M_STATUS, {"M_STATUS", 0, "M3", RESULT_STRING, false, false});
     CmdMap.insert(M_PING, {"M_PING", 0, "M4", RESULT_STRING, false, false});
+    InitiateTimers();
 }
 
 Client::~Client()
@@ -98,7 +99,6 @@ int Client::Connect(QString host, QString port, int clientmode)
         Pass = pc.PersPsw;
     }
     Busy = Connected = CmdOk = false;
-    InitiateTimers();
 
     MainEthernet = new Ethernet;
     MainEthernet->SetEthernet(Host, Port.toInt(), Ethernet::ETH_SSL);
@@ -150,7 +150,7 @@ void Client::Disconnect()
     {
         if (Connected)
         {
-            SendCmd(M_QUIT);
+//            SendCmd(M_QUIT);
             while ((Busy == true) && (DetectedError == CLIER_NOERROR))
             {
                 QThread::msleep(MAINSLEEP);
@@ -177,9 +177,12 @@ void Client::SendCmd(int command, QStringList &args)
     }
     if ((!Connected) || (TimeoutCounter > 3)) // if we're disconnected
     {
-        Disconnect();
-        RetrTimer->start();
-        emit RetrStarted(RetrTimer->interval());
+        if (!RetrTimer->isActive())
+        {
+            Disconnect();
+            RetrTimer->start();
+            emit RetrStarted(RetrTimer->interval());
+        }
         DetectedError = CLIER_CLOSED;
         return;
     }
@@ -416,6 +419,13 @@ void Client::ParseReply(QByteArray ba)
         WaitActive = false;
         emit WaitEnded();
     }
+    if (RcvDataString == "M5") // M_LOGIN
+    {
+        CmdOk = true;
+        Busy = false;
+        SendCmd(M_ANSLOGIN);
+        return;
+    }
     switch (CurrentCommand)
     {
     case M_STATUS:
@@ -426,17 +436,6 @@ void Client::ParseReply(QByteArray ba)
         if (ResultStr == SERVEROK)
             CmdOk = true;
         break;
-    case M_LOGIN: // по сути установление соединения, должны получить запрос LOGIN
-    {
-        if (RcvDataString == "M5")
-        {
-            CmdOk = true;
-            Busy = false;
-            SendCmd(M_ANSLOGIN);
-            return;
-        }
-        break;
-    }
     case M_ANSLOGIN:
     {
         // если получили в ответ "GROUP <access>", значит, всё в порядке, иначе ошибка пароля
@@ -772,6 +771,9 @@ void Client::GetFileTimerTimeout()
 void Client::ClientConnected()
 {
     Connected = true;
+    RetrTimer->stop();
+    CurRetrPeriod = 0;
+    emit RetrEnded();
 #ifndef TIMERSOFF
     TimeoutTimer->start(); // рестарт таймера для получения запроса от сервера
 #endif
@@ -910,18 +912,19 @@ bool Client::isConnected()
 
 void Client::RetrTimeout()
 {
-    if (CurRetrPeriod < CL_MAXRETR)
-        ++CurRetrPeriod;
-    RetrTimer->setInterval(RetryTimePeriods[CurRetrPeriod]);
     RetrTimer->stop();
     Disconnect();
     if (Connect(Host, Port, ClientMode) == CLIER_NOERROR) // if the connection was successful send previous command with previous arguments
     {
         SendCmd(LastCommand, LastArgs);
         emit RetrEnded();
+        CurRetrPeriod = 0;
         return;
     }
     // else try again later
+    if (CurRetrPeriod < CL_MAXRETR)
+        ++CurRetrPeriod;
+    RetrTimer->setInterval(RetryTimePeriods[CurRetrPeriod]);
     RetrTimer->start();
-    emit RetrStarted(RetrTimer->interval());
+    emit RetrStarted(RetrTimer->interval()/1000);
 }

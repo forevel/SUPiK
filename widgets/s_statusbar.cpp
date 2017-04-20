@@ -19,7 +19,7 @@ s_StatusBar::s_StatusBar(QWidget *parent) : QWidget(parent)
     lbl->setObjectName("retrcounter");
     lbl->setText("---");
     lbl->setStyleSheet("QLabel {color: red;}");
-//    lbl->setEnabled(false);
+    lbl->setEnabled(false);
     hlyout->addWidget(lbl);
     lbl = new s_tqLabel;
     lbl->setObjectName("serverstatus");
@@ -77,13 +77,13 @@ void s_StatusBar::ClearActiveServerState()
 void s_StatusBar::SetRetrCounter(int value)
 {
     SetServerStatusOffline();
-    WDFunc::SetLEData(this, "retrcounter", QString::number(value));
+    WDFunc::SetLBLText(this, "retrcounter", QString::number(value));
 }
 
 void s_StatusBar::DisableRetrCounter()
 {
     SetServerStatusOnline();
-    WDFunc::SetLEData(this, "retrcounter", "---");
+    WDFunc::SetLBLText(this, "retrcounter", "---", false);
 }
 
 void s_StatusBar::SetServerStatusOffline()

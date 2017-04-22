@@ -107,7 +107,7 @@
 #define SZ_PUTFILE  3 // "OK\n"
 #define SZ_DUMMY    1 // dummy size when we're in concern that the incoming packet size will be less than 4096 bytes long
 
-#define GETTIMEOUT  3000 // таймаут на приём файла - 3 секунды
+#define ETHTIMEOUT  200 // таймаут на закрытие сокетов в Ethernet - 200 мс
 #define MAINTIMEOUT 5000 // таймаут на ответ от сервера - 5 секунд
 
 #define MAINSLEEP   50  // количество мс сна в процессах
@@ -191,6 +191,13 @@ public:
         bool CheckForPairsNum;
     };
 
+    enum EthStatuses
+    {
+        STAT_CONNECTED,
+        STAT_ABOUTTOCLOSE,
+        STAT_CLOSED
+    };
+
     QList<QStringList> Result;
     QString ResultStr;
     int ResultInt;
@@ -226,8 +233,8 @@ private:
     qint32 RetryTimePeriods[CL_MAXRETR];
     QByteArray RcvData, WrData;
     Ethernet *MainEthernet, *FileEthernet;
-    QTimer *TimeoutTimer, *GetFileTimer; // general timeout, timer for server reply, getfile timer
-    bool FileBusy, Connected, CmdOk, LoginOk;
+    QTimer *TimeoutTimer, *EthStateChangeTimer; // general timeout, timer for server reply, getfile timer
+    bool FileBusy, CmdOk, LoginOk;
     QString Host, Port, FileHost;
     quint16 FilePort;
     quint64 WrittenBytes, ReadBytes, RcvDataSize, XmitDataSize;
@@ -248,6 +255,7 @@ private:
     bool WaitActive; // flag indicates that the server is doing long lasts work and we should wait a bit
     bool Busy;
     int DetectedError;
+    int EthStatus;
 
     QString RemoveSpaces(QString str);
     void Error(QString ErMsg, int ErrorInt=CLIER_GENERAL);
@@ -260,7 +268,7 @@ private slots:
     void Timeout();
     void ClientErr(int error);
     void ParseReply(QByteArray ba);
-    void GetFileTimerTimeout();
+    void EthStateChangeTimerTimeout();
     void RetrTimeout();
 };
 

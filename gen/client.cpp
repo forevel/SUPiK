@@ -18,13 +18,12 @@ Client::Client(QObject *parent) : QObject(parent)
     ServRetryActive = false;
     WaitActive = false;
     ServRetryCount = 0;
-    Connected = false;
+    EthStatus = STAT_CLOSED;
     ResultType = RESULT_NONE;
     TimeoutCounter = 0;
     CurRetrPeriod = 0;
     LastArgs.clear();
     LastCommand = M_IDLE;
-    MainEthernet = 0;
     RetryTimePeriods[0] = CL_RETR1;
     RetryTimePeriods[1] = CL_RETR2;
     RetryTimePeriods[2] = CL_RETR3;
@@ -67,6 +66,7 @@ Client::Client(QObject *parent) : QObject(parent)
     CmdMap.insert(M_ACTIVATE, {"M_ACTIVATE", 2, "M9", RESULT_STRING, false, false}); // 0 - code, 1 - newpass
     CmdMap.insert(M_STATUS, {"M_STATUS", 0, "M3", RESULT_STRING, false, false});
     CmdMap.insert(M_PING, {"M_PING", 0, "M4", RESULT_STRING, false, false});
+    InitiateTimers();
 }
 
 Client::~Client()
@@ -85,7 +85,7 @@ int Client::Connect(QString host, QString port, int clientmode)
     Host = host;
     Port = port;
     ClientMode = clientmode;
-    if (Connected) // если уже подсоединены, не надо по второму разу
+    if (EthStatus == STAT_CONNECTED) // если уже подсоединены, не надо по второму разу
         return CLIER_NOERROR;
     if (ClientMode == CLIMODE_TEST)
     {
@@ -97,8 +97,7 @@ int Client::Connect(QString host, QString port, int clientmode)
         Pers = pc.PersLogin;
         Pass = pc.PersPsw;
     }
-    Busy = Connected = CmdOk = false;
-    InitiateTimers();
+    Busy = CmdOk = false;
 
     MainEthernet = new Ethernet;
     MainEthernet->SetEthernet(Host, Port.toInt(), Ethernet::ETH_SSL);
@@ -109,6 +108,19 @@ int Client::Connect(QString host, QString port, int clientmode)
     TimeoutTimer->start();
 #endif
     DetectedError = CLIER_NOERROR;
+    while ((EthStatus != STAT_CONNECTED) && (DetectedError == CLIER_NOERROR))
+    {
+        QTime tme;
+        tme.start();
+        while (tme.elapsed() < MAINSLEEP)
+            qApp->processEvents(QEventLoop::AllEvents);
+    }
+    if (EthStatus != STAT_CONNECTED)
+    {
+        CliLog->warning("Entering autonomous mode...");
+        return CLIER_TIMEOUT;
+    }
+    DetectedError = CLIER_NOERROR;
     LoginOk = false;
     CurrentCommand = M_LOGIN;
     while (!LoginOk && (DetectedError == CLIER_NOERROR))
@@ -117,11 +129,6 @@ int Client::Connect(QString host, QString port, int clientmode)
         tme.start();
         while (tme.elapsed() < MAINSLEEP)
             qApp->processEvents(QEventLoop::AllEvents);
-    }
-    if (!Connected)
-    {
-        CliLog->warning("Entering autonomous mode...");
-        return CLIER_TIMEOUT;
     }
     if (!LoginOk)
     {
@@ -136,9 +143,10 @@ void Client::InitiateTimers()
     TimeoutTimer = new QTimer;
     TimeoutTimer->setInterval(MAINTIMEOUT);
     connect(TimeoutTimer,SIGNAL(timeout()),this,SLOT(Timeout()));
-    GetFileTimer = new QTimer;
-    GetFileTimer->setInterval(GETTIMEOUT); // таймер на получение файлов, если за 2 с ничего не принято, считаем, что файл окончен
-    connect(GetFileTimer,SIGNAL(timeout()),this,SLOT(GetFileTimerTimeout()));
+    EthStateChangeTimer = new QTimer;
+    EthStateChangeTimer->setInterval(ETHTIMEOUT); // таймер на получение файлов, если за 2 с ничего не принято, считаем, что файл окончен
+    EthStateChangeTimer->setSingleShot(true);
+    connect(EthStateChangeTimer,SIGNAL(timeout()),this,SLOT(EthStateChangeTimerTimeout()));
     RetrTimer = new QTimer;
     RetrTimer->setInterval(RetryTimePeriods[CurRetrPeriod]);
     connect(RetrTimer,SIGNAL(timeout()),this,SLOT(RetrTimeout()));
@@ -146,22 +154,17 @@ void Client::InitiateTimers()
 
 void Client::Disconnect()
 {
-    try
+    if (EthStatus == STAT_ABOUTTOCLOSE)
     {
-        if (Connected)
+        try
         {
-            SendCmd(M_QUIT);
-            while ((Busy == true) && (DetectedError == CLIER_NOERROR))
-            {
-                QThread::msleep(MAINSLEEP);
-                qApp->processEvents(QEventLoop::AllEvents);
-            }
+            delete MainEthernet;
+            EthStatus = STAT_CLOSED;
         }
-        Connected = false;
-    }
-    catch(...)
-    {
-        ERMSG("Exception in Client::Disconnect()");
+        catch(...)
+        {
+            ERMSG("Exception in Client::Disconnect()");
+        }
     }
 }
 
@@ -175,9 +178,11 @@ void Client::SendCmd(int command, QStringList &args)
         LastCommand = command;
         LastArgs = args; // store command arguments for retrying
     }
-    if ((!Connected) || (TimeoutCounter > 3)) // if we're disconnected
+    if ((EthStatus != STAT_CONNECTED) || (TimeoutCounter > 3)) // if we're disconnected
     {
-        Disconnect();
+        EthStatus = STAT_ABOUTTOCLOSE;
+        EthStateChangeTimer->start();
+        TimeoutCounter = 0;
         RetrTimer->start();
         emit RetrStarted(RetrTimer->interval());
         DetectedError = CLIER_CLOSED;
@@ -190,7 +195,7 @@ void Client::SendCmd(int command, QStringList &args)
         DetectedError = CLIER_BUSY;
         return;
     }
-    if ((ClientMode == CLIMODE_TEST) && (command != M_ACTIVATE) && (command != M_ANSLOGIN) && (command != M_ANSPSW) && (command != M_QUIT))
+    if ((ClientMode == CLIMODE_TEST) && (command != M_ACTIVATE) && (command != M_ANSLOGIN) && (command != M_QUIT))
     {
         CliLog->warning("illegal test command");
         DetectedError = CLIER_CMDER;
@@ -220,7 +225,7 @@ void Client::SendCmd(int command, QStringList &args)
         sl << st.Prefix;
         sl.append(args);
         QString tmps = sl.join(TOKEN);
-        CommandString = tmps;// + "\n";
+        CommandString = tmps;
         ResultType = st.ResultType;
     }
     switch (command)
@@ -748,7 +753,6 @@ void Client::ParseReply(QByteArray ba)
     default:
         break;
     }
-//    if (CmdOk)
     TimeoutTimer->stop();
     CurrentCommand = M_IDLE;
     Busy = false;
@@ -763,15 +767,14 @@ void Client::Error(QString ErMsg, int ErrorInt)
     CurrentCommand = M_IDLE;
 }
 
-void Client::GetFileTimerTimeout()
+void Client::EthStateChangeTimerTimeout()
 {
-    FileBusy = false;
-    ++TimeoutCounter;
+    Disconnect();
 }
 
 void Client::ClientConnected()
 {
-    Connected = true;
+    EthStatus = STAT_CONNECTED;
 #ifndef TIMERSOFF
     TimeoutTimer->start(); // рестарт таймера для получения запроса от сервера
 #endif
@@ -779,10 +782,8 @@ void Client::ClientConnected()
 
 void Client::ClientDisconnected()
 {
-    Busy = false;
-    Connected = false;
-    DetectedError = CLIER_CLOSED;
-//    Disconnect(); // delete MainEthernet to try connect later if needed
+    EthStatus = STAT_ABOUTTOCLOSE; // delete MainEthernet to try connect later if needed
+    EthStateChangeTimer->start();
 }
 
 void Client::ClientErr(int error)
@@ -905,16 +906,12 @@ int Client::SendAndGetResult(int command, QStringList &args)
 
 bool Client::isConnected()
 {
-    return Connected;
+    return (EthStatus == STAT_CONNECTED);
 }
 
 void Client::RetrTimeout()
 {
-    if (CurRetrPeriod < CL_MAXRETR)
-        ++CurRetrPeriod;
-    RetrTimer->setInterval(RetryTimePeriods[CurRetrPeriod]);
     RetrTimer->stop();
-    Disconnect();
     if (Connect(Host, Port, ClientMode) == CLIER_NOERROR) // if the connection was successful send previous command with previous arguments
     {
         SendCmd(LastCommand, LastArgs);
@@ -922,6 +919,9 @@ void Client::RetrTimeout()
         return;
     }
     // else try again later
+    if (CurRetrPeriod < CL_MAXRETR)
+        ++CurRetrPeriod;
+    RetrTimer->setInterval(RetryTimePeriods[CurRetrPeriod]);
     RetrTimer->start();
     emit RetrStarted(RetrTimer->interval());
 }

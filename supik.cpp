@@ -29,7 +29,7 @@ supik::supik()
 {
     IsProblemsDetected = false;
     PeriodicOddSecond = true;
-    PeriodicFifthSecond = 0;
+    PingSecCounter = 0;
     SetSupikWindow();
     pc.supikprocs << "ExitSupik" << "SysStructEdit" << "SettingsEdit" << "Components" << "Directories" << "BackupDir" << "RestoreDir" << "ProbCheck";
     pc.supikprocs << "WhIncome" << "WhOutgoing" << "WhSearch" << "DevDoc" << "DevDev" << "Quarantine" << "" << "SysImportClass" << "TBExam";
@@ -77,7 +77,7 @@ void supik::keyPressEvent(QKeyEvent *event)
     switch(event->key()){
     case Qt::Key_S:
     {
-        if (event->modifiers() == Qt::AltModifier) // "Alt + S" => Status window
+        if (event->modifiers() == (Qt::AltModifier | Qt::ControlModifier)) // "Alt + S" => Status window
             ShowServerStatus();
         break;
     }
@@ -567,10 +567,10 @@ void supik::executeDirDialog()
 
 void supik::periodic1s()
 {
-    ++PeriodicFifthSecond;
-    if (PeriodicFifthSecond > 4)
+    ++PingSecCounter;
+    if (PingSecCounter > SUPIK_PINGPERIOD)
     {
-        PeriodicFifthSecond = 0;
+        PingSecCounter = 0;
         Cli->SendCmd(M_PING); // проверка связи
     }
     PeriodicOddSecond = !PeriodicOddSecond;
@@ -648,25 +648,28 @@ void supik::UpdateProblemsNumberInTab()
 
 void supik::ShowServerStatus()
 {
-    int res = Cli->SendAndGetResult(M_STATUS);
-    if (res == Client::CLIER_EMPTY)
-        WARNMSG("Empty response");
-    else if (res != Client::CLIER_NOERROR)
-        ERMSG("Error response");
-    else
+    if (pc.access & ACC_SYS_RO)
     {
-        QDialog *dlg = new QDialog;
-        dlg->setAttribute(Qt::WA_DeleteOnClose);
-        QVBoxLayout *lyout = new QVBoxLayout;
-        s_tqPushButton *pb = new s_tqPushButton("Ага");
-        connect(pb,SIGNAL(clicked(bool)),dlg,SLOT(close()));
-        QTextEdit *te = new QTextEdit;
-        te->setPlainText(Cli->ResultStr);
-        te->setEnabled(false);
-        lyout->addWidget(te);
-        lyout->addWidget(pb);
-        dlg->setLayout(lyout);
-        dlg->exec();
+        int res = Cli->SendAndGetResult(M_STATUS);
+        if (res == Client::CLIER_EMPTY)
+            WARNMSG("Empty response");
+        else if (res != Client::CLIER_NOERROR)
+            ERMSG("Error response");
+        else
+        {
+            QDialog *dlg = new QDialog;
+            dlg->setAttribute(Qt::WA_DeleteOnClose);
+            QVBoxLayout *lyout = new QVBoxLayout;
+            s_tqPushButton *pb = new s_tqPushButton("Ага");
+            connect(pb,SIGNAL(clicked(bool)),dlg,SLOT(close()));
+            QTextEdit *te = new QTextEdit;
+            te->setPlainText(Cli->ResultStr);
+            te->setEnabled(false);
+            lyout->addWidget(te);
+            lyout->addWidget(pb);
+            dlg->setLayout(lyout);
+            dlg->exec();
+        }
     }
 }
 

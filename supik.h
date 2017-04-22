@@ -15,6 +15,8 @@
 #define SUPIKMENU_ITEM_COLOR_SELECTED "#000000"
 #define SYS_TAB_BGCOLOR "#FF373A"
 
+#define SUPIK_PINGPERIOD    10
+
 #define PROGVER    "2.1.37"
 
 #define SYSSTYLESHEET "background-image: url(:/res/SysWallpaper.png);"
@@ -35,7 +37,7 @@ public slots:
 
 private:
     bool IsProblemsDetected, PeriodicOddSecond, RetrCounterEnabled;
-    int PeriodicFifthSecond, WarningActionIndex;
+    int PingSecCounter, WarningActionIndex;
     QHash <QString, void (supik::*)()> pf;
     int ErMsgNum;
 

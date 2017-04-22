@@ -6,6 +6,7 @@
 #include <QMutex>
 #include <QByteArray>
 #include <QSslSocket>
+#include "../gen/log.h"
 
 // ошибки IP-сокета
 #define SKT_UNKNOWNER       1 // неизвестная ошибка
@@ -82,13 +83,13 @@ public:
 
     void SetEthernet(const QString &Host, int Port, int Type=ETH_PLAIN);
     void WriteData(QByteArray &ba);
-    void Disconnect();
 //    void SetReadDataSize(quint64 size);
 
 public slots:
 //    void Run();
 //    void Stop();
 //    void InitiateWriteDataToPort(QByteArray);
+    void Disconnect();
 
 signals:
     void error(int);
@@ -104,7 +105,6 @@ private slots:
     void SslErrors(QList<QSslError> errlist);
     void SocketStateChanged(QAbstractSocket::SocketState state);
     void SslSocketEncrypted();
-    void OkToDelete();
 
 private:
     QString Host;
@@ -113,6 +113,7 @@ private:
     QByteArray ReadData;
     quint64 ReadDataSize;
     int Level;
+    Log *EthLog;
 
     void SendData();
 

@@ -3,9 +3,6 @@
 
 #include "Ethernet.h"
 #include "../gen/publicclass.h"
-#include "../gen/log.h"
-
-Log *EthLog;
 
 Ethernet::Ethernet(QObject *parent) : QObject(parent)
 {
@@ -17,7 +14,8 @@ Ethernet::Ethernet(QObject *parent) : QObject(parent)
 
 Ethernet::~Ethernet()
 {
-    delete EthLog;
+    Disconnect();
+//    delete EthLog;
 }
 
 void Ethernet::SetEthernet(const QString &Host, int Port, int Type)
@@ -33,8 +31,7 @@ void Ethernet::SetEthernet(const QString &Host, int Port, int Type)
         sock = new QTcpSocket(this);
         connect(sock,SIGNAL(error(QAbstractSocket::SocketError)),this,SLOT(SockError(QAbstractSocket::SocketError)));
         connect(sock,SIGNAL(connected()),this,SIGNAL(connected()));
-        connect(sock,SIGNAL(disconnected()),this,SIGNAL(disconnected()));
-        connect(sock,SIGNAL(disconnected()),this, SLOT(OkToDelete()));
+        connect(sock,SIGNAL(disconnected()),this, SIGNAL(disconnected()));
         connect(sock,SIGNAL(readyRead()),this,SLOT(CheckForData()));
         connect(sock,SIGNAL(bytesWritten(qint64)),this,SIGNAL(byteswritten(qint64)));
         EthLog->info("Connecting to host "+Host+":"+QString::number(Port)+"...");
@@ -45,7 +42,6 @@ void Ethernet::SetEthernet(const QString &Host, int Port, int Type)
         sslsock->setProtocol(QSsl::AnyProtocol);
         connect(sslsock, SIGNAL(error(QAbstractSocket::SocketError)),this,SLOT(SslError(QAbstractSocket::SocketError)));
         connect(sslsock,SIGNAL(disconnected()),this,SIGNAL(disconnected()));
-        connect(sslsock,SIGNAL(disconnected()),this,SLOT(OkToDelete()));
         connect(sslsock,SIGNAL(sslErrors(QList<QSslError>)),this,SLOT(SslErrors(QList<QSslError>)));
         connect(sslsock,SIGNAL(encrypted()),this,SLOT(SslSocketEncrypted()));
         connect(sslsock,SIGNAL(encrypted()),this,SIGNAL(connected()));
@@ -60,7 +56,7 @@ void Ethernet::SetEthernet(const QString &Host, int Port, int Type)
 
 void Ethernet::Disconnect()
 {
-    try
+/*    try
     {
         switch (EthType)
         {
@@ -73,6 +69,7 @@ void Ethernet::Disconnect()
                     sock->disconnectFromHost();
                     QThread::msleep(10);
                 }
+                sock->deleteLater();
             }
             break;
         }
@@ -83,31 +80,20 @@ void Ethernet::Disconnect()
                 sslsock->disconnectFromHost();
                 QThread::msleep(10);
             }
+            sslsock->deleteLater();
         }
         default:
             break;
         }
-        emit disconnected();
     }
     catch (...)
     {
         EthLog->error("Error while disconnecting");
-    }
-}
-
-void Ethernet::OkToDelete()
-{
-    try
-    {
-        if (EthType == ETH_PLAIN)
-            sock->deleteLater();
-        else
-            sslsock->deleteLater();
-    }
-    catch(...)
-    {
-        EthLog->error("Error while deleting socket");
-    }
+    } */
+    if (EthType == ETH_PLAIN)
+        sock->close();
+    else
+        sslsock->close();
 }
 
 void Ethernet::SslSocketEncrypted()
@@ -119,10 +105,6 @@ void Ethernet::SslSocketEncrypted()
 
 void Ethernet::SocketStateChanged(QAbstractSocket::SocketState state)
 {
-/*     if ((state == QAbstractSocket::UnconnectedState) || (state == QAbstractSocket::ClosingState))
-     {
-         Disconnect();
-     } */
      switch (state)
      {
      case QAbstractSocket::UnconnectedState:
@@ -160,7 +142,8 @@ void Ethernet::SslError(QAbstractSocket::SocketError err)
     EthLog->warning("SSL Error: "+sslsock->errorString());
     if (err == QAbstractSocket::RemoteHostClosedError)
         return;
-    Disconnect();
+//    Disconnect();
+    emit disconnected();
 }
 
 void Ethernet::SslErrors(QList<QSslError> errlist)
@@ -209,9 +192,3 @@ void Ethernet::CheckForData()
     ReadData.clear();
     --Level;
 }
-/*
-void Ethernet::SetReadDataSize(quint64 size)
-{
-    ReadDataSize = size;
-}
-*/

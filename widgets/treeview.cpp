@@ -27,8 +27,6 @@ TreeView::TreeView(int Mode, int Proxy, bool HeaderVisible, QWidget *parent) :
     StretchableColumnIsSet = false;
     if (Mode == TV_EXPANDABLE)
         connect(this, SIGNAL(clicked(QModelIndex)), this, SLOT(setTVexpanded(QModelIndex)));
-    connect(this->model(),SIGNAL(columnsInserted(QModelIndex,int,int)),this,SLOT(UpdateStretchableColumn()));
-    connect(this->model(),SIGNAL(columnsRemoved(QModelIndex,int,int)),this,SLOT(UpdateStretchableColumn()));
 }
 
 void TreeView::setTVexpanded(QModelIndex index)

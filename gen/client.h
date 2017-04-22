@@ -5,6 +5,7 @@
 #include <QTimer>
 #include <QFile>
 #include <QMap>
+#include <QPointer>
 #include "../threads/ethernet.h"
 #include "publicclass.h"
 #include "log.h"
@@ -232,7 +233,7 @@ private:
     const QStringList PathSuffixes = QStringList() << "prot/" << "dsheet/" << "libs/" << "symbols/" << "footprints/" << "photo/";
     qint32 RetryTimePeriods[CL_MAXRETR];
     QByteArray RcvData, WrData;
-    Ethernet *MainEthernet, *FileEthernet;
+    QPointer<Ethernet> MainEthernet, FileEthernet;
     QTimer *TimeoutTimer, *EthStateChangeTimer; // general timeout, timer for server reply, getfile timer
     bool FileBusy, CmdOk, LoginOk;
     QString Host, Port, FileHost;
@@ -254,6 +255,7 @@ private:
     bool NextActive; // flag indicates that we have already a result size and this is a 2,3... chunks
     bool WaitActive; // flag indicates that the server is doing long lasts work and we should wait a bit
     bool Busy;
+    bool PingIsDisabled; // flag indicates that no ping command should be sent
     int DetectedError;
     int EthStatus;
 

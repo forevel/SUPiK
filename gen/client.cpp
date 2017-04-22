@@ -14,6 +14,7 @@ Client *Cli = 0;
 
 Client::Client(QObject *parent) : QObject(parent)
 {
+    PingIsDisabled = false;
     NextActive = false;
     ServRetryActive = false;
     WaitActive = false;
@@ -98,7 +99,8 @@ int Client::Connect(QString host, QString port, int clientmode)
         Pass = pc.PersPsw;
     }
     Busy = CmdOk = false;
-
+    PrevLastBA.clear();
+    LoginOk = false;
     MainEthernet = new Ethernet;
     MainEthernet->SetEthernet(Host, Port.toInt(), Ethernet::ETH_SSL);
     connect(MainEthernet,SIGNAL(connected()),this,SLOT(ClientConnected()));
@@ -121,8 +123,13 @@ int Client::Connect(QString host, QString port, int clientmode)
         return CLIER_TIMEOUT;
     }
     DetectedError = CLIER_NOERROR;
-    LoginOk = false;
     CurrentCommand = M_LOGIN;
+    if (!PrevLastBA.isEmpty()) // if there was some data in canal while we were connecting
+    {
+        QByteArray ba = PrevLastBA;
+        PrevLastBA.clear();
+        ParseReply(ba); // parse it
+    }
     while (!LoginOk && (DetectedError == CLIER_NOERROR))
     {
         QTime tme;
@@ -156,15 +163,9 @@ void Client::Disconnect()
 {
     if (EthStatus == STAT_ABOUTTOCLOSE)
     {
-        try
-        {
+        if (MainEthernet != 0)
             delete MainEthernet;
-            EthStatus = STAT_CLOSED;
-        }
-        catch(...)
-        {
-            ERMSG("Exception in Client::Disconnect()");
-        }
+        EthStatus = STAT_CLOSED;
     }
 }
 
@@ -178,14 +179,16 @@ void Client::SendCmd(int command, QStringList &args)
         LastCommand = command;
         LastArgs = args; // store command arguments for retrying
     }
+    if (PingIsDisabled && (command == M_PING))
+        return;
     if ((EthStatus != STAT_CONNECTED) || (TimeoutCounter > 3)) // if we're disconnected
     {
-        EthStatus = STAT_ABOUTTOCLOSE;
-        EthStateChangeTimer->start();
         TimeoutCounter = 0;
-        RetrTimer->start();
-        emit RetrStarted(RetrTimer->interval());
+        PingIsDisabled = true;
         DetectedError = CLIER_CLOSED;
+        if (EthStatus != STAT_ABOUTTOCLOSE)
+            ClientDisconnected();
+        RetrTimeout();
         return;
     }
     if (!ServRetryActive) // if this send is not a retry
@@ -337,6 +340,11 @@ void Client::ParseReply(QByteArray ba)
 {
     if (ba.isEmpty())
         return;
+    if (EthStatus != STAT_CONNECTED) // if there's a real connection but the flag wasn't set (at the start)
+    {
+        PrevLastBA += ba;
+        return;
+    }
     emit BytesRead(ba.size());
     QString RcvDataString;
     CmdOk = false;
@@ -774,6 +782,8 @@ void Client::ClientConnected()
 #ifndef TIMERSOFF
     TimeoutTimer->start(); // рестарт таймера для получения запроса от сервера
 #endif
+    emit RetrEnded();
+    PingIsDisabled = false;
 }
 
 void Client::ClientDisconnected()
@@ -910,6 +920,7 @@ void Client::RetrTimeout()
     RetrTimer->stop();
     if (Connect(Host, Port, ClientMode) == CLIER_NOERROR) // if the connection was successful send previous command with previous arguments
     {
+        PingIsDisabled = false;
         SendCmd(LastCommand, LastArgs);
         emit RetrEnded();
         CurRetrPeriod = 0;

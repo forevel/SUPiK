@@ -97,7 +97,11 @@ int Client::Connect(QString host, QString port, int clientmode)
         Pers = pc.PersLogin;
         Pass = pc.PersPsw;
     }
+<<<<<<< HEAD
     Busy = CmdOk = false;
+=======
+    Busy = Connected = CmdOk = false;
+>>>>>>> d6e1d817ab104d81d962ba78baff83c2492dd1dd
 
     MainEthernet = new Ethernet;
     MainEthernet->SetEthernet(Host, Port.toInt(), Ethernet::ETH_SSL);
@@ -158,12 +162,21 @@ void Client::Disconnect()
     {
         try
         {
+<<<<<<< HEAD
             delete MainEthernet;
             EthStatus = STAT_CLOSED;
         }
         catch(...)
         {
             ERMSG("Exception in Client::Disconnect()");
+=======
+//            SendCmd(M_QUIT);
+            while ((Busy == true) && (DetectedError == CLIER_NOERROR))
+            {
+                QThread::msleep(MAINSLEEP);
+                qApp->processEvents(QEventLoop::AllEvents);
+            }
+>>>>>>> d6e1d817ab104d81d962ba78baff83c2492dd1dd
         }
     }
 }
@@ -180,11 +193,20 @@ void Client::SendCmd(int command, QStringList &args)
     }
     if ((EthStatus != STAT_CONNECTED) || (TimeoutCounter > 3)) // if we're disconnected
     {
+<<<<<<< HEAD
         EthStatus = STAT_ABOUTTOCLOSE;
         EthStateChangeTimer->start();
         TimeoutCounter = 0;
         RetrTimer->start();
         emit RetrStarted(RetrTimer->interval());
+=======
+        if (!RetrTimer->isActive())
+        {
+            Disconnect();
+            RetrTimer->start();
+            emit RetrStarted(RetrTimer->interval());
+        }
+>>>>>>> d6e1d817ab104d81d962ba78baff83c2492dd1dd
         DetectedError = CLIER_CLOSED;
         return;
     }
@@ -770,7 +792,14 @@ void Client::EthStateChangeTimerTimeout()
 
 void Client::ClientConnected()
 {
+<<<<<<< HEAD
     EthStatus = STAT_CONNECTED;
+=======
+    Connected = true;
+    RetrTimer->stop();
+    CurRetrPeriod = 0;
+    emit RetrEnded();
+>>>>>>> d6e1d817ab104d81d962ba78baff83c2492dd1dd
 #ifndef TIMERSOFF
     TimeoutTimer->start(); // рестарт таймера для получения запроса от сервера
 #endif

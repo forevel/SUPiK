@@ -132,12 +132,13 @@ bool WDFunc::SetLBLImage(QWidget *w, const QString &lblname, QPixmap *pm)
     return true;
 }
 
-bool WDFunc::SetLBLText(QWidget *w, const QString &lblname, const QString &lbltext)
+bool WDFunc::SetLBLText(QWidget *w, const QString &lblname, const QString &lbltext, bool enabled)
 {
     s_tqLabel *lbl = w->findChild<s_tqLabel *>(lblname);
     if (lbl == 0)
         return false;
     lbl->setText(lbltext);
+    lbl->setEnabled(enabled);
     return true;
 }
 

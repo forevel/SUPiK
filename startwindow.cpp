@@ -144,7 +144,7 @@ void StartWindow::ActivatedEnter()
     if (!ok)
         return;
     Cli->Disconnect();
-    if (ClientConnect(Client::CLIMODE_TEST) != RESULTOK)
+    if (ClientConnect(STAT_MODETEST) != RESULTOK)
         return;
     pc.AutonomousMode = false;
     QString newpsw;
@@ -158,7 +158,7 @@ void StartWindow::ChangePassword()
 {
     WDFunc::LEData(this, "UNameLE", pc.PersLogin);
     WDFunc::LEData(this, "PasswdLE", pc.PersPsw);
-    if (ClientConnect(Client::CLIMODE_WORK) != RESULTOK)
+    if (ClientConnect(STAT_MODEWORK) != RESULTOK)
         return;
     pc.AutonomousMode = false;
     QStringList cmpfl = QStringList() << "login";
@@ -234,7 +234,7 @@ void StartWindow::OkPBClicked()
     StartWindowSplashScreen->showMessage("Подключение к серверу СУПиК...", Qt::AlignRight, Qt::white);
     Cli->Disconnect();
     pc.AutonomousMode = true;
-    int res = Cli->Connect(pc.SupikServer, pc.SupikPort, Client::CLIMODE_WORK);
+    int res = Cli->Connect(pc.SupikServer, pc.SupikPort, STAT_MODEWORK);
     switch (res)
     {
     case Client::CLIER_LOGIN:

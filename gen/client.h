@@ -88,23 +88,26 @@
 #define C_CRALT		1301
 
 // описания типов файлов
+#define FLT_NONE     "#"
 #define FLT_TB       "0"
 #define FLT_DOC      "1"
 #define FLT_ALT      "2"
 #define FLT_PERS     "3"
+#define FLT_LOG      "4"
 
 // описания подтипов файлов
+#define FLST_NONE     "#" // нет подтипа
 #define FLST_PROT     "0" // протоколы
-#define FLST_TECHDOC  "1" // техдокументация
+#define FLST_DSHEET   "1" // техдокументация
 #define FLST_LIBS     "2" // библиотеки
-#define FLST_LIBSYM   "3" // библиотеки Altium - SchLib
-#define FLST_LIBFOOT  "4" // библиотеки Altium - PcbLib
+#define FLST_SYMBOLS  "3" // библиотеки Altium - SchLib
+#define FLST_FOOTPRT  "4" // библиотеки Altium - PcbLib
 #define FLST_PHOTO    "5" // фотографии
 
 #define READBUFMAX  16384
 
 // incoming sizes
-#define SZ_RDY  4 // "RDY\n"
+#define SZ_RDY      4 // "RDY\n"
 #define SZ_PUTFILE  3 // "OK\n"
 #define SZ_DUMMY    1 // dummy size when we're in concern that the incoming packet size will be less than 4096 bytes long
 
@@ -121,6 +124,58 @@
 #define CL_RETR6       32000
 #define CL_RETR7       64000 // 64 seconds is the maximum time period between two connection retries
 #define CL_MAXRETR     7 // maximum number of retry time periods
+
+#define STAT_CONNECTED      1
+#define STAT_COMACTIVE      2 // command CurrentCommand is active
+#define STAT_ABOUTTOCLOSE   4
+#define STAT_CLOSED         8
+#define STAT_MODETEST       16
+#define STAT_MODEWORK       32
+
+class EthStatusClass
+{
+public:
+    int status;
+    bool isConnected()
+    {
+        return (status & STAT_CONNECTED);
+    }
+    bool isntConnected()
+    {
+        return ((status & STAT_CONNECTED) == 0);
+    }
+    bool isCommandActive()
+    {
+        return (status & STAT_COMACTIVE);
+    }
+    bool isAboutToClose()
+    {
+        return (status & STAT_ABOUTTOCLOSE);
+    }
+    bool isTestMode()
+    {
+        return (status & STAT_MODETEST);
+    }
+    void setStatus(int stat)
+    {
+        status &= 0x30; // leave mode bits
+        status |= stat;
+    }
+    void setCommandActive()
+    {
+        status |= STAT_COMACTIVE;
+    }
+    void clearCommandActive()
+    {
+        int nOTaCTIVE = ~STAT_COMACTIVE;
+        status &= nOTaCTIVE;
+    }
+    void setMode(int mode)
+    {
+        status &= 0x0F; // leave status bits
+        status |= mode;
+    }
+};
 
 class Client : public QObject
 {
@@ -176,12 +231,6 @@ public:
         CMD_STATUS  // запрос статуса от сервера
     };
 
-    enum ClientModes
-    {
-        CLIMODE_TEST,   // тестовый режим с тестовыми логином и паролем - нужно для активации
-        CLIMODE_WORK    // основной режим работы
-    };
-
     struct CmdStruct
     {
         QString CmdString;
@@ -190,13 +239,6 @@ public:
         int ResultType;
         bool CheckForFieldsNum;
         bool CheckForPairsNum;
-    };
-
-    enum EthStatuses
-    {
-        STAT_CONNECTED,
-        STAT_ABOUTTOCLOSE,
-        STAT_CLOSED
     };
 
     QList<QStringList> Result;
@@ -229,13 +271,13 @@ signals:
 
 private:
     QMap<int, CmdStruct> CmdMap;
-    const QStringList PathPrefixes = QStringList() << "tb/" << "doc/" << "alt/" << "pers/";
+    const QStringList PathPrefixes = QStringList() << "tb/" << "doc/" << "alt/" << "pers/" << "log/";
     const QStringList PathSuffixes = QStringList() << "prot/" << "dsheet/" << "libs/" << "symbols/" << "footprints/" << "photo/";
     qint32 RetryTimePeriods[CL_MAXRETR];
     QByteArray RcvData, WrData;
     QPointer<Ethernet> MainEthernet, FileEthernet;
     QTimer *TimeoutTimer, *EthStateChangeTimer; // general timeout, timer for server reply, getfile timer
-    bool FileBusy, CmdOk, LoginOk;
+    bool CmdOk, LoginOk;
     QString Host, Port, FileHost;
     quint16 FilePort;
     quint64 WrittenBytes, ReadBytes, RcvDataSize, XmitDataSize;
@@ -257,12 +299,13 @@ private:
     bool Busy;
     bool PingIsDisabled; // flag indicates that no ping command should be sent
     int DetectedError;
-    int EthStatus;
+    EthStatusClass EthStatus;
 
     QString RemoveSpaces(QString str);
     void Error(QString ErMsg, int ErrorInt=CLIER_GENERAL);
     bool CheckArgs(QString cmd, QStringList &args, int argsnum, bool fieldscheck=false, bool pairscheck=false);
     void InitiateTimers();
+    void SetWaitEnded();
 
 private slots:
     void ClientConnected();

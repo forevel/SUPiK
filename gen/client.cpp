@@ -19,7 +19,7 @@ Client::Client(QObject *parent) : QObject(parent)
     ServRetryActive = false;
     WaitActive = false;
     ServRetryCount = 0;
-    EthStatus = STAT_CLOSED;
+    EthStatus.setStatus(STAT_CLOSED);
     ResultType = RESULT_NONE;
     TimeoutCounter = 0;
     CurRetrPeriod = 0;
@@ -85,10 +85,10 @@ int Client::Connect(QString host, QString port, int clientmode)
 {
     Host = host;
     Port = port;
-    ClientMode = clientmode;
-    if (EthStatus == STAT_CONNECTED) // если уже подсоединены, не надо по второму разу
+    if (EthStatus.isConnected()) // если уже подсоединены, не надо по второму разу
         return CLIER_NOERROR;
-    if (ClientMode == CLIMODE_TEST)
+    EthStatus.setMode(clientmode);
+    if (EthStatus.isTestMode())
     {
         Pers = "test";
         Pass = "test";
@@ -98,7 +98,7 @@ int Client::Connect(QString host, QString port, int clientmode)
         Pers = pc.PersLogin;
         Pass = pc.PersPsw;
     }
-    Busy = CmdOk = false;
+    CmdOk = false;
     PrevLastBA.clear();
     LoginOk = false;
     MainEthernet = new Ethernet;
@@ -110,20 +110,19 @@ int Client::Connect(QString host, QString port, int clientmode)
     TimeoutTimer->start();
 #endif
     DetectedError = CLIER_NOERROR;
-    while ((EthStatus != STAT_CONNECTED) && (DetectedError == CLIER_NOERROR))
+    while ((EthStatus.isntConnected()) && (DetectedError == CLIER_NOERROR))
     {
         QTime tme;
         tme.start();
         while (tme.elapsed() < MAINSLEEP)
             qApp->processEvents(QEventLoop::AllEvents);
     }
-    if (EthStatus != STAT_CONNECTED)
+    if (EthStatus.isntConnected())
     {
         CliLog->warning("Entering autonomous mode...");
         return CLIER_TIMEOUT;
     }
     DetectedError = CLIER_NOERROR;
-    CurrentCommand = M_LOGIN;
     if (!PrevLastBA.isEmpty()) // if there was some data in canal while we were connecting
     {
         QByteArray ba = PrevLastBA;
@@ -161,44 +160,42 @@ void Client::InitiateTimers()
 
 void Client::Disconnect()
 {
-    if (EthStatus == STAT_ABOUTTOCLOSE)
+    if (EthStatus.isAboutToClose())
     {
         if (MainEthernet != 0)
             delete MainEthernet;
-        EthStatus = STAT_CLOSED;
+        EthStatus.setStatus(STAT_CLOSED);
     }
 }
 
 void Client::SendCmd(int command, QStringList &args)
 {
-    CurrentCommand = command;
-    NextActive = false;
-    PrevLastBA.clear();
-    if ((command != M_LOGIN) && (command != M_ANSLOGIN))
+    if ((EthStatus.isCommandActive()) && (command == M_PING))
     {
-        LastCommand = command;
-        LastArgs = args; // store command arguments for retrying
-    }
-    if (PingIsDisabled && (command == M_PING))
+        CliLog->error("Command active already");
         return;
-    if ((EthStatus != STAT_CONNECTED) || (TimeoutCounter > 3)) // if we're disconnected
+    }
+    if ((EthStatus.isntConnected()) || (TimeoutCounter > 3)) // if we're disconnected
     {
         TimeoutCounter = 0;
         PingIsDisabled = true;
         DetectedError = CLIER_CLOSED;
-        if (EthStatus != STAT_ABOUTTOCLOSE)
+        if (!EthStatus.isAboutToClose())
             ClientDisconnected();
         RetrTimeout();
         return;
     }
+    CurrentCommand = command;
+    NextActive = false;
+    PrevLastBA.clear();
+    if ((command != M_LOGIN) && (command != M_ANSLOGIN) && (command != M_AGETFILE) && (command != M_NEXT)) // not "RDY"
+    {
+        LastCommand = command;
+        LastArgs = args; // store command arguments for retrying
+    }
     if (!ServRetryActive) // if this send is not a retry
         ServRetryCount = 0;
-    if (Busy)
-    {
-        DetectedError = CLIER_BUSY;
-        return;
-    }
-    if ((ClientMode == CLIMODE_TEST) && (command != M_ACTIVATE) && (command != M_ANSLOGIN) && (command != M_QUIT))
+    if (EthStatus.isTestMode() && (command != M_ACTIVATE) && (command != M_ANSLOGIN) && (command != M_QUIT))
     {
         CliLog->warning("illegal test command");
         DetectedError = CLIER_CMDER;
@@ -210,12 +207,11 @@ void Client::SendCmd(int command, QStringList &args)
         ResultStr.clear();
     }
     DetectedError = CLIER_NOERROR;
-    Busy = true;
+//    Busy = true;
 #ifndef TIMERSOFF
     TimeoutTimer->start();
 #endif
     QString CommandString;
-
     if (CmdMap.keys().contains(command))
     {
         CmdStruct st = CmdMap[command];
@@ -233,8 +229,10 @@ void Client::SendCmd(int command, QStringList &args)
     }
     switch (command)
     {
-    case M_STATUS:
     case M_PING:
+        if (PingIsDisabled)
+            return;
+    case M_STATUS:
     case M_ACTIVATE:
         break; // no operands or all is already included in CommandString
 /*    case CMD_MESSAGES:
@@ -250,22 +248,19 @@ void Client::SendCmd(int command, QStringList &args)
     // 1 - подтип файла
     // 2 - имя файла
     // Формат: M8 <тип> <подтип> <имя_файла>\n
-    // далее ожидание прихода "<длина_в_байтах>\n", затем приём содержимого файла блоками по 16384 байт, после каждого отсылка RDY\n
+    // далее ожидание прихода "<длина_в_байтах>\n", затем приём содержимого файла блоками по 16384 байт
     case M_GETFILE:
     {
         bool ok;
         int fltype, flsubtype;
+        QString path = pc.HomeDir + "/";
         fltype = args.at(0).toInt(&ok);
-        if (ok)
-            flsubtype = args.at(1).toInt(&ok);
-        if ((!ok) || (fltype >= PathPrefixes.size()) || (flsubtype >= PathSuffixes.size()))
-        {
-            ERMSG("GETFILE: Ошибка в параметрах");
-            DetectedError = CLIER_GETFER;
-            return;
-        }
+        if ((ok) && (fltype < PathPrefixes.size()))
+            path += PathPrefixes.at(fltype);
+        flsubtype = args.at(1).toInt(&ok);
+        if ((ok) && (flsubtype < PathSuffixes.size()))
+            path += PathSuffixes.at(flsubtype);
         QDir *dr = new QDir;
-        QString path = pc.HomeDir + "/" + PathPrefixes.at(fltype) + PathSuffixes.at(flsubtype);
         dr->mkpath(path);
         delete dr;
         fp.setFileName(path + args.at(2));
@@ -325,6 +320,7 @@ void Client::SendCmd(int command, QStringList &args)
     default:
         break;
     }
+    EthStatus.setCommandActive();
     if (command == M_ANSLOGIN)
         CliLog->info(">"+Pers);
     else
@@ -340,7 +336,7 @@ void Client::ParseReply(QByteArray ba)
 {
     if (ba.isEmpty())
         return;
-    if (EthStatus != STAT_CONNECTED) // if there's a real connection but the flag wasn't set (at the start)
+    if (EthStatus.isntConnected()) // if there's a real connection but the flag wasn't set (at the start)
     {
         PrevLastBA += ba;
         return;
@@ -360,11 +356,8 @@ void Client::ParseReply(QByteArray ba)
                 fp.close();
             Error("Server error response", CLIER_SERVER);
             TimeoutTimer->stop();
-            if (WaitActive)
-            {
-                WaitActive = false;
-                emit WaitEnded();
-            }
+            SetWaitEnded();
+            EthStatus.clearCommandActive();
             return;
         }
         if (RcvDataString == SERVEMPSTR)
@@ -373,11 +366,8 @@ void Client::ParseReply(QByteArray ba)
                 fp.remove(); // remove empty created in files.cpp file
             Error("Server empty response", CLIER_EMPTY);
             TimeoutTimer->stop();
-            if (WaitActive)
-            {
-                WaitActive = false;
-                emit WaitEnded();
-            }
+            SetWaitEnded();
+            EthStatus.clearCommandActive();
             return;
         }
         if (RcvDataString == SERVRETSTR) // for file operations
@@ -393,24 +383,21 @@ void Client::ParseReply(QByteArray ba)
             else
             {
                 ServRetryActive = true;
-                SendCmd(CurrentCommand, LastArgs);
+                Busy = false;
+                CurrentCommand = M_IDLE;
+                SendCmd(LastCommand, LastArgs);
             }
             TimeoutTimer->stop();
-            if (WaitActive)
-            {
-                WaitActive = false;
-                emit WaitEnded();
-            }
+            SetWaitEnded();
+            EthStatus.clearCommandActive();
             return;
         }
         if (RcvDataString == SERVIDLSTR)
         {
             CurrentCommand = M_IDLE;
-            if (WaitActive)
-            {
-                WaitActive = false;
-                emit WaitEnded();
-            }
+            SetWaitEnded();
+            EthStatus.clearCommandActive();
+            return;
         }
         if (RcvDataString == SERVWAIT)
         {
@@ -422,17 +409,15 @@ void Client::ParseReply(QByteArray ba)
             }
             return;
         }
-        CliLog->info("<"+RcvDataString);
+        QString cmdstr = QString::number(CurrentCommand);
+        CliLog->info("<["+cmdstr+"] "+RcvDataString);
     }
-    if (WaitActive)
-    {
-        WaitActive = false;
-        emit WaitEnded();
-    }
+    SetWaitEnded();
     if (RcvDataString == "M5") // M_LOGIN
     {
         CmdOk = true;
         Busy = false;
+        EthStatus.setCommandActive();
         SendCmd(M_ANSLOGIN);
         return;
     }
@@ -449,11 +434,10 @@ void Client::ParseReply(QByteArray ba)
     case M_ANSLOGIN:
     {
         // если получили в ответ "GROUP <access>", значит, всё в порядке, иначе ошибка пароля
-        if ((ClientMode == CLIMODE_TEST) && (RcvDataString == SERVEROK))
+        if ((ClientMode == STAT_MODETEST) && (RcvDataString == SERVEROK))
         {
             LoginOk = true;
             CmdOk = true;
-            CurrentCommand = M_IDLE;
         }
         else
         {
@@ -472,11 +456,11 @@ void Client::ParseReply(QByteArray ba)
                 {
                     pc.access = 0x0; // нет доступа никуда
                     Error("Group access undefined: "+sl.at(1), CLIER_GROUP);
+                    EthStatus.clearCommandActive();
                     return;
                 }
                 CliLog->info("Group access: "+QString::number(pc.access));
                 CmdOk = true;
-                CurrentCommand = M_IDLE;
             }
             else
                 Error("Bad password", CLIER_PSW);
@@ -506,6 +490,7 @@ void Client::ParseReply(QByteArray ba)
         else
         {
             Error("Error while command processing", CLIER_CMDER);
+            EthStatus.clearCommandActive();
             return;
         }
         break;
@@ -545,6 +530,7 @@ void Client::ParseReply(QByteArray ba)
         if (RcvList.isEmpty()) // нет ничего в принятой посылке (0 байт)
         {
             Error("Wrong answer", CLIER_WRANSW);
+            EthStatus.clearCommandActive();
             return;
         }
         if (!NextActive)
@@ -553,7 +539,8 @@ void Client::ParseReply(QByteArray ba)
             RcvDataSize = tmps.toInt(&ok); // количество байт
             if ((!ok) || (RcvDataSize < 0))
             {
-                Error("Некорректное количество байт", CLIER_WRANSW);
+                Error("Incorrect number of bytes", CLIER_WRANSW);
+                EthStatus.clearCommandActive();
                 return;
             }
             if (RcvDataSize == 0)
@@ -567,6 +554,7 @@ void Client::ParseReply(QByteArray ba)
         if (RcvList.isEmpty()) // нет ничего после размера
         {
             Error("Wrong answer", CLIER_WRANSW);
+            EthStatus.clearCommandActive();
             return;
         }
         RcvDataSize -= ba.size();
@@ -586,12 +574,13 @@ void Client::ParseReply(QByteArray ba)
             if (!ok)
             {
                 Error("It's not possible to convert to integer: "+RcvDataString, CLIER_WRANSW);
+                EthStatus.clearCommandActive();
                 return;
             }
             CmdOk = true;
             TimeoutTimer->stop();
             CurrentCommand = M_IDLE;
-            Busy = false;
+            EthStatus.clearCommandActive();
             return;
         }
         case RESULT_MATRIX:
@@ -634,13 +623,15 @@ void Client::ParseReply(QByteArray ba)
         }
         default:
             Error("Bad result type", CLIER_WRANSW);
+            EthStatus.clearCommandActive();
             return;
-            break;
         }
         if (RcvDataSize == 0) // последний фрагмент обработан
         {
             CmdOk = true;
-            break;
+            TimeoutTimer->stop();
+            EthStatus.clearCommandActive();
+            return;
         }
 #ifndef TIMERSOFF
         TimeoutTimer->start();
@@ -652,6 +643,7 @@ void Client::ParseReply(QByteArray ba)
         if (RcvDataString != "OK")
         {
             Error("Not ok answer", CLIER_PUTFER);
+            EthStatus.clearCommandActive();
             return;
         }
     }
@@ -673,7 +665,7 @@ void Client::ParseReply(QByteArray ba)
                     return;
                 }
                 WrittenBytes += WrData.size();
-                Busy = false;
+                EthStatus.clearCommandActive();
                 SendCmd(M_APUTFILE);
 #ifndef TIMERSOFF
                 TimeoutTimer->start();
@@ -683,6 +675,7 @@ void Client::ParseReply(QByteArray ba)
             else
             {
                 Error("File error", CLIER_PUTFER);
+                EthStatus.clearCommandActive();
                 return;
             }
         }
@@ -707,10 +700,11 @@ void Client::ParseReply(QByteArray ba)
             if (fp.isOpen())
                 fp.remove();
             Error("Not a decimal value detected", CLIER_GETFER);
+            EthStatus.clearCommandActive();
             return;
         }
         emit BytesOverall(RcvDataSize);
-        Busy = false;
+        EthStatus.clearCommandActive();
         SendCmd(M_AGETFILE);
         return;
     }
@@ -749,7 +743,6 @@ void Client::ParseReply(QByteArray ba)
 #ifndef TIMERSOFF
             TimeoutTimer->start();
 #endif
-            Busy = true;
             return;
         }
         break;
@@ -758,8 +751,7 @@ void Client::ParseReply(QByteArray ba)
         break;
     }
     TimeoutTimer->stop();
-    CurrentCommand = M_IDLE;
-    Busy = false;
+    EthStatus.clearCommandActive();
 }
 
 void Client::Error(QString ErMsg, int ErrorInt)
@@ -767,7 +759,7 @@ void Client::Error(QString ErMsg, int ErrorInt)
     CliLog->warning(ErMsg);
     DetectedError = ErrorInt;
     TimeoutTimer->stop();
-    Busy = false;
+    EthStatus.clearCommandActive();
     CurrentCommand = M_IDLE;
 }
 
@@ -778,7 +770,7 @@ void Client::EthStateChangeTimerTimeout()
 
 void Client::ClientConnected()
 {
-    EthStatus = STAT_CONNECTED;
+    EthStatus.setStatus(STAT_CONNECTED);
 #ifndef TIMERSOFF
     TimeoutTimer->start(); // рестарт таймера для получения запроса от сервера
 #endif
@@ -788,14 +780,14 @@ void Client::ClientConnected()
 
 void Client::ClientDisconnected()
 {
-    EthStatus = STAT_ABOUTTOCLOSE; // delete MainEthernet to try connect later if needed
+    EthStatus.setStatus(STAT_ABOUTTOCLOSE); // delete MainEthernet to try connect later if needed
     EthStateChangeTimer->start();
 }
 
 void Client::ClientErr(int error)
 {
     ERMSG(Ethernet::EthernetErrors()[error]);
-    Busy = false;
+    EthStatus.clearCommandActive();
     DetectedError = CLIER_GENERAL;
     TimeoutTimer->stop();
 }
@@ -803,8 +795,7 @@ void Client::ClientErr(int error)
 void Client::Timeout()
 {
     ERMSG("Произошло превышение времени ожидания");
-    Busy = false;
-    FileBusy = false;
+    EthStatus.clearCommandActive();
     DetectedError = CLIER_TIMEOUT;
     TimeoutTimer->stop();
     ++TimeoutCounter;
@@ -819,7 +810,6 @@ bool Client::CheckArgs(QString cmd, QStringList &args, int argsnum, bool fieldsc
     {
         CliLog->error(cmd + ": Number of arguments is less than " + QString::number(argsnum));
         DetectedError = CLIER_WRARGS;
-        Busy = false;
         return false;
     }
     if (fieldscheck)
@@ -836,7 +826,6 @@ bool Client::CheckArgs(QString cmd, QStringList &args, int argsnum, bool fieldsc
         {
             CliLog->error(cmd + ": argument is not a number");
             DetectedError = CLIER_WRARGS;
-            Busy = false;
             return false;
         }
     }
@@ -855,7 +844,6 @@ bool Client::CheckArgs(QString cmd, QStringList &args, int argsnum, bool fieldsc
         {
             CliLog->error(cmd + ": argument is not a number");
             DetectedError = CLIER_WRARGS;
-            Busy = false;
             return false;
         }
     }
@@ -865,7 +853,6 @@ bool Client::CheckArgs(QString cmd, QStringList &args, int argsnum, bool fieldsc
         {
             CliLog->error(cmd + ": Number of fields is less than mentioned in header: "+QString::number(args.size())+" "+QString::number(FieldsNum+2*pnum+1));
             DetectedError = CLIER_WRARGS;
-            Busy = false;
             return false;
         }
     }
@@ -878,7 +865,7 @@ int Client::GetFile(const QString &type, const QString &subtype, const QString &
     sl.clear();
     sl << type << subtype << filename;
     SendCmd(M_GETFILE, sl);
-    while (Busy)
+    while (EthStatus.isCommandActive())
     {
         QThread::msleep(10);
         qApp->processEvents(QEventLoop::AllEvents);
@@ -891,7 +878,7 @@ int Client::PutFile(const QString &localfilename, const QString &type, const QSt
     QStringList sl;
     sl << localfilename << type << subtype << filename;
     SendCmd(M_PUTFILE, sl);
-    while (Busy)
+    while (EthStatus.isCommandActive())
     {
         QThread::msleep(10);
         qApp->processEvents(QEventLoop::AllEvents);
@@ -902,7 +889,7 @@ int Client::PutFile(const QString &localfilename, const QString &type, const QSt
 int Client::SendAndGetResult(int command, QStringList &args)
 {
     Cli->SendCmd(command, args);
-    while (Cli->Busy)
+    while (EthStatus.isCommandActive())
     {
         QThread::msleep(10);
         qApp->processEvents(QEventLoop::AllEvents);
@@ -912,7 +899,7 @@ int Client::SendAndGetResult(int command, QStringList &args)
 
 bool Client::isConnected()
 {
-    return (EthStatus == STAT_CONNECTED);
+    return EthStatus.isConnected();
 }
 
 void Client::RetrTimeout()
@@ -921,6 +908,7 @@ void Client::RetrTimeout()
     if (Connect(Host, Port, ClientMode) == CLIER_NOERROR) // if the connection was successful send previous command with previous arguments
     {
         PingIsDisabled = false;
+        EthStatus.clearCommandActive();
         SendCmd(LastCommand, LastArgs);
         emit RetrEnded();
         CurRetrPeriod = 0;
@@ -932,4 +920,13 @@ void Client::RetrTimeout()
     RetrTimer->setInterval(RetryTimePeriods[CurRetrPeriod]);
     RetrTimer->start();
     emit RetrStarted(RetrTimer->interval()/1000);
+}
+
+void Client::SetWaitEnded()
+{
+    if (WaitActive)
+    {
+        WaitActive = false;
+        emit WaitEnded();
+    }
 }

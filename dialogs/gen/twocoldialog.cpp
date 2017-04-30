@@ -14,7 +14,7 @@
 #include <QPaintEvent>
 #include <QPainter>
 #include <QPixmap>
-#include <QFile>
+//#include <QFile>
 #include <QHeaderView>
 #include <QMessageBox>
 #include <QApplication>

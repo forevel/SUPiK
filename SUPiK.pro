@@ -8,7 +8,7 @@ QMAKE_TARGET_COMPANY = EvelSoft
 QMAKE_TARGET_COPYRIGHT = EvelSoft
 QMAKE_TARGET_PRODUCT = SUPiK
 RC_ICONS = res/SUPiK.ico
-VERSION = 2.1.38
+VERSION = 2.1.39
 
 QT       += widgets core gui sql network printsupport
 
@@ -93,7 +93,10 @@ SOURCES += main.cpp\
     widgets/treeview.cpp \
     widgets/waitwidget.cpp \
     widgets/wd_func.cpp \
-    widgets/s_statusbar.cpp
+    widgets/s_statusbar.cpp \
+    models/fileitem.cpp \
+    models/filemodel.cpp \
+    dialogs/sys/serverdialog.cpp
 
 HEADERS  += startwindow.h \
     supik.h \
@@ -172,7 +175,10 @@ HEADERS  += startwindow.h \
     widgets/treeview.h \
     widgets/waitwidget.h \
     widgets/wd_func.h \
-    widgets/s_statusbar.h
+    widgets/s_statusbar.h \
+    models/fileitem.h \
+    models/filemodel.h \
+    dialogs/sys/serverdialog.h
 
 RESOURCES += \
     pic.qrc

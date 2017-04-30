@@ -13,7 +13,7 @@
 #include <QPainter>
 #include <QPaintEvent>
 #include <QDesktopWidget>
-#include <QFileSystemModel>
+//#include <QFileSystemModel>
 #include "specialdialog.h"
 #include "../../widgets/s_tqpushbutton.h"
 #include "../../widgets/s_tqlabel.h"

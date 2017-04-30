@@ -16,6 +16,7 @@
 #include "dialogs/sys/sys_backuprestoredirdialog.h"
 #include "dialogs/sys/sys_importclass.h"
 #include "dialogs/sys/sys_erdialog.h"
+#include "dialogs/sys/serverdialog.h"
 #include "dialogs/tb/tb_maindialog.h"
 #include "dialogs/tb/tb_examdialog.h"
 #include "widgets/s_tqlabel.h"
@@ -650,26 +651,8 @@ void supik::ShowServerStatus()
 {
     if (pc.access & ACC_SYS_RO)
     {
-        int res = Cli->SendAndGetResult(M_STATUS);
-        if (res == Client::CLIER_EMPTY)
-            WARNMSG("Empty response");
-        else if (res != Client::CLIER_NOERROR)
-            ERMSG("Error response");
-        else
-        {
-            QDialog *dlg = new QDialog;
-            dlg->setAttribute(Qt::WA_DeleteOnClose);
-            QVBoxLayout *lyout = new QVBoxLayout;
-            s_tqPushButton *pb = new s_tqPushButton("Ага");
-            connect(pb,SIGNAL(clicked(bool)),dlg,SLOT(close()));
-            QTextEdit *te = new QTextEdit;
-            te->setPlainText(Cli->ResultStr);
-            te->setEnabled(false);
-            lyout->addWidget(te);
-            lyout->addWidget(pb);
-            dlg->setLayout(lyout);
-            dlg->exec();
-        }
+        ServerDialog *dlg = new ServerDialog;
+        dlg->exec();
     }
 }
 

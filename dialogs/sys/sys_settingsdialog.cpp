@@ -8,7 +8,7 @@
 #include <QPainter>
 #include <QMessageBox>
 #include <QSettings>
-#include <QFileDialog>
+#include <QFile>
 
 #include "../../gen/publicclass.h"
 #include "sys_settingsdialog.h"

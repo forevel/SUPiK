@@ -6,6 +6,8 @@
 #include <QVariant>
 #include "../gen/publicclass.h"
 
+#define TOKEN   0x7F
+
 class s_tqChooseWidget : public QWidget
 {
     Q_OBJECT
@@ -28,7 +30,7 @@ public slots:
 
 private:
 //    QVariant adata;
-    QString hdr, links;
+    QString hdr, links, CurPath;
     PublicClass::FieldFormat ff;
     bool Transparent;
 
@@ -38,6 +40,8 @@ private slots:
     void DateTimeEditFinished(QDateTime);
     void accepted(QString);
     void tepbclicked();
+    void ChooseTEFile();
+    void TEDirCheck(QString dir);
 };
 
 #endif // S_TQCHOOSEWIDGET_H

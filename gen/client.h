@@ -245,6 +245,8 @@ public:
     QString ResultStr;
     int ResultInt;
     QTimer *RetrTimer;
+    const QStringList PathPrefixes = QStringList() << "tb/" << "doc/" << "alt/" << "pers/" << "log/";
+    const QStringList PathSuffixes = QStringList() << "prot/" << "dsheet/" << "libs/" << "symbols/" << "footprints/" << "photo/";
 
     int Connect(QString host, QString port, int clientmode);
     bool isConnected();
@@ -271,8 +273,6 @@ signals:
 
 private:
     QMap<int, CmdStruct> CmdMap;
-    const QStringList PathPrefixes = QStringList() << "tb/" << "doc/" << "alt/" << "pers/" << "log/";
-    const QStringList PathSuffixes = QStringList() << "prot/" << "dsheet/" << "libs/" << "symbols/" << "footprints/" << "photo/";
     qint32 RetryTimePeriods[CL_MAXRETR];
     QByteArray RcvData, WrData;
     QPointer<Ethernet> MainEthernet, FileEthernet;

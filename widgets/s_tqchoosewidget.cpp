@@ -15,6 +15,7 @@
 #include "s_tqtextedit.h"
 #include "wd_func.h"
 #include "../gen/s_sql.h"
+#include "../gen/client.h"
 #include "../gen/s_tablefields.h"
 #include "../dialogs/gen/twocoldialog.h"
 #include "../dialogs/gen/chooseitemdialog.h"
@@ -134,11 +135,12 @@ void s_tqChooseWidget::Setup(QString links, QString hdr)
     {
         s_tqTextEdit *te = new s_tqTextEdit;
         te->setObjectName("fdcte");
+        te->setEnabled(false);
         s_tqPushButton *pb = new s_tqPushButton("...");
         pb->setObjectName("fdcpb");
         connect(pb, SIGNAL(clicked()), this, SLOT(pbclicked()));
         ml2->addWidget(te, 80);
-        pb->setFixedSize(20, 20);
+        pb->setFixedSize(32, 32);
         ml2->addWidget(pb, 1);
         break;
     }
@@ -156,14 +158,39 @@ void s_tqChooseWidget::pbclicked()
     {
         QDialog *dlg = new QDialog(this);
         dlg->setObjectName("tedlg");
+        QVBoxLayout *vlyout = new QVBoxLayout;
         s_tqTextEdit *te = new s_tqTextEdit;
         te->setObjectName("tedit");
         QString tmps;
         WDFunc::TEData(this, "fdcte", tmps);
-        te->setPlainText(tmps);
-        QVBoxLayout *vlyout = new QVBoxLayout;
+
+        s_tqLineEdit *le = new s_tqLineEdit;
+        le->setObjectName("teledit");
+        // вытаскиваем имя файла из textedit-а, если таковое присутствует
+        if (tmps.contains(TOKEN)) // есть составная запись
+        {
+            QStringList tmpsl = tmps.split(TOKEN);
+            le->setText(tmpsl.at(0));
+            if (tmpsl.size() > 1) // есть и текст тоже
+                te->setPlainText(tmpsl.at(1));
+            else // только картинка
+                te->clear();
+        }
+        else
+        {
+            te->setPlainText(tmps);
+            le->clear();
+        }
         vlyout->addWidget(te, 95);
-        s_tqPushButton *pb = new s_tqPushButton("Готово");
+        QHBoxLayout *hlyout = new QHBoxLayout;
+        s_tqLabel *lbl = new s_tqLabel("Имя файла:");
+        hlyout->addWidget(lbl, 5);
+        hlyout->addWidget(le, 90);
+        s_tqPushButton *pb = new s_tqPushButton("...");
+        connect(pb,SIGNAL(clicked(bool)),this,SLOT(ChooseTEFile()));
+        hlyout->addWidget(pb, 5);
+        vlyout->addLayout(hlyout);
+        pb = new s_tqPushButton("Готово");
         connect(pb,SIGNAL(clicked(bool)),this,SLOT(tepbclicked()));
         vlyout->addWidget(pb, 5);
         dlg->setLayout(vlyout);
@@ -294,31 +321,66 @@ void s_tqChooseWidget::pbclicked()
 
 void s_tqChooseWidget::accepted(QString str)
 {
-/*    s_tqLineEdit *le = this->findChild<s_tqLineEdit*>("fdcle");
-    if (le == 0)
-        return; */
     PublicClass::ValueStruct vs;
     QString tmps;
     pc.getlinksfromFF(ff, tmps);
     tfl.idtov(tmps, str, vs);
-/*    QStringList tmpsl = vs.Value.split(".");
-    if (tmpsl.size()>1) // ИД с индексом таблицы
-        le->setText(QString::number(tmpsl.at(1).toInt()));
-    else
-        le->setText(QString::number(vs.Value.toInt())); */
     WDFunc::SetLEData(this, "fdcle", vs.Value);
-//    le->setText(vs.Value);
     emit textchanged(QVariant(vs.Value));
 }
 
 void s_tqChooseWidget::tepbclicked()
 {
-    QString tmps;
+    QString tmps, tmps2;
     WDFunc::TEData(this, "tedit", tmps);
+    WDFunc::TEData(this, "teledit", tmps2);
+    // составляем из файла и текста запись
+    if (!tmps2.isEmpty())
+    {
+        tmps.insert(0, TOKEN);
+        tmps.insert(0, tmps2);
+    }
     QDialog *dlg = this->findChild<QDialog *>("tedlg");
     if (dlg != 0)
         dlg->close();
     SetValue(tmps);
+}
+
+void s_tqChooseWidget::ChooseTEFile()
+{
+    QString tmps;
+    if (!ff.link.isEmpty())
+    {
+        bool ok;
+        int tmpi = ff.link.at(0).toInt(&ok);
+        if (ok && (tmpi < Cli->PathPrefixes.size()))
+            tmps += Cli->PathPrefixes.at(tmpi);
+        if (ff.link.size() > 1) // есть ещё и суффикс
+        {
+            tmpi = ff.link.at(1).toInt(&ok);
+            if (ok && (tmpi < Cli->PathSuffixes.size()))
+                tmps += Cli->PathSuffixes.at(tmpi);
+        }
+    }
+    CurPath = pc.HomeDir+"/"+tmps;
+    QFileDialog *fdlg = new QFileDialog;
+    connect(fdlg,SIGNAL(directoryEntered(QString)),this,SLOT(TEDirCheck(QString)));
+    connect(fdlg,SIGNAL(fileSelected(QString)),this,SLOT(accepted(QString)));
+    fdlg->setAcceptMode(QFileDialog::AcceptOpen);
+    fdlg->setDirectory(CurPath);
+    fdlg->exec();
+}
+
+void s_tqChooseWidget::TEDirCheck(QString dir)
+{
+    QFileDialog *fdlg = static_cast<QFileDialog *>(sender());
+    if (fdlg != 0)
+    {
+        if (dir != CurPath)
+            fdlg->setDirectory(CurPath);
+    }
+    else
+        DBGMSG;
 }
 
 void s_tqChooseWidget::SetValue(QVariant data)
@@ -336,17 +398,11 @@ void s_tqChooseWidget::SetData(PublicClass::ValueStruct data)
     case FD_CHOOSE:
     case FD_CHOOSE_X:
     {
-/*        s_tqLineEdit *le = this->findChild<s_tqLineEdit*>("fdcle");
-        if (le != 0)
-            le->setText(data.Value); */
         WDFunc::SetLEData(this, "fdcle", data.Value);
         break;
     }
     case FD_COMBO:
     {
-/*        s_tqComboBox *cb = this->findChild<s_tqComboBox *>("fdccb");
-        if (cb != 0)
-            cb->setCurrentText(data.Value); */
         WDFunc::SetCBData(this, "fdccb", data.Value);
         break;
     }
@@ -363,9 +419,6 @@ void s_tqChooseWidget::SetData(PublicClass::ValueStruct data)
         }
         default:
         {
-/*            s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("lele");
-            if (le != 0)
-                le->setText(data.Value); */
             WDFunc::SetLEData(this, "lele", data.Value);
             break;
         }
@@ -374,22 +427,11 @@ void s_tqChooseWidget::SetData(PublicClass::ValueStruct data)
     }
     case FD_SPIN:
     {
-/*        s_tqSpinBox *sb = this->findChild<s_tqSpinBox *>("fdcsb");
-        if (sb != 0)
-            sb->setValue(data.Value.toDouble()); */
         WDFunc::SetSPBData(this, "fdcsb", data.Value.toDouble());
         break;
     }
     case FD_CHECK:
     {
-/*        s_tqCheckBox *cb = this->findChild<s_tqCheckBox *>("fdcb");
-        if (cb != 0)
-        {
-            if (data.Value == ":/res/ok.png")
-                cb->setChecked(true);
-            else
-                cb->setChecked(false);
-        } */
         WDFunc::SetChBData(this, "fdcb", (data.Value == "1"));
         break;
     }
@@ -421,17 +463,12 @@ PublicClass::ValueStruct s_tqChooseWidget::Data()
     case FD_CHOOSE:
     case FD_CHOOSE_X:
     {
-/*        s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fdcle");
-        if (le != 0)
-            vs.Value = le->text(); */
+
         WDFunc::LEData(this, "fdcle", vs.Value);
         break;
     }
     case FD_COMBO:
     {
-/*        s_tqComboBox *cb = this->findChild<s_tqComboBox *>("fdccb");
-        if (cb != 0)
-            vs.Value = cb->currentText(); */
         WDFunc::CBData(this, "fdccb", vs.Value);
         break;
     }
@@ -448,9 +485,6 @@ PublicClass::ValueStruct s_tqChooseWidget::Data()
         }
         default:
         {
-/*            s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("lele");
-            if (le != 0)
-                vs.Value = le->text(); */
             WDFunc::LEData(this, "lele", vs.Value);
             break;
         }
@@ -470,14 +504,6 @@ PublicClass::ValueStruct s_tqChooseWidget::Data()
     case FD_CHECK:
     {
         vs.Type = VS_ICON;
-/*        s_tqCheckBox *cb = this->findChild<s_tqCheckBox *>("fdcb");
-        if (cb != 0)
-        {
-            if (cb->isChecked())
-                vs.Value = "1";
-            else
-                vs.Value = "0";
-        } */
         bool chbdata;
         WDFunc::ChBData(this, "fdcb", chbdata);
         vs.Value = (chbdata) ? "1" : "0";
@@ -504,14 +530,3 @@ void s_tqChooseWidget::DateTimeEditFinished(QDateTime dtm)
 {
     accepted(dtm.toString("dd-MM-yyyy hh:mm:ss"));
 }
-
-/*void s_tqChooseWidget::setAData(QVariant dat)
-{
-    this->adata = dat;
-}
-
-QVariant s_tqChooseWidget::getAData()
-{
-    return this->adata;
-}
-*/

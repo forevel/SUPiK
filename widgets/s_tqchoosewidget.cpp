@@ -163,6 +163,7 @@ void s_tqChooseWidget::pbclicked()
         te->setObjectName("tedit");
         QString tmps;
         WDFunc::TEData(this, "fdcte", tmps);
+        vlyout->addWidget(te, 95);
 
         s_tqLineEdit *le = new s_tqLineEdit;
         le->setObjectName("teledit");
@@ -181,16 +182,18 @@ void s_tqChooseWidget::pbclicked()
             te->setPlainText(tmps);
             le->clear();
         }
-        vlyout->addWidget(te, 95);
-        QHBoxLayout *hlyout = new QHBoxLayout;
-        s_tqLabel *lbl = new s_tqLabel("Имя файла:");
-        hlyout->addWidget(lbl, 5);
-        hlyout->addWidget(le, 90);
-        s_tqPushButton *pb = new s_tqPushButton("...");
-        connect(pb,SIGNAL(clicked(bool)),this,SLOT(ChooseTEFile()));
-        hlyout->addWidget(pb, 5);
-        vlyout->addLayout(hlyout);
-        pb = new s_tqPushButton("Готово");
+        if (!ff.link.isEmpty()) // если есть линк на тип каталога, добавляем поле для ввода имени файла
+        {
+            QHBoxLayout *hlyout = new QHBoxLayout;
+            s_tqLabel *lbl = new s_tqLabel("Имя файла:");
+            hlyout->addWidget(lbl, 5);
+            hlyout->addWidget(le, 90);
+            s_tqPushButton *pb = new s_tqPushButton("...");
+            connect(pb,SIGNAL(clicked(bool)),this,SLOT(ChooseTEFile()));
+            hlyout->addWidget(pb, 5);
+            vlyout->addLayout(hlyout);
+        }
+        s_tqPushButton *pb = new s_tqPushButton("Готово");
         connect(pb,SIGNAL(clicked(bool)),this,SLOT(tepbclicked()));
         vlyout->addWidget(pb, 5);
         dlg->setLayout(vlyout);
@@ -333,10 +336,10 @@ void s_tqChooseWidget::tepbclicked()
 {
     QString tmps, tmps2;
     WDFunc::TEData(this, "tedit", tmps);
-    WDFunc::TEData(this, "teledit", tmps2);
-    // составляем из файла и текста запись
-    if (!tmps2.isEmpty())
+    if (!ff.link.isEmpty())
     {
+        WDFunc::LEData(this, "teledit", tmps2);
+        // составляем из файла и текста запись
         tmps.insert(0, TOKEN);
         tmps.insert(0, tmps2);
     }

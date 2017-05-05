@@ -19,6 +19,8 @@
 #define TB_EX_TIME  10 // minutes to finish exam
 
 #include <QDialog>
+class QScrollArea;
+
 #include "../../models/treemodel.h"
 #include "../../widgets/s_tqwidget.h"
 
@@ -73,7 +75,7 @@ private:
     QList<Answers_s> Answers;
 
     bool PrepareQuestions();
-    QList<s_tqWidget *> PrepareQuestionsByTheme(int theme, int questnum); // подготовка набора виджетов по теме theme в количестве questnum
+    QList<QScrollArea *> PrepareQuestionsByTheme(int theme, int questnum); // подготовка набора виджетов по теме theme в количестве questnum
     void SetupUI();
 };
 

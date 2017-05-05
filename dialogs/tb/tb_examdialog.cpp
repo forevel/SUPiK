@@ -10,6 +10,7 @@
 #include <QPainter>
 #include <QPaintEvent>
 #include <QApplication>
+#include <QScrollBar>
 #include <QThread>
 #include <stdlib.h>
 #include "../../widgets/s_tqscrollarea.h"
@@ -182,6 +183,7 @@ void tb_examdialog::SetupUI()
 
     gb = new s_tqGroupBox;
     gb->setTitle("Комментарий");
+//    gb->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Maximum);
     vlyout = new QVBoxLayout;
     gb->setObjectName("commentgb");
     stw = new s_tqStackedWidget;
@@ -295,7 +297,7 @@ bool tb_examdialog::PrepareQuestions()
     Answers.clear();
     AnswerCount = 0; // номер текущего ответа
     RightAnswerCount = 0;
-    QList<s_tqWidget *> tmplw = PrepareQuestionsByTheme(TB_TH_PTE, TB_PTENUM);
+    QList<QScrollArea *> tmplw = PrepareQuestionsByTheme(TB_TH_PTE, TB_PTENUM);
     while (tmplw.size() != 0)
         stw->addWidget(tmplw.takeFirst());
     tmplw = PrepareQuestionsByTheme(TB_TH_PUE, TB_PUENUM);
@@ -315,9 +317,9 @@ bool tb_examdialog::PrepareQuestions()
     return true;
 }
 
-QList<s_tqWidget *> tb_examdialog::PrepareQuestionsByTheme(int theme, int questnum)
+QList<QScrollArea *> tb_examdialog::PrepareQuestionsByTheme(int theme, int questnum)
 {
-    QList<s_tqWidget *> wdgts;
+    QList<QScrollArea *> wdgts;
 
     if (TBGroup == 0)
     {
@@ -339,8 +341,6 @@ QList<s_tqWidget *> tb_examdialog::PrepareQuestionsByTheme(int theme, int questn
     }
     // from qt fortune server example
     qsrand(QTime(0,0,0).secsTo(QTime::currentTime())); // инициализация генератора случайных чисел
-/*    int msecs = QTime::currentTime().msecsSinceStartOfDay();
-    qsrand(msecs); // инициализация генератора случайных чисел */
     for (int i=0; i<questnum; ++i)
     {
         s_tqWidget *w = new s_tqWidget;
@@ -394,7 +394,10 @@ QList<s_tqWidget *> tb_examdialog::PrepareQuestionsByTheme(int theme, int questn
         quest.Id = AnotherID.toInt();
         Questions.append(quest);
         w->setLayout(lyout);
-        wdgts.append(w);
+        QScrollArea *sa = new QScrollArea;
+        sa->setWidgetResizable(true);
+        sa->setWidget(w);
+        wdgts.append(sa);
     }
     return wdgts;
 }
@@ -464,7 +467,10 @@ void tb_examdialog::NextQuestion()
 {
     ++AnswerCount;
     if (AnswerCount >= TB_QUESTNUM) // хватит вопросов, пора кончать экзамен
+    {
         ProcessResultsAndExit();
+        return;
+    }
     s_tqStackedWidget *stw = this->findChild<s_tqStackedWidget *>("questionstw");
     if (stw == 0)
     {
@@ -472,6 +478,8 @@ void tb_examdialog::NextQuestion()
         return;
     }
     stw->setCurrentIndex(AnswerCount);
+    QScrollArea *sa = static_cast<QScrollArea *>(stw->currentWidget());
+    sa->verticalScrollBar()->setValue(sa->verticalScrollBar()->minimum());
     stw = this->findChild<s_tqStackedWidget *>("commentstw");
     if (stw == 0)
     {

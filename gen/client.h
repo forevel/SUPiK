@@ -311,7 +311,6 @@ private slots:
     void ClientConnected();
     void ClientDisconnected();
     void Timeout();
-    void ClientErr(int error);
     void ParseReply(QByteArray ba);
     void EthStateChangeTimerTimeout();
     void RetrTimeout();

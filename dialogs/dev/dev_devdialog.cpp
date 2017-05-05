@@ -207,7 +207,7 @@ void dev_devdialog::EditDev()
         return;
     }
     stw->addWidget(dlg);
-    stw->setCurrentWidget(dlg);
+//    stw->setCurrentWidget(dlg);
     stw->repaint();
 //    dlg->exec();
 //    Refresh();

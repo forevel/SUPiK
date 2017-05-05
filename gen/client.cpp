@@ -177,6 +177,7 @@ void Client::SendCmd(int command, QStringList &args)
     }
     if ((EthStatus.isntConnected()) || (TimeoutCounter > 3)) // if we're disconnected
     {
+        CliLog->error("Ethernet disconnected");
         TimeoutCounter = 0;
         PingIsDisabled = true;
         DetectedError = CLIER_CLOSED;
@@ -784,17 +785,9 @@ void Client::ClientDisconnected()
     EthStateChangeTimer->start();
 }
 
-void Client::ClientErr(int error)
-{
-    ERMSG(Ethernet::EthernetErrors()[error]);
-    EthStatus.clearCommandActive();
-    DetectedError = CLIER_GENERAL;
-    TimeoutTimer->stop();
-}
-
 void Client::Timeout()
 {
-    ERMSG("Произошло превышение времени ожидания");
+    ERMSG("Timeout detected");
     EthStatus.clearCommandActive();
     DetectedError = CLIER_TIMEOUT;
     TimeoutTimer->stop();

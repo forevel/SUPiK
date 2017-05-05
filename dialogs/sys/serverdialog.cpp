@@ -65,7 +65,7 @@ void ServerDialog::ShowLogFiles()
     lyout->addWidget(pb);
     w->setLayout(lyout);
     stw->addWidget(w);
-    stw->setCurrentWidget(w);
+//    stw->setCurrentWidget(w);
 }
 
 void ServerDialog::ShowServerStatus()

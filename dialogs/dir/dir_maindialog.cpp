@@ -314,7 +314,7 @@ void dir_maindialog::EditItem(QString str)
         return;
     }
     cw->addWidget(newdialog);
-    cw->setCurrentWidget(newdialog);
+//    cw->setCurrentWidget(newdialog);
     cw->repaint();
 //    RefreshSlaveTV();
 }

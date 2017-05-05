@@ -335,7 +335,7 @@ void sys_systemdialog::SystemDirEditor()
     dir_maindialog *dird = new dir_maindialog("Справочники системные");
     connect(this,SIGNAL(closeslvdlg()),dird,SLOT(close()));
     sw->addWidget(dird);
-    sw->setCurrentWidget(dird);
+//    sw->setCurrentWidget(dird);
     repaint();
 }
 
@@ -433,7 +433,7 @@ void sys_systemdialog::NewTable()
     }
     dir_adddialog *dlg = new dir_adddialog(false,"");
     sw->addWidget(dlg);
-    sw->setCurrentWidget(dlg);
+//    sw->setCurrentWidget(dlg);
     repaint();
 }
 
@@ -454,7 +454,7 @@ void sys_systemdialog::EditTable()
     }
     dir_adddialog *dlg = new dir_adddialog(true,"",tblename);
     sw->addWidget(dlg);
-    sw->setCurrentWidget(dlg);
+//    sw->setCurrentWidget(dlg);
     repaint();
 }
 

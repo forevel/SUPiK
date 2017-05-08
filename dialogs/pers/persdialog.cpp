@@ -217,10 +217,7 @@ bool PersDialog::Fill()
     }
     int i;
     for (i=0; i<vl.size(); ++i)
-    {
-        if (!WDFunc::SetLEData(this, "le."+QString::number(i+1), vl.at(i)))
-            WARNMSG("");
-    }
+        WDFunc::SetLEData(this, "le."+QString::number(i+1), vl.at(i));
     Pers = vl.at(0); // полные ФИО сотрудника
     SetPhoto();
     if (Mode == MODE_EDIT)
@@ -248,14 +245,10 @@ bool PersDialog::Fill()
             PO = (PO.isEmpty()) ? TB_NODATA : PO;
             PB = (PB.isEmpty()) ? TB_NODATA : PB;
             OT = (OT.isEmpty()) ? TB_NODATA : OT;
-            if (!WDFunc::SetLEData(this, "le.41", TBGroup))
-                DBGMSG;
+            WDFunc::SetLEData(this, "le.41", TBGroup);
             vl = QStringList() << PB << OT << PO;
             for (i=0; i<vl.size(); ++i)
-            {
-                if (!WDFunc::SetCWData(this, "cw."+QString::number(i), vl.at(i)))
-                    DBGMSG;
-            }
+                WDFunc::SetCWData(this, "cw."+QString::number(i), vl.at(i));
             vl.clear();
             fl = QStringList() << "idpers" << "section";
             if (TBGroup.at(0) == TB_NODATA)
@@ -524,8 +517,7 @@ void PersDialog::SetPhoto()
         pm.load(fp.fileName());
         fp.close();
     }
-    if (!WDFunc::SetLBLImage(this, "photo", &pm))
-        WARNMSG("");
+    WDFunc::SetLBLImage(this, "photo", &pm);
 }
 
 void PersDialog::CloseDialog()

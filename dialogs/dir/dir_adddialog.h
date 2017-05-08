@@ -53,6 +53,7 @@ private slots:
     void ConstructLink();
     void TbleChoosed();
     void TbleNameChanged(QString tblename);
+    void PixTEChBClicked(bool value);
     void WriteToTfl (QStringList fl, QStringList vl, QStringList cmpfl, QStringList cmpvl);
 };
 

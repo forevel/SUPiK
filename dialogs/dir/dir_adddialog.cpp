@@ -12,9 +12,11 @@
 #include "../../widgets/s_tqcheckbox.h"
 #include "../../widgets/s_tqspinbox.h"
 #include "../../widgets/s_tqstackedwidget.h"
+#include "../../widgets/wd_func.h"
 #include "../gen/accessdialog.h"
 #include "../gen/messagebox.h"
 #include "../../gen/s_sql.h"
+#include "../../gen/client.h"
 #include "../../gen/publicclass.h"
 #include "../../gen/s_tablefields.h"
 #include "../../models/s_duniversal.h"
@@ -49,7 +51,8 @@ dir_adddialog::dir_adddialog(bool update, QString dirtype, QString dir, QWidget 
     FW_Links << "0.Автонумерация" << "1.Фиксированное значение" << "2.Простая ссылка" << "3.Ссылка на несколько таблиц" << "4.Ссылка на дочерние элементы" << \
                 "5.Значение с макс. ИД" << "6.Форматированное поле" << "7.Вычисляемое поле" << "8.Простое поле" << "9.Права доступа" << \
                 "10.Форматированное число" << "11.Специальная ссылка" << "12.Булево поле" << "13.Вызов диалога редактирования строки" << "14.Конструктор ссылок" << \
-                "15.Ссылка на файл" << "16.Ссылка на каталог" << "17.Ссылка на элемент внутри файла" << "18.Выбор даты" << "19.Автодополнение нулями" << "20.Шифрование";
+                "15.Ссылка на файл" << "16.Ссылка на каталог" << "17.Ссылка на элемент внутри файла" << "18.Выбор даты" << "19.Автодополнение нулями" << "20.Шифрование" << \
+                "21.Выбор даты и времени" << "22.Текст с изображением";
 }
 
 void dir_adddialog::setupUI()
@@ -88,19 +91,12 @@ void dir_adddialog::setupUI()
     connect(le, SIGNAL(editingFinished()), this, SLOT(transliteDirName()));
     dlg1Layout->addWidget(le, 0, 1);
     lbl = new s_tqLabel("Количество полей (исключая id, date, idpers и deleted)");
-    spb = new s_tqSpinBox;
-    spb->setObjectName("dirFieldNum");
-    spb->setValue(1);
-    spb->setMinimum(1);
-    spb->setMaximum(FSIZE);
-    spb->setDecimals(0);
+    spb = WDFunc::NewSPB(this, "dirFieldNum", 1, FSIZE, 1, 0);
+    WDFunc::SetSPBData(this, "dirFieldNum", 1);
     connect(spb, SIGNAL(valueChanged(double)), this, SLOT(updateTWFields(double)));
     dlg1Layout->addWidget(lbl, 1, 0);
     dlg1Layout->addWidget(spb, 1, 1);
     lbl = new s_tqLabel("Тип справочника");
-    cb = new s_tqComboBox;
-    cb->setObjectName("dirBelong");
-    QStringListModel *tmpSLM = new QStringListModel;
     QStringList tmpSL;
     tmpSL << "Основной";
     if (pc.access & (ACC_ALT_WR | ACC_SYS_WR)) // САПРовские права
@@ -111,9 +107,7 @@ void dir_adddialog::setupUI()
         tmpSL << "СисАдмин";
     if (pc.access & ACC_SYS_WR)
         tmpSL << "Системный";
-    cb->setEnabled(true);
-    tmpSLM->setStringList(tmpSL);
-    cb->setModel(tmpSLM);
+    cb = WDFunc::NewCB(this, "dirBelong", tmpSL);
     dlg1Layout->addWidget(lbl, 2, 0);
     dlg1Layout->addWidget(cb, 2, 1);
     lbl = new s_tqLabel("Права доступа");
@@ -136,8 +130,7 @@ void dir_adddialog::setupUI()
     dlg1Layout->addWidget(lbl, 3, 0);
     dlg1Layout->addWidget(cw, 3, 1);
     lbl = new s_tqLabel("Имя таблицы в БД (необязательно)");
-    le = new s_tqLineEdit;
-    le->setObjectName("dirname");
+    le = WDFunc::NewLE(this, "dirname");
     connect(le,SIGNAL(editingFinished(QString)),this,SLOT(TbleNameChanged(QString)));
     dlg1Layout->addWidget(lbl, 4, 0);
     dlg1Layout->addWidget(le, 4, 1);
@@ -158,21 +151,18 @@ void dir_adddialog::setupUI()
         QList<QWidget *> wl;
         lbl = new s_tqLabel("Поле №" + QString::number(i+1) + " :");
         wl << lbl;
-        le = new s_tqLineEdit;
-        le->setObjectName("name." + QString::number(i));
+        le = WDFunc::NewLE(this, "name." + QString::number(i));
         adjustFieldSize(le, 20);
         wl << le;
         lbl = new s_tqLabel("Системное имя:");
         wl << lbl;
-        cb = new s_tqComboBox;
-        cb->setObjectName("field."+QString::number(i));
+        cb = WDFunc::NewCB(this, "field."+QString::number(i));
         cb->setEditable(true);
         adjustFieldSize(cb, 15);
         wl << cb;
         lbl = new s_tqLabel("Описание (links):");
         wl << lbl;
-        le = new s_tqLineEdit;
-        le->setObjectName("value." + QString::number(i));
+        le = WDFunc::NewLE(this, "value." + QString::number(i));
         adjustFieldSize(le, 10);
         le->setEnabled(false);
         wl << le;
@@ -625,6 +615,15 @@ void dir_adddialog::TbleNameChanged(QString tblename)
     }
 }
 
+void dir_adddialog::PixTEChBClicked(bool value)
+{
+    QString chbname = sender()->objectName();
+    if (chbname == "fwpixteprefixenchb")
+        WDFunc::SetEnabled(this, "fwpixteprefix", !value);
+    if (chbname == "fwpixtesuffixenchb")
+        WDFunc::SetEnabled(this, "fwpixtesuffix", !value);
+}
+
 void dir_adddialog::TbleChoosed()
 {
     QString objname = sender()->objectName();
@@ -906,7 +905,7 @@ void dir_adddialog::FPBPressed()
     QStringListModel *cbmodel = new QStringListModel;
     QStringList tmpStringList; // делегаты
     tmpStringList << "0.Простое поле" << "1.Поле ввода" << "2.Поле выбора" << "3.Выпадающий список" << "4.Неактивное поле" <<  \
-                     "5.Счётчик" << "6.Поле выбора с вводом" << "7.Поле с рамкой" << "8.Поле бинарного ввода";
+                     "5.Счётчик" << "6.Поле выбора с вводом" << "7.Поле с рамкой" << "8.Поле бинарного ввода" << "9.Многострочное поле";
     cbmodel->setStringList(tmpStringList);
     dtypecb->setModel(cbmodel);
     connect(dtypecb,SIGNAL(currentIndexChanged(int)),this,SLOT(DTypeCBIndexChanged(int)));
@@ -950,7 +949,7 @@ void dir_adddialog::FPBPressed()
 
     s_tqStackedWidget *sw = new s_tqStackedWidget;
     sw->setObjectName("linksconstrsw");
-    for (int i=0; i<20; i++)
+    for (int i=0; i<FW_COUNT; i++)
         sw->addWidget(SetWidget(i));
 
     lyout->addWidget(sw);
@@ -965,15 +964,18 @@ void dir_adddialog::FPBPressed()
     connect(this,SIGNAL(closelinkdialog()),dlg,SLOT(close()));
     lyout->addLayout(hlyout);
     dlg->setLayout(lyout);
+    dlg->show(); // to let the widgets appear
     if (links.size()>1)
     {
         dtypecb->setCurrentIndex(links.at(0).toInt());
+//        DTypeCBIndexChanged();
         QString LTypeCBString = FW_Links.at(links.at(1).toInt());
         ltypecb->setCurrentText(LTypeCBString);
+//        LTypeCBIndexChanged(LTypeCBString);
     }
-
-    dlg->show();
-    DTypeCBIndexChanged(0); // если links нет, то хотя бы установить выбор ссылки по 0-му делегату
+    else
+//    dlg->show();
+        DTypeCBIndexChanged(0); // если links нет, то хотя бы установить выбор ссылки по 0-му делегату
     dlg->exec();
 //    updateTWFields(sb->value());
 }
@@ -997,15 +999,9 @@ s_tqWidget *dir_adddialog::SetWidget(int FType)
         lbl = new s_tqLabel("Число");
         hlyout->addWidget(lbl);
         hlyout->setAlignment(lbl, Qt::AlignRight);
-        spb = new s_tqSpinBox;
-        spb->setObjectName("number");
-        spb->setDecimals(0);
-        spb->setSingleStep(1);
-        spb->setMaximum(999999);
-        spb->setMinimum(0);
+        spb = WDFunc::NewSPB(this, "number", 0, 999999, 1, 0);
         hlyout->addWidget(spb);
         vlyout->addLayout(hlyout);
-        w->setLayout(vlyout);
         break;
     }
     case FW_LINK:
@@ -1028,7 +1024,6 @@ s_tqWidget *dir_adddialog::SetWidget(int FType)
         cb->setObjectName("fwlinkcb2");
         hlyout->addWidget(cb);
         vlyout->addLayout(hlyout);
-        w->setLayout(vlyout);
         break;
     }
     case FW_DLINK:
@@ -1057,7 +1052,6 @@ s_tqWidget *dir_adddialog::SetWidget(int FType)
             hlyout->addWidget(cb);
             vlyout->addLayout(hlyout);
         }
-        w->setLayout(vlyout);
         break;
     }
     case FW_ALLINK:
@@ -1081,7 +1075,6 @@ s_tqWidget *dir_adddialog::SetWidget(int FType)
         cb->setObjectName("fwallinkcb2");
         hlyout->addWidget(cb);
         vlyout->addLayout(hlyout);
-        w->setLayout(vlyout);
         break;
     }
     case FW_MAXLINK:
@@ -1121,7 +1114,6 @@ s_tqWidget *dir_adddialog::SetWidget(int FType)
         le->setObjectName("fwmaxlinkle");
         hlyout->addWidget(le);
         vlyout->addLayout(hlyout);
-        w->setLayout(vlyout);
         break;
     }
     case FW_MASKED:
@@ -1134,7 +1126,6 @@ s_tqWidget *dir_adddialog::SetWidget(int FType)
         le->setToolTip("Пример: [0-9]{0,2}-[0-9]{0,9}");
         hlyout->addWidget(le);
         vlyout->addLayout(hlyout);
-        w->setLayout(vlyout);
         break;
     }
     case FW_EQUAT:
@@ -1166,7 +1157,6 @@ s_tqWidget *dir_adddialog::SetWidget(int FType)
         le->setObjectName("fwequatle2");
         hlyout->addWidget(le);
         vlyout->addLayout(hlyout);
-        w->setLayout(vlyout);
         break;
     }
     case FW_FNUMBER:
@@ -1174,27 +1164,16 @@ s_tqWidget *dir_adddialog::SetWidget(int FType)
         lbl = new s_tqLabel("Количество знаков целой части");
         hlyout->addWidget(lbl);
         hlyout->setAlignment(lbl,Qt::AlignRight);
-        spb = new s_tqSpinBox;
-        spb->setObjectName("fnumber");
-        spb->setDecimals(0);
-        spb->setSingleStep(1);
-        spb->setMaximum(9);
-        spb->setMinimum(0);
+        spb = WDFunc::NewSPB(this, "fnumber", 0, 9, 1, 0);
         hlyout->addWidget(spb);
         vlyout->addLayout(hlyout);
         hlyout = new QHBoxLayout;
         lbl = new s_tqLabel("Количество знаков дробной части");
         hlyout->addWidget(lbl);
         hlyout->setAlignment(lbl,Qt::AlignRight);
-        spb = new s_tqSpinBox;
-        spb->setObjectName("fnumber2");
-        spb->setDecimals(0);
-        spb->setSingleStep(1);
-        spb->setMaximum(5);
-        spb->setMinimum(0);
+        spb = WDFunc::NewSPB(this, "fnumber2", 0, 5, 1, 0);
         hlyout->addWidget(spb);
         vlyout->addLayout(hlyout);
-        w->setLayout(vlyout);
         break;
     }
     case FW_SPECIAL:
@@ -1218,7 +1197,6 @@ s_tqWidget *dir_adddialog::SetWidget(int FType)
         cb->setObjectName("fwspecialcb2");
         hlyout->addWidget(cb);
         vlyout->addLayout(hlyout);
-        w->setLayout(vlyout);
         break;
     }
     case FW_ID:
@@ -1226,21 +1204,39 @@ s_tqWidget *dir_adddialog::SetWidget(int FType)
         lbl = new s_tqLabel("Размер поля");
         hlyout->addWidget(lbl);
         hlyout->setAlignment(lbl, Qt::AlignRight);
-        spb = new s_tqSpinBox;
-        spb->setObjectName("id");
-        spb->setDecimals(0);
-        spb->setSingleStep(1);
-        spb->setMaximum(9);
-        spb->setMinimum(0);
+        spb = WDFunc::NewSPB(this, "id", 0, 9, 1, 0);
         spb->setValue(7);
         hlyout->addWidget(spb);
         vlyout->addLayout(hlyout);
-        w->setLayout(vlyout);
+        break;
+    }
+    case FW_PIXTE:
+    {
+        lbl = new s_tqLabel("Префикс пути к файлам");
+        hlyout->addWidget(lbl);
+        hlyout->setAlignment(lbl, Qt::AlignRight);
+        cb = WDFunc::NewCB(this, "fwpixteprefix", Cli->PathPrefixes);
+        hlyout->addWidget(cb);
+        s_tqCheckBox *chb = WDFunc::NewChB(this, "fwpixteprefixenchb", "Нет");
+        connect(chb,SIGNAL(toggled(bool)),this,SLOT(PixTEChBClicked(bool)));
+        hlyout->addWidget(chb);
+        vlyout->addLayout(hlyout);
+        hlyout = new QHBoxLayout;
+        lbl = new s_tqLabel("Суффикс пути к файлам");
+        hlyout->addWidget(lbl);
+        hlyout->setAlignment(lbl, Qt::AlignRight);
+        cb = WDFunc::NewCB(this, "fwpixtesuffix", Cli->PathSuffixes);
+        hlyout->addWidget(cb);
+        chb = WDFunc::NewChB(this, "fwpixtesuffixenchb", "Нет");
+        connect(chb,SIGNAL(toggled(bool)),this,SLOT(PixTEChBClicked(bool)));
+        hlyout->addWidget(chb);
+        vlyout->addLayout(hlyout);
         break;
     }
     default:
         break;
     }
+    w->setLayout(vlyout);
     return w;
 }
 
@@ -1275,7 +1271,7 @@ void dir_adddialog::DTypeCBIndexChanged(int FD)
     {
         tmpStringList << FW_Links.at(FW_LINK) << FW_Links.at(FW_DLINK) << FW_Links.at(FW_ALLINK) << FW_Links.at(FW_RIGHTS) << FW_Links.at(FW_FNUMBER) \
                       << FW_Links.at(FW_SPECIAL) << FW_Links.at(FW_2CD  ) << FW_Links.at(FW_LLINK) << FW_Links.at(FW_FLINK) \
-                      << FW_Links.at(FW_ILINK) << FW_Links.at(FW_FLLINK) << FW_Links.at(FW_DATE);
+                      << FW_Links.at(FW_ILINK) << FW_Links.at(FW_FLLINK) << FW_Links.at(FW_DATE) << FW_Links.at(FW_DATETIME);
         break;
     }
     case FD_COMBO:
@@ -1291,6 +1287,10 @@ void dir_adddialog::DTypeCBIndexChanged(int FD)
     case FD_CHECK:
     {
         tmpStringList << FW_Links.at(FW_BOOL);
+    }
+    case FD_TEXTEDIT:
+    {
+        tmpStringList << FW_Links.at(FW_PLAIN) << FW_Links.at(FW_PIXTE);
     }
     default:
         break;
@@ -1311,47 +1311,23 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
         return;
     }
     sw->setCurrentIndex(wdgtsidx);
-    s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("value."+QString::number(idx));
-    if (le == 0)
-    {
-        DBGMSG;
-        return;
-    }
-    QStringList links = le->text().split("."); // формируем links
+    QString tmps;
+    WDFunc::LEData(this, "value."+QString::number(idx), tmps);
+    QStringList links = tmps.split("."); // формируем links
     switch (wdgtsidx)
     {
     case FW_NUMBER:
     {
         if (links.size()>3)
-        {
-            s_tqSpinBox *NumberSB = this->findChild<s_tqSpinBox *>("number");
-            if (NumberSB == 0)
-            {
-                DBGMSG;
-                return;
-            }
-            NumberSB->setValue(links.at(3).toDouble());
-        }
+            WDFunc::SetSPBData(this, "number", links.at(3).toDouble());
         break;
     }
     case FW_LINK:
     {
         if (links.size()>4)
         {
-            s_tqComboBox *tcb = this->findChild<s_tqComboBox *>("tcb."+QString::number(FW_LINK));
-            if (tcb == 0)
-            {
-                DBGMSG;
-                return;
-            }
-            tcb->setCurrentText(links.at(3));
-            tcb = this->findChild<s_tqComboBox *>("fwlinkcb2");
-            if (tcb == 0)
-            {
-                DBGMSG;
-                return;
-            }
-            tcb->setCurrentText(links.at(4));
+            WDFunc::SetCBData(this, "tcb."+QString::number(FW_LINK), links.at(3));
+            WDFunc::SetCBData(this, "fwlinkcb2", links.at(4));
         }
         break;
     }
@@ -1359,20 +1335,8 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
     {
         if (links.size()>4)
         {
-            s_tqComboBox *tcb = this->findChild<s_tqComboBox *>("tcb."+QString::number(FW_SPECIAL));
-            {
-                DBGMSG;
-                return;
-            }
-                return;
-            tcb->setCurrentText(links.at(3));
-            tcb = this->findChild<s_tqComboBox *>("fwspecialcb2");
-            if (tcb == 0)
-            {
-                DBGMSG;
-                return;
-            }
-            tcb->setCurrentText(links.at(4));
+            WDFunc::SetCBData(this, "tcb."+QString::number(FW_SPECIAL), links.at(3));
+            WDFunc::SetCBData(this, "fwspecialcb2", links.at(4));
         }
         break;
     }
@@ -1380,20 +1344,8 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
     {
         if (links.size()>4)
         {
-            s_tqComboBox *tcb = this->findChild<s_tqComboBox *>("tcb."+QString::number(FW_ALLINK));
-            if (tcb == 0)
-            {
-                DBGMSG;
-                return;
-            }
-            tcb->setCurrentText(links.at(3));
-            tcb = this->findChild<s_tqComboBox *>("fwallinkcb2");
-            if (tcb == 0)
-            {
-                DBGMSG;
-                return;
-            }
-            tcb->setCurrentText(links.at(4));
+            WDFunc::SetCBData(this, "tcb."+QString::number(FW_ALLINK), links.at(3));
+            WDFunc::SetCBData(this, "fwallinkcb2", links.at(4));
         }
         break;
     }
@@ -1405,22 +1357,10 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
             links.removeFirst();
             links.removeFirst();
             links.removeFirst();
-            while (links.size()>2) // вытаскиваем данные попарно
+            while (links.size()>=2) // вытаскиваем данные попарно
             {
-                s_tqComboBox *cb = this->findChild<s_tqComboBox *>("tble."+QString::number(i));
-                if (cb == 0)
-                {
-                    DBGMSG;
-                    return;
-                }
-                cb->setCurrentText(links.at(0));
-                cb = this->findChild<s_tqComboBox *>("tblefield."+QString::number(i));
-                if (cb == 0)
-                {
-                    DBGMSG;
-                    return;
-                }
-                cb->setCurrentText(links.at(1));
+                WDFunc::SetCBData(this, "tble."+QString::number(i), links.at(0));
+                WDFunc::SetCBData(this, "tblefield."+QString::number(i), links.at(1));
                 links.removeFirst();
                 links.removeFirst();
                 i++;
@@ -1432,37 +1372,11 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
     {
         if (links.size()>5)
         {
-            s_tqComboBox *tcb = this->findChild<s_tqComboBox *>("tcb."+QString::number(FW_MAXLINK));
-            if (tcb == 0)
-            {
-                DBGMSG;
-                return;
-            }
-            tcb->setCurrentText(links.at(3));
-            tcb = this->findChild<s_tqComboBox *>("fwmaxlinkcb2");
-            if (tcb == 0)
-            {
-                DBGMSG;
-                return;
-            }
-            tcb->setCurrentText(links.at(4));
-            tcb = this->findChild<s_tqComboBox *>("fwmaxlinkcb3");
-            if (tcb == 0)
-            {
-                DBGMSG;
-                return;
-            }
-            tcb->setCurrentText(links.at(5));
+            WDFunc::SetCBData(this, "tcb."+QString::number(FW_MAXLINK), links.at(3));
+            WDFunc::SetCBData(this, "fwmaxlinkcb2", links.at(4));
+            WDFunc::SetCBData(this, "fwmaxlinkcb3", links.at(5));
             if (links.size()>6)
-            {
-                s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fwmaxlinkle");
-                if (le == 0)
-                {
-                    DBGMSG;
-                    return;
-                }
-                le->setText(links.at(6));
-            }
+                WDFunc::SetLEData(this, "fwmaxlinkle", links.at(6));
         }
         break;
     }
@@ -1470,12 +1384,6 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
     {
         if (links.size()>3)
         {
-            s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fwmaskedle");
-            if (le == 0)
-            {
-                DBGMSG;
-                return;
-            }
             QString tmps = links.at(3);
             int begidx = tmps.indexOf("\\\"^");
             if (begidx != -1)
@@ -1483,55 +1391,29 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
             int endidx = tmps.indexOf("$\\\"");
             if (endidx != -1)
                 tmps.remove(endidx, 3);
-            le->setText(tmps);
+            WDFunc::SetLEData(this, "fwmaskedle", tmps);
         }
         break;
     }
     case FW_ID:
     {
         if (links.size()>3)
-        {
-            s_tqSpinBox *NumberSB = this->findChild<s_tqSpinBox *>("id");
-            if (NumberSB == 0)
-            {
-                DBGMSG;
-                return;
-            }
-            NumberSB->setValue(links.at(3).toDouble());
-        }
+            WDFunc::SetSPBData(this, "id", links.at(3).toDouble());
         break;
     }
     case FW_EQUAT:
     {
         if (links.size()>4)
         {
-            s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fwequatle");
-            if (le == 0)
-            {
-                DBGMSG;
-                return;
-            }
-            le->setText(links.at(4));
+            WDFunc::SetLEData(this, "fwequatle", links.at(4));
             if (links.size()>6)
             {
-                le = this->findChild<s_tqLineEdit *>("fwequatle2");
-                if (le == 0)
-                {
-                    DBGMSG;
-                    return;
-                }
-                le->setText(links.at(6));
-                s_tqComboBox *cb = this->findChild<s_tqComboBox *>("fwequatcb");
-                if (cb == 0)
-                {
-                    DBGMSG;
-                    return;
-                }
+                WDFunc::SetLEData(this, "fwequatle2", links.at(6));
                 QString op = links.at(5);
-                if (op == "s")  cb->setCurrentIndex(0);
-                if (op == "r")  cb->setCurrentIndex(1);
-                if (op == "m")  cb->setCurrentIndex(2);
-                if (op == "d")  cb->setCurrentIndex(3);
+                if (op == "s")  WDFunc::SetCBIndex(this, "fwequatcb", 0);
+                if (op == "r")  WDFunc::SetCBIndex(this, "fwequatcb", 1);
+                if (op == "m")  WDFunc::SetCBIndex(this, "fwequatcb", 2);
+                if (op == "d")  WDFunc::SetCBIndex(this, "fwequatcb", 3);
             }
         }
         break;
@@ -1540,21 +1422,17 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
     {
         if (links.size()>3)
         {
-            s_tqSpinBox *NumberSB = this->findChild<s_tqSpinBox *>("fnumber");
-            if (NumberSB == 0)
-            {
-                DBGMSG;
-                return;
-            }
-            NumberSB->setValue(links.at(3).count("n", Qt::CaseSensitive));
-            NumberSB = this->findChild<s_tqSpinBox *>("fnumber2");
-            if (NumberSB == 0)
-            {
-                DBGMSG;
-                return;
-            }
-            NumberSB->setValue(links.at(3).count("d", Qt::CaseSensitive));
+            WDFunc::SetSPBData(this, "fnumber", links.at(3).count("n", Qt::CaseSensitive));
+            WDFunc::SetSPBData(this, "fnumber2", links.at(3).count("d", Qt::CaseSensitive));
         }
+        break;
+    }
+    case FW_PIXTE:
+    {
+        if (links.size() > 3)
+            WDFunc::SetCBIndex(this, "fwpixteprefix", links.at(3).toInt());
+        if (links.size() > 4)
+            WDFunc::SetCBIndex(this, "fwpixtesuffix", links.at(4).toInt());
         break;
     }
     default:
@@ -1802,6 +1680,25 @@ void dir_adddialog::ConstructLink()
         }
         tmps.fill('d', spb->value());
         links.append(tmps);
+        break;
+    }
+    case FW_PIXTE:
+    {
+        bool tmpb;
+        int tmpi;
+        WDFunc::ChBData(this, "fwpixteprefixenchb", tmpb);
+        if (!tmpb)
+        {
+            WDFunc::CBIndex(this, "fwpixteprefix", tmpi);
+            links.append(QString::number(tmpi));
+        }
+        links.append(".");
+        WDFunc::ChBData(this, "fwpixtesuffixenchb", tmpb);
+        if (!tmpb)
+        {
+            WDFunc::CBIndex(this, "fwpixtesuffix", tmpi);
+            links.append(QString::number(tmpi));
+        }
         break;
     }
     default:

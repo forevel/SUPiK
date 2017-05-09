@@ -96,7 +96,8 @@ SOURCES += main.cpp\
     widgets/s_statusbar.cpp \
     models/fileitem.cpp \
     models/filemodel.cpp \
-    dialogs/sys/serverdialog.cpp
+    dialogs/sys/serverdialog.cpp \
+    dialogs/gen/textwithpicdialog.cpp
 
 HEADERS  += startwindow.h \
     supik.h \
@@ -178,7 +179,8 @@ HEADERS  += startwindow.h \
     widgets/s_statusbar.h \
     models/fileitem.h \
     models/filemodel.h \
-    dialogs/sys/serverdialog.h
+    dialogs/sys/serverdialog.h \
+    dialogs/gen/textwithpicdialog.h
 
 RESOURCES += \
     pic.qrc

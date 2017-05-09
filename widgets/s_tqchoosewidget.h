@@ -39,9 +39,6 @@ private slots:
     void dateChoosed(QDate);
     void DateTimeEditFinished(QDateTime);
     void accepted(QString);
-    void tepbclicked();
-    void ChooseTEFile();
-    void TEDirCheck(QString dir);
 };
 
 #endif // S_TQCHOOSEWIDGET_H

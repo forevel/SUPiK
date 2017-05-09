@@ -21,6 +21,7 @@
 #include "../dialogs/gen/chooseitemdialog.h"
 #include "../dialogs/gen/specialdialog.h"
 #include "../dialogs/gen/accessdialog.h"
+#include "../dialogs/gen/textwithpicdialog.h"
 
 // универсальный класс для организации списков выбора из таблиц БД СУПиК
 // правила его использования:
@@ -140,7 +141,7 @@ void s_tqChooseWidget::Setup(QString links, QString hdr)
         pb->setObjectName("fdcpb");
         connect(pb, SIGNAL(clicked()), this, SLOT(pbclicked()));
         ml2->addWidget(te, 80);
-        pb->setFixedSize(32, 32);
+        pb->setFixedSize(24, 24);
         ml2->addWidget(pb, 1);
         break;
     }
@@ -156,48 +157,33 @@ void s_tqChooseWidget::pbclicked()
 {
     if (ff.delegate == FD_TEXTEDIT)
     {
-        QDialog *dlg = new QDialog(this);
-        dlg->setObjectName("tedlg");
-        QVBoxLayout *vlyout = new QVBoxLayout;
-        s_tqTextEdit *te = new s_tqTextEdit;
-        te->setObjectName("tedit");
+        int TEType;
+        if (!ff.link.isEmpty()) // если есть линк на тип каталога, добавляем поле для ввода имени файла
+            TEType = TextWithPicDialog::TWPD_TEWITHPIC;
+        else
+            TEType = TextWithPicDialog::TWPD_TEONLY;
         QString tmps;
         WDFunc::TEData(this, "fdcte", tmps);
-        vlyout->addWidget(te, 95);
 
-        s_tqLineEdit *le = new s_tqLineEdit;
-        le->setObjectName("teledit");
+        TextWithPicDialog *dlg = new TextWithPicDialog(TEType);
+        dlg->SetLink(ff.link);
         // вытаскиваем имя файла из textedit-а, если таковое присутствует
         if (tmps.contains(TOKEN)) // есть составная запись
         {
             QStringList tmpsl = tmps.split(TOKEN);
-            le->setText(tmpsl.at(0));
+            dlg->SetFileField(tmpsl.at(0));
             if (tmpsl.size() > 1) // есть и текст тоже
-                te->setPlainText(tmpsl.at(1));
+                dlg->SetTEField(tmpsl.at(1));
             else // только картинка
-                te->clear();
+                dlg->SetTEField("");
         }
         else
         {
-            te->setPlainText(tmps);
-            le->clear();
+            dlg->SetTEField(tmps);
+            dlg->SetFileField("");
         }
-        if (!ff.link.isEmpty()) // если есть линк на тип каталога, добавляем поле для ввода имени файла
-        {
-            QHBoxLayout *hlyout = new QHBoxLayout;
-            s_tqLabel *lbl = new s_tqLabel("Имя файла:");
-            hlyout->addWidget(lbl, 5);
-            hlyout->addWidget(le, 90);
-            s_tqPushButton *pb = new s_tqPushButton("...");
-            connect(pb,SIGNAL(clicked(bool)),this,SLOT(ChooseTEFile()));
-            hlyout->addWidget(pb, 5);
-            vlyout->addLayout(hlyout);
-        }
-        s_tqPushButton *pb = new s_tqPushButton("Готово");
-        connect(pb,SIGNAL(clicked(bool)),this,SLOT(tepbclicked()));
-        vlyout->addWidget(pb, 5);
-        dlg->setLayout(vlyout);
-        dlg->show();
+        connect(dlg,SIGNAL(ChangesHasBeenMade(QString)),this,SLOT(accepted(QString)));
+        dlg->exec();
         return;
     }
     s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fdcle");
@@ -328,62 +314,8 @@ void s_tqChooseWidget::accepted(QString str)
     QString tmps;
     pc.getlinksfromFF(ff, tmps);
     tfl.idtov(tmps, str, vs);
-    WDFunc::SetLEData(this, "fdcle", vs.Value);
+    SetData(vs);
     emit textchanged(QVariant(vs.Value));
-}
-
-void s_tqChooseWidget::tepbclicked()
-{
-    QString tmps, tmps2;
-    WDFunc::TEData(this, "tedit", tmps);
-    if (!ff.link.isEmpty())
-    {
-        WDFunc::LEData(this, "teledit", tmps2);
-        // составляем из файла и текста запись
-        tmps.insert(0, TOKEN);
-        tmps.insert(0, tmps2);
-    }
-    QDialog *dlg = this->findChild<QDialog *>("tedlg");
-    if (dlg != 0)
-        dlg->close();
-    SetValue(tmps);
-}
-
-void s_tqChooseWidget::ChooseTEFile()
-{
-    QString tmps;
-    if (!ff.link.isEmpty())
-    {
-        bool ok;
-        int tmpi = ff.link.at(0).toInt(&ok);
-        if (ok && (tmpi < Cli->PathPrefixes.size()))
-            tmps += Cli->PathPrefixes.at(tmpi);
-        if (ff.link.size() > 1) // есть ещё и суффикс
-        {
-            tmpi = ff.link.at(1).toInt(&ok);
-            if (ok && (tmpi < Cli->PathSuffixes.size()))
-                tmps += Cli->PathSuffixes.at(tmpi);
-        }
-    }
-    CurPath = pc.HomeDir+"/"+tmps;
-    QFileDialog *fdlg = new QFileDialog;
-    connect(fdlg,SIGNAL(directoryEntered(QString)),this,SLOT(TEDirCheck(QString)));
-    connect(fdlg,SIGNAL(fileSelected(QString)),this,SLOT(accepted(QString)));
-    fdlg->setAcceptMode(QFileDialog::AcceptOpen);
-    fdlg->setDirectory(CurPath);
-    fdlg->exec();
-}
-
-void s_tqChooseWidget::TEDirCheck(QString dir)
-{
-    QFileDialog *fdlg = static_cast<QFileDialog *>(sender());
-    if (fdlg != 0)
-    {
-        if (dir != CurPath)
-            fdlg->setDirectory(CurPath);
-    }
-    else
-        DBGMSG;
 }
 
 void s_tqChooseWidget::SetValue(QVariant data)

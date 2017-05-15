@@ -270,6 +270,7 @@ signals:
     void WaitEnded(); // сервер закончил длительную процедуру
     void RetrStarted(int); // начаты попытки восстановить связь с сервером
     void RetrEnded(); // связь восстановлена
+    void CallSend(int command, QStringList &args);
 
 private:
     QMap<int, CmdStruct> CmdMap;
@@ -306,6 +307,7 @@ private:
     bool CheckArgs(QString cmd, QStringList &args, int argsnum, bool fieldscheck=false, bool pairscheck=false);
     void InitiateTimers();
     void SetWaitEnded();
+    void SendNextFileChunk(); // sends another portion of file in putfile command, return value - number of bytes least to write
 
 private slots:
     void ClientConnected();
@@ -314,6 +316,8 @@ private slots:
     void ParseReply(QByteArray ba);
     void EthStateChangeTimerTimeout();
     void RetrTimeout();
+    void Send(int command, QStringList &args);
+    void SendNext(qint64 bytes); // slot called by signal bytesWritten from the socket
 };
 
 extern Client *Cli;

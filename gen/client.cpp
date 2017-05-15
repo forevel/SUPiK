@@ -106,6 +106,9 @@ int Client::Connect(QString host, QString port, int clientmode)
     connect(MainEthernet,SIGNAL(connected()),this,SLOT(ClientConnected()));
     connect(MainEthernet,SIGNAL(disconnected()),this,SLOT(ClientDisconnected()));
     connect(MainEthernet,SIGNAL(NewDataArrived(QByteArray)),this,SLOT(ParseReply(QByteArray)));
+    connect(MainEthernet,SIGNAL(byteswritten(qint64)),this,SLOT(SendNext(qint64)));
+    connect(this,SIGNAL(CallSend(int,QStringList&)),this,SLOT(Send(int,QStringList&)));
+
 #ifndef TIMERSOFF
     TimeoutTimer->start();
 #endif
@@ -158,6 +161,61 @@ void Client::InitiateTimers()
     connect(RetrTimer,SIGNAL(timeout()),this,SLOT(RetrTimeout()));
 }
 
+void Client::SendNextFileChunk()
+{
+    CliLog->info(QString::number(WrittenBytes)+" bytes written to file");
+    qint64 BytesToSend = XmitDataSize - WrittenBytes;
+    if (BytesToSend > READBUFMAX)
+        BytesToSend = READBUFMAX;
+    if (BytesToSend > 0)
+    {
+        if (fp.isOpen())
+        {
+            WrData = QByteArray(fp.read(BytesToSend));
+            if (WrData.isEmpty())
+            {
+                Error("Error while reading file", CLIER_PUTFER);
+                return;
+            }
+#ifndef TIMERSOFF
+            TimeoutTimer->start();
+#endif
+            SendCmd(M_APUTFILE);
+            return;
+        }
+        else
+        {
+            Error("File error", CLIER_PUTFER);
+            EthStatus.clearCommandActive();
+        }
+    }
+    else
+    {
+        if (fp.isOpen())
+            fp.close();
+        emit TransferComplete();
+        CmdOk = true;
+        EthStatus.clearCommandActive();
+        TimeoutTimer->stop();
+        CurrentCommand = M_IDLE;
+    }
+}
+
+void Client::SendNext(qint64 bytes)
+{
+    switch(CurrentCommand)
+    {
+    case M_APUTFILE:
+    {
+        WrittenBytes += bytes;
+        SendNextFileChunk();
+        break;
+    }
+    default:
+        break;
+    }
+}
+
 void Client::Disconnect()
 {
     if (EthStatus.isAboutToClose())
@@ -169,6 +227,11 @@ void Client::Disconnect()
 }
 
 void Client::SendCmd(int command, QStringList &args)
+{
+    emit CallSend(command, args);
+}
+
+void Client::Send(int command, QStringList &args)
 {
     if ((EthStatus.isCommandActive()) && (command == M_PING))
     {
@@ -298,9 +361,10 @@ void Client::SendCmd(int command, QStringList &args)
     }
     case M_APUTFILE:
     {
-        CliLog->info("> ...binary data " + QString::number(WrData.size()) + "size...");
+        CliLog->info("> ...binary data " + QString::number(WrData.size()) + " size...");
         MainEthernet->WriteData(WrData);
-        return;
+        emit BytesWritten(WrData.size());
+        return; // move to the SendNext slot
     }
     case M_AGETFILE:
     case M_NEXT:
@@ -647,47 +711,8 @@ void Client::ParseReply(QByteArray ba)
             EthStatus.clearCommandActive();
             return;
         }
-    }
-    case M_APUTFILE:
-    {
-//        emit BytesWritten(WrittenBytes);
-        CliLog->info(QString::number(WrittenBytes)+" bytes written to file");
-        qint64 BytesToSend = XmitDataSize - WrittenBytes;
-        if (BytesToSend > READBUFMAX)
-            BytesToSend = READBUFMAX;
-        if (BytesToSend > 0)
-        {
-            if (fp.isOpen())
-            {
-                WrData = QByteArray(fp.read(BytesToSend));
-                if (WrData.isEmpty())
-                {
-                    Error("Error while reading file", CLIER_PUTFER);
-                    return;
-                }
-                WrittenBytes += WrData.size();
-                EthStatus.clearCommandActive();
-                SendCmd(M_APUTFILE);
-#ifndef TIMERSOFF
-                TimeoutTimer->start();
-#endif
-                return;
-            }
-            else
-            {
-                Error("File error", CLIER_PUTFER);
-                EthStatus.clearCommandActive();
-                return;
-            }
-        }
-        else
-        {
-            if (fp.isOpen())
-                fp.close();
-            emit TransferComplete();
-            CmdOk = true;
-            break;
-        }
+        SendNextFileChunk();
+        return;
         break;
     }
     // первый приём после команды

@@ -307,7 +307,6 @@ private:
     bool CheckArgs(QString cmd, QStringList &args, int argsnum, bool fieldscheck=false, bool pairscheck=false);
     void InitiateTimers();
     void SetWaitEnded();
-    void SendNextFileChunk(); // sends another portion of file in putfile command, return value - number of bytes least to write
 
 private slots:
     void ClientConnected();

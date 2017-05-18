@@ -15,7 +15,6 @@ Ethernet::Ethernet(QObject *parent) : QObject(parent)
 Ethernet::~Ethernet()
 {
     Disconnect();
-//    delete EthLog;
 }
 
 void Ethernet::SetEthernet(const QString &Host, int Port, int Type)
@@ -56,40 +55,6 @@ void Ethernet::SetEthernet(const QString &Host, int Port, int Type)
 
 void Ethernet::Disconnect()
 {
-/*    try
-    {
-        switch (EthType)
-        {
-        case ETH_PLAIN:
-        {
-            if (sock)
-            {
-                if (sock->isOpen())
-                {
-                    sock->disconnectFromHost();
-                    QThread::msleep(10);
-                }
-                sock->deleteLater();
-            }
-            break;
-        }
-        case ETH_SSL:
-        {
-            if (sslsock->isOpen())
-            {
-                sslsock->disconnectFromHost();
-                QThread::msleep(10);
-            }
-            sslsock->deleteLater();
-        }
-        default:
-            break;
-        }
-    }
-    catch (...)
-    {
-        EthLog->error("Error while disconnecting");
-    } */
     if (EthType == ETH_PLAIN)
         sock->close();
     else
@@ -100,7 +65,7 @@ void Ethernet::SslSocketEncrypted()
 {
     EthLog->info("SSL: Secure connection established!");
     connect(sslsock, SIGNAL(readyRead()),this, SLOT(CheckForData()));
-    connect(sslsock,SIGNAL(encryptedBytesWritten(qint64)),this,SIGNAL(byteswritten(qint64)));
+    connect(sslsock,SIGNAL(bytesWritten(qint64)),this,SIGNAL(byteswritten(qint64)));
 }
 
 void Ethernet::SocketStateChanged(QAbstractSocket::SocketState state)

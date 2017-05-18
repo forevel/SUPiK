@@ -161,54 +161,14 @@ void Client::InitiateTimers()
     connect(RetrTimer,SIGNAL(timeout()),this,SLOT(RetrTimeout()));
 }
 
-void Client::SendNextFileChunk()
-{
-    CliLog->info(QString::number(WrittenBytes)+" bytes written to file");
-    qint64 BytesToSend = XmitDataSize - WrittenBytes;
-    if (BytesToSend > READBUFMAX)
-        BytesToSend = READBUFMAX;
-    if (BytesToSend > 0)
-    {
-        if (fp.isOpen())
-        {
-            WrData = QByteArray(fp.read(BytesToSend));
-            if (WrData.isEmpty())
-            {
-                Error("Error while reading file", CLIER_PUTFER);
-                return;
-            }
-#ifndef TIMERSOFF
-            TimeoutTimer->start();
-#endif
-            SendCmd(M_APUTFILE);
-            return;
-        }
-        else
-        {
-            Error("File error", CLIER_PUTFER);
-            EthStatus.clearCommandActive();
-        }
-    }
-    else
-    {
-        if (fp.isOpen())
-            fp.close();
-        emit TransferComplete();
-        CmdOk = true;
-        EthStatus.clearCommandActive();
-        TimeoutTimer->stop();
-        CurrentCommand = M_IDLE;
-    }
-}
-
 void Client::SendNext(qint64 bytes)
 {
     switch(CurrentCommand)
     {
     case M_APUTFILE:
     {
+        CliLog->info(QString::number(bytes)+" bytes written to file");
         WrittenBytes += bytes;
-        SendNextFileChunk();
         break;
     }
     default:
@@ -361,10 +321,47 @@ void Client::Send(int command, QStringList &args)
     }
     case M_APUTFILE:
     {
-        CliLog->info("> ...binary data " + QString::number(WrData.size()) + " size...");
-        MainEthernet->WriteData(WrData);
-        emit BytesWritten(WrData.size());
-        return; // move to the SendNext slot
+        while ((WrittenBytes < XmitDataSize) && (DetectedError == CLIER_NOERROR))
+        {
+            quint64 BytesToSend = XmitDataSize - WrittenBytes;
+            quint64 NextThr;
+            if (BytesToSend > READBUFMAX)
+                BytesToSend = READBUFMAX;
+            if (fp.isOpen())
+            {
+                WrData = QByteArray(fp.read(BytesToSend));
+                if (WrData.isEmpty())
+                {
+                    Error("Error while reading file", CLIER_PUTFER);
+                    return;
+                }
+#ifndef TIMERSOFF
+                TimeoutTimer->start();
+#endif
+                CliLog->info("> ...binary data " + QString::number(WrData.size()) + " size...");
+                NextThr = WrittenBytes + WrData.size();
+                MainEthernet->WriteData(WrData);
+                emit BytesWritten(WrData.size());
+            }
+            else
+            {
+                Error("File error", CLIER_PUTFER);
+                EthStatus.clearCommandActive();
+                return;
+            }
+            while (WrittenBytes < NextThr)
+            {
+                qApp->processEvents(QEventLoop::AllEvents, 100);
+            }
+        }
+        if (fp.isOpen())
+            fp.close();
+        emit TransferComplete();
+        CmdOk = true;
+        EthStatus.clearCommandActive();
+        TimeoutTimer->stop();
+        CurrentCommand = M_IDLE;
+        return;
     }
     case M_AGETFILE:
     case M_NEXT:
@@ -711,7 +708,7 @@ void Client::ParseReply(QByteArray ba)
             EthStatus.clearCommandActive();
             return;
         }
-        SendNextFileChunk();
+        SendCmd(M_APUTFILE);
         return;
         break;
     }

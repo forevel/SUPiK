@@ -532,16 +532,9 @@ void s_tablefields::vtoid(PublicClass::ValueStruct &vl, QString &out)
                 WARNMSG("");
             break;
         }
-        case FW_AUTONUM:
         case FW_NUMBER:
         case FW_FNUMBER:
         case FW_PLAIN:
-        case FW_MASKED:
-        case FW_EQUAT:
-        case FW_ID:
-        case FW_SPECIAL:
-        case FW_FLINK:
-        case FW_ILINK:
         {
             if (ff.delegate == FD_SPIN) // для спина отдельная обработка, ибо дурит как хочет
             {
@@ -558,6 +551,18 @@ void s_tablefields::vtoid(PublicClass::ValueStruct &vl, QString &out)
                     out += "." + sl.at(1).left(tmpInt2);
                 break;
             }
+            out = vl.Value;
+            break;
+        }
+        case FW_AUTONUM:
+        case FW_MASKED:
+        case FW_EQUAT:
+        case FW_ID:
+        case FW_SPECIAL:
+        case FW_FLINK:
+        case FW_ILINK:
+        case FW_PIXTE:
+        {
             out = vl.Value;
             break;
         }

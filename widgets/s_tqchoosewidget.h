@@ -6,8 +6,6 @@
 #include <QVariant>
 #include "../gen/publicclass.h"
 
-#define TOKEN   0x7F
-
 class s_tqChooseWidget : public QWidget
 {
     Q_OBJECT

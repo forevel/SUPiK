@@ -133,7 +133,9 @@
 #define DBLOGIN "supik"
 #define DBPSWD  "sysupik"
 #define SQLPORT 3306
-//#define SQLPORT 3333 // временно для отладки с виртуальной машиной
+
+#define TOKEN       0x7F // разделитель полей при передаче
+#define DATA_TOKEN  0x1F // разделитель внутри поля (файл/текст для FW_PIXTE)
 
 enum twocoldialog_modes
 {

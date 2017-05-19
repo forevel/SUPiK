@@ -117,6 +117,9 @@ QVariant FileModel::data(const QModelIndex &index, int role) const
 
 bool FileModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
+    Q_UNUSED(index);
+    Q_UNUSED(value);
+    Q_UNUSED(role);
 /*    if (index.isValid())
     {
         if (role == Qt::EditRole)
@@ -263,6 +266,7 @@ bool FileModel::setHeaderData(int section, Qt::Orientation orientation, const QV
 
 void FileModel::GotoFile(QModelIndex idx)
 {
+    Q_UNUSED(idx);
     // 1. вытащить ИД кликнутого элемента
     // 2. добавить в стек ИД элемента
     // 3. очистить модель
@@ -565,6 +569,8 @@ int FileModel::SetFirstTreeElements()
 
 int FileModel::SetTable(int Table, QString Id)
 {
+    Q_UNUSED(Table);
+    Q_UNUSED(Id);
 /*    if (Id == "0") // процедура установки таблицы имеет смысл только для корневого элемента
     {
         QString IndentSpaces;

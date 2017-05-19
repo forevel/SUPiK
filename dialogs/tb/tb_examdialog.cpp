@@ -26,6 +26,7 @@
 #include "../../widgets/s_tqtextedit.h"
 #include "../../widgets/s_tqwidget.h"
 #include "../../widgets/s_tqstackedwidget.h"
+#include "../../widgets/s_tqlinkswidget.h"
 #include "../../widgets/goodbadwidget.h"
 #include "../../widgets/waitwidget.h"
 #include "../../widgets/clevertimer.h"
@@ -380,11 +381,8 @@ QList<QScrollArea *> tb_examdialog::PrepareQuestionsByTheme(int theme, int quest
                 rb->setObjectName(QString::number(j));
                 connect(rb,SIGNAL(clicked(bool)),this,SLOT(AnswerChoosed()));
                 hlyout->addWidget(rb);
-                lbl = new s_tqLabel(mainvl.at(j));
-                font.setPointSize(13);
-                lbl->setFont(font);
-                lbl->setWordWrap(true);
-                hlyout->addWidget(lbl, 100);
+                s_tqLinksWidget *lw = new s_tqLinksWidget("9.22..0.5", mainvl.at(j)); // fw_pixte/tb/photo
+                hlyout->addWidget(lw, 100);
                 lyout->addLayout(hlyout);
             }
         }

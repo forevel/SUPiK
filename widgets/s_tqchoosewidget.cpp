@@ -168,9 +168,9 @@ void s_tqChooseWidget::pbclicked()
         TextWithPicDialog *dlg = new TextWithPicDialog(TEType);
         dlg->SetLink(ff.link);
         // вытаскиваем имя файла из textedit-а, если таковое присутствует
-        if (tmps.contains(TOKEN)) // есть составная запись
+        if (tmps.contains(DATA_TOKEN)) // есть составная запись
         {
-            QStringList tmpsl = tmps.split(TOKEN);
+            QStringList tmpsl = tmps.split(DATA_TOKEN);
             dlg->SetFileField(tmpsl.at(0));
             if (tmpsl.size() > 1) // есть и текст тоже
                 dlg->SetTEField(tmpsl.at(1));

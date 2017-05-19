@@ -19,7 +19,6 @@
 
 //#define TIMERSOFF // если не закомментировано, таймауты отключены
 #define SLNUMMAX    10 // максимальное число полей в запросе по столбцам
-#define TOKEN       0x7F // разделитель
 
 // M-commands (main)
 #define M_COMMAND   1000

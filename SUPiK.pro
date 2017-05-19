@@ -97,7 +97,8 @@ SOURCES += main.cpp\
     models/fileitem.cpp \
     models/filemodel.cpp \
     dialogs/sys/serverdialog.cpp \
-    dialogs/gen/textwithpicdialog.cpp
+    dialogs/gen/textwithpicdialog.cpp \
+    widgets/s_tqlinkswidget.cpp
 
 HEADERS  += startwindow.h \
     supik.h \
@@ -180,7 +181,8 @@ HEADERS  += startwindow.h \
     models/fileitem.h \
     models/filemodel.h \
     dialogs/sys/serverdialog.h \
-    dialogs/gen/textwithpicdialog.h
+    dialogs/gen/textwithpicdialog.h \
+    widgets/s_tqlinkswidget.h
 
 RESOURCES += \
     pic.qrc

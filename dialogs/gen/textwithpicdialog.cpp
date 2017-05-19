@@ -97,7 +97,7 @@ void TextWithPicDialog::tepbclicked()
         if (!sourcefile.isEmpty())
         {
             // составляем из файла и текста запись
-            tmps.insert(0, TOKEN);
+            tmps.insert(0, DATA_TOKEN);
             // оставляем только само имя файла
             QStringList sl = sourcefile.split("/");
             shortfile = sl.last();

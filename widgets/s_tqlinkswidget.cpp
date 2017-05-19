@@ -64,6 +64,18 @@ s_tqLinksWidget::s_tqLinksWidget(const QString &links, const QString &value, QWi
                 lbl->setPixmap(pm);
                 hlyout->addWidget(lbl);
             }
+            else
+            {
+                if (Cli->GetFile(QString::number(fltype), QString::number(flsubtype), tmpsl.at(0)) \
+                        != Client::CLIER_NOERROR)
+                {
+                    // добавим метку с изображением из файла
+                    s_tqLabel *lbl = new s_tqLabel;
+                    QPixmap pm(path);
+                    lbl->setPixmap(pm);
+                    hlyout->addWidget(lbl);
+                }
+            }
             if (tmpsl.size()>1)
             {
                 s_tqLabel *lbl = new s_tqLabel(tmpsl.at(1));

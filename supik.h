@@ -17,7 +17,7 @@
 
 #define SUPIK_PINGPERIOD    10
 
-#define PROGVER    "2.1.43"
+#define PROGVER    "2.1.49"
 
 #define SYSSTYLESHEET "background-image: url(:/res/SysWallpaper.png);"
 

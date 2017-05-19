@@ -16,6 +16,7 @@ public:
     QSize sizeHint();
     void setCurrentWidget(QWidget *w);
     void removeWidget(QWidget *w);
+    void clear();
     void setCurrentIndexLast();
 
 public slots:

@@ -93,3 +93,9 @@ void s_tqStackedWidget::removeWidget(QWidget *w)
         }
     }
 }
+
+void s_tqStackedWidget::clear()
+{
+    for (int i=0; i<count(); ++i)
+        widgets.removeAt(i);
+}

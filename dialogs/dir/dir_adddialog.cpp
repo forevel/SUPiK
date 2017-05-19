@@ -215,32 +215,24 @@ void dir_adddialog::CancelAndClose()
 void dir_adddialog::WriteAndClose()
 {
     int i;
-    s_tqComboBox *cbfield,*dirB;
-    s_tqLineEdit *levalue,*lename,*dirNameLE,*dirAliasLE;
-    s_tqSpinBox *sb;
     QString tmpString, FullTblename, ShortTblename;
     QStringList sl;
-    dirNameLE = this->findChild<s_tqLineEdit *>("dirname");
-    dirAliasLE = this->findChild<s_tqLineEdit *>("dirAlias");
     s_tqChooseWidget *dirAccessCW = this->findChild<s_tqChooseWidget *>("dirAccess");
-    dirB = this->findChild<s_tqComboBox *>("dirBelong");
-    sb = this->findChild<s_tqSpinBox *>("dirFieldNum");
-    if ((dirNameLE == 0) || (dirAliasLE == 0) || (dirAccessCW == 0) || (dirB == 0) || (sb == 0))
-    {
-        DBGMSG;
-        return;
-    }
+    QString tmps, dirAlias;
+    WDFunc::LEData(this, "dirAlias", dirAlias);
     if (IsDir)
     {
-        QString tmps = dirAliasLE->text();
-        FullTblename = tmps+"_полн";
-        ShortTblename = tmps+"_сокращ";
+        FullTblename = dirAlias+"_полн";
+        ShortTblename = dirAlias+"_сокращ";
     }
     else
-        FullTblename = dirAliasLE->text();
-    int numfields = sb->value();
-    QString dirdb = dirBelongAliases.value(dirB->currentText());
-    QString tble = dirNameLE->text();
+        FullTblename = dirAlias;
+    double numfields;
+    WDFunc::SPBData(this, "dirFieldNum", numfields);
+    WDFunc::CBData(this, "dirBelong", tmps);
+    QString dirdb = dirBelongAliases.value(tmps);
+    QString tble;
+    WDFunc::LEData(this, "dirname", tble);
     // проверяем, существует ли таблица, на которую пытаются сослаться поля справочника
     sqlc.GetColumnsFromTable(dirdb, tble);
     if (sqlc.result)
@@ -250,13 +242,8 @@ void dir_adddialog::WriteAndClose()
         for (i = 0; i < numfields; i++)
         {
             //      запоминаем его значение в список sl
-            cbfield = this->findChild<s_tqComboBox *>("field."+QString::number(i));
-            if (cbfield == 0)
-            {
-                DBGMSG;
-                return;
-            }
-            sl << cbfield->currentText();
+            WDFunc::CBData(this, "field."+QString::number(i), tmps);
+            sl << tmps;
         }
         // делаем create table с запомненным списком sl
         sqlc.CreateTable(dirdb, tble, sl);
@@ -284,17 +271,12 @@ void dir_adddialog::WriteAndClose()
         // для каждого поля "cbfield"
         for (i=0; i<numfields; i++)
         {
-            cbfield = this->findChild<s_tqComboBox *>("field."+QString::number(i));
-            if (cbfield == 0)
-            {
-                DBGMSG;
-                return;
-            }
+            WDFunc::CBData(this, "field."+QString::number(i), tmps);
             //      проверяем наличие такого элемента в считанной структуре
-            int cmpslidx = cmpsl.indexOf(cbfield->currentText());
+            int cmpslidx = cmpsl.indexOf(tmps);
             if (cmpslidx == -1)
                 //      если такого нет, запоминаем в список sl
-                sl << cbfield->currentText();
+                sl << tmps;
             else
                 //      в противном случае удаляем элемент из списка непросмотренных
                 cmpsl.removeAt(cmpslidx);
@@ -336,19 +318,13 @@ void dir_adddialog::WriteAndClose()
     // теперь для каждого значения в полях levalue, cbfield сравним значения cbfield со значениями в соответствующих списках
     for (i = 0; i < numfields; i++)
     {
-        levalue = this->findChild<s_tqLineEdit *>("value."+QString::number(i));
-        lename = this->findChild<s_tqLineEdit *>("name."+QString::number(i));
-        cbfield = this->findChild<s_tqComboBox *>("field."+QString::number(i));
-        s_tqCheckBox *chb = this->findChild<s_tqCheckBox *>("short."+QString::number(i));
-        if ((levalue == 0) || (lename == 0) || (cbfield == 0) || (chb == 0))
-        {
-            DBGMSG;
-            return;
-        }
+        bool isChecked;
+        WDFunc::CBData(this, "field."+QString::number(i), tmps);
+        WDFunc::ChBData(this, "short."+QString::number(i), isChecked);
         // удаляем из наших списков найденное в полях значение, если хоть одно останется, значит, надо будет его удалить потом
-        FullTbleDeleteList.removeAll(cbfield->currentText());
-        if (chb->isChecked())
-            ShortTbleDeleteList.removeAll(cbfield->currentText());
+        FullTbleDeleteList.removeAll(tmps);
+        if (isChecked)
+            ShortTbleDeleteList.removeAll(tmps);
     }
     // если есть значения на удаление
     if (!FullTbleDeleteList.isEmpty())
@@ -388,25 +364,22 @@ void dir_adddialog::WriteAndClose()
           "date" << "deleted" << "idpers";
     for (i = 0; i < numfields; i++)
     {
-        levalue = this->findChild<s_tqLineEdit *>("value."+QString::number(i));
-        lename = this->findChild<s_tqLineEdit *>("name."+QString::number(i));
-        cbfield = this->findChild<s_tqComboBox *>("field."+QString::number(i));
-        s_tqCheckBox *chb = this->findChild<s_tqCheckBox *>("short."+QString::number(i));
-        if ((levalue == 0) || (lename == 0) || (cbfield == 0) || (chb == 0))
-        {
-            DBGMSG;
-            return;
-        }
+        QString levalue, lename, cbtext;
+        bool isChecked;
+        WDFunc::LEData(this, "value."+QString::number(i), levalue);
+        WDFunc::LEData(this, "name."+QString::number(i), lename);
+        WDFunc::CBData(this, "field."+QString::number(i), cbtext);
+        WDFunc::ChBData(this, "short."+QString::number(i), isChecked);
         vl.clear();
-        vl << cbfield->currentText() << dirdb+"."+tble  << "" << lename->text() << levalue->text(); // "" - на месте ключевого поля, т.к. ИД пишем далее
+        vl << cbtext << dirdb+"."+tble << "" << lename << levalue; // "" - на месте ключевого поля, т.к. ИД пишем далее
         tmpString = QString("%1").arg(i+1, 2, 10, QChar('0')); // fieldsorder = i+1, т.к. на 0-м месте должен идти ИД
         vl << tmpString << FullTblename << pc.DateTime << "0" << QString::number(pc.idPers);
         cmpvl.clear();
-        cmpvl << FullTblename << cbfield->currentText();
+        cmpvl << FullTblename << cbtext;
         WriteToTfl(fl, vl, cmpfl, cmpvl);
         vl.replace(6, ShortTblename); // заменяем полное наименование на сокращённое
-        cmpvl = QStringList() << ShortTblename << cbfield->currentText();
-        if (chb->isChecked())
+        cmpvl = QStringList() << ShortTblename << cbtext;
+        if (isChecked)
             WriteToTfl(fl, vl, cmpfl, cmpvl);
         else
         {
@@ -428,11 +401,12 @@ void dir_adddialog::WriteAndClose()
     }
     // запись в tablefields полей ДАТА и ИДПОЛЬЗ
     cmpvl = QStringList() << FullTblename << "date";
-    vl = QStringList() << "date" << dirdb+"."+tble << "" << "Дата" << "2.21.." << QString("%1").arg(numfields+1, 2, 10, QChar('0')) << \
+    int tmpi = numfields;
+    vl = QStringList() << "date" << dirdb+"."+tble << "" << "Дата" << "2.21.." << QString("%1").arg(tmpi+1, 2, 10, QChar('0')) << \
                           FullTblename << pc.DateTime << "0" << QString::number(pc.idPers);
     WriteToTfl(fl, vl, cmpfl, cmpvl);
     cmpvl = QStringList() << FullTblename << "idpers";
-    vl = QStringList() << "idpers" << dirdb+"."+tble << "" << "ИДПольз" << "2.2..Персонал_полн.ФИО" << QString("%1").arg(numfields+2, 2, 10, QChar('0')) << \
+    vl = QStringList() << "idpers" << dirdb+"."+tble << "" << "ИДПольз" << "2.2..Персонал_полн.ФИО" << QString("%1").arg(tmpi+2, 2, 10, QChar('0')) << \
                           FullTblename << pc.DateTime << "0" << QString::number(pc.idPers);
     WriteToTfl(fl, vl, cmpfl, cmpvl);
 
@@ -454,7 +428,7 @@ void dir_adddialog::WriteAndClose()
     tble = "dirlist";
     if (IsDir)
     {
-        QString tmpdir = dirAliasLE->text();
+        QString tmpdir = dirAlias;
         int diridx = tmpdir.indexOf("_полн");
         if (diridx != -1)
             tmpdir.chop(5);
@@ -575,13 +549,9 @@ void dir_adddialog::TbleNameChanged(QString tblename)
     // 5. Если idx >= NumCols, idx = NumCols-1
     // 6. Заполнить комбобокс моделью mdl
     // 1
-    s_tqComboBox *dirB = this->findChild<s_tqComboBox *>("dirBelong");
-    if (dirB == 0)
-    {
-        DBGMSG;
-        return;
-    }
-    QStringList dirColumns = sqlc.GetColumnsFromTable(dirBelongAliases[dirB->currentText()], tblename);
+    QString tmps;
+    WDFunc::CBData(this, "dirBelong", tmps);
+    QStringList dirColumns = sqlc.GetColumnsFromTable(dirBelongAliases[tmps], tblename);
     dirColumns.removeAt(dirColumns.indexOf("id"+tblename)); // убираем ИД, т.к. с ним разговор особый
     if (sqlc.result)
     {
@@ -848,24 +818,13 @@ void dir_adddialog::fillFields()
 
 void dir_adddialog::transliteDirName()
 {
-    s_tqLineEdit *dirNameLE = new s_tqLineEdit;
-    s_tqLineEdit *dirAliasLE = new s_tqLineEdit;
-    dirNameLE = this->findChild<s_tqLineEdit *>("dirname");
-    if (dirNameLE == 0)
+    QString tmps;
+    WDFunc::LEData(this, "dirname", tmps);
+    if (tmps.isEmpty())
     {
-        DBGMSG;
-        return;
-    }
-    if (dirNameLE->text().isEmpty())
-    {
-        dirAliasLE = this->findChild<s_tqLineEdit *>("dirAlias");
-        if (dirAliasLE == 0)
-        {
-            DBGMSG;
-            return;
-        }
-        QString tmpString = pc.getTranslit(dirAliasLE->text());
-        dirNameLE->setText(tmpString);
+        WDFunc::LEData(this, "dirAlias", tmps);
+        QString tmpString = pc.getTranslit(tmps);
+        WDFunc::SetLEData(this, "dirname", tmpString);
     }
 }
 
@@ -890,24 +849,16 @@ void dir_adddialog::FPBPressed()
     QDialog *dlg = new QDialog(this);
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     // заполняем элементы конструктора ссылок
-    s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("value."+QString::number(idx));
-    if (le == 0)
-    {
-        DBGMSG;
-        return;
-    }
-    QStringList links = le->text().split("."); // формируем links
+    QString tmps;
+    WDFunc::LEData(this, "value."+QString::number(idx), tmps);
+    QStringList links = tmps.split("."); // формируем links
 
     s_tqLabel *lbl1 = new s_tqLabel ("Тип поля");
     s_tqLabel *lbl2 = new s_tqLabel ("Тип ссылки");
-    s_tqComboBox *dtypecb = new s_tqComboBox;
-    dtypecb->setObjectName("dtypecb");
-    QStringListModel *cbmodel = new QStringListModel;
-    QStringList tmpStringList; // делегаты
-    tmpStringList << "0.Простое поле" << "1.Поле ввода" << "2.Поле выбора" << "3.Выпадающий список" << "4.Неактивное поле" <<  \
+    // делегаты
+    QStringList tmpStringList = QStringList() << "0.Простое поле" << "1.Поле ввода" << "2.Поле выбора" << "3.Выпадающий список" << "4.Неактивное поле" <<  \
                      "5.Счётчик" << "6.Поле выбора с вводом" << "7.Поле с рамкой" << "8.Поле бинарного ввода" << "9.Многострочное поле";
-    cbmodel->setStringList(tmpStringList);
-    dtypecb->setModel(cbmodel);
+    s_tqComboBox *dtypecb = WDFunc::NewCB(this, "dtypecb", tmpStringList);
     connect(dtypecb,SIGNAL(currentIndexChanged(int)),this,SLOT(DTypeCBIndexChanged(int)));
     adjustFieldSize(dtypecb, 25);
     s_tqComboBox *ltypecb = new s_tqComboBox;
@@ -935,13 +886,7 @@ void dir_adddialog::FPBPressed()
         return;
     }
     int NumFields = spb->value();
-    spb = new s_tqSpinBox;
-    spb->setObjectName("dependsspb");
-    spb->setMaximum(NumFields);
-    spb->setMinimum(-1);
-    spb->setDecimals(0);
-    spb->setSingleStep(1);
-    spb->setValue(-1);
+    spb = WDFunc::NewSPB(this, "dependsspb", -1, NumFields, 1, 0);
     hlyout->addWidget(spb);
     if ((links.size()>2) && (!links.at(2).isEmpty()))
         spb->setValue(links.at(2).toInt());
@@ -949,9 +894,6 @@ void dir_adddialog::FPBPressed()
 
     s_tqStackedWidget *sw = new s_tqStackedWidget;
     sw->setObjectName("linksconstrsw");
-    for (int i=0; i<FW_COUNT; i++)
-        sw->addWidget(SetWidget(i));
-
     lyout->addWidget(sw);
     lyout->setSizeConstraint(QLayout::SetFixedSize);
     hlyout = new QHBoxLayout;
@@ -968,16 +910,12 @@ void dir_adddialog::FPBPressed()
     if (links.size()>1)
     {
         dtypecb->setCurrentIndex(links.at(0).toInt());
-//        DTypeCBIndexChanged();
         QString LTypeCBString = FW_Links.at(links.at(1).toInt());
         ltypecb->setCurrentText(LTypeCBString);
-//        LTypeCBIndexChanged(LTypeCBString);
     }
     else
-//    dlg->show();
         DTypeCBIndexChanged(0); // если links нет, то хотя бы установить выбор ссылки по 0-му делегату
     dlg->exec();
-//    updateTWFields(sb->value());
 }
 
 s_tqWidget *dir_adddialog::SetWidget(int FType)
@@ -989,7 +927,6 @@ s_tqWidget *dir_adddialog::SetWidget(int FType)
     s_tqWidget *w = new s_tqWidget;
     s_tqComboBox *cb;
     s_tqLineEdit *le;
-    QStringListModel *slm = new QStringListModel;
     QStringList vls = sqlc.GetValuesFromTableByColumn("sup", "tablefields", "tablename", "tablename");
     vls.removeDuplicates();
     switch (FType)
@@ -1009,10 +946,7 @@ s_tqWidget *dir_adddialog::SetWidget(int FType)
         lbl = new s_tqLabel("Таблица");
         hlyout->addWidget(lbl);
         hlyout->setAlignment(lbl,Qt::AlignRight);
-        cb = new s_tqComboBox;
-        slm->setStringList(vls);
-        cb->setModel(slm);
-        cb->setObjectName("tcb."+QString::number(FW_LINK));
+        cb = WDFunc::NewCB(this, "tcb."+QString::number(FW_LINK), vls);
         connect(cb,SIGNAL(currentTextChanged(QString)),this,SLOT(TbleChoosed()));
         hlyout->addWidget(cb);
         vlyout->addLayout(hlyout);
@@ -1020,8 +954,7 @@ s_tqWidget *dir_adddialog::SetWidget(int FType)
         lbl = new s_tqLabel("Поле");
         hlyout->addWidget(lbl);
         hlyout->setAlignment(lbl,Qt::AlignRight);
-        cb = new s_tqComboBox;
-        cb->setObjectName("fwlinkcb2");
+        cb = WDFunc::NewCB(this, "fwlinkcb2");
         hlyout->addWidget(cb);
         vlyout->addLayout(hlyout);
         break;
@@ -1035,11 +968,7 @@ s_tqWidget *dir_adddialog::SetWidget(int FType)
             lbl = new s_tqLabel("Таблица"+QString::number(i));
             hlyout->addWidget(lbl);
             hlyout->setAlignment(lbl,Qt::AlignRight);
-            cb = new s_tqComboBox;
-            slm = new QStringListModel;
-            slm->setStringList(vls);
-            cb->setModel(slm);
-            cb->setObjectName("tble."+QString::number(FW_DLINK+FW_COUNT+i)); // +20 - чтобы точно перекрыть диапазон возможных вариантов полей
+            cb = WDFunc::NewCB(this, "tble."+QString::number(FW_DLINK+FW_COUNT+i), vls); // +20 - чтобы точно перекрыть диапазон возможных вариантов полей
             connect(cb,SIGNAL(currentTextChanged(QString)),this,SLOT(TbleChoosed()));
             hlyout->addWidget(cb);
             vlyout->addLayout(hlyout);
@@ -1047,8 +976,7 @@ s_tqWidget *dir_adddialog::SetWidget(int FType)
             lbl = new s_tqLabel("Поле"+QString::number(i));
             hlyout->addWidget(lbl);
             hlyout->setAlignment(lbl,Qt::AlignRight);
-            cb = new s_tqComboBox;
-            cb->setObjectName("tblefield."+QString::number(i));
+            cb = WDFunc::NewCB(this, "tblefield."+QString::number(i));
             hlyout->addWidget(cb);
             vlyout->addLayout(hlyout);
         }
@@ -1059,11 +987,7 @@ s_tqWidget *dir_adddialog::SetWidget(int FType)
         lbl = new s_tqLabel("Таблица");
         hlyout->addWidget(lbl);
         hlyout->setAlignment(lbl,Qt::AlignRight);
-        cb = new s_tqComboBox;
-        slm = new QStringListModel;
-        slm->setStringList(vls);
-        cb->setModel(slm);
-        cb->setObjectName("tcb."+QString::number(FW_ALLINK));
+        cb = WDFunc::NewCB(this, "tcb."+QString::number(FW_ALLINK), vls);
         connect(cb,SIGNAL(currentTextChanged(QString)),this,SLOT(TbleChoosed()));
         hlyout->addWidget(cb);
         vlyout->addLayout(hlyout);
@@ -1071,8 +995,7 @@ s_tqWidget *dir_adddialog::SetWidget(int FType)
         lbl = new s_tqLabel("Поле");
         hlyout->addWidget(lbl);
         hlyout->setAlignment(lbl,Qt::AlignRight);
-        cb = new s_tqComboBox;
-        cb->setObjectName("fwallinkcb2");
+        cb = WDFunc::NewCB(this, "fwallinkcb2");
         hlyout->addWidget(cb);
         vlyout->addLayout(hlyout);
         break;
@@ -1082,11 +1005,7 @@ s_tqWidget *dir_adddialog::SetWidget(int FType)
         lbl = new s_tqLabel("Таблица");
         hlyout->addWidget(lbl);
         hlyout->setAlignment(lbl,Qt::AlignRight);
-        cb = new s_tqComboBox;
-        slm = new QStringListModel;
-        slm->setStringList(vls);
-        cb->setModel(slm);
-        cb->setObjectName("tcb."+QString::number(FW_MAXLINK));
+        cb = WDFunc::NewCB(this, "tcb."+QString::number(FW_MAXLINK), vls);
         connect(cb,SIGNAL(currentTextChanged(QString)),this,SLOT(TbleChoosed()));
         hlyout->addWidget(cb);
         vlyout->addLayout(hlyout);
@@ -1094,24 +1013,21 @@ s_tqWidget *dir_adddialog::SetWidget(int FType)
         lbl = new s_tqLabel("Поле значения");
         hlyout->addWidget(lbl);
         hlyout->setAlignment(lbl,Qt::AlignRight);
-        cb = new s_tqComboBox;
-        cb->setObjectName("fwmaxlinkcb2");
+        cb = WDFunc::NewCB(this, "fwmaxlinkcb2");
         hlyout->addWidget(cb);
         vlyout->addLayout(hlyout);
         hlyout = new QHBoxLayout;
         lbl = new s_tqLabel("Поле сравнения");
         hlyout->addWidget(lbl);
         hlyout->setAlignment(lbl,Qt::AlignRight);
-        cb = new s_tqComboBox;
-        cb->setObjectName("fwmaxlinkcb3");
+        cb = WDFunc::NewCB(this, "fwmaxlinkcb3");
         hlyout->addWidget(cb);
         vlyout->addLayout(hlyout);
         hlyout = new QHBoxLayout;
         lbl = new s_tqLabel("Значение (опц.)");
         hlyout->addWidget(lbl);
         hlyout->setAlignment(lbl,Qt::AlignRight);
-        le = new s_tqLineEdit;
-        le->setObjectName("fwmaxlinkle");
+        le = WDFunc::NewLE(this, "fwmaxlinkle");
         hlyout->addWidget(le);
         vlyout->addLayout(hlyout);
         break;
@@ -1121,8 +1037,7 @@ s_tqWidget *dir_adddialog::SetWidget(int FType)
         lbl = new s_tqLabel("Регулярное выражение");
         hlyout->addWidget(lbl);
         hlyout->setAlignment(lbl,Qt::AlignRight);
-        le = new s_tqLineEdit;
-        le->setObjectName("fwmaskedle");
+        le = WDFunc::NewLE(this, "fwmaskedle");
         le->setToolTip("Пример: [0-9]{0,2}-[0-9]{0,9}");
         hlyout->addWidget(le);
         vlyout->addLayout(hlyout);
@@ -1133,16 +1048,11 @@ s_tqWidget *dir_adddialog::SetWidget(int FType)
         lbl = new s_tqLabel("Выражение1");
         hlyout->addWidget(lbl);
         hlyout->setAlignment(lbl,Qt::AlignRight);
-        le = new s_tqLineEdit;
-        le->setObjectName("fwequatle");
+        le = WDFunc::NewLE(this, "fwequatle");
         hlyout->addWidget(le);
         vlyout->addLayout(hlyout);
         QStringList ops = QStringList() << "+" << "-" << "*" << "/";
-        QStringListModel *opsmdl = new QStringListModel;
-        opsmdl->setStringList(ops);
-        cb = new s_tqComboBox;
-        cb->setObjectName("fwequatcb");
-        cb->setModel(opsmdl);
+        cb = WDFunc::NewCB(this, "fwequatcb", ops);
         hlyout = new QHBoxLayout;
         lbl = new s_tqLabel("Операция");
         hlyout->addWidget(lbl);
@@ -1153,8 +1063,7 @@ s_tqWidget *dir_adddialog::SetWidget(int FType)
         lbl = new s_tqLabel("Выражение2");
         hlyout->addWidget(lbl);
         hlyout->setAlignment(lbl,Qt::AlignRight);
-        le = new s_tqLineEdit;
-        le->setObjectName("fwequatle2");
+        le = WDFunc::NewLE(this, "fwequatle2");
         hlyout->addWidget(le);
         vlyout->addLayout(hlyout);
         break;
@@ -1181,11 +1090,7 @@ s_tqWidget *dir_adddialog::SetWidget(int FType)
         lbl = new s_tqLabel("Таблица");
         hlyout->addWidget(lbl);
         hlyout->setAlignment(lbl,Qt::AlignRight);
-        cb = new s_tqComboBox;
-        slm = new QStringListModel;
-        slm->setStringList(vls);
-        cb->setModel(slm);
-        cb->setObjectName("tcb."+QString::number(FW_SPECIAL));
+        cb = WDFunc::NewCB(this, "tcb."+QString::number(FW_SPECIAL), vls);
         connect(cb,SIGNAL(currentTextChanged(QString)),this,SLOT(TbleChoosed()));
         hlyout->addWidget(cb);
         vlyout->addLayout(hlyout);
@@ -1193,8 +1098,7 @@ s_tqWidget *dir_adddialog::SetWidget(int FType)
         lbl = new s_tqLabel("Поле");
         hlyout->addWidget(lbl);
         hlyout->setAlignment(lbl,Qt::AlignRight);
-        cb = new s_tqComboBox;
-        cb->setObjectName("fwspecialcb2");
+        cb = WDFunc::NewCB(this, "fwspecialcb2");
         hlyout->addWidget(cb);
         vlyout->addLayout(hlyout);
         break;
@@ -1310,7 +1214,10 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
         DBGMSG;
         return;
     }
-    sw->setCurrentIndex(wdgtsidx);
+    s_tqWidget *w = SetWidget(wdgtsidx);
+    sw->clear();
+    sw->addWidget(w);
+    sw->setCurrentWidget(w);
     QString tmps;
     WDFunc::LEData(this, "value."+QString::number(idx), tmps);
     QStringList links = tmps.split("."); // формируем links
@@ -1445,75 +1352,42 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
 void dir_adddialog::ConstructLink()
 {
     QString links;
-    s_tqComboBox *cb = this->findChild<s_tqComboBox *>("dtypecb");
-    if (cb == 0)
-    {
-        DBGMSG;
-        return;
-    }
-    links.append(QString::number(cb->currentIndex()));
+    double tmpd;
+    int tmpi;
+    QString tmps;
+    WDFunc::CBIndex(this, "dtypecb", tmpi);
+    links.append(QString::number(tmpi));
     links.append(".");
-    cb = this->findChild<s_tqComboBox *>("ltypecb");
-    if (cb == 0)
-    {
-        DBGMSG;
-        return;
-    }
-    links.append(QString::number(FW_Links.indexOf(cb->currentText())));
+    WDFunc::CBData(this, "ltypecb", tmps);
+    links.append(QString::number(FW_Links.indexOf(tmps)));
     links.append(".");
-    s_tqSpinBox *spb = this->findChild<s_tqSpinBox *>("dependsspb");
-    if (spb == 0)
-    {
-        DBGMSG;
-        return;
-    }
-    int spbvalue = spb->value();
-    if (spbvalue != -1)
-        links.append(QString::number(spb->value()));
+    WDFunc::SPBData(this, "dependsspb", tmpd);
+    if (tmpd != -1)
+        links.append(QString::number(tmpd));
     links.append(".");
-    int CurFW = cb->currentText().split(".").at(0).toInt(); // вытаскиваем номер типа ссылки из её названия
+    int CurFW = tmps.split(".").at(0).toInt(); // вытаскиваем номер типа ссылки из её названия
     switch (CurFW)
     {
     case FW_ALLINK:
     {
-        s_tqComboBox *tcb = this->findChild<s_tqComboBox *>("tcb."+QString::number(FW_ALLINK));
-        if (tcb == 0)
-        {
-            DBGMSG;
-            return;
-        }
-        links.append(tcb->currentText());
+        WDFunc::CBData(this, "tcb."+QString::number(FW_ALLINK), tmps);
+        links.append(tmps);
         links.append(".");
-        tcb = this->findChild<s_tqComboBox *>("fwallinkcb2");
-        if (tcb == 0)
-        {
-            DBGMSG;
-            return;
-        }
-        links.append(tcb->currentText());
+        WDFunc::CBData(this, "fwallinkcb2", tmps);
+        links.append(tmps);
         break;
     }
     case FW_DLINK:
     {
         for (int i = 0; i < 4; i++)
         {
-            s_tqComboBox *cb = this->findChild<s_tqComboBox *>("tble."+QString::number(i));
-            if (cb == 0)
-            {
-                DBGMSG;
-                return;
-            }
-            if (cb->currentText().isEmpty())
+            WDFunc::CBData(this, "tble."+QString::number(i), tmps);
+            if (tmps.isEmpty())
                 break;
-            links.append(cb->currentText());
+            links.append(tmps);
             links.append(".");
-            cb = this->findChild<s_tqComboBox *>("tblefield."+QString::number(i));
-            if (cb == 0)
-            {
-                DBGMSG;
-                return;
-            }
-            links.append(cb->currentText());
+            WDFunc::CBData(this, "tblefield."+QString::number(i), tmps);
+            links.append(tmps);
             links.append(".");
         }
         links.chop(1); // убрали последнюю точку
@@ -1521,164 +1395,84 @@ void dir_adddialog::ConstructLink()
     }
     case FW_EQUAT:
     {
-        s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fwequatle");
-        if (le == 0)
-        {
-            DBGMSG;
-            return;
-        }
-        links.append(le->text());
-        le = this->findChild<s_tqLineEdit *>("fwequatle2");
-        if (le == 0)
-        {
-            DBGMSG;
-            return;
-        }
-        if (!le->text().isEmpty())
+        WDFunc::LEData(this, "fwequatle", tmps);
+        links.append(tmps);
+        WDFunc::LEData(this, "fwequatle2", tmps);
+        if (!tmps.isEmpty())
         {
             links.append(".");
             QString ops[4] = {"s","r","m","d"};
-            s_tqComboBox *cb = this->findChild<s_tqComboBox *>("fwequatcb");
-            if (cb == 0)
-            {
-                DBGMSG;
-                return;
-            }
-            links.append(ops[cb->currentIndex()]);
+            WDFunc::CBIndex(this, "fwequatcb", tmpi);
+            links.append(ops[tmpi]);
             links.append(".");
-            links.append(le->text());
+            links.append(tmps);
         }
         break;
     }
     case FW_ID:
     {
-        spb = this->findChild<s_tqSpinBox *>("id");
-        if (spb == 0)
-        {
-            DBGMSG;
-            return;
-        }
-        links.append(QString::number(spb->value()));
+        WDFunc::SPBData(this, "id", tmpd);
+        links.append(QString::number(tmpd));
         break;
     }
     case FW_LINK:
     {
-        s_tqComboBox *tcb = this->findChild<s_tqComboBox *>("tcb."+QString::number(FW_LINK));
-        if (tcb == 0)
-        {
-            DBGMSG;
-            return;
-        }
-        links.append(tcb->currentText());
+        WDFunc::CBData(this, "tcb."+QString::number(FW_LINK), tmps);
+        links.append(tmps);
         links.append(".");
-        tcb = this->findChild<s_tqComboBox *>("fwlinkcb2");
-        if (tcb == 0)
-        {
-            DBGMSG;
-            return;
-        }
-        links.append(tcb->currentText());
+        WDFunc::CBData(this, "fwlinkcb2", tmps);
+        links.append(tmps);
         break;
     }
     case FW_MASKED:
     {
-        s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fwmaskedle");
-        if (le == 0)
-        {
-            DBGMSG;
-            return;
-        }
+        WDFunc::LEData(this, "fwmaskedle", tmps);
         links.append("\\\"^"); // в lineedit-е \", для БД кавычки надо ещё больше обрамить
-        links.append(le->text());
+        links.append(tmps);
         links.append("$\\\"");
         break;
     }
     case FW_MAXLINK:
     {
-        s_tqComboBox *tcb = this->findChild<s_tqComboBox *>("tcb."+QString::number(FW_MAXLINK));
-        if (tcb == 0)
-        {
-            DBGMSG;
-            return;
-        }
-        links.append(tcb->currentText());
+        WDFunc::CBData(this, "tcb."+QString::number(FW_MAXLINK), tmps);
+        links.append(tmps);
         links.append(".");
-        tcb = this->findChild<s_tqComboBox *>("fwmaxlinkcb2");
-        if (tcb == 0)
-        {
-            DBGMSG;
-            return;
-        }
-        links.append(tcb->currentText());
+        WDFunc::CBData(this, "fwmaxlinkcb2", tmps);
+        links.append(tmps);
         links.append(".");
-        tcb = this->findChild<s_tqComboBox *>("fwmaxlinkcb3");
-        if (tcb == 0)
-        {
-            DBGMSG;
-            return;
-        }
-        links.append(tcb->currentText());
-        s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("fwmaxlinkle");
-        if (le == 0)
-        {
-            DBGMSG;
-            return;
-        }
-        if (!le->text().isEmpty())
+        WDFunc::CBData(this, "fwmaxlinkcb3", tmps);
+        links.append(tmps);
+        WDFunc::LEData(this, "fwmaxlinkle", tmps);
+        if (!tmps.isEmpty())
         {
             links.append(".");
-            links.append(le->text());
+            links.append(tmps);
         }
         break;
     }
     case FW_NUMBER:
     {
-        spb = this->findChild<s_tqSpinBox *>("number");
-        if (spb == 0)
-        {
-            DBGMSG;
-            return;
-        }
-        links.append(QString::number(spb->value()));
+        WDFunc::SPBData(this, "number", tmpd);
+        links.append(QString::number(tmpd));
         break;
     }
     case FW_SPECIAL:
     {
-        s_tqComboBox *tcb = this->findChild<s_tqComboBox *>("tcb."+QString::number(FW_SPECIAL));
-        if (tcb == 0)
-        {
-            DBGMSG;
-            return;
-        }
-        links.append(tcb->currentText());
+        WDFunc::CBData(this, "tcb."+QString::number(FW_SPECIAL), tmps);
+        links.append(tmps);
         links.append(".");
-        tcb = this->findChild<s_tqComboBox *>("fwspecialcb2");
-        if (tcb == 0)
-        {
-            DBGMSG;
-            return;
-        }
-        links.append(tcb->currentText());
+        WDFunc::CBData(this, "fwspecialcb2", tmps);
+        links.append(tmps);
         break;
     }
     case FW_FNUMBER:
     {
         QString tmps;
-        spb = this->findChild<s_tqSpinBox *>("fnumber");
-        if (spb == 0)
-        {
-            DBGMSG;
-            return;
-        }
-        tmps.fill('n', spb->value());
+        WDFunc::SPBData(this, "fnumber", tmpd);
+        tmps.fill('n', tmpd);
         links.append(tmps);
-        spb = this->findChild<s_tqSpinBox *>("fnumber2");
-        if (spb == 0)
-        {
-            DBGMSG;
-            return;
-        }
-        tmps.fill('d', spb->value());
+        WDFunc::SPBData(this, "fnumber2", tmpd);
+        tmps.fill('d', tmpd);
         links.append(tmps);
         break;
     }
@@ -1704,12 +1498,6 @@ void dir_adddialog::ConstructLink()
     default:
         break;
     }
-    s_tqLineEdit *le = this->findChild<s_tqLineEdit *>("value."+QString::number(idx));
-    if (le == 0)
-    {
-        DBGMSG;
-        return;
-    }
-    le->setText(links);
+    WDFunc::SetLEData(this, "value."+QString::number(idx), links);
     emit closelinkdialog();
 }

@@ -459,12 +459,11 @@ void dir_maindialog::SystemSlaveContextMenu(QPoint)
     connect (DeleteAction, SIGNAL(triggered()), this, SLOT(DeleteData()));
     QMenu *ContextMenu = new QMenu;
     ContextMenu->setTitle("Context menu");
-    if (SlaveTVAccess & pc.access & 0x2492) // права на изменение
+    if (SlaveTVAccess & pc.access & 0xAAAA) // права на изменение
     {
         ContextMenu->addAction(AddData);
         ContextMenu->addAction(ChangeDataChild);
-    }
-    if (SlaveTVAccess & pc.access & 0x4924) // права на удаление
         ContextMenu->addAction(DeleteAction);
+    }
     ContextMenu->exec(QCursor::pos()); // если есть права на удаление, на изменение тоже должны быть
 }

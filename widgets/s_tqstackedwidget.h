@@ -29,6 +29,8 @@ private:
     QList<QWidget *> widgets;
     QVBoxLayout *lyout;
 
+    void DeleteWidgetFromLayout(QWidget *w);
+
 protected:
     void showCurrentWidget();
 

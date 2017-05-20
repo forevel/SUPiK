@@ -36,6 +36,28 @@ void s_tqStackedWidget::CurrentWidgetClosed()
     setCurrentIndexLast();
 }
 
+void s_tqStackedWidget::DeleteWidgetFromLayout(QWidget *w)
+{
+    for (int j=0; j<lyout->count(); ++j)
+    {
+        if (lyout->itemAt(j)->widget() == w)
+        {
+            QLayoutItem *item = lyout->itemAt(j);
+            if (item)
+            {
+                lyout->removeItem(item);
+                if (w)
+                {
+                    lyout->removeWidget(w);
+                    w->deleteLater();
+                }
+                delete item;
+            }
+            return;
+        }
+    }
+}
+
 void s_tqStackedWidget::setCurrentIndexLast()
 {
     curr_index = count()-1;
@@ -88,6 +110,7 @@ void s_tqStackedWidget::removeWidget(QWidget *w)
     {
         if (widgets.at(i) == w)
         {
+            DeleteWidgetFromLayout(w);
             widgets.removeAt(i);
             return;
         }
@@ -97,5 +120,9 @@ void s_tqStackedWidget::removeWidget(QWidget *w)
 void s_tqStackedWidget::clear()
 {
     for (int i=0; i<count(); ++i)
-        widgets.removeAt(i);
+    {
+        QWidget *w = widgets.takeAt(i);
+        DeleteWidgetFromLayout(w);
+    }
 }
+

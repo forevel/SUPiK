@@ -197,7 +197,7 @@ void Wh_Editor::AddNewPlace()
 
 void Wh_Editor::ChangeWh(QString str)
 {
-    // достанем индекс склада по имени str из whplaces
+/*    // достанем индекс склада по имени str из whplaces
     QStringList PlaceID;
     QString table = "Склады размещение_полн";
     QStringList fields = QStringList("ИД");
@@ -234,7 +234,7 @@ void Wh_Editor::ChangeWh(QString str)
     IDs.push(ID);
     SomethingChanged = false;
     // создадим новый корневой виджет и положим его в stw, вызовем SetCells для нового ID
-    BuildWorkspace(ID, true);
+    BuildWorkspace(ID, true);*/
 }
 
 void Wh_Editor::BuildWorkspace(int ID, bool IsWarehouse)

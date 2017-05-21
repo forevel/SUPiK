@@ -1215,6 +1215,7 @@ void s_tablefields::valuesbyfield(const QString &tble, QStringList &fl, const QS
 
 void s_tablefields::valuesbyfields(const QString &tble, QStringList &fl, QStringList &cmpfields, QStringList &cmpvalues, QStringList &out, bool Warn)
 {
+    Q_UNUSED(Warn);
     QList<QStringList> lsl;
     valuesbyfieldsmatrix(tble, fl, cmpfields, cmpvalues, lsl);
     if (result == TFRESULT_NOERROR)
@@ -1260,7 +1261,8 @@ void s_tablefields::valuesbyfieldsmatrix(const QString &tble, QStringList &fl, Q
         QString cmpdb = sl.at(0).split(".").at(0); // реальное имя БД
         QString cmptble = sl.at(0).split(".").at(1); // реальное название таблицы
         out = sqlc.GetMoreValuesFromTableByFields(cmpdb,cmptble,fl,cmpfl,cmpvalues);
-        if ((sqlc.result) && (Warn))
+//        if ((sqlc.result) && (Warn))
+        if (sqlc.result)
         {
             WARNMSG(sqlc.LastError);
             result = TFRESULT_ERROR;

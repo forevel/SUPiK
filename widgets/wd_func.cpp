@@ -132,6 +132,21 @@ s_tqComboBox *WDFunc::NewCB(QWidget *parent, const QString &cbname, const QStrin
     return cb;
 }
 
+void WDFunc::SetCBList(QWidget *w, const QString &cbname, const QStringList &cbsl)
+{
+    if (cbsl.isEmpty())
+        return;
+    s_tqComboBox *cb = w->findChild<s_tqComboBox *>(cbname);
+    if (cb == 0)
+    {
+        DBGMSGT("Problem in CBData, name=" + cbname);
+        return;
+    }
+    cb->clear();
+    cb->insertItems(0, cbsl);
+    cb->setCurrentIndex(0);
+}
+
 void WDFunc::CBData(QWidget *w, const QString &cbname, QString &cbvalue)
 {
     s_tqComboBox *cb = w->findChild<s_tqComboBox *>(cbname);

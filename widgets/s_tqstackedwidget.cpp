@@ -26,6 +26,8 @@ void s_tqStackedWidget::addWidget(QWidget *w)
 
 void s_tqStackedWidget::setCurrentIndex(int i)
 {
+    if ((i >= count()) || (i < 0))
+        return;
     curr_index = i;
     showCurrentWidget();
 }
@@ -78,7 +80,7 @@ void s_tqStackedWidget::showCurrentWidget()
 
 QWidget *s_tqStackedWidget::currentWidget()
 {
-    if (curr_index < count())
+    if ((curr_index < count()) && (curr_index >= 0))
         return widgets.at(curr_index);
     else
         return NULL;
@@ -112,6 +114,8 @@ void s_tqStackedWidget::removeWidget(QWidget *w)
         {
             DeleteWidgetFromLayout(w);
             widgets.removeAt(i);
+            if (curr_index == i)
+                setCurrentIndexLast();
             return;
         }
     }
@@ -124,5 +128,6 @@ void s_tqStackedWidget::clear()
         QWidget *w = widgets.takeAt(i);
         DeleteWidgetFromLayout(w);
     }
+    curr_index = 0;
 }
 

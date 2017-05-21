@@ -25,7 +25,6 @@
         <file>res/TN.png</file>
         <file>res/wh-in.png</file>
         <file>res/wh-out.png</file>
-        <file>res/WhWallpaper.jpg</file>
         <file>res/altium.png</file>
         <file>res/arrows3-1.png</file>
         <file>res/book-angle.png</file>
@@ -85,5 +84,6 @@
         <file>res/file.png</file>
         <file>res/folder.png</file>
         <file>res/folderopened.png</file>
+        <file>res/WhWallpaper.png</file>
     </qresource>
 </RCC>

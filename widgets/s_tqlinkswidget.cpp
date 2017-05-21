@@ -67,7 +67,7 @@ s_tqLinksWidget::s_tqLinksWidget(const QString &links, const QString &value, QWi
             else
             {
                 if (Cli->GetFile(QString::number(fltype), QString::number(flsubtype), tmpsl.at(0)) \
-                        != Client::CLIER_NOERROR)
+                        == Client::CLIER_NOERROR)
                 {
                     // добавим метку с изображением из файла
                     s_tqLabel *lbl = new s_tqLabel;

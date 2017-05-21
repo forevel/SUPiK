@@ -6,6 +6,7 @@
 #include "../../widgets/s_tqgroupbox.h"
 #include "../../widgets/s_tqwidget.h"
 #include "../../widgets/s_tqchoosewidget.h"
+#include "../../widgets/wd_func.h"
 #include "../../gen/s_tablefields.h"
 #include "../../gen/publicclass.h"
 #include "../gen/messagebox.h"
@@ -21,6 +22,47 @@
 #include <QStandardItemModel>
 #include <QScrollArea>
 
+WhPlacesModel::WhPlacesModel()
+{
+    ClearModel();
+}
+
+WhPlacesModel::WhPlacesItem WhPlacesModel::Item(int index)
+{
+    if (index < Items.count())
+        return Items.at(index);
+}
+
+void WhPlacesModel::SetItem(int index, WhPlacesModel::WhPlacesItem value)
+{
+    if (index < Items.count())
+        Items.replace(index, value);
+}
+
+void WhPlacesModel::InsertItem(WhPlacesModel::WhPlacesItem value)
+{
+    Items.append(value);
+}
+
+int WhPlacesModel::SetupModel(int rootid)
+{
+    RootID = rootid;
+    ClearModel();
+    QStringList fl = QStringList() << "ИД" << "Наименование" << "Описание" << "Обозначение" << "Тип размещения";
+    QStringList cmpfields = QStringList() << "ИД_а";
+    QStringList cmpvalues = QStringList() << QString::number(RootID);
+    QList<QStringList> lsl;
+    tfl.valuesbyfieldsmatrix("Склады размещение_полн", fl, cmpfields, cmpvalues, lsl);
+    if (tfl.result != TFRESULT_NOERROR)
+        return RESULTBAD;
+}
+
+void WhPlacesModel::ClearModel()
+{
+    Items.clear();
+}
+
+
 Wh_Editor::Wh_Editor(QWidget *parent) : QDialog(parent)
 {
     SomethingChanged = false;
@@ -32,7 +74,7 @@ Wh_Editor::Wh_Editor(QWidget *parent) : QDialog(parent)
 void Wh_Editor::paintEvent(QPaintEvent *e)
 {
     QPainter painter(this);
-    painter.drawPixmap(rect(), QPixmap(":/res/WhWallpaper.jpg"));
+    painter.drawPixmap(rect(), QPixmap(":/res/WhWallpaper.png"));
     e->accept();
 }
 
@@ -60,7 +102,6 @@ void Wh_Editor::SetupUI()
     pb->setToolTip("Закрыть вкладку");
     connect(pb,SIGNAL(clicked()),this,SIGNAL(CloseAllWidgets())); // по нажатию кнопки "Закрыть вкладку" закрыть и удалить все виджеты
     hlyout->addWidget(pb);
-
     hlyout->addStretch(300);
     s_tqLabel *lbl = new s_tqLabel("Редактор складов");
     QFont font;
@@ -71,13 +112,7 @@ void Wh_Editor::SetupUI()
     lyout->addLayout(hlyout);
     hlyout = new QHBoxLayout;
     // Комбобокс с наименованиями складов из wh
-    QStringListModel *mdl = new QStringListModel;
-//    QStringList vl = tfl.GetValuesByColumn("Склады_сокращ", "Наименование");
-//    mdl->setStringList(vl);
-    s_tqComboBox *cb = new s_tqComboBox;
-    cb->setObjectName("whcb");
-    cb->setModel(mdl);
-//    cb->setCurrentIndex(-1);
+    s_tqComboBox *cb = WDFunc::NewCB(this, "whcb");
     connect(cb,SIGNAL(currentIndexChanged(QString)),this,SLOT(ChangeWh(QString)));
     lbl = new s_tqLabel("Редактируемый склад:");
     hlyout->addWidget(lbl, 0);
@@ -92,7 +127,7 @@ void Wh_Editor::SetupUI()
     s_tqStackedWidget *stw = new s_tqStackedWidget;
     stw->setObjectName("stw");
     lyout->addWidget(stw);
-    lyout->addStretch(1);
+//    lyout->addStretch(1);
     setLayout(lyout);
     UpdateWhComboBox();
     cb->setCurrentIndex(0); // принудительный вызов загрузки данных в окно
@@ -117,20 +152,13 @@ void Wh_Editor::AddNewWh()
 
 void Wh_Editor::UpdateWhComboBox()
 {
-    s_tqComboBox *cb = this->findChild<s_tqComboBox *>("whcb");
-    if (cb == 0)
-    {
-        DBGMSG;
-        return;
-    }
-    QStringListModel *mdl = qobject_cast<QStringListModel *>(cb->model());
     QStringList vl;
     QString table = "Склады размещение_полн";
     QString field = "Наименование";
     QString cmpfield = "ИД_а";
     QString cmpvalue = "0";
     tfl.GetValuesByColumnAndField(table, field, cmpfield, cmpvalue, vl);
-    mdl->setStringList(vl);
+    WDFunc::SetCBList(this, "whcb", vl);
 }
 
 void Wh_Editor::WriteAndClose()
@@ -169,7 +197,7 @@ void Wh_Editor::AddNewPlace()
 
 void Wh_Editor::ChangeWh(QString str)
 {
-/*    // достанем индекс склада по имени str из whplaces
+    // достанем индекс склада по имени str из whplaces
     QStringList PlaceID;
     QString table = "Склады размещение_полн";
     QStringList fields = QStringList("ИД");
@@ -206,7 +234,7 @@ void Wh_Editor::ChangeWh(QString str)
     IDs.push(ID);
     SomethingChanged = false;
     // создадим новый корневой виджет и положим его в stw, вызовем SetCells для нового ID
-    BuildWorkspace(ID, true); */
+    BuildWorkspace(ID, true);
 }
 
 void Wh_Editor::BuildWorkspace(int ID, bool IsWarehouse)

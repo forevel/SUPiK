@@ -20,6 +20,7 @@ public:
     static void SetTEData(QWidget *w, const QString &tename, const QString &tetext);
     static void TEData(QWidget *w, const QString &tename, QString &tevalue);
     static s_tqComboBox *NewCB(QWidget *parent, const QString &cbname, const QStringList &cbsl=QStringList(), const QString &cbcolor="");
+    static void SetCBList(QWidget *w, const QString &cbname, const QStringList &cbsl=QStringList());
     static void SetCBData(QWidget *w, const QString &cbname, const QString &cbvalue);
     static void SetCBIndex(QWidget *w, const QString &cbname, int index);
     static void CBData(QWidget *w, const QString &cbname, QString &cbvalue);

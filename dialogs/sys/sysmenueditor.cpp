@@ -137,7 +137,7 @@ void SysmenuEditor::Delete()
     sl = sqlc.GetValuesFromTableByField(tmpdb, tmptble, sl, "idalias", tmpString);
     if (!sqlc.result) // есть записи с данным idalias
     {
-        if (MessageBox2::question(this, "Вы уверены?", "Категория содержит подкатегории.\nВы уверены, что хотите удалить её?"))
+        if (MessageBox2::question(0, "Вы уверены?", "Категория содержит подкатегории.\nВы уверены, что хотите удалить её?"))
         {
             tfl.Remove(table, tmpString);
             if (tfl.result == TFRESULT_ERROR)
@@ -151,12 +151,12 @@ void SysmenuEditor::Delete()
                 WARNMSG("");
                 return;
             }
-            MessageBox2::information(this, "Внимание", "Записано успешно!");
+            MessageBox2::information(0, "Внимание", "Записано успешно!");
         }
     }
     else
     {
-        if (MessageBox2::question(this, "Вы уверены?", "Вы уверены?"))
+        if (MessageBox2::question(0, "Вы уверены?", "Вы уверены?"))
         {
             tfl.Remove(table, tmpString);
             if (tfl.result == TFRESULT_ERROR)
@@ -165,7 +165,7 @@ void SysmenuEditor::Delete()
                 return;
             }
         }
-        MessageBox2::information(this, "Внимание", "Записано успешно!");
+        MessageBox2::information(0, "Внимание", "Записано успешно!");
     }
     UpdateTree();
 }
@@ -185,9 +185,8 @@ void SysmenuEditor::AddRoot()
 void SysmenuEditor::AddToTree(QString str)
 {
     QString table = tble + "_полн";
-    QString NewClass = QInputDialog::getText(this, "СУПиК :: новый элемент", \
-                                               "Введите имя нового элемента", \
-                                               QLineEdit::Normal, "", 0, 0, 0);
+    QString NewClass = QInputDialog::getText(0, "СУПиК :: новый элемент", \
+                                               "Введите имя нового элемента");
     if (NewClass == "") return;
     str = QString::number(str.toInt(0));
 

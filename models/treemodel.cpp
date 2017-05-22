@@ -363,7 +363,6 @@ int TreeModel::Setup(QStringList Tables, int Type, bool Cond)
         WARNMSG("Передан пустой список таблиц");
         return TM_BADRESULT;
     }
-    TablesNum = 0;
     int i;
     for (i=0; i<Tables.size(); i++)
     {
@@ -419,7 +418,6 @@ int TreeModel::SetupRaw(QString db, QString tble, QStringList fields)
     TreeType = TT_SIMPLE;
     for (i = columnCount(); i < TableHeadersSl.size(); i++) // добавим нехватающее количество столбцов в общую модель
         insertColumns(i,1,QModelIndex());
-
     if (BuildTree()) // элементы записываются в виде: <номер_таблицы>.<ИД>
     {
         WARNMSG("");
@@ -975,6 +973,7 @@ void TreeModel::ClearModel()
     TableLinks.clear();
     TableIsTree.clear();
     IsRaw = false;
+    TablesNum = 0;
     endResetModel();
 }
 

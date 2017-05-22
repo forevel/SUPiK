@@ -186,12 +186,17 @@ void cmp_compdialog::MainItemChoosed(QModelIndex idx)
     fl = QStringList() << "id" << "PartNumber" << "Manufacturer";
     if (sl.isEmpty())
     {
+        QApplication::restoreOverrideCursor();
         WARNMSG("");
         return;
     }
     CompTbles = sl.at(0);
     if (SlaveModel->SetupRaw(CompDb,CompTbles,fl) != TM_OK) // строим таблицу с сортировкой по ИД
+    {
         MessageBox2::information(this, "Внимание", "Проблемы при построении таблицы "+CompTbles);
+        QApplication::restoreOverrideCursor();
+        return;
+    }
     WDFunc::TVAutoResize(this, "stv");
     QApplication::restoreOverrideCursor();
 }

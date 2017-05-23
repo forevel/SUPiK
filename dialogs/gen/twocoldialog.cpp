@@ -39,7 +39,7 @@ TwoColDialog::TwoColDialog(QString caption, QWidget *parent) :
     setAttribute(Qt::WA_DeleteOnClose);
 }
 
-void TwoColDialog::setup(QString tble, int Mode, QString id, bool isQuarantine)
+int TwoColDialog::setup(QString tble, int Mode, QString id, bool isQuarantine)
 {
     QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
     this->tble.clear();
@@ -51,14 +51,14 @@ void TwoColDialog::setup(QString tble, int Mode, QString id, bool isQuarantine)
     {
         QApplication::restoreOverrideCursor();
         WARNMSG("");
-        return;
+        return RESULTBAD;
     }
     if (!setupUI())
-        return;
+        return RESULTBAD;
     FillHeaderData();
     this->IsQuarantine = isQuarantine;
-    result = 0;
     QApplication::restoreOverrideCursor();
+    return RESULTOK;
 }
 
 void TwoColDialog::SetupRaw(QString db, QString tble, int Mode, QString id)

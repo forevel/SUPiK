@@ -33,13 +33,13 @@ WhPlacesModel::WhPlacesItem WhPlacesModel::Item(int index)
         return Items.at(index);
 }
 
-void WhPlacesModel::SetItem(int index, WhPlacesModel::WhPlacesItem value)
+void WhPlacesModel::SetItem(int index, WhPlacesModel::WhPlacesItem &value)
 {
     if (index < Items.count())
         Items.replace(index, value);
 }
 
-void WhPlacesModel::InsertItem(WhPlacesModel::WhPlacesItem value)
+void WhPlacesModel::InsertItem(WhPlacesModel::WhPlacesItem &value)
 {
     Items.append(value);
 }
@@ -55,6 +55,30 @@ int WhPlacesModel::SetupModel(int rootid)
     tfl.valuesbyfieldsmatrix("Склады размещение_полн", fl, cmpfields, cmpvalues, lsl);
     if (tfl.result != TFRESULT_NOERROR)
         return RESULTBAD;
+    while (lsl.size() > 0)
+    {
+        QStringList tmpsl = lsl.takeAt(0);
+        if (tmpsl.size() < 5)
+            continue;
+        WhPlacesItem item;
+        item.Id = tmpsl.at(0);
+        item.Alias = tmpsl.at(1);
+        item.Description = tmpsl.at(2);
+        item.Name = tmpsl.at(3);
+        item.WhPlaceTypeID = tmpsl.at(4);
+        InsertItem(item);
+    }
+}
+
+int WhPlacesModel::Save()
+{
+    while (Items.size())
+    {
+        WhPlacesItem item = Items.takeAt(0);
+        QStringList fl = QStringList() << "ИД" << "Наименование" << "Описание" << "Обозначение" << "Тип размещения";
+        QStringList vl = QStringList() << item.Id << item.Alias << item.Description << item.Name << item.WhPlaceTypeID;
+
+    }
 }
 
 void WhPlacesModel::ClearModel()
@@ -66,7 +90,6 @@ void WhPlacesModel::ClearModel()
 Wh_Editor::Wh_Editor(QWidget *parent) : QDialog(parent)
 {
     SomethingChanged = false;
-//    WhModel = 0;
     setAttribute(Qt::WA_DeleteOnClose);
     SetupUI();
 }
@@ -138,12 +161,13 @@ void Wh_Editor::AddNewWh()
     QString newID;
     QString table = "Склады размещение_полн";
     tfl.Insert(table, newID);
-    QStringList fl = QStringList() << "ИД" << "ИД_а" << "Склад" << "Тип размещения";
-    QStringList vl = QStringList() << newID << "0" << newID << "4";
+//    QStringList fl = QStringList() << "ИД" << "ИД_а" << "Склад" << "Тип размещения";
+//    QStringList vl = QStringList() << newID << "0" << newID << "4"; // 4 - тип размещения "Склад"
+    QStringList fl = QStringList() << "ИД" << "ИД_а" << "Тип размещения";
+    QStringList vl = QStringList() << newID << "0" << "4"; // 4 - тип размещения "Склад"
     tfl.Update(table, fl, vl);
     TwoColDialog *dlg = new TwoColDialog("Склады::Добавить");
-    dlg->setup(table, MODE_EDITNEW, newID);
-    if (dlg->result)
+    if (dlg->setup(table, MODE_EDITNEW, newID) == RESULTBAD)
         WARNMSG("");
     else
         dlg->exec();
@@ -163,11 +187,11 @@ void Wh_Editor::UpdateWhComboBox()
 
 void Wh_Editor::WriteAndClose()
 {
-/*    if (WhModel->Save())
+    if (WhModel->Save())
         return;
     else
         MessageBox2::information(this, "Внимание", "Записано успешно!");
-    emit CloseAllWidgets(); */
+    emit CloseAllWidgets();
 }
 
 void Wh_Editor::CancelAndClose()
@@ -193,11 +217,14 @@ void Wh_Editor::AddNewPlace()
         WARNMSG("");
     else
         dlg->exec();
+    // отобразить новое размещение на экране
+    WhModel->SetupModel(IDs.last());
+    Update();
 }
 
 void Wh_Editor::ChangeWh(QString str)
 {
-/*    // достанем индекс склада по имени str из whplaces
+    // достанем индекс склада по имени str из whplaces
     QStringList PlaceID;
     QString table = "Склады размещение_полн";
     QStringList fields = QStringList("ИД");
@@ -234,7 +261,7 @@ void Wh_Editor::ChangeWh(QString str)
     IDs.push(ID);
     SomethingChanged = false;
     // создадим новый корневой виджет и положим его в stw, вызовем SetCells для нового ID
-    BuildWorkspace(ID, true);*/
+    BuildWorkspace(ID, true);
 }
 
 void Wh_Editor::BuildWorkspace(int ID, bool IsWarehouse)

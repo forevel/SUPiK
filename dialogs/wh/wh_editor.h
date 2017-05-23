@@ -21,24 +21,23 @@ public:
 
     struct WhPlacesItem
     {
-        int Id; // ИД размещения, копия key
+        QString Id; // ИД размещения, копия key
         QString Alias; // наименование размещения
 //        int IdAlias; // ссылка на корневой элемент размещения (-1 -> нет размещения)
         QString Name; // обозначение размещения в документах
         QString Description; // описание размещения
 //        int WhID; // ИД склада по wh
 //        int WhNum; // номер размещения на складе
-        int WhPlaceTypeID; // тип размещения по "Склады типы размещения"
+        QString WhPlaceTypeID; // тип размещения по "Склады типы размещения"
         int UpdIns; // признак того, что элемент менялся (=1), был создан (=3), был создан и изменён (но не записан в БД, =2) или без изменений (=0)
     };
 
     WhPlacesItem Item(int index);
-    void SetItem(int index, WhPlacesItem value);
-    void InsertItem(WhPlacesItem value);
+    void SetItem(int index, WhPlacesItem &value);
+    void InsertItem(WhPlacesItem &value);
     int DeleteItem();
     int SetupModel(int rootid);
-//    int Load (int Index);
-//    int Save ();
+    int Save ();
     void ClearModel();
 //    QList<int> Children(int Index); // выдать индексы всех дочерних элементов для данного элемента
 //    int Find(quint8 mask, QStringList cmpvl); // инициировать поиск элемента, у которого элементы с номерами по маске mask равны элементам списка cmpvl. Mask начинается с элемента Alias (не с Id!)
@@ -83,6 +82,7 @@ private:
     void SetCells(QWidget *w);
     void BuildWorkspace(int ID, bool IsWarehouse); // отобразить рабочее поле (размещения внутри размещения с данным ID). IsWarehouse - признак "корня"
     void UpdatePlace();
+    void Update();
     void Disband(int ID); // расформирование единицы размещения
     QStringList NameAndPicture(int ID); // вытащить картинку по ИД размещения
     void ClearLayout (QLayout *lyout);

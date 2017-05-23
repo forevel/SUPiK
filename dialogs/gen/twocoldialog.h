@@ -18,7 +18,7 @@ public:
     void SetupFile(QString Filename, QString StringToFind, QString str);
     // tble - имя таблицы из tablefields, Mode - список выбора или редактор полей, caption - заголовок в окне, matchtext - текущее значение
     // (для MODE_CHOOSE), isQuarantine - признак для MODE_EDIT: карантинная база или нет, для спец. обработки слота accepted()
-    void setup(QString tble, int Mode=MODE_CHOOSE, QString id="", bool isQuarantine=false);
+    int setup(QString tble, int Mode=MODE_CHOOSE, QString id="", bool isQuarantine=false);
     // sl - список строк для выбора, links - опционально вид для каждой ячейки, str - текущее выбранное значение
     // void setup(QStringList sl, QStringList links=QStringList(), QString str="");
     void SetupRaw(QString db, QString tble, int Mode=MODE_CHOOSE_RAW, QString id=""); // построение диалога по таблицам SQL

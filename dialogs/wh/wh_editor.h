@@ -4,6 +4,7 @@
 #include <QDialog>
 #include <QStack>
 #include <QPixmap>
+#include <QPointer>
 #include <QVBoxLayout>
 
 #include "../../widgets/s_tqcombobox.h"
@@ -14,10 +15,11 @@
 
 #define MAXPLACES   999999
 
-class WhPlacesModel
+class WhPlacesModel : public QObject
 {
+    Q_OBJECT
 public:
-    WhPlacesModel();
+    WhPlacesModel(QObject *parent=0);
 
     struct WhPlacesItem
     {
@@ -63,7 +65,7 @@ signals:
 private:
     QStack<int> IDs;
     int Wh;
-    WhPlacesModel *WhModel;
+    QPointer<WhPlacesModel> WhModel;
     int CurID;
     bool SomethingChanged;
     struct IDProperties

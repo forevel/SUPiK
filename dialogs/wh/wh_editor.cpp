@@ -22,15 +22,18 @@
 #include <QStandardItemModel>
 #include <QScrollArea>
 
-WhPlacesModel::WhPlacesModel()
+WhPlacesModel::WhPlacesModel(QObject *parent) : QObject(parent)
 {
     ClearModel();
 }
 
 WhPlacesModel::WhPlacesItem WhPlacesModel::Item(int index)
 {
-    if (index < Items.count())
+    if ((index < Items.count()) && (index >= 0))
         return Items.at(index);
+    WhPlacesItem item;
+    item.Id = "#"; // неправильный итем
+    return item;
 }
 
 void WhPlacesModel::SetItem(int index, WhPlacesModel::WhPlacesItem &value)
@@ -68,6 +71,7 @@ int WhPlacesModel::SetupModel(int rootid)
         item.WhPlaceTypeID = tmpsl.at(4);
         InsertItem(item);
     }
+    return RESULTOK;
 }
 
 int WhPlacesModel::Save()
@@ -79,6 +83,7 @@ int WhPlacesModel::Save()
         QStringList vl = QStringList() << item.Id << item.Alias << item.Description << item.Name << item.WhPlaceTypeID;
 
     }
+    return RESULTOK;
 }
 
 void WhPlacesModel::ClearModel()
@@ -244,15 +249,13 @@ void Wh_Editor::ChangeWh(QString str)
         {
             if (MessageBox2::question(this, "Данные были изменены", "Сохранить изменения?"))
                 WhModel->Save(); // если модель уже существует, надо сохранить данные в БД, чтобы не потерялись
-            else
-                WhModel->DeleteNew();
         }
         delete WhModel;
     }
-    WhModel = new WhPlacesTreeModel;
+    WhModel = new WhPlacesModel;
     int ID = PlaceID.at(0).toInt();
     Wh = ID;
-    if (WhModel->Load(ID))
+    if (WhModel->SetupModel(ID))
     {
         WARNMSG("");
         return;
@@ -266,7 +269,7 @@ void Wh_Editor::ChangeWh(QString str)
 
 void Wh_Editor::BuildWorkspace(int ID, bool IsWarehouse)
 {
-/*    CloseAllWidgets();
+    CloseAllWidgets();
     s_tqStackedWidget *stw = this->findChild<s_tqStackedWidget *>("stw");
     if (stw == 0)
     {
@@ -280,21 +283,23 @@ void Wh_Editor::BuildWorkspace(int ID, bool IsWarehouse)
     // построим текстовое поле места размещения
     QString PlaceNameString;
     CurID = ID;
-    while (ID != 0)
+    QString IDQS = QString::number(ID);
+    while (IDQS != "0")
     {
-        WhPlacesTreeModel::WhPlacesTreeItem *item = WhModel->Data(ID);
-        if (item == 0)
+        QStringList tmpsl;
+        QStringList sl = QStringList() << "Наименование" << "Обозначение" << "ИД_а";
+        tfl.valuesbyfield("Склады размещение_полн", sl, "ИД", IDQS, tmpsl);
+        if ((tfl.result) || (tmpsl.size()<3))
         {
             WARNMSG("");
             return;
         }
-        QString tmps = "\\" + item->Alias;
-        if (item->IdAlias != 0)
-            tmps += " " + item->Name; // формируем имя места размещения как "alias name", например: "Мешок А5"
+        QString tmps = "/" + tmpsl.at(0) + " " + tmpsl.at(1);
         PlaceNameString.insert(0, tmps);
-        ID = item->IdAlias;
+        IDQS = tmpsl.at(2);
     }
     PlaceNameString.insert(0, ":"); // ":" - обозначение "корня"
+    PlaceNameString.append(WhModel->Item(ID).Alias + " " + WhModel->Item(ID).Name);
     s_tqLabel *lbl = new s_tqLabel(PlaceNameString);
     vlyout->addWidget(lbl);
     QHBoxLayout *hlyout = new QHBoxLayout;
@@ -346,7 +351,7 @@ void Wh_Editor::BuildWorkspace(int ID, bool IsWarehouse)
     stw->addWidget(wdgt);
     // взять по ID наименование места размещения
     UpdatePlace(); // принудительное обновление данных в рабочем пространстве
-    stw->repaint(); */
+    stw->repaint();
 }
 
 void Wh_Editor::UpdatePlace()

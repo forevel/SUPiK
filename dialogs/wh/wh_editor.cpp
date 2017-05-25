@@ -69,6 +69,17 @@ int WhPlacesModel::SetupModel(int rootid)
         item.Description = tmpsl.at(2);
         item.Name = tmpsl.at(3);
         item.WhPlaceTypeID = tmpsl.at(4);
+        QString tmps;
+        tfl.valuesbyfield("Склады типы размещения_полн", QStringList("Тип размещения"), "ИД", item.WhPlaceTypeID, tmps);
+        if (tfl.result == TFRESULT_NOERROR)
+        {
+            tfl.valuesbyfield("Склады ёмкости размещения_полн", QStringList("Приоритет вложенности"), "ИД", tmps, tmps);
+            if (tfl.result == TFRESULT_NOERROR)
+                item.Priority = tmps.toInt();
+            else item.Priority = WRONGNUM;
+        }
+        else
+            item.Priority = WRONGNUM;
         InsertItem(item);
     }
     return RESULTOK;
@@ -260,14 +271,13 @@ void Wh_Editor::ChangeWh(QString str)
         WARNMSG("");
         return;
     }
-    IDs.clear();
-    IDs.push(ID);
+    ItemsStack.clear();
     SomethingChanged = false;
     // создадим новый корневой виджет и положим его в stw, вызовем SetCells для нового ID
-    BuildWorkspace(ID, true);
+    BuildWorkspace(ID);
 }
 
-void Wh_Editor::BuildWorkspace(int ID, bool IsWarehouse)
+void Wh_Editor::BuildWorkspace(int ID)
 {
     CloseAllWidgets();
     s_tqStackedWidget *stw = this->findChild<s_tqStackedWidget *>("stw");
@@ -300,11 +310,15 @@ void Wh_Editor::BuildWorkspace(int ID, bool IsWarehouse)
     }
     PlaceNameString.insert(0, ":"); // ":" - обозначение "корня"
     PlaceNameString.append(WhModel->Item(ID).Alias + " " + WhModel->Item(ID).Name);
+
+    IDs.push(ID);
+    Priorities.push(WRONGNUM);
+
     s_tqLabel *lbl = new s_tqLabel(PlaceNameString);
     vlyout->addWidget(lbl);
     QHBoxLayout *hlyout = new QHBoxLayout;
     // если текущий ID относится не к корневому месту размещения (складу), то рисуем дополнительные виджеты выбора типа места размещения
-    if (!IsWarehouse)
+/*    if (!IsWarehouse)
     {
         s_tqLabel *lbl = new s_tqLabel("Тип размещения:");
         hlyout = new QHBoxLayout;
@@ -322,7 +336,7 @@ void Wh_Editor::BuildWorkspace(int ID, bool IsWarehouse)
         hlyout->addWidget(pb);
         vlyout->addLayout(hlyout);
         hlyout = new QHBoxLayout;
-    }
+    }*/
     QScrollArea *area = new QScrollArea;
     s_tqWidget *CellW = new s_tqWidget;
     area->setWidget(CellW);
@@ -334,7 +348,7 @@ void Wh_Editor::BuildWorkspace(int ID, bool IsWarehouse)
     pb->setIcon(QIcon(":/res/back.png"));
     connect(pb, SIGNAL(clicked()), this, SLOT(GoBack()));
     hlyout->addWidget(pb);
-    if (IsWarehouse)
+    if (IDs.size() < 2) // this place is warehouse
         pb->setEnabled(false);
     else
         pb->setEnabled(true);
@@ -356,16 +370,17 @@ void Wh_Editor::BuildWorkspace(int ID, bool IsWarehouse)
 
 void Wh_Editor::UpdatePlace()
 {
-/*    WhPlacesTreeModel::WhPlacesTreeItem *item = WhModel->Data(CurID);
-    if (item == NULL)
+
+    WhPlacesModel::WhPlacesItem item = WhModel->Item(CurID);
+    if (item.Id == "#")
         return;
-    if (item->UpdIns == WHP_CREATENEW) // новый элемент, его ещё нет в базе данных и по нему не заполнена модель
+    if (item.UpdIns == WHP_CREATENEW) // новый элемент, его ещё нет в базе данных и по нему не заполнена модель
         return;
     QStringList fl = QStringList() << "Тип размещения" << "Наименование" << "Кол-во рядов" << "Кол-во этажей";
     QStringList vl;
     QString table = "Склады типы размещения_полн";
     QString field = "ИД";
-    QString value = QString::number(item->WhPlaceTypeID);
+    QString value = QString::number(item.WhPlaceTypeID);
     tfl.valuesbyfield(table, fl, field, value, vl);
     if ((tfl.result == TFRESULT_ERROR) || (vl.size() < 4)) // нет размещения в БД
         return;
@@ -412,7 +427,7 @@ void Wh_Editor::UpdatePlace()
     }
     QLayout *l = w->layout();
     ClearLayout(l);
-    SetCells(w); */
+    SetCells(w);
 }
 
 void Wh_Editor::ClearLayout(QLayout *lyout)
@@ -500,14 +515,9 @@ void Wh_Editor::GoToPlace()
         WARNMSG("");
         return;
     }
-    s_tqLineEdit *le = this->findChild<s_tqLineEdit *>(QString::number(ID));
-    if (le == 0)
-    {
-        DBGMSG;
-        return;
-    }
     IDs.push(ID);
-    BuildWorkspace(ID, false);
+    Priorities.push(WhModel->Item(ID).Priority);
+    BuildWorkspace(ID);
 }
 
 void Wh_Editor::GoBack()
@@ -516,10 +526,7 @@ void Wh_Editor::GoBack()
         return;
     IDs.pop();
     int ID = IDs.top();
-    if (IDs.size() > 1)
-        BuildWorkspace(ID, false);
-    else
-        BuildWorkspace(ID, true);
+    BuildWorkspace(ID);
 }
 
 void Wh_Editor::ChangePlace(QVariant PlaceName)

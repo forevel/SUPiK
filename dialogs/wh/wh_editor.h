@@ -15,6 +15,8 @@
 
 #define MAXPLACES   999999
 
+#define WRONGNUM    -1
+
 class WhPlacesModel : public QObject
 {
     Q_OBJECT
@@ -30,6 +32,7 @@ public:
         QString Description; // описание размещения
 //        int WhID; // ИД склада по wh
 //        int WhNum; // номер размещения на складе
+        int Priority; // приоритет места размещения
         QString WhPlaceTypeID; // тип размещения по "Склады типы размещения"
         int UpdIns; // признак того, что элемент менялся (=1), был создан (=3), был создан и изменён (но не записан в БД, =2) или без изменений (=0)
     };
@@ -63,7 +66,7 @@ signals:
     void CloseAllWidgets();
 
 private:
-    QStack<int> IDs;
+    QStack<WhPlacesModel::WhPlacesItem> ItemsStack;
     int Wh;
     QPointer<WhPlacesModel> WhModel;
     int CurID;
@@ -79,10 +82,11 @@ private:
     };
     IDProperties CurIDProperties;
 
+
     void SetupUI();
     void UpdateWhComboBox();
     void SetCells(QWidget *w);
-    void BuildWorkspace(int ID, bool IsWarehouse); // отобразить рабочее поле (размещения внутри размещения с данным ID). IsWarehouse - признак "корня"
+    void BuildWorkspace(int ID); // отобразить рабочее поле (размещения внутри размещения с данным ID)
     void UpdatePlace();
     void Update();
     void Disband(int ID); // расформирование единицы размещения

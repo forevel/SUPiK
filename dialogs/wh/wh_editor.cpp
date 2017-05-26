@@ -272,6 +272,7 @@ void Wh_Editor::ChangeWh(QString str)
         return;
     }
     ItemsStack.clear();
+    PushItemStackByID(ID);
     SomethingChanged = false;
     // создадим новый корневой виджет и положим его в stw, вызовем SetCells для нового ID
     BuildWorkspace(ID);
@@ -310,9 +311,6 @@ void Wh_Editor::BuildWorkspace(int ID)
     }
     PlaceNameString.insert(0, ":"); // ":" - обозначение "корня"
     PlaceNameString.append(WhModel->Item(ID).Alias + " " + WhModel->Item(ID).Name);
-
-    IDs.push(ID);
-    Priorities.push(WRONGNUM);
 
     s_tqLabel *lbl = new s_tqLabel(PlaceNameString);
     vlyout->addWidget(lbl);
@@ -370,12 +368,9 @@ void Wh_Editor::BuildWorkspace(int ID)
 
 void Wh_Editor::UpdatePlace()
 {
-
-    WhPlacesModel::WhPlacesItem item = WhModel->Item(CurID);
-    if (item.Id == "#")
+    if (ItemsStack.isEmpty())
         return;
-    if (item.UpdIns == WHP_CREATENEW) // новый элемент, его ещё нет в базе данных и по нему не заполнена модель
-        return;
+    WhPlacesModel::WhPlacesItem item = ItemsStack.last();
     QStringList fl = QStringList() << "Тип размещения" << "Наименование" << "Кол-во рядов" << "Кол-во этажей";
     QStringList vl;
     QString table = "Склады типы размещения_полн";
@@ -388,13 +383,13 @@ void Wh_Editor::UpdatePlace()
     CurIDProperties.ChoosePlaceString = vl.at(1);
     CurIDProperties.Columns = vl.at(2).toInt();
     CurIDProperties.Rows = vl.at(3).toInt();
-    if ((CurIDProperties.Columns == -1) || (CurIDProperties.Rows == -1))
+    if ((CurIDProperties.Columns < 1) || (CurIDProperties.Rows < 1))
     {
         WARNMSG("");
         return;
     }
     if (CurIDProperties.PlaceType == 0) // текущее размещение - склад (корневой элемент)
-        CurIDProperties.PlacePrefix = item->Alias;
+        CurIDProperties.PlacePrefix = item.Alias;
     else
     {
         fl = QStringList() << "Наименование" << "Картинка";
@@ -416,38 +411,45 @@ void Wh_Editor::UpdatePlace()
         }
         cw->SetValue(CurIDProperties.ChoosePlaceString);
     }
-    item->Alias = CurIDProperties.PlacePrefix;
-    item->WhID = Wh;
+    item.Alias = CurIDProperties.PlacePrefix;
+//    item.WhID = Wh;
     // затем для данного curID отображаем места размещения
+    ClearLayout();
+    SetCells();
+}
+
+void Wh_Editor::ClearLayout()
+{
     s_tqWidget *w = this->findChild<s_tqWidget *>("cellwidget");
     if (w == 0)
     {
         DBGMSG;
         return;
     }
-    QLayout *l = w->layout();
-    ClearLayout(l);
-    SetCells(w);
-}
-
-void Wh_Editor::ClearLayout(QLayout *lyout)
-{
-/*    if (lyout == 0)
+    QLayout *lyout = w->layout();
+    if (lyout == 0)
         return;
-    QLayoutItem *item;
-    while((item = lyout->takeAt(0)))
+    for (int j=0; j<lyout->count(); ++j)
     {
-        if (item->layout())
+        QLayoutItem *item = lyout->itemAt(j);
+        if (item)
         {
-            ClearLayout(item->layout());
-            delete item->layout();
+            lyout->removeItem(item);
+            delete item;
         }
-    } */
+    }
 }
 
-void Wh_Editor::SetCells(QWidget *w)
+void Wh_Editor::SetCells()
 {
-/*    QStringList sl;
+    s_tqWidget *w = this->findChild<s_tqWidget *>("cellwidget");
+    if (w == 0)
+    {
+        DBGMSG;
+        return;
+    }
+
+    QStringList sl;
     QList<int> Children = WhModel->Children(CurID);
     int ChildrenSize = Children.size();
     int ChildrenIndex = 0;
@@ -504,7 +506,7 @@ void Wh_Editor::SetCells(QWidget *w)
         lyout->addLayout(hlyout);
     }
     lyout->addSpacing(50);
-    w->setLayout(lyout); */
+    w->setLayout(lyout);
 }
 
 void Wh_Editor::GoToPlace()
@@ -657,6 +659,42 @@ bool Wh_Editor::CheckPriorities(QString PlaceName)
     // в противном случае можно
     return true; */
     return true;
+}
+
+void Wh_Editor::PushItemStackByID(int ID)
+{
+    QStringList fl = QStringList() << "Наименование" << "Описание" << "Обозначение" << "Тип размещения";
+    QString cmpfield = "ИД";
+    QString cmpvalue = QString::number(ID);
+    QStringList sl;
+    tfl.valuesbyfield("Склады размещение_полн", fl, cmpfield, cmpvalue, sl);
+    if (tfl.result != TFRESULT_NOERROR)
+    {
+        WARNMSG("");
+        return;
+    }
+    if (sl.size() < 4)
+    {
+        WARNMSG("");
+        return;
+    }
+    WhPlacesModel::WhPlacesItem item;
+    item.Id = cmpvalue; // ID
+    item.Alias = sl.at(0);
+    item.Description = sl.at(1);
+    item.Name = tmpsl.at(2);
+    item.WhPlaceTypeID = tmpsl.at(3);
+    QString tmps;
+    tfl.valuesbyfield("Склады типы размещения_полн", QStringList("Тип размещения"), "ИД", item.WhPlaceTypeID, tmps);
+    if (tfl.result == TFRESULT_NOERROR)
+    {
+        tfl.valuesbyfield("Склады ёмкости размещения_полн", QStringList("Приоритет вложенности"), "ИД", tmps, tmps);
+        if (tfl.result == TFRESULT_NOERROR)
+            item.Priority = tmps.toInt();
+        else item.Priority = WRONGNUM;
+    }
+    else
+        item.Priority = WRONGNUM;
 }
 
 void Wh_Editor::Disband(int ID)

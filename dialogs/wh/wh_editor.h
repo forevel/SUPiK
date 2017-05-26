@@ -85,14 +85,15 @@ private:
 
     void SetupUI();
     void UpdateWhComboBox();
-    void SetCells(QWidget *w);
+    void SetCells();
     void BuildWorkspace(int ID); // отобразить рабочее поле (размещения внутри размещения с данным ID)
     void UpdatePlace();
     void Update();
     void Disband(int ID); // расформирование единицы размещения
     QStringList NameAndPicture(int ID); // вытащить картинку по ИД размещения
-    void ClearLayout (QLayout *lyout);
+    void ClearLayout ();
     bool CheckPriorities (QString PlaceName);
+    void PushItemStackByID(int ID);
 
 private slots:
     void AddNewPlace();

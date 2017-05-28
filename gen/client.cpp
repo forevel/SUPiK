@@ -58,7 +58,7 @@ Client::Client(QObject *parent) : QObject(parent)
     CmdMap.insert(T_RDEL, {"T_RDEL", 2, "T6", RESULT_NONE, false, false});
     CmdMap.insert(T_IDTVL, {"T_IDTVL", 1, "T;", RESULT_VECTOR, false, false});
     CmdMap.insert(T_GID, {"T_GID", 1, "T8", RESULT_INT, false, false});
-    CmdMap.insert(T_VTID, {"T_VTID", 3, "T=", RESULT_STRING, false, false});
+    CmdMap.insert(T_VTID, {"T_VTID", 2, "T=", RESULT_STRING, false, false});
     CmdMap.insert(T_TID, {"T_TID", 3, "T<", RESULT_STRING, false, false});
     CmdMap.insert(T_C, {"T_C", 3, "T4", RESULT_STRING, false, false});
     CmdMap.insert(T_UPDV, {"T_UPDV", 3, "TC", RESULT_NONE, false, false});
@@ -195,7 +195,7 @@ void Client::Send(int command, QStringList &args)
 {
     if ((EthStatus.isCommandActive()) && (command == M_PING))
     {
-        CliLog->error("Command active already");
+        CliLog->error("Command active already: "+QString::number(CurrentCommand));
         return;
     }
     if ((EthStatus.isntConnected()) || (TimeoutCounter > 3)) // if we're disconnected

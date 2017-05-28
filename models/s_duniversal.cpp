@@ -28,16 +28,8 @@ void s_duniversal::setEditorData(QWidget *editor, const QModelIndex &index) cons
         return;
     s_tqChooseWidget *wdgt = static_cast<s_tqChooseWidget *>(editor);
     connect(wdgt,SIGNAL(textchanged(QVariant)),this,SLOT(CommitChanges(QVariant)));
-    PublicClass::ValueStruct vs;
-    vs.Value = index.data(Qt::EditRole).toString();
-    QStringList tmpsl = index.data(TreeModel::CellInfoRole).toString().split(".");
-    if (tmpsl.size()<2)
-        vs.Type = VS_STRING;
-    else if (tmpsl.at(0) == "i")
-        vs.Type = VS_ICON;
-    else
-        vs.Type = VS_STRING;
-    wdgt->SetData(vs);
+    QString tmps = index.data(Qt::EditRole).toString();
+    wdgt->SetData(tmps);
 }
 
 void s_duniversal::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const
@@ -45,14 +37,8 @@ void s_duniversal::setModelData(QWidget *editor, QAbstractItemModel *model, cons
     if ((ff.delegate == FD_DISABLED) || (ff.delegate == FD_SIMPLE) || (ff.delegate == FD_SIMGRID))
         return;
     s_tqChooseWidget *wdgt = static_cast<s_tqChooseWidget *>(editor);
-    PublicClass::ValueStruct vs = wdgt->Data();
-    if (vs.Type == VS_STRING)
-        model->setData(index,vs.Value,Qt::EditRole);
-    else if (vs.Type == VS_ICON)
-    {
-        model->setData(index,QIcon(vs.Value),Qt::DecorationRole);
-        model->setData(index, vs.Value, TreeModel::CellInfoRole);
-    }
+    QString tmps = wdgt->Data();
+    model->setData(index,tmps,Qt::EditRole);
 }
 
 void s_duniversal::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const

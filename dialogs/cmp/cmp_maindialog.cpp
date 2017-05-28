@@ -762,22 +762,14 @@ void cmp_maindialog::SetCWData(QString cwname, QVariant data)
 {
     s_tqChooseWidget *cw = this->findChild<s_tqChooseWidget *>(cwname);
     if (cw != 0)
-    {
-        PublicClass::ValueStruct vl;
-        vl.Type = VS_STRING;
-        vl.Value = data.toString();
-        cw->SetData(vl);
-    }
+        cw->SetData(data.toString());
 }
 
 QString cmp_maindialog::CWData(QString cwname)
 {
     s_tqChooseWidget *cw = this->findChild<s_tqChooseWidget *>(cwname);
     if (cw != 0)
-    {
-        PublicClass::ValueStruct vl = cw->Data();
-        return vl.Value;
-    }
+        return cw->Data();
     else
         return QString();
 }
@@ -836,8 +828,7 @@ void cmp_maindialog::AddManuf()
     tmps = "Производители_полн";
     tfl.Insert(tmps, newID);
     TwoColDialog *newdialog = new TwoColDialog("Производители:добавить");
-    newdialog->setup("Производители_полн",MODE_EDITNEW,newID);
-    if (newdialog->result)
+    if (newdialog->setup("Производители_полн",MODE_EDITNEW,newID) != RESULTOK)
         WARNMSG("");
     else
         newdialog->exec();

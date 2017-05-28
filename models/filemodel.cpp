@@ -375,14 +375,14 @@ int FileModel::PrepareTable(QString Table)
     if (Table.isEmpty())
     {
         DBGMSG;
-        return TM_BADRESULT;
+        return RESULTBAD;
     }
     QStringList fl = QStringList() << "table" << "tablefields" << "header" << "links";
     QList<QStringList> vl = sqlc.GetMoreValuesFromTableByFields("sup", "tablefields", fl, QStringList("tablename"), QStringList(Table), "fieldsorder", true);
     if ((sqlc.result) || (vl.size() == 0))
     {
         WARNMSG(sqlc.LastError);
-        return TM_BADRESULT;
+        return RESULTBAD;
     }
     int i;
     int idpos = -1;
@@ -420,7 +420,7 @@ int FileModel::PrepareTable(QString Table)
     if (idpos == -1)
     {
         INFOMSG("Не найдено поле ИД в таблице "+Table);
-        return TM_BADRESULT;
+        return RESULTBAD;
     }
     if (!IsIdAliasExist)
     {
@@ -431,7 +431,7 @@ int FileModel::PrepareTable(QString Table)
     else if (!IsAliasExist) // если есть idalias, но нет <tble> - это не дело
     {
         INFOMSG("Не найдено поле " + PlainTable + " в таблице "+Table);
-        return TM_BADRESULT;
+        return RESULTBAD;
     }
     else
         TableIsTree.append(true);
@@ -450,7 +450,7 @@ int FileModel::PrepareTable(QString Table)
     if (tmpsl.size()<2)
     {
         DBGMSG;
-        return TM_BADRESULT;
+        return RESULTBAD;
     }
     DBs.append(tmpsl.at(0));
     Tables.append(tmpsl.at(1));
@@ -466,21 +466,21 @@ int FileModel::BuildTree()
     if (TableId.size()<2)
     {
         DBGMSG;
-        return TM_BADSOURCE;
+        return RESULTBAD;
     }
     int Table = TableId.at(0).toInt();
     QString Id = QString::number(TableId.at(1).toInt()); // убираем лишние нули
     if (SetFirstTreeElements()) // нарисовать первый элемент его самого с открытой книгой
     {
         WARNMSG("");
-        return TM_BADRESULT;
+        return RESULTBAD;
     }
     if (TableIsTree.at(Table))
     {
         if (SetTree(Table, Id))
         {
             WARNMSG("");
-            return TM_BADRESULT;
+            return RESULTBAD;
         }
     }
     else
@@ -488,22 +488,22 @@ int FileModel::BuildTree()
         if (SetTable(Table, Id))
         {
             WARNMSG("");
-            return TM_BADRESULT;
+            return RESULTBAD;
         }
     }
     // построили по текущему уровню и текущей таблице, надо проверить следующую по списку таблицу на наличие элементов, связанных с текущим Id
     if (RootIDs.top() != "0.0")
         Table++; // переходим на новый уровень дерева
     else
-        return TM_OK;
+        return RESULTOK;
     if (Table >= TablesNum) // больше нет таблиц
-        return TM_OK; // выход
+        return RESULTOK; // выход
     if (TableIsTree.at(Table))
     {
         if (SetNextTree(Table, Id))
         {
             WARNMSG("");
-            return TM_BADRESULT;
+            return RESULTBAD;
         }
     }
     else
@@ -511,7 +511,7 @@ int FileModel::BuildTree()
         if (SetNextTable(Table, Id))
         {
             WARNMSG("");
-            return TM_BADRESULT;
+            return RESULTBAD;
         }
     } */
     return FM_OK;
@@ -530,21 +530,21 @@ int FileModel::SetFirstTreeElements()
         if (RIDsl.size()<2)
         {
             DBGMSG;
-            return TM_BADRESULT;
+            return RESULTBAD;
         }
         bool ok;
         int Table = RIDsl.at(0).toInt(&ok);
         if (!ok)
         {
             DBGMSG;
-            return TM_BADRESULT;
+            return RESULTBAD;
         }
         QString Id = RIDsl.at(1);
         QStringList tmpsl = sqlc.GetValuesFromTableByID(DBs.at(Table), Tables.at(Table), TableHeaders.at(Table), Id);
         if (sqlc.result)
         {
             WARNMSG(sqlc.LastError);
-            return TM_BADRESULT;
+            return RESULTBAD;
         }
         Id = QString("%1").arg(Id.toInt(0), 7, 10, QChar('0'));
         Id.insert(0, IndentSpaces);
@@ -583,7 +583,7 @@ int FileModel::SetTable(int Table, QString Id)
         if (sqlc.result)
         {
             WARNMSG(sqlc.LastError);
-            return TM_BADRESULT;
+            return RESULTBAD;
         }
         int NewTable = Table+1;
         bool NewTableExist = (NewTable < TablesNum);
@@ -622,7 +622,7 @@ int FileModel::SetTable(int Table, QString Id)
                 if (sqlc.result == SQLC_FAILED)
                 {
                     WARNMSG(sqlc.LastError);
-                    return TM_BADRESULT;
+                    return RESULTBAD;
                 }
                 // если есть хотя бы один потомок, надо ставить "книжку"
                 if (tmps.isEmpty()) // нет потомков

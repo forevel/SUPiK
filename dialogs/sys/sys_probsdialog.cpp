@@ -157,12 +157,8 @@ void SysProblemsDialog::InitialModelFill()
     for (int i=0; i<pc.ProblemsList.size(); i++)
     {
         PublicClass::ProblemStruct pl = pc.ProblemsList.at(i);
-        PublicClass::ValueStruct vl;
-        vl.Type=VS_STRING;
-        vl.Value = ProbStringCombiner(pl);
-        QList<PublicClass::ValueStruct> lvl;
-        lvl.append(vl);
-        mainmodel->AddItemToTree(lvl);
+        QStringList sl = QStringList(ProbStringCombiner(pl));
+        mainmodel->AddItemToTree(sl);
         mainmodel->SetLastItem(PublicClass::ProblemForegroundColors()[pl.ProblemType], PublicClass::ProblemBackgroundColors()[pl.ProblemType], \
                                font, QIcon());
     }
@@ -177,12 +173,8 @@ void SysProblemsDialog::NewProblemsDetected()
     {
         PublicClass::ProblemStruct pl = pc.ExchangeProblemsList.takeFirst();
         pc.ProblemsList.append(pl); // перекидываем из временного хранилища проблем в постоянное
-        PublicClass::ValueStruct vl;
-        vl.Type=VS_STRING;
-        vl.Value = ProbStringCombiner(pl);
-        QList<PublicClass::ValueStruct> lvl;
-        lvl.append(vl);
-        mainmodel->AddItemToTree(lvl);
+        QStringList sl = QStringList(ProbStringCombiner(pl));
+        mainmodel->AddItemToTree(sl);
         mainmodel->SetLastItem(PublicClass::ProblemForegroundColors()[pl.ProblemType], PublicClass::ProblemBackgroundColors()[pl.ProblemType], \
                                font, QIcon());
     }

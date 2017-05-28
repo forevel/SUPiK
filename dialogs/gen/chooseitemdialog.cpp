@@ -225,8 +225,7 @@ void ChooseItemDialog::AddItem()
     if (tfl.result != TFRESULT_ERROR)
     {
         TwoColDialog *newdialog = new TwoColDialog(Caption);
-        newdialog->setup(tmptble, MODE_EDITNEW, newID);
-        if (!newdialog->result)
+        if (newdialog->setup(tmptble, MODE_EDITNEW, newID) == RESULTOK)
         {
             newdialog->setModal(true);
             newdialog->exec();

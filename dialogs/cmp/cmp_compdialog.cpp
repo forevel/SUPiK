@@ -110,7 +110,7 @@ void cmp_compdialog::SetupUI()
     MainTV->verticalHeader()->setVisible(false);
     MainModel = new TreeModel;
     ProxyModel *MainProxyModel = new ProxyModel;
-    if (MainModel->Setup(CompLetter+"Компоненты_описание_сокращ", false) != TM_OK)
+    if (MainModel->Setup(CompLetter+"Компоненты_описание_сокращ", false) != RESULTOK)
     {
         WARNMSG("");
         QApplication::restoreOverrideCursor();
@@ -191,7 +191,7 @@ void cmp_compdialog::MainItemChoosed(QModelIndex idx)
         return;
     }
     CompTbles = sl.at(0);
-    if (SlaveModel->SetupRaw(CompDb,CompTbles,fl) != TM_OK) // строим таблицу с сортировкой по ИД
+    if (SlaveModel->SetupRaw(CompDb,CompTbles,fl) != RESULTOK) // строим таблицу с сортировкой по ИД
     {
         MessageBox2::information(this, "Внимание", "Проблемы при построении таблицы "+CompTbles);
         QApplication::restoreOverrideCursor();

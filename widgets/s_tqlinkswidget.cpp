@@ -27,7 +27,6 @@
 s_tqLinksWidget::s_tqLinksWidget(const QString &links, const QString &value, QWidget *parent) :
     QWidget(parent)
 {
-    PublicClass::ValueStruct vls;
     setStyleSheet("QWidget {background-color: rgba(0,0,0,0);}");
     PublicClass::FieldFormat ff;
     pc.getFFfromLinks(links, ff);
@@ -98,8 +97,9 @@ s_tqLinksWidget::s_tqLinksWidget(const QString &links, const QString &value, QWi
     }
     default:
     {
-        tfl.idtov(links, value, vls);
-        s_tqLabel *lbl = new s_tqLabel(vls.Value);
+        QString tmps;
+        tfl.idtov(links, value, tmps);
+        s_tqLabel *lbl = new s_tqLabel(tmps);
         vlyout->addWidget(lbl);
         break;
     }

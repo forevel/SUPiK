@@ -176,7 +176,7 @@ void tb_maindialog::SetupModel()
     w->Start();
     w->SetMessage("Подготовка таблицы: база...");
     QStringList PersIds, FIOs, TBGroups, POs, PBs, OTs;
-    PublicClass::ValueStruct tmpv;
+    QString tmps;
     QList<QColor> CList = {Qt::darkGreen, Qt::blue, Qt::red};
     MainModel->ClearModel();
     MainModel->AddColumn("ФИО");
@@ -200,8 +200,8 @@ void tb_maindialog::SetupModel()
     int PIDSize = PersIds.size();
     for (i=0; i<PIDSize; ++i)
     {
-        tfl.idtov("2.2..Персонал_полн.ФИО", PersIds.at(i), tmpv);
-        FIOs.append(tmpv.Value);
+        tfl.idtov("2.2..Персонал_полн.ФИО", PersIds.at(i), tmps);
+        FIOs.append(tmps);
     }
     table = "Персонал_ТБ_полн";
     header = "Группа";
@@ -220,7 +220,6 @@ void tb_maindialog::SetupModel()
         return;
     }
     // заполняем таблицу
-    PublicClass::ValueStruct vls;
     for (i=0; i<FIOs.size(); ++i)
     {
         w->SetMessage("Подготовка таблицы: обработка "+QString::number(i)+" записей из "+QString::number(FIOs.size()));
@@ -228,12 +227,12 @@ void tb_maindialog::SetupModel()
         SetMainModelData(row, 0, FIOs.at(i), Qt::black);
         QString TBGroup = (!TBGroups.at(i).isEmpty()) ? TBGroups.at(i) : TB_NODATA;
         SetMainModelData(row, 1, TBGroup, Qt::black);
-        tfl.idtov("2.18..", POs.at(i), vls);
-        SetMainModelData(row, 5, vls.Value, CList.at(TBFunc_CheckDate(DT_MED, vls.Value)));
-        tfl.idtov("2.18..", PBs.at(i), vls);
-        SetMainModelData(row, 4, vls.Value, CList.at(TBFunc_CheckDate(DT_PB, vls.Value)));
-        tfl.idtov("2.18..", OTs.at(i), vls);
-        SetMainModelData(row, 3, vls.Value, CList.at(TBFunc_CheckDate(DT_OT, vls.Value)));
+        tfl.idtov("2.18..", POs.at(i), tmps);
+        SetMainModelData(row, 5, tmps, CList.at(TBFunc_CheckDate(DT_MED, tmps)));
+        tfl.idtov("2.18..", PBs.at(i), tmps);
+        SetMainModelData(row, 4, tmps, CList.at(TBFunc_CheckDate(DT_PB, tmps)));
+        tfl.idtov("2.18..", OTs.at(i), tmps);
+        SetMainModelData(row, 3, tmps, CList.at(TBFunc_CheckDate(DT_OT, tmps)));
         QStringList Dates, fl, vl;
         fl << "idpers" << "section";
         if (TBGroup == TB_NODATA)

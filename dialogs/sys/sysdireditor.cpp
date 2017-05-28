@@ -102,8 +102,7 @@ void SysDirEditor::EditDir()
         return;
     }
     TwoColDialog *newdialog = new TwoColDialog("Справочники:"+tmpString);
-    newdialog->setup("Справочники_полн",MODE_EDIT,tmpString);
-    if (newdialog->result)
+    if (newdialog->setup("Справочники_полн",MODE_EDIT,tmpString) != RESULTOK)
         WARNMSG("");
     else
         newdialog->exec();

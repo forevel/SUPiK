@@ -285,9 +285,9 @@ void wh_dialog::updateDialog()
 
 void wh_dialog::resizeMainTV(QModelIndex index1, QModelIndex index2)
 {
-/*    Q_UNUSED(index1);
+    Q_UNUSED(index1);
     Q_UNUSED(index2);
-    float realwidths[W_SIZE];
+/*    float realwidths[W_SIZE];
     QStringList sl;
     if (!mainmodel->checkforEmptyRows())
         mainmodel->addRow();
@@ -307,8 +307,7 @@ void wh_dialog::resizeMainTV(QModelIndex index1, QModelIndex index2)
 void wh_dialog::chooseConsumer()
 {
     TwoColDialog *dlg = new TwoColDialog("Выбор контрагента");
-    dlg->setup("Контрагенты_сокращ", MODE_CHOOSE, Consumer);
-    if (dlg->result)
+    if (dlg->setup("Контрагенты_сокращ", MODE_CHOOSE, Consumer) != RESULTOK)
         return;
     connect(dlg, SIGNAL(changeshasbeenMade(QString)), this, SLOT(consumerChoosed(QString)));
     dlg->exec();
@@ -323,8 +322,7 @@ void wh_dialog::consumerChoosed(QString str)
 void wh_dialog::chooseSupplier()
 {
     TwoColDialog *dlg = new TwoColDialog("Выбор контрагента");
-    dlg->setup("Контрагенты_сокращ", MODE_CHOOSE, Supplier);
-    if (dlg->result)
+    if (dlg->setup("Контрагенты_сокращ", MODE_CHOOSE, Supplier) != RESULTOK)
         return;
     connect(dlg, SIGNAL(changeshasbeenMade(QString)), this, SLOT(supplierChoosed(QString)));
     dlg->exec();
@@ -490,7 +488,8 @@ void wh_dialog::acceptandclose()
                 if (sqlc.result)
                     throw 0x2b;
                 TwoColDialog *dlg = new TwoColDialog("");
-                dlg->setup("Расположение на складе_полн", MODE_EDIT, tmpString);
+                if (dlg->setup("Расположение на складе_полн", MODE_EDIT, tmpString) != RESULTOK)
+                    throw 0x2c;
                 dlg->exec();
             }
             else if (sqlc.result > 1) // ошибка
@@ -674,6 +673,7 @@ void wh_dialog::dateChoosed(QDate dte)
 
 void wh_dialog::CBChanged(QWidget *wdgt)
 {
+    Q_UNUSED(wdgt);
 /*    QComboBox *cb = static_cast<QComboBox *>(wdgt);
     if (mainmodel->headerData(mainTV->currentIndex().column(), Qt::Horizontal, Qt::DisplayRole) == "Валюта")
     {

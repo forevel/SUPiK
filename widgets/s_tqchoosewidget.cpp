@@ -215,7 +215,11 @@ void s_tqChooseWidget::pbclicked()
         if (count == 0)
             break;
         TwoColDialog *dlg = new TwoColDialog(hdr);
-        dlg->setup(ff.link.at(0),MODE_CHOOSE,"");
+        if (dlg->setup(ff.link.at(0),MODE_CHOOSE,"") != RESULTOK)
+        {
+            WARNMSG("");
+            return;
+        }
         for (int i = 1; i < count; i++)
             dlg->AddTable(ff.link.at(i));
         connect(dlg,SIGNAL(changeshasbeenMade(QString)),this,SLOT(accepted(QString)));
@@ -310,35 +314,35 @@ void s_tqChooseWidget::pbclicked()
 
 void s_tqChooseWidget::accepted(QString str)
 {
-    PublicClass::ValueStruct vs;
+    QString vs;
     QString tmps;
     pc.getlinksfromFF(ff, tmps);
     tfl.idtov(tmps, str, vs);
     SetData(vs);
-    emit textchanged(QVariant(vs.Value));
+    emit textchanged(QVariant(vs));
 }
 
 void s_tqChooseWidget::SetValue(QVariant data)
 {
-    PublicClass::ValueStruct vls;
+    QString tmps;
     QString datastring = data.toString();
-    tfl.idtov(links, datastring, vls);
-    SetData(vls);
+    tfl.idtov(links, datastring, tmps);
+    SetData(tmps);
 }
 
-void s_tqChooseWidget::SetData(PublicClass::ValueStruct data)
+void s_tqChooseWidget::SetData(const QString &data)
 {
     switch (ff.delegate)
     {
     case FD_CHOOSE:
     case FD_CHOOSE_X:
     {
-        WDFunc::SetLEData(this, "fdcle", data.Value);
+        WDFunc::SetLEData(this, "fdcle", data);
         break;
     }
     case FD_COMBO:
     {
-        WDFunc::SetCBData(this, "fdccb", data.Value);
+        WDFunc::SetCBData(this, "fdccb", data);
         break;
     }
     case FD_LINEEDIT:
@@ -349,12 +353,12 @@ void s_tqChooseWidget::SetData(PublicClass::ValueStruct data)
         {
             s_MaskedLineEdit *le = this->findChild<s_MaskedLineEdit *>("lele");
             if (le != 0)
-                le->setText(data.Value);
+                le->setText(data);
             break;
         }
         default:
         {
-            WDFunc::SetLEData(this, "lele", data.Value);
+            WDFunc::SetLEData(this, "lele", data);
             break;
         }
         }
@@ -362,17 +366,17 @@ void s_tqChooseWidget::SetData(PublicClass::ValueStruct data)
     }
     case FD_SPIN:
     {
-        WDFunc::SetSPBData(this, "fdcsb", data.Value.toDouble());
+        WDFunc::SetSPBData(this, "fdcsb", data.toDouble());
         break;
     }
     case FD_CHECK:
     {
-        WDFunc::SetChBData(this, "fdcb", (data.Value == "1"));
+        WDFunc::SetChBData(this, "fdcb", (data == "1"));
         break;
     }
     case FD_TEXTEDIT:
     {
-        WDFunc::SetTEData(this, "fdcte", data.Value);
+        WDFunc::SetTEData(this, "fdcte", data);
         break;
     }
     default:
@@ -382,29 +386,27 @@ void s_tqChooseWidget::SetData(PublicClass::ValueStruct data)
 
 QString s_tqChooseWidget::Value()
 {
-    QString tmps;
-    tfl.vtoid(Data(), tmps);
-    return tmps;
+    QString in, out;
+    in = Data();
+    tfl.vtoid(links, in, out);
+    return out;
 }
 
-PublicClass::ValueStruct s_tqChooseWidget::Data()
+QString s_tqChooseWidget::Data()
 {
-    PublicClass::ValueStruct vs;
-    vs.Type = VS_STRING;
-    vs.Value = "";
-    vs.Links = links;
+    QString out = "";
     switch (ff.delegate)
     {
     case FD_CHOOSE:
     case FD_CHOOSE_X:
     {
 
-        WDFunc::LEData(this, "fdcle", vs.Value);
+        WDFunc::LEData(this, "fdcle", out);
         break;
     }
     case FD_COMBO:
     {
-        WDFunc::CBData(this, "fdccb", vs.Value);
+        WDFunc::CBData(this, "fdccb", out);
         break;
     }
     case FD_LINEEDIT:
@@ -415,12 +417,12 @@ PublicClass::ValueStruct s_tqChooseWidget::Data()
         {
             s_MaskedLineEdit *le = this->findChild<s_MaskedLineEdit *>("lele");
             if (le != 0)
-                vs.Value = le->text();
+                out = le->text();
             break;
         }
         default:
         {
-            WDFunc::LEData(this, "lele", vs.Value);
+            WDFunc::LEData(this, "lele", out);
             break;
         }
         }
@@ -432,27 +434,26 @@ PublicClass::ValueStruct s_tqChooseWidget::Data()
         if (sb != 0)
         {
             int tmpInt2 = ff.link.at(0).count("d", Qt::CaseSensitive);
-            vs.Value = QString::number(sb->value(),'f',tmpInt2);
+            out = QString::number(sb->value(),'f',tmpInt2);
         }
         break;
     }
     case FD_CHECK:
     {
-        vs.Type = VS_ICON;
         bool chbdata;
         WDFunc::ChBData(this, "fdcb", chbdata);
-        vs.Value = (chbdata) ? "1" : "0";
+        out = (chbdata) ? "1" : "0";
         break;
     }
     case FD_TEXTEDIT:
     {
-        WDFunc::TEData(this, "fdcte", vs.Value);
+        WDFunc::TEData(this, "fdcte", out);
         break;
     }
     default:
         break;
     }
-    return vs;
+    return out;
 }
 
 

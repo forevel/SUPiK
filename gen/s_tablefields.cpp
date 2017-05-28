@@ -222,16 +222,14 @@ void s_tablefields::tov(const QString &tble, const QString &header, const QStrin
 // id - ИД элемента в таблице tablefields:table/tablefields
 // links - строка из поля tablefields:links
 
-void s_tablefields::idtov(const QString &links, const QString &id, PublicClass::ValueStruct &out)
+void s_tablefields::idtov(const QString &links, const QString &id, QString &out)
 {
     QStringList sl;
     PublicClass::FieldFormat ff;
 //    if (pc.AutonomousMode)
 //    {
         QString table, header, tmpid;
-        out.Type = VS_STRING; // тип по умолчанию - простая строка
-        out.Value = ""; // значение по умолчанию - пустая строка
-        out.Links = links;
+        out = ""; // значение по умолчанию - пустая строка
         tmpid = id;
         pc.getFFfromLinks(links, ff);
         switch (ff.ftype)
@@ -240,7 +238,7 @@ void s_tablefields::idtov(const QString &links, const QString &id, PublicClass::
         {
             if (!id.toInt()) // корневой элемент
             {
-                out.Value = "<Корневой элемент>";
+                out = "<Корневой элемент>";
                 break;
             }
             sl = id.split(".");
@@ -248,7 +246,7 @@ void s_tablefields::idtov(const QString &links, const QString &id, PublicClass::
                 tmpid = sl.at(1);
             table = ff.link.at(0);
             header = "Наименование";
-            tov(table, header, tmpid, out.Value);
+            tov(table, header, tmpid, out);
             if (result)
                 WARNMSG("");
             break;
@@ -261,7 +259,7 @@ void s_tablefields::idtov(const QString &links, const QString &id, PublicClass::
                 tmpid = sl.at(1);
             table = ff.link.at(0);
             header = ff.link.at(1);
-            tov(table, header, tmpid, out.Value);
+            tov(table, header, tmpid, out);
             if (result)
                 WARNMSG("");
             break;
@@ -274,7 +272,7 @@ void s_tablefields::idtov(const QString &links, const QString &id, PublicClass::
         case FW_EQUAT:
         case FW_ID:
         {
-            out.Value = id;
+            out = id;
             break;
         }
         case FW_DATE:
@@ -291,7 +289,7 @@ void s_tablefields::idtov(const QString &links, const QString &id, PublicClass::
                 else
                     out.Value = "N/A";
             } */
-            out.Value = id;
+            out = id;
             break;
         }
         case FW_DLINK:
@@ -307,9 +305,9 @@ void s_tablefields::idtov(const QString &links, const QString &id, PublicClass::
             table = ff.link.at(tmpi*2);
             header = ff.link.at(tmpi*2+1);
             QString value = sl.at(1);
-            tov(table, header, value, out.Value);
+            tov(table, header, value, out);
             QString tmps = "_"+sl.at(0); // _ - признак того, что в ячейку надо сохранить доп. информацию о номере таблицы
-            out.Value.insert(0, tmps);
+            out.insert(0, tmps);
             if (result)
                 WARNMSG("");
             break;
@@ -324,7 +322,7 @@ void s_tablefields::idtov(const QString &links, const QString &id, PublicClass::
                 DBGMSG;
                 return;
             }
-            QString outs;
+            out.clear();
             int j = 0;
             while ((tmpui) && (j < ACC_NUM))
             {
@@ -332,12 +330,12 @@ void s_tablefields::idtov(const QString &links, const QString &id, PublicClass::
                 {
                 case 0:
                 {
-                    outs.insert(0, (tmpui & 0x0001) ? "ч" : ".");
+                    out.insert(0, (tmpui & 0x0001) ? "ч" : ".");
                     break;
                 }
                 case 1:
                 {
-                    outs.insert(0, (tmpui & 0x0001) ? "з" : ".");
+                    out.insert(0, (tmpui & 0x0001) ? "з" : ".");
                     break;
                 }
                 default:
@@ -346,7 +344,6 @@ void s_tablefields::idtov(const QString &links, const QString &id, PublicClass::
                 j++;
                 tmpui >>= 1;
             }
-            out.Value = outs;
             break;
         }
         case FW_BOOL:
@@ -359,11 +356,8 @@ void s_tablefields::idtov(const QString &links, const QString &id, PublicClass::
                 DBGMSG;
                 return;
             }
-            out.Type = VS_ICON;
-            if (tmpb == 0)
-                out.Value = ":/res/cross.png";
-            else
-                out.Value = ":/res/ok.png";
+            out = (tmpb == 0) ? "0" : "1";
+            break;
         }
         case FW_CRYPT:
         {
@@ -385,17 +379,15 @@ void s_tablefields::idtov(const QString &links, const QString &id, PublicClass::
                     result = 1;
                     return;
                 }
-                sl = Cli->Result.at(0); // sl[0] - <id>, sl[1] - <value>
-                out.Links = links + "." + sl.at(1); // id to the end
-                out.Type = VS_STRING;
-                out.Value = sl.at(0);
+                sl = Cli->Result.at(0); // sl[0] - <id>, sl[1] - <links>
+                out = sl.at(0);
                 result = 0;
             }
             break;
         }
         default:
         {
-            out.Value = id;
+            out = id;
             break;
         }
         }
@@ -490,35 +482,30 @@ void s_tablefields::idtovl(const QString &links, QStringList &out)
 // перевод имени в его ИД через строку links в таблице tablefields (поиск в таблице по имени его ИД)
 // links = 2.9, value = "ч..ч..чузчузч"
 
-void s_tablefields::vtoid(PublicClass::ValueStruct &vl, QString &out)
+void s_tablefields::vtoid(QString &links, QString &in, QString &out)
 {
 //    if (pc.AutonomousMode)
 //    {
         QString table, header;
         result = TFRESULT_NOERROR;
         out.clear();
-        if ((vl.Type == VS_STRING) && (vl.Value == "")) // пустая строка вполне имеет право на запись
+        if (in.isEmpty()) // пустая строка вполне имеет право на запись
             return;
         PublicClass::FieldFormat ff;
-        pc.getFFfromLinks(vl.Links, ff);
+        pc.getFFfromLinks(links, ff);
         switch (ff.ftype)
         {
         case FW_ALLINK:
         {
-            if (vl.Type == VS_STRING)
-            {
-                if (vl.Value == "<Корневой элемент>")
-                    out = "0";
-                else
-                {
-                    table = ff.link.at(0);
-                    header = "Наименование";
-                    toid(table, header, vl.Value, out);
-                }
-                if (result)
-                    WARNMSG("");
-            }
+            if (in == "<Корневой элемент>")
+                out = "0";
             else
+            {
+                table = ff.link.at(0);
+                header = "Наименование";
+                toid(table, header, in, out);
+            }
+            if (result)
                 WARNMSG("");
             break;
         }
@@ -527,7 +514,7 @@ void s_tablefields::vtoid(PublicClass::ValueStruct &vl, QString &out)
         {
             table = ff.link.at(0);
             header = ff.link.at(1);
-            toid(table, header, vl.Value, out);
+            toid(table, header, in, out);
             if (result)
                 WARNMSG("");
             break;
@@ -540,7 +527,7 @@ void s_tablefields::vtoid(PublicClass::ValueStruct &vl, QString &out)
             {
                 int tmpInt = ff.link.at(0).count("n", Qt::CaseSensitive);
                 int tmpInt2 = ff.link.at(0).count("d", Qt::CaseSensitive);
-                QStringList sl = vl.Value.split(".");
+                QStringList sl = in.split(".");
                 if (sl.size() > 0)
                 {
                     out = sl.at(0).right(tmpInt);
@@ -551,7 +538,7 @@ void s_tablefields::vtoid(PublicClass::ValueStruct &vl, QString &out)
                     out += "." + sl.at(1).left(tmpInt2);
                 break;
             }
-            out = vl.Value;
+            out = in;
             break;
         }
         case FW_AUTONUM:
@@ -563,7 +550,7 @@ void s_tablefields::vtoid(PublicClass::ValueStruct &vl, QString &out)
         case FW_ILINK:
         case FW_PIXTE:
         {
-            out = vl.Value;
+            out = in;
             break;
         }
         case FW_DATE:
@@ -574,54 +561,52 @@ void s_tablefields::vtoid(PublicClass::ValueStruct &vl, QString &out)
                 out = "N/A";
             else
                 out = tmpd.toString("dd-MM-yyyy hh:mm:ss"); */
-            out = vl.Value;
+            out = in;
             break;
         }
         case FW_DLINK:
         {
-            QString tmps = vl.Value;
             int tmpi;
-            if (tmps.at(0) == '_') // символ подчёркивания в первой позиции ИД означает, что номер таблицы надо брать из второго символа
+            if (in.at(0) == '_') // символ подчёркивания в первой позиции ИД означает, что номер таблицы надо брать из второго символа
             {
-                tmpi = tmps.at(1).digitValue();
+                tmpi = in.at(1).digitValue();
                 if (tmpi*2+1 > ff.link.size()) // нет в перечислении links таблицы с таким номером
                 {
                     result = TFRESULT_ERROR;
                     WARNMSG("");
                     return;
                 }
-                tmps.remove(0, 2);
+                in.remove(0, 2);
             }
             else
                 tmpi = 0;
             table = ff.link.at(tmpi*2);
             header = ff.link.at(tmpi*2+1);
-            toid(table, header, tmps, out);
+            toid(table, header, in, out);
             if (result)
                 WARNMSG("");
             break;
         }
         case FW_RIGHTS:
         {
-            QString tmps = vl.Value;
             quint32 outui=0, tmpui = 0x0001;
             int j = 0;
-            while ((!tmps.isEmpty()) && (j < ACC_NUM)) // пока в строке есть что-нибудь и находимся в пределах битовой ширины прав
+            while ((!in.isEmpty()) && (j < ACC_NUM)) // пока в строке есть что-нибудь и находимся в пределах битовой ширины прав
             {
                 switch (j%2)
                 {
                 case 0:
                 {
-                    int tmpi = tmps.size()-1;
-                    QChar tmpc = tmps.at(tmpi);
+                    int tmpi = in.size()-1;
+                    QChar tmpc = in.at(tmpi);
                     if (tmpc == QChar(1095)) // "ч"
                         outui |= tmpui;
                     break;
                 }
                 case 1:
                 {
-                    int tmpi = tmps.size()-1;
-                    QChar tmpc = tmps.at(tmpi);
+                    int tmpi = in.size()-1;
+                    QChar tmpc = in.at(tmpi);
                     if (tmpc == QChar(1079)) // "з"
                         outui |= tmpui;
                     break;
@@ -629,7 +614,7 @@ void s_tablefields::vtoid(PublicClass::ValueStruct &vl, QString &out)
                 default:
                     break;
                 }
-                tmps.chop(1);
+                in.chop(1);
                 j++;
                 tmpui <<= 1;
             }
@@ -645,7 +630,7 @@ void s_tablefields::vtoid(PublicClass::ValueStruct &vl, QString &out)
             else
             {
                 QStringList sl;
-                sl << QString::number(vl.Type) << vl.Value << vl.Links;
+                sl << in << links;
                 int res = Cli->SendAndGetResult(T_VTID, sl);
                 if (res == Client::CLIER_EMPTY)
                     result = TFRESULT_EMPTY;
@@ -658,17 +643,7 @@ void s_tablefields::vtoid(PublicClass::ValueStruct &vl, QString &out)
         }
         case FW_BOOL:
         {
-            if (vl.Type == VS_ICON)
-            {
-                if (vl.Value == ":/res/ok.png")
-                    out = "1";
-                else if (vl.Value == ":/res/cross.png")
-                    out = "0";
-                else
-                    WARNMSG("");
-            }
-            else
-                WARNMSG("");
+            out = in;
             break;
         }
         default:
@@ -677,27 +652,6 @@ void s_tablefields::vtoid(PublicClass::ValueStruct &vl, QString &out)
             break;
         }
         }
-/*    }
-    else
-    {
-        QStringList sl;
-        sl << QString::number(vl.Type) << vl.Value << vl.Links;
-        int res = Cli->SendAndGetResult(T_VTID, sl);
-        if ((res != Client::CLIER_NOERROR) || Cli->Result.isEmpty())
-        {
-            result = 1;
-            out.clear();
-            return;
-        }
-        if (Cli->Result.at(0).isEmpty())
-        {
-            result = 1;
-            out.clear();
-            return;
-        }
-        out = Cli->Result.at(0).at(0);
-        result = 0;
-    }*/
 }
 
 // вспомогательная процедура возвращает ИД по значению value для заданной таблицы tble и поля header

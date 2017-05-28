@@ -32,8 +32,6 @@ supik::supik()
     PeriodicOddSecond = true;
     PingSecCounter = 0;
     SetSupikWindow();
-    pc.supikprocs << "ExitSupik" << "SysStructEdit" << "SettingsEdit" << "Components" << "Directories" << "BackupDir" << "RestoreDir" << "ProbCheck";
-    pc.supikprocs << "WhIncome" << "WhOutgoing" << "WhSearch" << "DevDoc" << "DevDev" << "Quarantine" << "" << "SysImportClass" << "TBExam";
     pf["ExitSupik"] = &supik::ExitSupik;
     pf["SysStructEdit"] = &supik::SysStructEdit;
     pf["SettingsEdit"] = &supik::SettingsEdit;

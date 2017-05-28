@@ -47,7 +47,7 @@ int TwoColDialog::setup(QString tble, int Mode, QString id, bool isQuarantine)
     this->Mode = Mode;
     this->Id = id;
     MainModel = new EditModel;
-    if (MainModel->Setup(tble, id))
+    if ((MainModel->Setup(tble, id)) == RESULTBAD)
     {
         QApplication::restoreOverrideCursor();
         WARNMSG("");
@@ -61,7 +61,7 @@ int TwoColDialog::setup(QString tble, int Mode, QString id, bool isQuarantine)
     return RESULTOK;
 }
 
-void TwoColDialog::SetupRaw(QString db, QString tble, int Mode, QString id)
+int TwoColDialog::SetupRaw(QString db, QString tble, int Mode, QString id)
 {
     QApplication::setOverrideCursor(QCursor(Qt::WaitCursor));
     this->tble.clear();
@@ -70,21 +70,25 @@ void TwoColDialog::SetupRaw(QString db, QString tble, int Mode, QString id)
     this->Id = id;
     this->Db = db;
     MainModel = new EditModel;
-    if (MainModel->SetupRaw(db, tble, id))
+    if ((MainModel->SetupRaw(db, tble, id)) == RESULTBAD)
     {
         QApplication::restoreOverrideCursor();
         WARNMSG("");
-        return;
+        return RESULTBAD;
     }
     if (!setupUI())
-        return;
+        return RESULTBAD;
     FillHeaderData();
-    result = 0;
     QApplication::restoreOverrideCursor();
+    return RESULTOK;
 }
 
-void TwoColDialog::SetupFile(QString Filename, QString StringToFind, QString str)
+int TwoColDialog::SetupFile(QString Filename, QString StringToFind, QString str)
 {
+    Q_UNUSED(Filename);
+    Q_UNUSED(StringToFind);
+    Q_UNUSED(str);
+    return RESULTOK;
 }
 
 bool TwoColDialog::setupUI()
@@ -180,8 +184,7 @@ void TwoColDialog::AddItem()
         if (tfl.result != TFRESULT_ERROR)
         {
             TwoColDialog *newdialog = new TwoColDialog(Caption);
-            newdialog->setup(tmptble, MODE_EDITNEW, newID);
-            if (!newdialog->result)
+            if (newdialog->setup(tmptble, MODE_EDITNEW, newID) != RESULTOK)
             {
                 newdialog->setModal(true);
                 newdialog->exec();
@@ -213,8 +216,7 @@ void TwoColDialog::AddItem()
             return;
         }
         TwoColDialog *newdialog = new TwoColDialog("");
-        newdialog->SetupRaw(Db, tble.at(0), MODE_EDITNEW_RAW, newid);
-        if (!newdialog->result)
+        if (newdialog->SetupRaw(Db, tble.at(0), MODE_EDITNEW_RAW, newid) != RESULTOK)
         {
             newdialog->setModal(true);
             newdialog->exec();
@@ -240,6 +242,7 @@ void TwoColDialog::Update()
 
 void TwoColDialog::AddTable(QString tble)
 {
+    Q_UNUSED(tble);
 /*    this->tble.append(tble);
     MainModel->Add(tble);
     if (MainModel->result)
@@ -353,7 +356,7 @@ void TwoColDialog::FillHeaderData()
     int ftype;
     for (i=0;i<MainModel->rowCount();i++)
     {
-        QStringList tmpStringList = MainModel->data(MainModel->index(i,1,QModelIndex()),Qt::UserRole).toString().split(".");
+        QStringList tmpStringList = MainModel->data(MainModel->index(i,1,QModelIndex()),EditModel::LinksRole).toString().split(".");
         if (tmpStringList.size() > 1)
             ftype = tmpStringList.at(1).toInt();
         QString hdradd = MainModel->data(MainModel->index(i,0,QModelIndex()),Qt::DisplayRole).toString();

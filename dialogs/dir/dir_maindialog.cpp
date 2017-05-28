@@ -307,8 +307,7 @@ void dir_maindialog::EditItem(QString str)
     }
     TwoColDialog *newdialog = new TwoColDialog(tmps+":"+SecondPart);
     int Mode = (isNewID) ? MODE_EDITNEW : MODE_EDIT;
-    newdialog->setup(Table+"_полн",Mode,Id,IsQuarantine);
-    if (newdialog->result)
+    if (newdialog->setup(Table+"_полн",Mode,Id,IsQuarantine) != RESULTOK)
     {
         WARNMSG("");
         return;

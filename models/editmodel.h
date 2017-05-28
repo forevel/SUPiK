@@ -9,6 +9,9 @@
 #include <QModelIndexList>
 #include "../gen/publicclass.h"
 
+#define FIELDCOLUMN 0
+#define VALUECOLUMN 1
+
 class EditModelItem
 {
 public:
@@ -75,13 +78,12 @@ public:
     QString getCellType(int row, int Column);
     void setRowAttr(int fcset=0, int icon=-1);
     void ClearModel();
-    QString Value(int Row, int Column); // взять значение по строке row и столбцу Column
+    QString Value(int row, int column); // взять значение по строке row и столбцу Column
     int Setup(QString Table, QString Id);
     int SetupRaw(QString Db, QString Tble, QString Id); // заполнение модели из таблицы, которой нет в tablefields
     QStringList Headers();
     QStringList Values();
     QStringList Links();
-    PublicClass::ValueStruct CellValue(int row, int column);
 
 signals:
 
@@ -94,7 +96,7 @@ private:
     QFont Fonts[6]; // определение набора шрифтов
     QIcon Icons[6]; // определение набора иконок
 
-    void AddRow(QList<PublicClass::ValueStruct> &ValuesSl);
+    void AddRow(QStringList &sl);
 };
 
 #endif // EDITMODEL_H

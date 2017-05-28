@@ -241,7 +241,7 @@ void TreeModel::GoIntoIndex(QModelIndex idx)
         // 3
         ClearOnlyData();
         // 4
-        if (BuildTree())
+        if (Build())
             WARNMSG("");
         return;
     }
@@ -257,7 +257,7 @@ void TreeModel::GoIntoIndex(QModelIndex idx)
         // 3
         ClearOnlyData();
         // 4
-        if (BuildTree())
+        if (Build())
             WARNMSG("");
     }
 }
@@ -300,7 +300,7 @@ int TreeModel::SetupFile(QString Filename, QString StringToFind)
     if (!file.open(QIODevice::ReadOnly))
     {
         WARNMSG("Невозможно открыть файл "+Filename);
-        return TM_BADSOURCE;
+        return RESULTBAD;
     }
     QByteArray ba = file.readAll();
     while ((filepos = ba.indexOf(StringToFind, filepos)) != -1)
@@ -325,16 +325,11 @@ int TreeModel::SetupFile(QString Filename, QString StringToFind)
             tmpChar++;
             filepos++;
         }
-        QList<PublicClass::ValueStruct> vl;
-        PublicClass::ValueStruct tmpvl;
-        tmpvl.Type = VS_STRING;
-        tmpvl.Value = tmpString;
-        vl.append(tmpvl);
-        AddItemToTree(vl);
+        AddItemToTree(QStringList(tmpString));
         SetLastItem(Colors[0], Qt::transparent, Fonts[0], Icons[0], TM_SIMPLE_ELEMENT);
     }
     file.close();
-    return TM_OK;
+    return RESULTOK;
 }
 
 // процедура инициализации модели данными из таблицы table и построение дерева по полям <tble> и idalias
@@ -361,20 +356,20 @@ int TreeModel::Setup(QStringList Tables, int Type, bool Cond)
     if (Tables.isEmpty())
     {
         WARNMSG("Передан пустой список таблиц");
-        return TM_BADRESULT;
+        return RESULTBAD;
     }
     int i;
     for (i=0; i<Tables.size(); i++)
     {
         if (PrepareTable(Tables.at(i)))
-            return TM_BADRESULT;
+            return RESULTBAD;
     }
-    if (BuildTree()) // элементы записываются в виде: <номер_таблицы>.<ИД>
+    if (Build()) // элементы записываются в виде: <номер_таблицы>.<ИД>
     {
         WARNMSG("");
-        return TM_BADRESULT;
+        return RESULTBAD;
     }
-    return TM_OK;
+    return RESULTOK;
 }
 
 //
@@ -397,10 +392,9 @@ int TreeModel::SetupRaw(QString db, QString tble, QStringList fields)
     if (ididx == -1)
         ididx = fields.indexOf("id");
     if (fields.isEmpty())
-        return TM_BADSOURCE;
-    QStringList TableHeadersSl = QStringList() << fields;
+        return RESULTBAD;
     QStringList TableLinksSl;
-    for (i=0; i<TableHeadersSl.size(); ++i)
+    for (i=0; i<fields.size(); ++i)
     {
         if (i == ididx)
             TableLinksSl.append("4.19..7");
@@ -409,21 +403,21 @@ int TreeModel::SetupRaw(QString db, QString tble, QStringList fields)
     }
     ClearModel();
     IsRaw = true;
-    TableHeaders.append(TableHeadersSl);
+    TableHeaders.append(fields);
     TableLinks.append(TableLinksSl);
     TableIsTree.append(false);
     DBs.append(db);
     Tables.append(tble);
     TablesNum++; // количество таблиц увеличиваем
     TreeType = TT_SIMPLE;
-    for (i = columnCount(); i < TableHeadersSl.size(); i++) // добавим нехватающее количество столбцов в общую модель
+    for (i = columnCount(); i < fields.size(); i++) // добавим нехватающее количество столбцов в общую модель
         insertColumns(i,1,QModelIndex());
-    if (BuildTree()) // элементы записываются в виде: <номер_таблицы>.<ИД>
+    if (Build()) // элементы записываются в виде: <номер_таблицы>.<ИД>
     {
         WARNMSG("");
-        return TM_BADRESULT;
+        return RESULTBAD;
     }
-    return TM_OK;
+    return RESULTOK;
 }
 
 int TreeModel::PrepareTable(QString Table)
@@ -432,14 +426,14 @@ int TreeModel::PrepareTable(QString Table)
     if (Table.isEmpty())
     {
         DBGMSG;
-        return TM_BADRESULT;
+        return RESULTBAD;
     }
     QStringList fl = QStringList() << "table" << "tablefields" << "header" << "links";
     QList<QStringList> vl = sqlc.GetMoreValuesFromTableByFields("sup", "tablefields", fl, QStringList("tablename"), QStringList(Table), "fieldsorder", true);
     if ((sqlc.result) || (vl.size() == 0))
     {
         WARNMSG(sqlc.LastError);
-        return TM_BADRESULT;
+        return RESULTBAD;
     }
     int i;
     int idpos = -1;
@@ -477,7 +471,7 @@ int TreeModel::PrepareTable(QString Table)
     if (idpos == -1)
     {
         INFOMSG("Не найдено поле ИД в таблице "+Table);
-        return TM_BADRESULT;
+        return RESULTBAD;
     }
     if (!IsIdAliasExist)
     {
@@ -488,7 +482,7 @@ int TreeModel::PrepareTable(QString Table)
     else if (!IsAliasExist) // если есть idalias, но нет <tble> - это не дело
     {
         INFOMSG("Не найдено поле " + PlainTable + " в таблице "+Table);
-        return TM_BADRESULT;
+        return RESULTBAD;
     }
     else
         TableIsTree.append(true);
@@ -507,71 +501,71 @@ int TreeModel::PrepareTable(QString Table)
     if (tmpsl.size()<2)
     {
         DBGMSG;
-        return TM_BADRESULT;
+        return RESULTBAD;
     }
     DBs.append(tmpsl.at(0));
     Tables.append(tmpsl.at(1));
     TablesNum++; // количество таблиц увеличиваем
-    return TM_OK;
+    return RESULTOK;
 }
 
 // процедура построения дерева по данному ИД в данной таблице. TableDotId в виде <Table>.<ID>
 
-int TreeModel::BuildTree()
+int TreeModel::Build()
 {
     QStringList TableId = RootIDs.top().split(".");
     if (TableId.size()<2)
     {
         DBGMSG;
-        return TM_BADSOURCE;
+        return RESULTBAD;
     }
     int Table = TableId.at(0).toInt();
     QString Id = QString::number(TableId.at(1).toInt()); // убираем лишние нули
     if (SetFirstTreeElements()) // нарисовать первый элемент его самого с открытой книгой
     {
         WARNMSG("");
-        return TM_BADRESULT;
+        return RESULTBAD;
     }
     if (TableIsTree.at(Table))
     {
-        if (SetTree(Table, Id))
+        if (Set(Table, Id, TM_STR))
         {
             WARNMSG("");
-            return TM_BADRESULT;
+            return RESULTBAD;
         }
     }
     else
     {
-        if (SetTable(Table, Id))
+        if (Set(Table, Id, TM_STT))
         {
             WARNMSG("");
-            return TM_BADRESULT;
+            return RESULTBAD;
         }
     }
     // построили по текущему уровню и текущей таблице, надо проверить следующую по списку таблицу на наличие элементов, связанных с текущим Id
     if (RootIDs.top() != "0.0")
         Table++; // переходим на новый уровень дерева
     else
-        return TM_OK;
+        return RESULTOK;
     if (Table >= TablesNum) // больше нет таблиц
-        return TM_OK; // выход
+        return RESULTOK; // выход
     if (TableIsTree.at(Table))
     {
-        if (SetNextTree(Table, Id))
+        if (Set(Table, Id, TM_SNTR))
         {
             WARNMSG("");
-            return TM_BADRESULT;
+            return RESULTBAD;
         }
     }
     else
     {
-        if (SetNextTable(Table, Id))
+        if (Set(Table, Id, TM_SNTT))
         {
             WARNMSG("");
-            return TM_BADRESULT;
+            return RESULTBAD;
         }
     }
-    return TM_OK;
+    return RESULTOK;
 }
 
 // установка первого элемента в виде раскрытой книги
@@ -587,265 +581,83 @@ int TreeModel::SetFirstTreeElements()
         if (RIDsl.size()<2)
         {
             DBGMSG;
-            return TM_BADRESULT;
+            return RESULTBAD;
         }
         bool ok;
         int Table = RIDsl.at(0).toInt(&ok);
         if (!ok)
         {
             DBGMSG;
-            return TM_BADRESULT;
+            return RESULTBAD;
         }
         QString Id = RIDsl.at(1);
         QStringList tmpsl = sqlc.GetValuesFromTableByID(DBs.at(Table), Tables.at(Table), TableHeaders.at(Table), Id);
         if (sqlc.result)
         {
             WARNMSG(sqlc.LastError);
-            return TM_BADRESULT;
+            return RESULTBAD;
         }
         Id = QString("%1").arg(Id.toInt(0), 7, 10, QChar('0'));
         Id.insert(0, IndentSpaces);
-        QList<PublicClass::ValueStruct> vl;
-        PublicClass::ValueStruct tmpvl;
-        tmpvl.Type = VS_STRING;
-        tmpvl.Value = Id;
-        vl.append(tmpvl);
+        QStringList vl;
+        vl.append(Id);
         for (int j=0; j<tmpsl.size(); j++)
         {
-            PublicClass::ValueStruct tmpvl;
-            tfl.idtov(TableLinks.at(Table).at(j), tmpsl.at(j), tmpvl);
-            tmpvl.Value.insert(0, IndentSpaces);
-            vl.append(tmpvl);
+            QString tmps;
+            tfl.idtov(TableLinks.at(Table).at(j), tmpsl.at(j), tmps);
+            tmps.insert(0, IndentSpaces);
+            vl.append(tmps);
         }
         AddItemToTree(vl);
         SetLastItem(Colors[4], Qt::transparent, Fonts[4], Icons[4], TM_ELEMENT_WITH_CHILDREN); // раскрытая книга
         Indentation++;
     }
-    return TM_OK;
+    return RESULTOK;
 }
 
-int TreeModel::SetTree(int Table, QString Id)
+int TreeModel::Set(int table, QString &id, int type)
 {
+//    bool Type2 = false; // (type == TM_SNTT) && (TreeType == TT_TYPE2) && (Table == 1)
+    if ((type == TM_STT) && (id != "0")) // процедура установки таблицы имеет смысл только для корневого элемента
+        return RESULTOK;
     QString IndentSpaces;
-    IndentSpaces.fill(0xFFFF, Indentation);
-    QStringList tmpsl = TableHeaders.at(Table);
-    if (!IsRaw)
-        tmpsl.insert(0, "id"+Tables.at(Table));
-    QList<QStringList> vl = sqlc.GetMoreValuesFromTableByFields(DBs.at(Table), Tables.at(Table), tmpsl, QStringList("idalias"), QStringList(Id), Tables.at(Table));
-    if (sqlc.result == 2) // пустой ответ вполне имеет право быть, т.к. есть ещё проверка на подчинённые таблицы с данным ИД
-    {
-        WARNMSG(sqlc.LastError);
-        return TM_BADRESULT;
-    }
-    for (int i=0; i<vl.size(); i++)
-    {
-        if ((IsConditional) && (RightsFieldNum >= 0))
-        {
-            QString Rights = vl.at(i).at(RightsFieldNum);
-            if (!(Rights.toUInt(0,16) & pc.access)) // пропускаем, если права не соответствуют
-                continue;
-        }
-        tmpsl = vl.at(i);
-        QString RootId = tmpsl.at(0);
-        QString tmps = QString::number(Table)+"."+QString("%1").arg(RootId.toInt(0), 7, 10, QChar('0')); // добавка нулей
-        tmps.insert(0, IndentSpaces);
-        QList<PublicClass::ValueStruct> vsl;
-        PublicClass::ValueStruct tmpvl;
-        tmpvl.Type = VS_STRING;
-        tmpvl.Value = tmps;
-        vsl.append(tmpvl);
-        for (int j=1; j<tmpsl.size(); j++)
-        {
-            PublicClass::ValueStruct tmpvl;
-            tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j), tmpvl);
-            tmpvl.Value.insert(0, IndentSpaces);
-            vsl.append(tmpvl);
-        }
-        AddItemToTree(vsl);
-        // проверка наличия потомков у элемента
-        tmps = sqlc.GetValueFromTableByField(DBs.at(Table), Tables.at(Table), Tables.at(Table), "idalias", RootId);
-        if (sqlc.result == SQLC_FAILED)
-        {
-            WARNMSG(sqlc.LastError);
-            return TM_BADRESULT;
-        }
-        // если есть хотя бы один потомок, надо ставить "книжку"
-        if (!tmps.isEmpty()) // есть потомки
-            SetLastItem(Colors[4],Qt::transparent,Fonts[4],Icons[3],TM_ELEMENT_WITH_CHILDREN); // закрытая книга
-        else // нет потомков в своей таблице - надо покопаться в подчинённой
-        {
-            int NextTable = Table+1;
-            if (NextTable < TablesNum) // есть ещё таблицы
-            {
-                if (IsRaw)
-                    tmps = sqlc.GetValueFromTableByField(DBs.at(NextTable), Tables.at(NextTable),"id","id"+Tables.at(Table), RootId);
-                else
-                    tmps = sqlc.GetValueFromTableByField(DBs.at(NextTable), Tables.at(NextTable),"id"+Tables.at(NextTable),"id"+Tables.at(Table), RootId);
-                if (!tmps.isEmpty())
-                    SetLastItem(Colors[4],Qt::transparent,Fonts[4],Icons[3],TM_ELEMENT_WITH_CHILDREN); // закрытая книга
-                else
-                    SetLastItem(Colors[0],Qt::transparent,Fonts[4],Icons[0],TM_SIMPLE_ELEMENT);
-            }
-            else
-                SetLastItem(Colors[0],Qt::transparent,Fonts[4],Icons[0],TM_SIMPLE_ELEMENT);
-        }
-    }
-    return TM_OK;
-}
-
-int TreeModel::SetTable(int Table, QString Id)
-{
-    if (Id == "0") // процедура установки таблицы имеет смысл только для корневого элемента
-    {
-        QString IndentSpaces;
-        IndentSpaces.fill(0xFFFF, Indentation);
-        QString MainTable = Tables.at(Table);
-        QStringList tmpsl = TableHeaders.at(Table);
-        if (!IsRaw)
-            tmpsl.insert(0, "id"+MainTable);
-        QList<QStringList> vl = sqlc.GetMoreValuesFromTableByFields(DBs.at(Table), MainTable, tmpsl, QStringList("deleted"), QStringList("0"), tmpsl.at(0));
-        if (sqlc.result)
-        {
-            WARNMSG(sqlc.LastError);
-            return TM_BADRESULT;
-        }
-        int NewTable = Table+1;
-        bool NewTableExist = (NewTable < TablesNum);
-        for (int i=0; i<vl.size(); i++)
-        {
-            if ((IsConditional) && (RightsFieldNum >= 0))
-            {
-                QString Rights = vl.at(i).at(RightsFieldNum);
-                if (!(Rights.toUInt(0,16) & pc.access)) // пропускаем, если права не соответствуют
-                    continue;
-            }
-            tmpsl = vl.at(i);
-            QString RootId = tmpsl.at(0);
-            QString tmps = QString::number(Table)+"."+QString("%1").arg(RootId.toInt(),7, 10, QChar('0')); // добавка нулей
-            tmps.insert(0, IndentSpaces);
-            QList<PublicClass::ValueStruct> vlsl;
-            PublicClass::ValueStruct tmpvl;
-            tmpvl.Type = VS_STRING;
-            tmpvl.Value = tmps;
-            vlsl.append(tmpvl);
-            for (int j=1; j<tmpsl.size(); j++)
-            {
-                tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j), tmpvl);
-                tmpvl.Value.insert(0, IndentSpaces);
-                vlsl.append(tmpvl);
-            }
-            AddItemToTree(vlsl);
-            // проверка наличия потомков у элемента
-            if (NewTableExist) // если дальше ещё есть таблицы
-            {
-                QString NewTableId = (IsRaw) ? "id" : "id"+Tables.at(NewTable+1);
-                if ((TreeType == TT_TYPE2) && (Tables.size() >= (NewTable+1)))
-                    tmps = sqlc.GetValueFromTableByField(DBs.at(NewTable+1), Tables.at(NewTable+1), NewTableId, "id"+MainTable, RootId);
-                else
-                    tmps = sqlc.GetValueFromTableByField(DBs.at(NewTable), Tables.at(NewTable), NewTableId, "id"+MainTable, RootId);
-                if (sqlc.result == SQLC_FAILED)
-                {
-                    WARNMSG(sqlc.LastError);
-                    return TM_BADRESULT;
-                }
-                // если есть хотя бы один потомок, надо ставить "книжку"
-                if (tmps.isEmpty()) // нет потомков
-                    SetLastItem(Colors[0],Qt::transparent,Fonts[4],Icons[0],TM_SIMPLE_ELEMENT);
-                else
-                    SetLastItem(Colors[4],Qt::transparent,Fonts[4],Icons[3],TM_ELEMENT_WITH_CHILDREN); // закрытая книга
-            }
-            else
-                SetLastItem(Colors[0],Qt::transparent,Fonts[0],Icons[0],TM_SIMPLE_ELEMENT);
-        }
-    }
-    return TM_OK;
-}
-
-int TreeModel::SetNextTree(int Table, QString Id)
-{
-    QString IndentSpaces;
-    IndentSpaces.fill(0xFFFF, Indentation);
-    QStringList tmpsl = TableHeaders.at(Table);
-    if (!IsRaw)
-        tmpsl.insert(0, "id"+Tables.at(Table));
-    QList<QStringList> vl = sqlc.GetMoreValuesFromTableByFields(DBs.at(Table), Tables.at(Table), tmpsl, QStringList("id"+Tables.at(Table-1)), QStringList(Id), tmpsl.at(0));
-    if (sqlc.result)
-    {
-        WARNMSG(sqlc.LastError);
-        return TM_BADRESULT;
-    }
-    for (int i=0; i<vl.size(); i++)
-    {
-        if ((IsConditional) && (RightsFieldNum >= 0))
-        {
-            QString Rights = vl.at(i).at(RightsFieldNum);
-            if (!(Rights.toUInt(0,16) & pc.access)) // пропускаем, если права не соответствуют
-                continue;
-        }
-        tmpsl = vl.at(i);
-        QString RootId = tmpsl.at(0);
-        QString tmps = QString::number(Table)+"."+QString("%1").arg(RootId.toInt(),7, 10, QChar('0')); // добавка нулей
-        tmps.insert(0, IndentSpaces);
-        QList<PublicClass::ValueStruct> vl;
-        PublicClass::ValueStruct tmpvl;
-        tmpvl.Type = VS_STRING;
-        tmpvl.Value = tmps;
-        vl.append(tmpvl);
-        for (int j=1; j<tmpsl.size(); j++)
-        {
-            PublicClass::ValueStruct tmpvl;
-            tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j), tmpvl);
-            tmpvl.Value.insert(0, IndentSpaces);
-            vl.append(tmpvl);
-        }
-        AddItemToTree(vl);
-        // проверка наличия потомков у элемента
-        tmps = sqlc.GetValueFromTableByField(DBs.at(Table), Tables.at(Table), Tables.at(Table), "idalias", RootId);
-        if (sqlc.result == SQLC_FAILED)
-        {
-            WARNMSG(sqlc.LastError);
-            return TM_BADRESULT;
-        }
-        // если есть хотя бы один потомок, надо ставить "книжку"
-        if (tmps.isEmpty()) // нет потомков
-            SetLastItem(Colors[0],Qt::transparent,Fonts[4],Icons[0],TM_SIMPLE_ELEMENT);
-        else
-            SetLastItem(Colors[4],Qt::transparent,Fonts[4],Icons[3],TM_ELEMENT_WITH_CHILDREN); // закрытая книга
-    }
-    return TM_OK;
-}
-
-int TreeModel::SetNextTable(int Table, QString Id)
-{
-    QString IndentSpaces;
-    IndentSpaces.fill(0xFFFF, Indentation);
-    QList<QStringList> vl;
-    QString MainTable; // Table = "docclasses", Table-1 = "devices", Table+1 = "documents"
     QStringList tmpsl;
-    if ((TreeType == TT_TYPE2) && (Table == 1)) // второй уровень для типа 2 - особенный
+//    int tmpidx;
+    QList<QStringList> vl;
+    IndentSpaces.fill(0xFFFF, Indentation);
+/*    if ((type == TM_SNTT) && (TreeType == TT_TYPE2) && (Table == 1))
     {
+        // второй уровень для типа 2 - особенный
+        // он составляется по данным нескольких таблиц - devices -> docclasses -> documents
+        Type2 = true;
         if (Tables.size() < 3)
         {
             DBGMSG;
-            return TM_BADRESULT;
+            return RESULTBAD;
         }
-        tmpsl = TableHeaders.at(Table+1);
-        if (!IsRaw)
-            tmpsl.insert(0, "id"+Tables.at(Table+1));
+        tmpsl = TableHeaders.at(table+1);
+    }
+    else */
+        tmpsl = TableHeaders.at(table);
+    if (!IsRaw)
+        tmpsl.insert(0, "id"+Tables.at(table));
+    if (type == TM_STR)
+        vl = sqlc.GetMoreValuesFromTableByFields(DBs.at(table), Tables.at(table), tmpsl, QStringList("idalias"), QStringList(id), Tables.at(table));
+    else if (type == TM_STT)
+        vl = sqlc.GetMoreValuesFromTableByFields(DBs.at(table), Tables.at(table), tmpsl, QStringList("deleted"), QStringList("0"), tmpsl.at(0));
+    else if ((type == TM_SNTR) || (type == TM_SNTT))
+        vl = sqlc.GetMoreValuesFromTableByFields(DBs.at(table), Tables.at(table), tmpsl, QStringList("id"+Tables.at(table-1)), QStringList(id), tmpsl.at(0));
+/*    else // Type2
+    {
         if (tmpsl.indexOf("id"+Tables.at(Table)) == -1)
             tmpsl.append("id"+Tables.at(Table));
-        vl = sqlc.GetMoreValuesFromTableByFields(DBs.at(Table+1), Tables.at(Table+1), tmpsl, QStringList("id"+Tables.at(Table-1)), QStringList(Id), tmpsl.at(0));
-        if (sqlc.result)
-        {
-            WARNMSG(sqlc.LastError);
-            return TM_BADRESULT;
-        }
-        int tmpidx = tmpsl.indexOf("id"+Tables.at(Table));
+        tmpidx = tmpsl.indexOf("id"+Tables.at(Table));
         if (tmpidx == -1)
         {
             DBGMSG;
-            return TM_BADRESULT;
+            return RESULTBAD;
         }
+        vl = sqlc.GetMoreValuesFromTableByFields(DBs.at(Table+1), Tables.at(Table+1), tmpsl, QStringList("id"+Tables.at(Table-1)), QStringList(Id), tmpsl.at(0));
         // надо подобрать уникальные iddocclasses
         QStringList idsl;
         for (int i=0; i<vl.size(); i++)
@@ -862,6 +674,8 @@ int TreeModel::SetNextTable(int Table, QString Id)
         tmpsl = TableHeaders.at(Table);
         if (!IsRaw)
             tmpsl.insert(0, "id"+Tables.at(Table));
+        if (!IsRaw)
+            tmpsl.insert(0, "id"+Tables.at(Table));
         for (int i=0; i<idsl.size(); i++)
         {
             QStringList sl = sqlc.GetValuesFromTableByField(DBs.at(Table), Tables.at(Table), tmpsl, "id"+Tables.at(Table), idsl.at(i));
@@ -871,91 +685,94 @@ int TreeModel::SetNextTable(int Table, QString Id)
             {
                 QString tmps = QString::number(Table)+"."+QString("%1").arg(sl.at(0).toInt(),7, 10, QChar('0')); // добавка нулей
                 tmps.insert(0, IndentSpaces);
-                QList<PublicClass::ValueStruct> vl;
-                PublicClass::ValueStruct tmpvl;
-                tmpvl.Type = VS_STRING;
-                tmpvl.Value = tmps;
-                vl.append(tmpvl);
+                QStringList sl;
+                sl.append(tmps);
                 for (int j=1; j<tmpsl.size(); j++)
                 {
-                    PublicClass::ValueStruct tmpvl;
-                    tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j), tmpvl);
-                    tmpvl.Value.insert(0, IndentSpaces);
-                    vl.append(tmpvl);
+                    tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j), tmps);
+                    tmps.insert(0, IndentSpaces);
+                    sl.append(tmps);
                 }
-                AddItemToTree(vl);
+                AddItemToTree(sl);
                 SetLastItem(Colors[4],Qt::transparent,Fonts[4],Icons[3], TM_ELEMENT_WITH_CHILDREN); // закрытая книга, т.к. если есть запись в таблице 2, значит, есть соответствующая запись в таблице 3
             }
         }
-    }
-    else
+    } */
+    if (sqlc.result)
     {
-        MainTable = Tables.at(Table);
-        tmpsl = TableHeaders.at(Table);
-        if (!IsRaw)
-            tmpsl.insert(0, "id"+Tables.at(Table));
-        vl = sqlc.GetMoreValuesFromTableByFields(DBs.at(Table), Tables.at(Table), tmpsl, QStringList("id"+Tables.at(Table-1)), QStringList(Id), tmpsl.at(0));
-        if (sqlc.result == 2)
+        WARNMSG(sqlc.LastError);
+        return RESULTBAD;
+    }
+    for (int i=0; i<vl.size(); i++)
+    {
+        if ((IsConditional) && (RightsFieldNum >= 0))
         {
-            WARNMSG(sqlc.LastError);
-            return TM_BADRESULT;
+            QString Rights = vl.at(i).at(RightsFieldNum);
+            if (!(Rights.toUInt(0,16) & pc.access)) // пропускаем, если права не соответствуют
+                continue;
         }
-        int NewTable = Table+1;
-        bool NewTableExist = (NewTable < TablesNum);
-        for (int i=0; i<vl.size(); i++)
+        tmpsl = vl.at(i);
+        QString RootId = tmpsl.at(0);
+        QString tmps = QString::number(table)+"."+QString("%1").arg(RootId.toInt(0), 7, 10, QChar('0')); // добавка нулей
+        tmps.insert(0, IndentSpaces);
+        QStringList sl;
+        sl.append(tmps);
+        for (int j=1; j<tmpsl.size(); j++)
         {
-            tmpsl = vl.at(i);
-            QString RootId = tmpsl.at(0);
-            QString tmps = QString::number(Table)+"."+QString("%1").arg(tmpsl.at(0).toInt(),7, 10, QChar('0')); // добавка нулей
+            tfl.idtov(TableLinks.at(table).at(j-1), tmpsl.at(j), tmps);
             tmps.insert(0, IndentSpaces);
-            QList<PublicClass::ValueStruct> vl;
-            PublicClass::ValueStruct tmpvl;
-            tmpvl.Type = VS_STRING;
-            tmpvl.Value = tmps;
-            vl.append(tmpvl);
-            for (int j=1; j<tmpsl.size(); j++)
+            sl.append(tmps);
+        }
+        AddItemToTree(sl);
+        if ((type == TM_STR) || (type == TM_SNTR))
+        {
+            // проверка наличия потомков у элемента
+            tmps = sqlc.GetValueFromTableByField(DBs.at(table), Tables.at(table), Tables.at(table), "idalias", RootId);
+            if (sqlc.result == SQLC_FAILED)
             {
-                PublicClass::ValueStruct tmpvl;
-                tfl.idtov(TableLinks.at(Table).at(j-1), tmpsl.at(j), tmpvl);
-                tmpvl.Value.insert(0, IndentSpaces);
-                vl.append(tmpvl);
+                WARNMSG(sqlc.LastError);
+                return RESULTBAD;
             }
-            AddItemToTree(vl);
-            if (NewTableExist) // если дальше ещё есть таблицы
+            // если есть хотя бы один потомок, надо ставить "книжку"
+            if (!tmps.isEmpty()) // есть потомки
+                SetLastItem(Colors[4],Qt::transparent,Fonts[4],Icons[3],TM_ELEMENT_WITH_CHILDREN); // закрытая книга
+            else
+                SetLastItem(Colors[0],Qt::transparent,Fonts[4],Icons[0],TM_SIMPLE_ELEMENT);
+            continue;
+        }
+        if (type != TM_SNTR)
+        {
+            // надо покопаться в подчинённой
+            int nexttable = table+1;
+            if (nexttable < TablesNum) // есть ещё таблицы
             {
-                tmps = sqlc.GetValueFromTableByField(DBs.at(NewTable), Tables.at(NewTable), "id"+Tables.at(NewTable), "id"+MainTable, RootId);
+                if (IsRaw)
+                    tmps = sqlc.GetValueFromTableByField(DBs.at(nexttable), Tables.at(nexttable),"id","id"+Tables.at(table), RootId);
+                else
+                    tmps = sqlc.GetValueFromTableByField(DBs.at(nexttable), Tables.at(nexttable),"id"+Tables.at(nexttable),"id"+Tables.at(table), RootId);
                 if (sqlc.result == SQLC_FAILED)
                 {
                     WARNMSG(sqlc.LastError);
-                    return TM_BADRESULT;
+                    return RESULTBAD;
                 }
-                // если есть хотя бы один потомок, надо ставить "книжку"
-                if (tmps.isEmpty()) // нет потомков
-                    SetLastItem(Colors[0],Qt::transparent,Fonts[4],Icons[0],TM_SIMPLE_ELEMENT);
+                if (!tmps.isEmpty())
+                    SetLastItem(Colors[4],Qt::transparent,Fonts[4],Icons[3],TM_ELEMENT_WITH_CHILDREN); // закрытая книга
                 else
-                    SetLastItem(Colors[4],Qt::transparent,Fonts[4],Icons[3], TM_ELEMENT_WITH_CHILDREN); // закрытая книга
+                    SetLastItem(Colors[0],Qt::transparent,Fonts[4],Icons[0],TM_SIMPLE_ELEMENT);
             }
             else
-                SetLastItem(Colors[0],Qt::transparent,Fonts[0],Icons[0],TM_SIMPLE_ELEMENT);
+                SetLastItem(Colors[0],Qt::transparent,Fonts[4],Icons[0],TM_SIMPLE_ELEMENT);
         }
     }
-    return TM_OK;
+    return RESULTOK;
 }
 
-void TreeModel::AddItemToTree(QList<PublicClass::ValueStruct> &vl)
+void TreeModel::AddItemToTree(QStringList &vl)
 {
     int LastIndex = rowCount();
     insertRows(LastIndex, 1);
     for (int column = 0; column < vl.size(); ++column)
-    {
-        if (vl.at(column).Type == VS_ICON)
-        {
-            setData(index(LastIndex, column, QModelIndex()), QIcon(vl.at(column).Value), Qt::DecorationRole);
-            setData(index(LastIndex, column, QModelIndex()), QVariant("i."+vl.at(column).Value), CellInfoRole);
-        }
-        else
-            setData(index(LastIndex, column, QModelIndex()), vl.at(column).Value, Qt::EditRole);
-    }
+        setData(index(LastIndex, column, QModelIndex()), vl.at(column), Qt::EditRole);
 }
 
 void TreeModel::ClearModel()
@@ -989,6 +806,6 @@ void TreeModel::ClearOnlyData()
 void TreeModel::Refresh()
 {
     ClearOnlyData();
-    if (BuildTree())
+    if (Build())
         WARNMSG("");
 }

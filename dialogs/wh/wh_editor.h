@@ -86,9 +86,9 @@ private:
     void SetupUI();
     void UpdateWhComboBox();
     void SetCells();
-    void BuildWorkspace(int ID); // отобразить рабочее поле (размещения внутри размещения с данным ID)
+    void BuildWorkspace(); // отобразить рабочее поле (размещения внутри размещения с данным ID)
     void UpdatePlace();
-    void Update();
+//    void Update();
     void Disband(int ID); // расформирование единицы размещения
     QStringList NameAndPicture(int ID); // вытащить картинку по ИД размещения
     void ClearLayout ();

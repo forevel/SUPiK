@@ -271,14 +271,6 @@ public:
     QList<ProblemStruct> ExchangeProblemsList, ProblemsList;
     QMutex EPLMutex;
 
-    // структура возвращаемых значений по полю links
-    struct ValueStruct
-    {
-        int Type; // тип значения VL_
-        QString Value; // само значение
-        QString Links; // строка ссылок
-    };
-
     double timerperiod; //, ErWidgetPeriod;
 //    bool ErWidgetShowing;
     bool AutonomousMode; // если сервер СУПиК (становится) недоступен, признак автономного режима становится равен true
@@ -300,7 +292,6 @@ public:
     QString SQLPath; // путь к SQL-серверу
     QByteArray data, symfind, footfind; // data - массив хранения считанных из файлов библиотек бинарных данных,
                                         // symfind и footfind - строки поиска в библиотеках "LIBREFERENCE=" и "PATTERN="
-    QStringList supikprocs;
     int Mode; // Режим работы (Справочники/Компоненты/Склады/Движение)
     int Altium; // граница между списком справочников и списком компонентов (для maintree)
     quint32 access; // текущие права доступа. Зашифрованы тройками бит (с младшего до старшего: право на чтение/изменение/удаление) (начиная с младших):

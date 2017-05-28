@@ -12,11 +12,6 @@
 #define TM_SIMPLE_ELEMENT           "0"
 #define TM_ELEMENT_WITH_CHILDREN    "1"
 
-// возвращаемые результаты
-#define TM_OK           0
-#define TM_BADSOURCE    1 // некорректные входные данные
-#define TM_BADRESULT    2 // ошибка при выполнении алгоритма
-
 class TreeModel : public QAbstractTableModel
 {
     Q_OBJECT
@@ -46,7 +41,7 @@ public:
     bool HaveChildren(int row);
     void SetLastItem(QColor FColor, QColor BColor, QFont Font, QIcon Icon, QString AData="0");
     void ClearModel();
-    void AddItemToTree(QList<PublicClass::ValueStruct> &Fields);
+    void AddItemToTree(QStringList &Fields);
 
     // роли для моделей
     enum Roles
@@ -65,6 +60,14 @@ public:
                    // полям id<tble2> в таблице 3, причём из таблицы 3 берутся элементы, для которых id<tble1> равны id<tble1> выбранного в уровне 1 элемента
                    // 3 уровень - элементы таблицы 3, для которых id<tble1>=id<tble1> уровня 1 И id<tble2>=id<tble2> выбранного в уровне 2
         TT_TABLE   // таблица, не дерево (нет поля idalias)
+    };
+
+    enum Stage2Types
+    {
+        TM_STR,     // SetTree
+        TM_STT,     // SetTable
+        TM_SNTR,    // SetNextTree
+        TM_SNTT     // SetNextTable
     };
 
     int TreeType; // тип дерева (см. определение enum TreeType)
@@ -91,12 +94,9 @@ private:
     bool IsEditable, IsRaw, IsConditional; // IsConditional - условное дерево/таблица, где видимость элементов зависит от поля "Права доступа"
     int RightsFieldNum; // номер поля "Права доступа" в tablefields
 
-    int BuildTree ();
+    int Build();
     int SetFirstTreeElements();
-    int SetTree(int Table, QString Id);
-    int SetTable(int Table, QString Id);
-    int SetNextTree(int Table, QString Id);
-    int SetNextTable(int Table, QString Id);
+    int Set(int table, QString &id, int type);
     int PrepareTable(QString Table); // подготовить очередные TableHeaders, DBs и Tables по таблице Table
     void ClearOnlyData();
 };

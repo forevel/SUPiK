@@ -64,9 +64,6 @@ QVariant EditModel::data(const QModelIndex &index, int role) const
     return QVariant();
 }
 
-// value должен представлять из себя запись вида: <value>.<links>, где links - вспомогательное поле, определяющее
-// порядок работы с полем - подставляемый делегат, ссылку на списки и формат отображения
-
 bool EditModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
     if (index.isValid())
@@ -212,44 +209,25 @@ void EditModel::AddColumn(const QString Hdrtext)
     Hdr.replace(lastEntry, Hdrtext);
 }
 
-QString EditModel::Value(int Row, int Column)
+QString EditModel::Value(int row, int column)
 {
-//    PublicClass::ValueStruct vs;
-//    QIcon ic = data(index(Row,Column,QModelIndex()),Qt::DecorationRole).value<QIcon>();
-    QString vl;
-/*    if (ic.isNull())
-    { */
-//        vs.Type = VS_STRING;
-    vl = data(index(Row, Column, QModelIndex()), Qt::DisplayRole).toString();
-    QString tablenum = data(index(Row,Column,QModelIndex()),TableNumberRole).toString();
+    QString tmps;
+    tmps = data(index(row, column, QModelIndex()), Qt::DisplayRole).toString();
+    QString tablenum = data(index(row,column,QModelIndex()),TableNumberRole).toString();
     if (tablenum != "") // если значение относится к полю типа DLINK, то добавляем в начало номер таблицы и спецсимвол
     {
-        vl.insert(0,tablenum);
-        vl.insert(0,'_');
+        tmps.insert(0,tablenum);
+        tmps.insert(0,'_');
     }
-    QString Links = data(index(Row,Column,QModelIndex()),LinksRole).toString();
+    QString Links = data(index(row,column,QModelIndex()),LinksRole).toString();
     PublicClass::FieldFormat ff;
     pc.getFFfromLinks(Links, ff);
     if (ff.ftype == FW_CRYPT)
     {
-        vl.insert(0, ".");
-        vl.insert(0, ff.link.last());
+        tmps.insert(0, ".");
+        tmps.insert(0, ff.link.last());
     }
-/*    }
-    else
-    {
-        vs.Type = VS_ICON;
-        vl = data(index(Row, Column, QModelIndex()), CellInfoRole).toString();
-    } */
-//    vs.Links = data(index(Row,Column,QModelIndex()),LinksRole).toString();
-//    vs.Value = vl;
-/*    tfl.vtoid(vs, vl);
-    if (tfl.result == TFRESULT_ERROR)
-    {
-        WARNMSG("");
-        return QString(); // если произошла ошибка при получении ИД по значению, добавляем пустую строку
-    } */
-    return vl;
+    return tmps;
 }
 
 // процедура заполнения модели значениями headers и по table:tablefields из таблицы tble в sup.tablefields по одному id
@@ -261,14 +239,14 @@ int EditModel::Setup(QString Table, QString Id)
     if (Table.isEmpty())
     {
         WARNMSG("");
-        return 1;
+        return RESULTBAD;
     }
     QStringList fl = QStringList() << "table" << "tablefields" << "header" << "links";
     QList<QStringList> vl = sqlc.GetMoreValuesFromTableByFields("sup", "tablefields", fl, QStringList("tablename"), QStringList(Table), "fieldsorder", true);
     if ((sqlc.result) || (vl.isEmpty()))
     {
         WARNMSG("");
-        return 1;
+        return RESULTBAD;
     }
     int i;
     int idpos = -1;
@@ -286,7 +264,7 @@ int EditModel::Setup(QString Table, QString Id)
     else
     {
         WARNMSG("");
-        return 1;
+        return RESULTBAD;
     }
     // ищем ключевые поля - <tble>, alias и id<tble>
     for (i = 0; i < vl.size(); i++)
@@ -305,12 +283,12 @@ int EditModel::Setup(QString Table, QString Id)
     if (idpos == -1)
     {
         INFOMSG("Не найдено ключевое поле в таблице "+Table);
-        return 1;
+        return RESULTBAD;
     }
     if (!IsAliasExist) // в таблице нет поля с именем таблицы - плохо, должно быть
     {
         INFOMSG("Не найдено поле " + PlainTable + " в таблице "+Table);
-        return 1;
+        return RESULTBAD;
     }
     // устанавливаем столбцы модели
     AddColumn("Имя поля");
@@ -321,25 +299,24 @@ int EditModel::Setup(QString Table, QString Id)
     if (sqlc.result)
     {
         WARNMSG("");
-        return 1;
+        return RESULTBAD;
     }
     for (i = 0; i < HeadersSl.size(); i++)
     {
         if ((HeadersSl.at(i) == "Дата") || (HeadersSl.at(i) == "ИДПольз"))
             continue;
-        QList<PublicClass::ValueStruct> ValuesToAdd;
-        PublicClass::ValueStruct tmpvl;
-        tmpvl.Type = VS_STRING;
-        tmpvl.Value = HeadersSl.at(i);
-        ValuesToAdd.append(tmpvl);
+        QStringList ValuesToAdd;
+        ValuesToAdd.append(HeadersSl.at(i));
         if ((i < ValuesSl.size() && (i < TableLinksSl.size())))
         {
-            tfl.idtov(TableLinksSl.at(i), ValuesSl.at(i), tmpvl);
-            ValuesToAdd.append(tmpvl);
+            QString tmps;
+            tfl.idtov(TableLinksSl.at(i), ValuesSl.at(i), tmps);
+            ValuesToAdd.append(tmps);
+            ValuesToAdd.append(TableLinksSl.at(i));
         }
         AddRow(ValuesToAdd);
     }
-    return 0;
+    return RESULTOK;
 }
 
 // процедура заполнения модели значениями полей из таблицы db:tble по одному id
@@ -351,7 +328,7 @@ int EditModel::SetupRaw(QString Db, QString Tble, QString Id)
     if (Db.isEmpty() || Tble.isEmpty())
     {
         WARNMSG("");
-        return 1;
+        return RESULTBAD;
     }
     int i;
     // устанавливаем столбцы модели
@@ -364,50 +341,36 @@ int EditModel::SetupRaw(QString Db, QString Tble, QString Id)
     if (sqlc.result)
     {
         WARNMSG("");
-        return 1;
+        return RESULTBAD;
     }
-    PublicClass::ValueStruct tmpvl;
-    tmpvl.Type = VS_STRING;
     for (i = 0; i < TableHeadersSl.size(); ++i)
     {
-        QList<PublicClass::ValueStruct> ValuesToAdd;
-        tmpvl.Value = TableHeadersSl.at(i);
-        ValuesToAdd.append(tmpvl);
+        QStringList ValuesToAdd;
+        ValuesToAdd.append(TableHeadersSl.at(i));
         if (i < ValuesSl.size())
-        {
-            tmpvl.Value = ValuesSl.at(i);
-            ValuesToAdd.append(tmpvl);
-        }
+            ValuesToAdd.append(ValuesSl.at(i));
+        ValuesToAdd.append("1.8"); // links
         AddRow(ValuesToAdd);
     }
-    return 0;
+    return RESULTOK;
 }
 
-void EditModel::AddRow(QList<PublicClass::ValueStruct> &ValuesSl)
+// sl[0] = field, sl[1] = value, sl[2] = links
+
+void EditModel::AddRow(QStringList &sl)
 {
     int LastIndex = rowCount();
     insertRows(LastIndex, 1);
-    for (int column = 0; column < ValuesSl.size(); ++column)
-    {
-        PublicClass::FieldFormat ff;
-        QString Links = ValuesSl.at(column).Links;
-        pc.getFFfromLinks(Links, ff);
-        if (ff.ftype == FW_BOOL)
-        {
-            setData(index(LastIndex, column, QModelIndex()), ValuesSl.at(column).Value, Qt::DecorationRole);
-            setData(index(LastIndex, column, QModelIndex()), QVariant("i."+ValuesSl.at(column).Value), CellInfoRole);
-        }
-        else
-            setData(index(LastIndex, column, QModelIndex()), ValuesSl.at(column).Value, Qt::EditRole);
-        setData(index(LastIndex,column,QModelIndex()),ValuesSl.at(column).Links, LinksRole);
-    }
+    setData(index(LastIndex, FIELDCOLUMN, QModelIndex()), sl.at(0), Qt::EditRole);
+    setData(index(LastIndex, VALUECOLUMN, QModelIndex()), sl.at(1), Qt::EditRole);
+    setData(index(LastIndex, VALUECOLUMN, QModelIndex()), sl.at(2), EditModel::LinksRole);
 }
 
 QStringList EditModel::Values()
 {
     QStringList sl;
     for (int i=0; i<rowCount(); i++)
-        sl.append(Value(i, 1)); // данные хранятся в 1-м столбце
+        sl.append(Value(i, VALUECOLUMN)); // данные хранятся в 1-м столбце
     return sl;
 }
 
@@ -415,7 +378,7 @@ QStringList EditModel::Links()
 {
     QStringList sl;
     for (int i=0; i<rowCount(); i++)
-        sl.append(data(index(i,1,QModelIndex()),LinksRole).toString()); // данные хранятся в 1-м столбце
+        sl.append(data(index(i,VALUECOLUMN,QModelIndex()),LinksRole).toString()); // данные хранятся в 1-м столбце
     return sl;
 }
 
@@ -423,7 +386,7 @@ QStringList EditModel::Headers()
 {
     QStringList sl;
     for (int i=0; i<rowCount(); i++)
-        sl.append(data(index(i, 0, QModelIndex()), Qt::DisplayRole).toString());
+        sl.append(data(index(i, FIELDCOLUMN, QModelIndex()), Qt::DisplayRole).toString());
     return sl;
 }
 

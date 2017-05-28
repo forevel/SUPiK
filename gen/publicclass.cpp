@@ -225,6 +225,8 @@ void PublicClass::AddErrMsg(ermsgtype msgtype, QString file, int line, QString m
 
 void PublicClass::ConvertId(bool ColumnZero, QString &Id)
 {
+    if (Id.isEmpty())
+        return;
     while (Id.at(0) == 0xFFFF)
         Id.remove(0, 1);
     if (ColumnZero) // в нулевом столбце всегда ИД элемента с нулями в начале, надо незначащие нули убрать

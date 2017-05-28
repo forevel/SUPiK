@@ -54,8 +54,7 @@ void sys_persdialog::ChangePers(QModelIndex idx)
     QString tmpString = index.data(Qt::DisplayRole).toString();
     pc.ConvertId(true, tmpString);
     TwoColDialog *newdialog = new TwoColDialog("");
-    newdialog->SetupRaw("sup", "perspsw", MODE_EDIT_RAW, tmpString);
-    if (!newdialog->result)
+    if (newdialog->SetupRaw("sup", "perspsw", MODE_EDIT_RAW, tmpString) != RESULTOK)
     {
         newdialog->setModal(true);
         newdialog->exec();

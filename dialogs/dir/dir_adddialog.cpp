@@ -90,7 +90,7 @@ void dir_adddialog::setupUI()
     le->setObjectName("dirAlias");
     connect(le, SIGNAL(editingFinished()), this, SLOT(transliteDirName()));
     dlg1Layout->addWidget(le, 0, 1);
-    lbl = new s_tqLabel("Количество полей (исключая id, date, idpers и deleted)");
+    lbl = new s_tqLabel("Количество полей (исключая id и deleted, но включая idpers и date)");
     spb = WDFunc::NewSPB(this, "dirFieldNum", 1, FSIZE, 1, 0);
     WDFunc::SetSPBData(this, "dirFieldNum", 1);
     connect(spb, SIGNAL(valueChanged(double)), this, SLOT(updateTWFields(double)));
@@ -122,10 +122,7 @@ void dir_adddialog::setupUI()
     else
     {
         cw->setEnabled(false);
-        PublicClass::ValueStruct vs;
-        vs.Type = VS_STRING;
-        vs.Value = "узч";
-        cw->SetData(vs);
+        cw->SetData("узч");
     }
     dlg1Layout->addWidget(lbl, 3, 0);
     dlg1Layout->addWidget(cw, 3, 1);
@@ -701,9 +698,7 @@ void dir_adddialog::adjustFieldSize(QWidget *wdgt, int widthInChar)
 
 void dir_adddialog::fillFields()
 {
-    s_tqComboBox *cbf;
     s_tqLineEdit *len;
-    s_tqLineEdit *lev;
     QList<QStringList> lsl, lslshort;
     QStringList fl;
     fl << "table" << "tablefields" << "header" << "links";
@@ -779,18 +774,16 @@ void dir_adddialog::fillFields()
     {
         if (i > FSIZE)
             break;
-        cbf = this->findChild<s_tqComboBox *>("field."+QString::number(i)); // имя поля
-        lev = this->findChild<s_tqLineEdit *>("value."+QString::number(i)); // строка 1
         len = this->findChild<s_tqLineEdit *>("name."+QString::number(i)); // строка 2
-        s_tqCheckBox *chb = this->findChild<s_tqCheckBox *>("short."+QString::number(i));
-        if ((cbf == 0) || (lev == 0) || (len == 0) || (chb == 0))
+        WDFunc::SetCBData(this, "field."+QString::number(i), lsl.at(i).at(1)); // tablefields
+        WDFunc::SetLEData(this, "name."+QString::number(i), lsl.at(i).at(2)); // header
+        QString tmps = lsl.at(i).at(3); // links
+        if ((lsl.at(i).at(1) == "date") || (lsl.at(i).at(1) == "idpers"))
         {
-            DBGMSG;
-            return;
+            WDFunc::SetEnabled(this, "field."+QString::number(i), false);
+            WDFunc::SetEnabled(this, "name."+QString::number(i), false);
+            WDFunc::SetEnabled(this, "valueconstr." + QString::number(i), false); // "Конструктор"
         }
-        cbf->setCurrentText(lsl.at(i).at(1));
-        len->setText(lsl.at(i).at(2));
-        QString tmps = lsl.at(i).at(3);
         if (tmps.startsWith("1.6")) // если максированное поле, надо добавить обратных слешей
         {
             QStringList tmpsl = tmps.split(".");
@@ -804,12 +797,12 @@ void dir_adddialog::fillFields()
             }
             tmps = tmpsl.join(".");
         }
-        lev->setText(tmps);
+        WDFunc::SetLEData(this, "value."+QString::number(i), tmps); // links
         for (int j=0; j<lslshort.size(); j++) // проверка наличия в сокращённой таблице такого же элемента, как и в полной
         {
             if (lslshort.at(j).at(2) == len->text())
             {
-                chb->setChecked(true);
+                WDFunc::SetChBData(this, "short."+QString::number(i), true);
                 break;
             }
         }

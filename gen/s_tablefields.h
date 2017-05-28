@@ -22,8 +22,8 @@ public:
     void GetAllValuesFromTable (const QString &tble, QList<QStringList> &out); // взять все значения по всем полям таблицы tble
     void tov(const QString &tble, const QString &header, const QString &tbleid, QString &out); // взять значение по id=tbleid из table.tablefields для заданного поля header таблицы tble
     void toid(const QString &tble, const QString &header, const QString &value, QString &out); // взять ИД из поля header таблицы tble, для которого значение = value
-    void vtoid(PublicClass::ValueStruct &value, QString &out); // взять один ИД по ссылке и значению
-    void idtov(const QString &links, const QString &id, PublicClass::ValueStruct &out); // взять одно значение по ссылке и ид
+    void vtoid(QString &links, QString &in, QString &out); // взять один ИД по ссылке и значению
+    void idtov(const QString &links, const QString &id, QString &out); // взять одно значение по ссылке и ид
     void idtovl(const QString &links, QStringList &out); // взять все значения по ссылке в зависимости от типа
     void Update (const QString &tble, QStringList &header, QStringList &values);
     void Updatev (const QString &tble, QStringList &headers, QStringList &values); // update headers in the tble with values

@@ -105,8 +105,7 @@ void SysmenuEditor::ChangeFields()
 void SysmenuEditor::ChangeFields(QString str)
 {
     TwoColDialog *newdialog = new TwoColDialog(tble);
-    newdialog->setup(tble+"_полн", MODE_EDIT, str);
-    if (!newdialog->result)
+    if (newdialog->setup(tble+"_полн", MODE_EDIT, str) == RESULTOK)
     {
         newdialog->setModal(true);
         newdialog->exec();

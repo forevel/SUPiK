@@ -359,20 +359,13 @@ void sys_systemdialog::TablesEditor()
     TreeView *tv = new TreeView;
     TreeModel *mdl = new TreeModel;
     mdl->ClearModel();
-    QList<PublicClass::ValueStruct> lsl;
-    QStringList ids, vls;
     int i = 0;
     QSqlQuery get_tables(sqlc.GetDB("sup"));
     get_tables.exec("SELECT DISTINCT `tablename` FROM `tablefields` ORDER BY `tablename` ASC;");
     while (get_tables.next())
     {
-        PublicClass::ValueStruct vl;
-        vl.Type = VS_STRING;
-        vl.Value = QString("%1").arg(i, 5, 10, QChar('0'));
-        lsl.append(vl);
-        vl.Value = get_tables.value(0).toString();
-        lsl.append(vl);
-        mdl->AddItemToTree(lsl);
+        QStringList sl = QStringList() << QString("%1").arg(i, 5, 10, QChar('0')) << get_tables.value(0).toString();
+        mdl->AddItemToTree(sl);
         mdl->SetLastItem(Qt::black,Qt::transparent,QFont("MS Sans Serif", -1, QFont::Normal),QIcon(":/res/hr.png"),TM_SIMPLE_ELEMENT);
     }
     tv->setModel(mdl);

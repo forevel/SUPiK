@@ -13,8 +13,8 @@ public:
     explicit s_tqChooseWidget(bool Transparent=false, QWidget *parent = 0);
 
     void Setup(QString links, QString hdr="");
-    void SetData (PublicClass::ValueStruct data);
-    PublicClass::ValueStruct Data();
+    void SetData (const QString &data);
+    QString Data();
 //    QVariant getAData();
 //    void setAData(QVariant dat);
     void SetValue(QVariant data); // установить значение поля ввода в зависимости от links

@@ -113,7 +113,7 @@
 #define ETHTIMEOUT  200 // таймаут на закрытие сокетов в Ethernet - 200 мс
 #define MAINTIMEOUT 5000 // таймаут на ответ от сервера - 5 секунд
 
-#define MAINSLEEP   50  // количество мс сна в процессах
+#define MAINSLEEP   500  // количество мс сна в процессах
 #define CL_MAXRETRCOUNT    3 // максимальное количество попыток повторить команду
 #define CL_RETR1       1000
 #define CL_RETR2       2000
@@ -247,6 +247,7 @@ public:
     const QStringList PathPrefixes = QStringList() << "tb/" << "doc/" << "alt/" << "pers/" << "log/";
     const QStringList PathSuffixes = QStringList() << "prot/" << "dsheet/" << "libs/" << "symbols/" << "footprints/" << "photo/";
 
+    void Run();
     int Connect(QString host, QString port, int clientmode);
     bool isConnected();
     void Disconnect();
@@ -257,6 +258,7 @@ public:
     void StartLog();
 
 public slots:
+    void FinishThread();
 
 signals:
     void ClientSend(QByteArray);
@@ -270,6 +272,7 @@ signals:
     void RetrStarted(int); // начаты попытки восстановить связь с сервером
     void RetrEnded(); // связь восстановлена
     void CallSend(int command, QStringList &args);
+    void finished();
 
 private:
     QMap<int, CmdStruct> CmdMap;
@@ -281,7 +284,7 @@ private:
     QString Host, Port, FileHost;
     quint16 FilePort;
     quint64 WrittenBytes, ReadBytes, RcvDataSize, XmitDataSize;
-    int CurrentCommand, CliMode, LastCommand;
+    int CliMode, LastCommand;
     QFile fp;
     int ClientMode; // mode = CLIMODE_TEST or CLIMODE_WORK
     int FieldsNum;
@@ -289,7 +292,6 @@ private:
     QString Pers, Pass;
     QByteArray PrevLastBA; // last string in previous ethernet received chunk to be concatenated with the first string from the next chunk
     Log *CliLog;
-    int TimeoutCounter; // counter of timeouts, when it equals 3 the connection is forced reconnected
     int ServRetryCount; // counter of retry reply from server to make disconnection
     int CurRetrPeriod; // index of current retry time period from RetryTimePeriods array
     QStringList LastArgs; // Args vector that was last used in SendCmd (for proper retrying)
@@ -299,6 +301,10 @@ private:
     bool Busy;
     bool PingIsDisabled; // flag indicates that no ping command should be sent
     int DetectedError;
+
+    bool isAboutToFinish, isThereSomethingToSend;
+    int CurrentCommand;
+    QStringList CurrentArgs;
     EthStatusClass EthStatus;
 
     QString RemoveSpaces(QString str);

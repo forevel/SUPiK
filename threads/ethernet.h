@@ -83,9 +83,9 @@ public:
 
     void SetEthernet(const QString &Host, int Port, int Type=ETH_PLAIN);
     void WriteData(QByteArray &ba);
+    void Disconnect();
 
 public slots:
-    void Disconnect();
 
 signals:
     void error(int);

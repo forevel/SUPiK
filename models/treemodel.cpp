@@ -343,6 +343,7 @@ int TreeModel::Setup(QString Table, bool Cond)
 
 int TreeModel::Setup(QStringList Tables, int Type, bool Cond)
 {
+    beginResetModel();
     IsConditional = Cond;
     TreeType = Type;
     ClearModel();
@@ -369,6 +370,7 @@ int TreeModel::Setup(QStringList Tables, int Type, bool Cond)
         WARNMSG("");
         return RESULTBAD;
     }
+    endResetModel();
     return RESULTOK;
 }
 

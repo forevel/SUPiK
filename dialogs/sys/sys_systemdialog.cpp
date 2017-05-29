@@ -153,7 +153,7 @@ void sys_systemdialog::SetSlave(QModelIndex idx)
         QString field = "Вызываемая функция";
         QString cmpfield = "Наименование";
         tfl.GetValuesByColumnAndField(table,field,cmpfield,tmpString, tmpsl); // получить имя вызываемой функции
-        if (tfl.result == TFRESULT_ERROR)
+        if ((tfl.result == TFRESULT_ERROR) || (tmpsl.isEmpty()))
         {
             WARNMSG("");
             return;
@@ -335,7 +335,7 @@ void sys_systemdialog::SystemDirEditor()
     dir_maindialog *dird = new dir_maindialog("Справочники системные");
     connect(this,SIGNAL(closeslvdlg()),dird,SLOT(close()));
     sw->addWidget(dird);
-//    sw->setCurrentWidget(dird);
+    sw->setCurrentWidget(dird);
     repaint();
 }
 

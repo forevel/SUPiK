@@ -31,9 +31,10 @@
 #define M_PUTFILE   1007 // отправка файла на сервер
 #define M_GETFILE   1008 // прием файла с сервера
 #define M_ACTIVATE  1009 // активация пользователя
+#define M_START     1010 // команда старта обмена
 // M-statuses
-#define M_IDLE		1000
 #define M_ANEXT     1047
+#define M_IDLE		1050
 #define M_RDY		1051
 #define M_ERROR		1052
 #define M_NEXT		1053 // подтверждение готовности приёма следующей порции данных
@@ -113,16 +114,8 @@
 #define ETHTIMEOUT  200 // таймаут на закрытие сокетов в Ethernet - 200 мс
 #define MAINTIMEOUT 5000 // таймаут на ответ от сервера - 5 секунд
 
-#define MAINSLEEP   500  // количество мс сна в процессах
-#define CL_MAXRETRCOUNT    3 // максимальное количество попыток повторить команду
-#define CL_RETR1       1000
-#define CL_RETR2       2000
-#define CL_RETR3       4000
-#define CL_RETR4       8000
-#define CL_RETR5       16000
-#define CL_RETR6       32000
-#define CL_RETR7       64000 // 64 seconds is the maximum time period between two connection retries
-#define CL_MAXRETR     7 // maximum number of retry time periods
+#define MAINSLEEP       200  // количество мс сна в процессах
+#define CL_RETRPERIOD   8000 // период повторения попыток реконнекта
 
 #define STAT_CONNECTED      1
 #define STAT_COMACTIVE      2 // command CurrentCommand is active
@@ -247,7 +240,6 @@ public:
     const QStringList PathPrefixes = QStringList() << "tb/" << "doc/" << "alt/" << "pers/" << "log/";
     const QStringList PathSuffixes = QStringList() << "prot/" << "dsheet/" << "libs/" << "symbols/" << "footprints/" << "photo/";
 
-    void Run();
     int Connect(QString host, QString port, int clientmode);
     bool isConnected();
     void Disconnect();
@@ -258,7 +250,6 @@ public:
     void StartLog();
 
 public slots:
-    void FinishThread();
 
 signals:
     void ClientSend(QByteArray);
@@ -271,12 +262,10 @@ signals:
     void WaitEnded(); // сервер закончил длительную процедуру
     void RetrStarted(int); // начаты попытки восстановить связь с сервером
     void RetrEnded(); // связь восстановлена
-    void CallSend(int command, QStringList &args);
-    void finished();
+//    void CallSend(int command, QStringList &args);
 
 private:
     QMap<int, CmdStruct> CmdMap;
-    qint32 RetryTimePeriods[CL_MAXRETR];
     QByteArray RcvData, WrData;
     QPointer<Ethernet> MainEthernet, FileEthernet;
     QTimer *TimeoutTimer, *EthStateChangeTimer; // general timeout, timer for server reply, getfile timer
@@ -284,7 +273,7 @@ private:
     QString Host, Port, FileHost;
     quint16 FilePort;
     quint64 WrittenBytes, ReadBytes, RcvDataSize, XmitDataSize;
-    int CliMode, LastCommand;
+    int CurrentCommand, CliMode, LastCommand;
     QFile fp;
     int ClientMode; // mode = CLIMODE_TEST or CLIMODE_WORK
     int FieldsNum;
@@ -292,8 +281,8 @@ private:
     QString Pers, Pass;
     QByteArray PrevLastBA; // last string in previous ethernet received chunk to be concatenated with the first string from the next chunk
     Log *CliLog;
+    int TimeoutCounter; // counter of timeouts, when it equals 3 the connection is forced reconnected
     int ServRetryCount; // counter of retry reply from server to make disconnection
-    int CurRetrPeriod; // index of current retry time period from RetryTimePeriods array
     QStringList LastArgs; // Args vector that was last used in SendCmd (for proper retrying)
     bool ServRetryActive; // flag indicates that retrying active
     bool NextActive; // flag indicates that we have already a result size and this is a 2,3... chunks
@@ -301,10 +290,6 @@ private:
     bool Busy;
     bool PingIsDisabled; // flag indicates that no ping command should be sent
     int DetectedError;
-
-    bool isAboutToFinish, isThereSomethingToSend;
-    int CurrentCommand;
-    QStringList CurrentArgs;
     EthStatusClass EthStatus;
 
     QString RemoveSpaces(QString str);
@@ -320,7 +305,7 @@ private slots:
     void ParseReply(QByteArray ba);
     void EthStateChangeTimerTimeout();
     void RetrTimeout();
-    void Send(int command, QStringList &args);
+//    void Send(int command, QStringList &args);
     void SendNext(qint64 bytes); // slot called by signal bytesWritten from the socket
 };
 

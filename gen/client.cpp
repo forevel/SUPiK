@@ -20,19 +20,10 @@ Client::Client(QObject *parent) : QObject(parent)
     WaitActive = false;
     ServRetryCount = 0;
     EthStatus.setStatus(STAT_CLOSED);
-    isAboutToFinish = false;
-    isThereSomethingToSend = false;
     ResultType = RESULT_NONE;
-    CurRetrPeriod = 0;
+    TimeoutCounter = 0;
     LastArgs.clear();
     LastCommand = M_IDLE;
-    RetryTimePeriods[0] = CL_RETR1;
-    RetryTimePeriods[1] = CL_RETR2;
-    RetryTimePeriods[2] = CL_RETR3;
-    RetryTimePeriods[3] = CL_RETR4;
-    RetryTimePeriods[4] = CL_RETR5;
-    RetryTimePeriods[5] = CL_RETR6;
-    RetryTimePeriods[6] = CL_RETR7;
     CmdMap.insert(S_GVBFS, {"S_GVBFS", 7, "S5", RESULT_VECTOR, true, true});
     CmdMap.insert(S_GVSBFS, {"S_GVSBFS", 7, "S1", RESULT_MATRIX, true, true});
     CmdMap.insert(S_GVSBC, {"S_GVSBC", 3, "S2", RESULT_VECTOR, false, false});
@@ -75,45 +66,6 @@ Client::~Client()
 {
 }
 
-void Client::Run()
-{
-    QTime retrytime;
-    MainEthernet = new Ethernet;
-    MainEthernet->SetEthernet(Host, Port.toInt(), Ethernet::ETH_SSL);
-    connect(MainEthernet,SIGNAL(connected()),this,SLOT(ClientConnected()));
-    connect(MainEthernet,SIGNAL(disconnected()),this,SLOT(ClientDisconnected()));
-    connect(MainEthernet,SIGNAL(NewDataArrived(QByteArray)),this,SLOT(ParseReply(QByteArray)));
-    connect(MainEthernet,SIGNAL(byteswritten(qint64)),this,SLOT(SendNext(qint64)));
-    connect(this,SIGNAL(CallSend(int,QStringList&)),this,SLOT(Send(int,QStringList&)));
-    DetectedError = CLIER_NOERROR;
-    while (!isAboutToFinish)
-    {
-        if (isThereSomethingToSend)
-        {
-            EthStatus.setCommandActive();
-#ifndef TIMERSOFF
-            TimeoutTimer->start();
-#endif
-            Send(CurrentCommand, CurrentArgs);
-            while (EthStatus.isCommandActive())
-            {
-                QTime tme;
-                tme.start();
-                while (tme.elapsed() < MAINSLEEP)
-                    qApp->processEvents(QEventLoop::AllEvents);
-            }
-            if (DetectedError == CLIER_TIMEOUT)
-            {
-                // try to reconnect
-                MainEthernet->Disconnect();
-                EthStatus.setStatus(STAT_CLOSED);
-                retrytime.start();
-            }
-        }
-    }
-    emit finished();
-}
-
 void Client::StartLog()
 {
     CliLog = new Log;
@@ -121,18 +73,14 @@ void Client::StartLog()
     CliLog->info("=== Log started ===");
 }
 
-void Client::FinishThread()
-{
-    isAboutToFinish = true;
-}
-
 int Client::Connect(QString host, QString port, int clientmode)
 {
+    if (EthStatus.isConnected()) // если уже подсоединены, не надо по второму разу
+        return CLIER_NOERROR;
+
     ClientMode = clientmode;
     Host = host;
     Port = port;
-    if (EthStatus.isConnected()) // если уже подсоединены, не надо по второму разу
-        return CLIER_NOERROR;
     EthStatus.setMode(clientmode);
     if (EthStatus.isTestMode())
     {
@@ -147,7 +95,18 @@ int Client::Connect(QString host, QString port, int clientmode)
     CmdOk = false;
     PrevLastBA.clear();
     LoginOk = false;
+    MainEthernet = new Ethernet;
+    MainEthernet->SetEthernet(Host, Port.toInt(), Ethernet::ETH_SSL);
+    connect(MainEthernet,SIGNAL(connected()),this,SLOT(ClientConnected()));
+    connect(MainEthernet,SIGNAL(disconnected()),this,SLOT(ClientDisconnected()));
+    connect(MainEthernet,SIGNAL(NewDataArrived(QByteArray)),this,SLOT(ParseReply(QByteArray)));
+    connect(MainEthernet,SIGNAL(byteswritten(qint64)),this,SLOT(SendNext(qint64)));
+//    connect(this,SIGNAL(CallSend(int,QStringList&)),this,SLOT(Send(int,QStringList&)));
 
+#ifndef TIMERSOFF
+    TimeoutTimer->start();
+#endif
+    DetectedError = CLIER_NOERROR;
     while ((EthStatus.isntConnected()) && (DetectedError == CLIER_NOERROR))
     {
         QTime tme;
@@ -161,6 +120,7 @@ int Client::Connect(QString host, QString port, int clientmode)
         return CLIER_TIMEOUT;
     }
     DetectedError = CLIER_NOERROR;
+
     if (!PrevLastBA.isEmpty()) // if there was some data in canal while we were connecting
     {
         QByteArray ba = PrevLastBA;
@@ -223,11 +183,11 @@ void Client::Disconnect()
 
 void Client::SendCmd(int command, QStringList &args)
 {
-    emit CallSend(command, args);
+/*    emit CallSend(command, args);
 }
 
 void Client::Send(int command, QStringList &args)
-{
+{ */
     if ((EthStatus.isCommandActive()) && (command == M_PING))
     {
         CliLog->error("Command active already: "+QString::number(CurrentCommand));
@@ -848,6 +808,7 @@ void Client::Timeout()
     EthStatus.clearCommandActive();
     DetectedError = CLIER_TIMEOUT;
     TimeoutTimer->stop();
+    ++TimeoutCounter;
 }
 
 // проверка аргументов

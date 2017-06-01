@@ -289,6 +289,7 @@ void TreeModel::SetLastItem(QColor FColor, QColor BColor, QFont Font, QIcon Icon
 
 int TreeModel::SetupFile(QString Filename, QString StringToFind)
 {
+    beginResetModel();
     ClearModel();
     insertColumns(0,1,QModelIndex());
     TreeType = TT_SIMPLE;
@@ -329,6 +330,7 @@ int TreeModel::SetupFile(QString Filename, QString StringToFind)
         SetLastItem(Colors[0], Qt::transparent, Fonts[0], Icons[0], TM_SIMPLE_ELEMENT);
     }
     file.close();
+    endResetModel();
     return RESULTOK;
 }
 
@@ -385,6 +387,7 @@ int TreeModel::Setup(QStringList Tables, int Type, bool Cond)
 
 int TreeModel::SetupRaw(QString db, QString tble, QStringList fields)
 {
+    beginResetModel();
     RightsFieldNum = -1;
     IsConditional = false;
     if (fields.isEmpty())
@@ -419,6 +422,7 @@ int TreeModel::SetupRaw(QString db, QString tble, QStringList fields)
         WARNMSG("");
         return RESULTBAD;
     }
+    endResetModel();
     return RESULTOK;
 }
 

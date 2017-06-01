@@ -53,7 +53,6 @@ supik::supik()
     pf["TBExam"] = &supik::TBExam;
     pf["TBMain"] = &supik::TBMain;
     ErMsgNum = 0;
-    RetrCounterEnabled = false;
 }
 
 void supik::showEvent(QShowEvent *event)
@@ -134,10 +133,8 @@ void supik::SetSupikWindow()
     s_StatusBar *SB = new s_StatusBar;
     connect(Cli,SIGNAL(BytesRead(quint64)),SB,SLOT(UpdateIncomeBytes(quint64)));
     connect(Cli,SIGNAL(BytesWritten(quint64)),SB,SLOT(UpdateOutgoingBytes(quint64)));
-    connect(Cli,SIGNAL(RetrStarted(int)),this,SLOT(StartRetrCounter(int)));
-    connect(Cli,SIGNAL(RetrEnded()),this,SLOT(StopRetrCounter()));
-    connect(this,SIGNAL(SetRetrCounterInSB(int)),SB,SLOT(SetRetrCounter(int)));
-    connect(this,SIGNAL(DisableRetrCounterInSB()),SB,SLOT(DisableRetrCounter()));
+    connect(Cli,SIGNAL(Disconnected()),SB,SLOT(SetStatusDisconnected()));
+    connect(Cli,SIGNAL(Connected()),SB,SLOT(SetStatusConnected()));
     mainLayout->addWidget(SB, 0);
 
     QWidget *wdgt = new QWidget;
@@ -604,10 +601,6 @@ void supik::periodic1s()
         }
         pb->setIcon(QIcon(":/res/ErYes.png"));
     }
-    if (RetrCounterEnabled)
-    {
-        emit SetRetrCounterInSB(Cli->RetrTimer->remainingTime()/1000);
-    }
 }
 
 void supik::ClearProblems()
@@ -652,16 +645,4 @@ void supik::ShowServerStatus()
         ServerDialog *dlg = new ServerDialog;
         dlg->exec();
     }
-}
-
-void supik::StartRetrCounter(int initialvalue)
-{
-    RetrCounterEnabled = true;
-    emit SetRetrCounterInSB(initialvalue);
-}
-
-void supik::StopRetrCounter()
-{
-    RetrCounterEnabled = false;
-    emit DisableRetrCounterInSB();
 }

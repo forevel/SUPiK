@@ -30,13 +30,11 @@ public:
 signals:
     void newnotify();
     void stopall();
-    void SetRetrCounterInSB(int);
-    void DisableRetrCounterInSB();
 
 public slots:
 
 private:
-    bool IsProblemsDetected, PeriodicOddSecond, RetrCounterEnabled;
+    bool IsProblemsDetected, PeriodicOddSecond;
     int PingSecCounter, WarningActionIndex;
     QHash <QString, void (supik::*)()> pf;
     int ErMsgNum;
@@ -77,8 +75,6 @@ private slots:
     void UpdateProblemsNumberInTab();
     void periodic1s();
     void ErrorProtocol();
-    void StartRetrCounter(int initialvalue);
-    void StopRetrCounter();
 
     void Components();
     void Directories();

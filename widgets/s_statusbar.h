@@ -24,8 +24,8 @@ signals:
 public slots:
     void UpdateIncomeBytes(quint64 bytes);
     void UpdateOutgoingBytes(quint64 bytes);
-    void SetRetrCounter(int value);
-    void DisableRetrCounter();
+    void SetStatusDisconnected();
+    void SetStatusConnected();
 
 private slots:
     void ClearActiveServerState();

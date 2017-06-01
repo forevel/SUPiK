@@ -104,7 +104,6 @@ private:
     void StartFtp(QString Host, quint16 Port);
     bool StartPASV(int Command, QString Filename = "", QByteArray *ba = 0, int size = 0);
     bool SendCmd(int Command, QString Args="");
-    QString RemoveSpaces(QString str);
 
 private slots:
     void FtpGet(QByteArray *);

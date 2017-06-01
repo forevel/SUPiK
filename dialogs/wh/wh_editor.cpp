@@ -130,11 +130,11 @@ void Wh_Editor::SetupUI()
     pb->setToolTip("Создать новый склад");
     hlyout->addWidget(pb);
     hlyout->addSpacing(5);
-    pb = new s_tqPushButton;
+/*    pb = new s_tqPushButton;
     pb->setIcon(QIcon(":/res/whPB-red.png"));
     connect(pb, SIGNAL(clicked()), this, SLOT(DeleteWh()));
     pb->setToolTip("Расформировать и удалить склад");
-    hlyout->addWidget(pb);
+    hlyout->addWidget(pb); */
     hlyout->addSpacing(5);
     pb = new s_tqPushButton;
     pb->setIcon(QIcon(":/res/cross.png"));

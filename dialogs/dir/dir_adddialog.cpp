@@ -637,26 +637,26 @@ void dir_adddialog::TbleChoosed()
     }
     case FW_DLINK+FW_COUNT:
     {
-        cb1name = "tble0";
-        cb2name = "tblefield0";
+        cb1name = "tble.0";
+        cb2name = "tblefield.0";
         break;
     }
     case FW_DLINK+FW_COUNT+1:
     {
-        cb1name = "tble1";
-        cb2name = "tblefield1";
+        cb1name = "tble.1";
+        cb2name = "tblefield.1";
         break;
     }
     case FW_DLINK+FW_COUNT+2:
     {
-        cb1name = "tble2";
-        cb2name = "tblefield2";
+        cb1name = "tble.2";
+        cb2name = "tblefield.2";
         break;
     }
     case FW_DLINK+FW_COUNT+3:
     {
-        cb1name = "tble3";
-        cb2name = "tblefield3";
+        cb1name = "tble.3";
+        cb2name = "tblefield.3";
         break;
     }
     }
@@ -852,11 +852,9 @@ void dir_adddialog::FPBPressed()
     QStringList tmpStringList = QStringList() << "0.Простое поле" << "1.Поле ввода" << "2.Поле выбора" << "3.Выпадающий список" << "4.Неактивное поле" <<  \
                      "5.Счётчик" << "6.Поле выбора с вводом" << "7.Поле с рамкой" << "8.Поле бинарного ввода" << "9.Многострочное поле";
     s_tqComboBox *dtypecb = WDFunc::NewCB(this, "dtypecb", tmpStringList);
-    connect(dtypecb,SIGNAL(currentIndexChanged(int)),this,SLOT(DTypeCBIndexChanged(int)));
     adjustFieldSize(dtypecb, 25);
     s_tqComboBox *ltypecb = new s_tqComboBox;
     ltypecb->setObjectName("ltypecb");
-    connect(ltypecb,SIGNAL(currentIndexChanged(QString)),this,SLOT(LTypeCBIndexChanged(QString)));
     adjustFieldSize(ltypecb, 30);
     QVBoxLayout *lyout = new QVBoxLayout;
     QHBoxLayout *hlyout = new QHBoxLayout;
@@ -903,238 +901,19 @@ void dir_adddialog::FPBPressed()
     if (links.size()>1)
     {
         dtypecb->setCurrentIndex(links.at(0).toInt());
+        DTypeCBIndexChanged(links.at(0).toInt());
         QString LTypeCBString = FW_Links.at(links.at(1).toInt());
         ltypecb->setCurrentText(LTypeCBString);
+        LTypeCBIndexChanged(LTypeCBString);
     }
     else
+    {
+        dtypecb->setCurrentIndex(0);
         DTypeCBIndexChanged(0); // если links нет, то хотя бы установить выбор ссылки по 0-му делегату
+    }
+    connect(dtypecb,SIGNAL(currentIndexChanged(int)),this,SLOT(DTypeCBIndexChanged(int)));
+    connect(ltypecb,SIGNAL(currentIndexChanged(QString)),this,SLOT(LTypeCBIndexChanged(QString)));
     dlg->exec();
-}
-
-s_tqWidget *dir_adddialog::SetWidget(int FType)
-{
-    QVBoxLayout *vlyout = new QVBoxLayout;
-    QHBoxLayout *hlyout = new QHBoxLayout;
-    s_tqLabel *lbl;
-    s_tqSpinBox *spb;
-    s_tqWidget *w = new s_tqWidget;
-    s_tqComboBox *cb;
-    s_tqLineEdit *le;
-    QStringList vls = sqlc.GetValuesFromTableByColumn("sup", "tablefields", "tablename", "tablename");
-    vls.removeDuplicates();
-    switch (FType)
-    {
-    case FW_NUMBER:
-    {
-        lbl = new s_tqLabel("Число");
-        hlyout->addWidget(lbl);
-        hlyout->setAlignment(lbl, Qt::AlignRight);
-        spb = WDFunc::NewSPB(this, "number", 0, 999999, 1, 0);
-        hlyout->addWidget(spb);
-        vlyout->addLayout(hlyout);
-        break;
-    }
-    case FW_LINK:
-    {
-        lbl = new s_tqLabel("Таблица");
-        hlyout->addWidget(lbl);
-        hlyout->setAlignment(lbl,Qt::AlignRight);
-        cb = WDFunc::NewCB(this, "tcb."+QString::number(FW_LINK), vls);
-        connect(cb,SIGNAL(currentTextChanged(QString)),this,SLOT(TbleChoosed()));
-        hlyout->addWidget(cb);
-        vlyout->addLayout(hlyout);
-        hlyout = new QHBoxLayout;
-        lbl = new s_tqLabel("Поле");
-        hlyout->addWidget(lbl);
-        hlyout->setAlignment(lbl,Qt::AlignRight);
-        cb = WDFunc::NewCB(this, "fwlinkcb2");
-        hlyout->addWidget(cb);
-        vlyout->addLayout(hlyout);
-        break;
-    }
-    case FW_DLINK:
-    {
-        vls.insert(0,""); // добавление пустого элемента, ибо в DLINK возможно отсутствие значения
-        for (int i = 0; i < 4; i++)
-        {
-            hlyout = new QHBoxLayout;
-            lbl = new s_tqLabel("Таблица"+QString::number(i));
-            hlyout->addWidget(lbl);
-            hlyout->setAlignment(lbl,Qt::AlignRight);
-            cb = WDFunc::NewCB(this, "tble."+QString::number(FW_DLINK+FW_COUNT+i), vls); // +20 - чтобы точно перекрыть диапазон возможных вариантов полей
-            connect(cb,SIGNAL(currentTextChanged(QString)),this,SLOT(TbleChoosed()));
-            hlyout->addWidget(cb);
-            vlyout->addLayout(hlyout);
-            hlyout = new QHBoxLayout;
-            lbl = new s_tqLabel("Поле"+QString::number(i));
-            hlyout->addWidget(lbl);
-            hlyout->setAlignment(lbl,Qt::AlignRight);
-            cb = WDFunc::NewCB(this, "tblefield."+QString::number(i));
-            hlyout->addWidget(cb);
-            vlyout->addLayout(hlyout);
-        }
-        break;
-    }
-    case FW_ALLINK:
-    {
-        lbl = new s_tqLabel("Таблица");
-        hlyout->addWidget(lbl);
-        hlyout->setAlignment(lbl,Qt::AlignRight);
-        cb = WDFunc::NewCB(this, "tcb."+QString::number(FW_ALLINK), vls);
-        connect(cb,SIGNAL(currentTextChanged(QString)),this,SLOT(TbleChoosed()));
-        hlyout->addWidget(cb);
-        vlyout->addLayout(hlyout);
-        hlyout = new QHBoxLayout;
-        lbl = new s_tqLabel("Поле");
-        hlyout->addWidget(lbl);
-        hlyout->setAlignment(lbl,Qt::AlignRight);
-        cb = WDFunc::NewCB(this, "fwallinkcb2");
-        hlyout->addWidget(cb);
-        vlyout->addLayout(hlyout);
-        break;
-    }
-    case FW_MAXLINK:
-    {
-        lbl = new s_tqLabel("Таблица");
-        hlyout->addWidget(lbl);
-        hlyout->setAlignment(lbl,Qt::AlignRight);
-        cb = WDFunc::NewCB(this, "tcb."+QString::number(FW_MAXLINK), vls);
-        connect(cb,SIGNAL(currentTextChanged(QString)),this,SLOT(TbleChoosed()));
-        hlyout->addWidget(cb);
-        vlyout->addLayout(hlyout);
-        hlyout = new QHBoxLayout;
-        lbl = new s_tqLabel("Поле значения");
-        hlyout->addWidget(lbl);
-        hlyout->setAlignment(lbl,Qt::AlignRight);
-        cb = WDFunc::NewCB(this, "fwmaxlinkcb2");
-        hlyout->addWidget(cb);
-        vlyout->addLayout(hlyout);
-        hlyout = new QHBoxLayout;
-        lbl = new s_tqLabel("Поле сравнения");
-        hlyout->addWidget(lbl);
-        hlyout->setAlignment(lbl,Qt::AlignRight);
-        cb = WDFunc::NewCB(this, "fwmaxlinkcb3");
-        hlyout->addWidget(cb);
-        vlyout->addLayout(hlyout);
-        hlyout = new QHBoxLayout;
-        lbl = new s_tqLabel("Значение (опц.)");
-        hlyout->addWidget(lbl);
-        hlyout->setAlignment(lbl,Qt::AlignRight);
-        le = WDFunc::NewLE(this, "fwmaxlinkle");
-        hlyout->addWidget(le);
-        vlyout->addLayout(hlyout);
-        break;
-    }
-    case FW_MASKED:
-    {
-        lbl = new s_tqLabel("Регулярное выражение");
-        hlyout->addWidget(lbl);
-        hlyout->setAlignment(lbl,Qt::AlignRight);
-        le = WDFunc::NewLE(this, "fwmaskedle");
-        le->setToolTip("Пример: [0-9]{0,2}-[0-9]{0,9}");
-        hlyout->addWidget(le);
-        vlyout->addLayout(hlyout);
-        break;
-    }
-    case FW_EQUAT:
-    {
-        lbl = new s_tqLabel("Выражение1");
-        hlyout->addWidget(lbl);
-        hlyout->setAlignment(lbl,Qt::AlignRight);
-        le = WDFunc::NewLE(this, "fwequatle");
-        hlyout->addWidget(le);
-        vlyout->addLayout(hlyout);
-        QStringList ops = QStringList() << "+" << "-" << "*" << "/";
-        cb = WDFunc::NewCB(this, "fwequatcb", ops);
-        hlyout = new QHBoxLayout;
-        lbl = new s_tqLabel("Операция");
-        hlyout->addWidget(lbl);
-        hlyout->setAlignment(lbl,Qt::AlignRight);
-        hlyout->addWidget(cb);
-        vlyout->addLayout(hlyout);
-        hlyout = new QHBoxLayout;
-        lbl = new s_tqLabel("Выражение2");
-        hlyout->addWidget(lbl);
-        hlyout->setAlignment(lbl,Qt::AlignRight);
-        le = WDFunc::NewLE(this, "fwequatle2");
-        hlyout->addWidget(le);
-        vlyout->addLayout(hlyout);
-        break;
-    }
-    case FW_FNUMBER:
-    {
-        lbl = new s_tqLabel("Количество знаков целой части");
-        hlyout->addWidget(lbl);
-        hlyout->setAlignment(lbl,Qt::AlignRight);
-        spb = WDFunc::NewSPB(this, "fnumber", 0, 9, 1, 0);
-        hlyout->addWidget(spb);
-        vlyout->addLayout(hlyout);
-        hlyout = new QHBoxLayout;
-        lbl = new s_tqLabel("Количество знаков дробной части");
-        hlyout->addWidget(lbl);
-        hlyout->setAlignment(lbl,Qt::AlignRight);
-        spb = WDFunc::NewSPB(this, "fnumber2", 0, 5, 1, 0);
-        hlyout->addWidget(spb);
-        vlyout->addLayout(hlyout);
-        break;
-    }
-    case FW_SPECIAL:
-    {
-        lbl = new s_tqLabel("Таблица");
-        hlyout->addWidget(lbl);
-        hlyout->setAlignment(lbl,Qt::AlignRight);
-        cb = WDFunc::NewCB(this, "tcb."+QString::number(FW_SPECIAL), vls);
-        connect(cb,SIGNAL(currentTextChanged(QString)),this,SLOT(TbleChoosed()));
-        hlyout->addWidget(cb);
-        vlyout->addLayout(hlyout);
-        hlyout = new QHBoxLayout;
-        lbl = new s_tqLabel("Поле");
-        hlyout->addWidget(lbl);
-        hlyout->setAlignment(lbl,Qt::AlignRight);
-        cb = WDFunc::NewCB(this, "fwspecialcb2");
-        hlyout->addWidget(cb);
-        vlyout->addLayout(hlyout);
-        break;
-    }
-    case FW_ID:
-    {
-        lbl = new s_tqLabel("Размер поля");
-        hlyout->addWidget(lbl);
-        hlyout->setAlignment(lbl, Qt::AlignRight);
-        spb = WDFunc::NewSPB(this, "id", 0, 9, 1, 0);
-        spb->setValue(7);
-        hlyout->addWidget(spb);
-        vlyout->addLayout(hlyout);
-        break;
-    }
-    case FW_PIXTE:
-    {
-        lbl = new s_tqLabel("Префикс пути к файлам");
-        hlyout->addWidget(lbl);
-        hlyout->setAlignment(lbl, Qt::AlignRight);
-        cb = WDFunc::NewCB(this, "fwpixteprefix", Cli->PathPrefixes);
-        hlyout->addWidget(cb);
-        s_tqCheckBox *chb = WDFunc::NewChB(this, "fwpixteprefixenchb", "Нет");
-        connect(chb,SIGNAL(toggled(bool)),this,SLOT(PixTEChBClicked(bool)));
-        hlyout->addWidget(chb);
-        vlyout->addLayout(hlyout);
-        hlyout = new QHBoxLayout;
-        lbl = new s_tqLabel("Суффикс пути к файлам");
-        hlyout->addWidget(lbl);
-        hlyout->setAlignment(lbl, Qt::AlignRight);
-        cb = WDFunc::NewCB(this, "fwpixtesuffix", Cli->PathSuffixes);
-        hlyout->addWidget(cb);
-        chb = WDFunc::NewChB(this, "fwpixtesuffixenchb", "Нет");
-        connect(chb,SIGNAL(toggled(bool)),this,SLOT(PixTEChBClicked(bool)));
-        hlyout->addWidget(chb);
-        vlyout->addLayout(hlyout);
-        break;
-    }
-    default:
-        break;
-    }
-    w->setLayout(vlyout);
-    return w;
 }
 
 // установка типа поля по выбранному типу делегата
@@ -1210,7 +989,6 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
     s_tqWidget *w = SetWidget(wdgtsidx);
     sw->clear();
     sw->addWidget(w);
-    sw->setCurrentWidget(w);
     QString tmps;
     WDFunc::LEData(this, "value."+QString::number(idx), tmps);
     QStringList links = tmps.split("."); // формируем links
@@ -1338,6 +1116,240 @@ void dir_adddialog::LTypeCBIndexChanged(QString str)
     default:
         break;
     }
+}
+
+s_tqWidget *dir_adddialog::SetWidget(int FType)
+{
+    QVBoxLayout *vlyout = new QVBoxLayout;
+    QHBoxLayout *hlyout = new QHBoxLayout;
+    s_tqLabel *lbl;
+    s_tqSpinBox *spb;
+    s_tqWidget *w = new s_tqWidget;
+    s_tqComboBox *cb;
+    s_tqLineEdit *le;
+    switch (FType)
+    {
+    case FW_NUMBER:
+    {
+        lbl = new s_tqLabel("Число");
+        hlyout->addWidget(lbl);
+        hlyout->setAlignment(lbl, Qt::AlignRight);
+        spb = WDFunc::NewSPB(this, "number", 0, 999999, 1, 0);
+        hlyout->addWidget(spb);
+        vlyout->addLayout(hlyout);
+        break;
+    }
+    case FW_LINK:
+    {
+        QStringList vls = sqlc.GetValuesFromTableByColumn("sup", "tablefields", "tablename", "tablename");
+        vls.removeDuplicates();
+        lbl = new s_tqLabel("Таблица");
+        hlyout->addWidget(lbl);
+        hlyout->setAlignment(lbl,Qt::AlignRight);
+        cb = WDFunc::NewCB(this, "tcb."+QString::number(FW_LINK), vls);
+        connect(cb,SIGNAL(currentTextChanged(QString)),this,SLOT(TbleChoosed()));
+        hlyout->addWidget(cb);
+        vlyout->addLayout(hlyout);
+        hlyout = new QHBoxLayout;
+        lbl = new s_tqLabel("Поле");
+        hlyout->addWidget(lbl);
+        hlyout->setAlignment(lbl,Qt::AlignRight);
+        cb = WDFunc::NewCB(this, "fwlinkcb2");
+        hlyout->addWidget(cb);
+        vlyout->addLayout(hlyout);
+        break;
+    }
+    case FW_DLINK:
+    {
+        QStringList vls = sqlc.GetValuesFromTableByColumn("sup", "tablefields", "tablename", "tablename");
+        vls.removeDuplicates();
+        vls.insert(0,""); // добавление пустого элемента, ибо в DLINK возможно отсутствие значения
+        for (int i = 0; i < 4; i++)
+        {
+            hlyout = new QHBoxLayout;
+            lbl = new s_tqLabel("Таблица"+QString::number(i));
+            hlyout->addWidget(lbl);
+            hlyout->setAlignment(lbl,Qt::AlignRight);
+            cb = WDFunc::NewCB(this, "tble."+QString::number(FW_DLINK+FW_COUNT+i), vls); // +20 - чтобы точно перекрыть диапазон возможных вариантов полей
+            connect(cb,SIGNAL(currentTextChanged(QString)),this,SLOT(TbleChoosed()));
+            hlyout->addWidget(cb);
+            vlyout->addLayout(hlyout);
+            hlyout = new QHBoxLayout;
+            lbl = new s_tqLabel("Поле"+QString::number(i));
+            hlyout->addWidget(lbl);
+            hlyout->setAlignment(lbl,Qt::AlignRight);
+            cb = WDFunc::NewCB(this, "tblefield."+QString::number(i));
+            hlyout->addWidget(cb);
+            vlyout->addLayout(hlyout);
+        }
+        break;
+    }
+    case FW_ALLINK:
+    {
+        QStringList vls = sqlc.GetValuesFromTableByColumn("sup", "tablefields", "tablename", "tablename");
+        vls.removeDuplicates();
+        lbl = new s_tqLabel("Таблица");
+        hlyout->addWidget(lbl);
+        hlyout->setAlignment(lbl,Qt::AlignRight);
+        cb = WDFunc::NewCB(this, "tcb."+QString::number(FW_ALLINK), vls);
+        connect(cb,SIGNAL(currentTextChanged(QString)),this,SLOT(TbleChoosed()));
+        hlyout->addWidget(cb);
+        vlyout->addLayout(hlyout);
+        hlyout = new QHBoxLayout;
+        lbl = new s_tqLabel("Поле");
+        hlyout->addWidget(lbl);
+        hlyout->setAlignment(lbl,Qt::AlignRight);
+        cb = WDFunc::NewCB(this, "fwallinkcb2");
+        hlyout->addWidget(cb);
+        vlyout->addLayout(hlyout);
+        break;
+    }
+    case FW_MAXLINK:
+    {
+        QStringList vls = sqlc.GetValuesFromTableByColumn("sup", "tablefields", "tablename", "tablename");
+        vls.removeDuplicates();
+        lbl = new s_tqLabel("Таблица");
+        hlyout->addWidget(lbl);
+        hlyout->setAlignment(lbl,Qt::AlignRight);
+        cb = WDFunc::NewCB(this, "tcb."+QString::number(FW_MAXLINK), vls);
+        connect(cb,SIGNAL(currentTextChanged(QString)),this,SLOT(TbleChoosed()));
+        hlyout->addWidget(cb);
+        vlyout->addLayout(hlyout);
+        hlyout = new QHBoxLayout;
+        lbl = new s_tqLabel("Поле значения");
+        hlyout->addWidget(lbl);
+        hlyout->setAlignment(lbl,Qt::AlignRight);
+        cb = WDFunc::NewCB(this, "fwmaxlinkcb2");
+        hlyout->addWidget(cb);
+        vlyout->addLayout(hlyout);
+        hlyout = new QHBoxLayout;
+        lbl = new s_tqLabel("Поле сравнения");
+        hlyout->addWidget(lbl);
+        hlyout->setAlignment(lbl,Qt::AlignRight);
+        cb = WDFunc::NewCB(this, "fwmaxlinkcb3");
+        hlyout->addWidget(cb);
+        vlyout->addLayout(hlyout);
+        hlyout = new QHBoxLayout;
+        lbl = new s_tqLabel("Значение (опц.)");
+        hlyout->addWidget(lbl);
+        hlyout->setAlignment(lbl,Qt::AlignRight);
+        le = WDFunc::NewLE(this, "fwmaxlinkle");
+        hlyout->addWidget(le);
+        vlyout->addLayout(hlyout);
+        break;
+    }
+    case FW_MASKED:
+    {
+        lbl = new s_tqLabel("Регулярное выражение");
+        hlyout->addWidget(lbl);
+        hlyout->setAlignment(lbl,Qt::AlignRight);
+        le = WDFunc::NewLE(this, "fwmaskedle");
+        le->setToolTip("Пример: [0-9]{0,2}-[0-9]{0,9}");
+        hlyout->addWidget(le);
+        vlyout->addLayout(hlyout);
+        break;
+    }
+    case FW_EQUAT:
+    {
+        lbl = new s_tqLabel("Выражение1");
+        hlyout->addWidget(lbl);
+        hlyout->setAlignment(lbl,Qt::AlignRight);
+        le = WDFunc::NewLE(this, "fwequatle");
+        hlyout->addWidget(le);
+        vlyout->addLayout(hlyout);
+        QStringList ops = QStringList() << "+" << "-" << "*" << "/";
+        cb = WDFunc::NewCB(this, "fwequatcb", ops);
+        hlyout = new QHBoxLayout;
+        lbl = new s_tqLabel("Операция");
+        hlyout->addWidget(lbl);
+        hlyout->setAlignment(lbl,Qt::AlignRight);
+        hlyout->addWidget(cb);
+        vlyout->addLayout(hlyout);
+        hlyout = new QHBoxLayout;
+        lbl = new s_tqLabel("Выражение2");
+        hlyout->addWidget(lbl);
+        hlyout->setAlignment(lbl,Qt::AlignRight);
+        le = WDFunc::NewLE(this, "fwequatle2");
+        hlyout->addWidget(le);
+        vlyout->addLayout(hlyout);
+        break;
+    }
+    case FW_FNUMBER:
+    {
+        lbl = new s_tqLabel("Количество знаков целой части");
+        hlyout->addWidget(lbl);
+        hlyout->setAlignment(lbl,Qt::AlignRight);
+        spb = WDFunc::NewSPB(this, "fnumber", 0, 9, 1, 0);
+        hlyout->addWidget(spb);
+        vlyout->addLayout(hlyout);
+        hlyout = new QHBoxLayout;
+        lbl = new s_tqLabel("Количество знаков дробной части");
+        hlyout->addWidget(lbl);
+        hlyout->setAlignment(lbl,Qt::AlignRight);
+        spb = WDFunc::NewSPB(this, "fnumber2", 0, 5, 1, 0);
+        hlyout->addWidget(spb);
+        vlyout->addLayout(hlyout);
+        break;
+    }
+    case FW_SPECIAL:
+    {
+        QStringList vls = sqlc.GetValuesFromTableByColumn("sup", "tablefields", "tablename", "tablename");
+        vls.removeDuplicates();
+        lbl = new s_tqLabel("Таблица");
+        hlyout->addWidget(lbl);
+        hlyout->setAlignment(lbl,Qt::AlignRight);
+        cb = WDFunc::NewCB(this, "tcb."+QString::number(FW_SPECIAL), vls);
+        connect(cb,SIGNAL(currentTextChanged(QString)),this,SLOT(TbleChoosed()));
+        hlyout->addWidget(cb);
+        vlyout->addLayout(hlyout);
+        hlyout = new QHBoxLayout;
+        lbl = new s_tqLabel("Поле");
+        hlyout->addWidget(lbl);
+        hlyout->setAlignment(lbl,Qt::AlignRight);
+        cb = WDFunc::NewCB(this, "fwspecialcb2");
+        hlyout->addWidget(cb);
+        vlyout->addLayout(hlyout);
+        break;
+    }
+    case FW_ID:
+    {
+        lbl = new s_tqLabel("Размер поля");
+        hlyout->addWidget(lbl);
+        hlyout->setAlignment(lbl, Qt::AlignRight);
+        spb = WDFunc::NewSPB(this, "id", 0, 9, 1, 0);
+        spb->setValue(7);
+        hlyout->addWidget(spb);
+        vlyout->addLayout(hlyout);
+        break;
+    }
+    case FW_PIXTE:
+    {
+        lbl = new s_tqLabel("Префикс пути к файлам");
+        hlyout->addWidget(lbl);
+        hlyout->setAlignment(lbl, Qt::AlignRight);
+        cb = WDFunc::NewCB(this, "fwpixteprefix", Cli->PathPrefixes);
+        hlyout->addWidget(cb);
+        s_tqCheckBox *chb = WDFunc::NewChB(this, "fwpixteprefixenchb", "Нет");
+        connect(chb,SIGNAL(toggled(bool)),this,SLOT(PixTEChBClicked(bool)));
+        hlyout->addWidget(chb);
+        vlyout->addLayout(hlyout);
+        hlyout = new QHBoxLayout;
+        lbl = new s_tqLabel("Суффикс пути к файлам");
+        hlyout->addWidget(lbl);
+        hlyout->setAlignment(lbl, Qt::AlignRight);
+        cb = WDFunc::NewCB(this, "fwpixtesuffix", Cli->PathSuffixes);
+        hlyout->addWidget(cb);
+        chb = WDFunc::NewChB(this, "fwpixtesuffixenchb", "Нет");
+        connect(chb,SIGNAL(toggled(bool)),this,SLOT(PixTEChBClicked(bool)));
+        hlyout->addWidget(chb);
+        vlyout->addLayout(hlyout);
+        break;
+    }
+    default:
+        break;
+    }
+    w->setLayout(vlyout);
+    return w;
 }
 
 // сборка строки ссылки из элементов выбора и выход из диалога конструктора

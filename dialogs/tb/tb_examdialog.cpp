@@ -345,7 +345,6 @@ QList<QScrollArea *> tb_examdialog::PrepareQuestionsByTheme(int theme, int quest
     for (int i=0; i<questnum; ++i)
     {
         s_tqWidget *w = new s_tqWidget;
-//        w->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
         QVBoxLayout *lyout = new QVBoxLayout;
         int idsize = idvl.size();
         if (idsize == 0) // protection against fools

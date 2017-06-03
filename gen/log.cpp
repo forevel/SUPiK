@@ -97,7 +97,7 @@ void Log::WriteFile(const QString &Prepend, const QString &msg)
     fp->flush();
     CheckAndGz();
 }
-
+/*
 void Log::Info(QByteArray &ba)
 {
     QString tmps = "[" + QDateTime::currentDateTime().toString("dd-MM-yyyy hh:mm:ss") + "]";
@@ -109,7 +109,7 @@ void Log::Info(QByteArray &ba)
     fp->flush();
     CheckAndGz();
 }
-
+*/
 void Log::CheckAndGz()
 {
     QString GZippedLogFile = LogFile + ".xz";

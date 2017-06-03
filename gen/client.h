@@ -6,6 +6,7 @@
 #include <QFile>
 #include <QMap>
 #include <QPointer>
+#include <QEventLoop>
 #include "../threads/ethernet.h"
 #include "publicclass.h"
 #include "log.h"
@@ -17,7 +18,6 @@
 #define SERVIDLSTR  "IDLE"
 #define SERVEROK    "OK"
 
-//#define TIMERSOFF // если не закомментировано, таймауты отключены
 #define SLNUMMAX    10 // максимальное число полей в запросе по столбцам
 
 // M-commands (main)
@@ -267,6 +267,7 @@ private:
     QByteArray RcvData, WrData;
     QPointer<Ethernet> MainEthernet;
     QTimer *RetrTimer, *TimeoutTimer, *EthStateChangeTimer; // general timeout, timer for server reply, getfile timer
+    QEventLoop ConnectLoop, CommandFinishedLoop;
     bool LoginOk;
     QString Host, Port;
     quint64 WrittenBytes, ReadBytes, RcvDataSize, XmitDataSize;
@@ -292,6 +293,7 @@ private:
     bool CheckArgs(QString cmd, QStringList &args, int argsnum, bool fieldscheck=false, bool pairscheck=false);
     void InitiateTimers();
     void SetWaitEnded();
+    void FinishCommand();
 
 private slots:
     void ClientConnected();

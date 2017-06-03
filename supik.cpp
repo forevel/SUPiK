@@ -564,11 +564,13 @@ void supik::executeDirDialog()
 void supik::periodic1s()
 {
     ++PingSecCounter;
+#ifndef DEBUGISON
     if (PingSecCounter > SUPIK_PINGPERIOD)
     {
         PingSecCounter = 0;
         Cli->SendCmd(M_PING); // проверка связи
     }
+#endif
     PeriodicOddSecond = !PeriodicOddSecond;
     pc.DateTime = QDateTime::currentDateTime().toString(DATETIMEFORMAT);
     s_tqLabel *le = this->findChild<s_tqLabel *>("datetime");

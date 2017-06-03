@@ -20,7 +20,7 @@ void s_tqStackedWidget::addWidget(QWidget *w)
 {
     widgets.append(w);
     lyout->addWidget(w);
-    connect(w, SIGNAL(destroyed(QObject*)),this,SLOT(CurrentWidgetClosed()));
+    connect(w, SIGNAL(destroyed(QObject*)),this,SLOT(setCurrentIndexLast()));
     setCurrentIndexLast();
 }
 
@@ -30,12 +30,6 @@ void s_tqStackedWidget::setCurrentIndex(int i)
         return;
     curr_index = i;
     showCurrentWidget();
-}
-
-void s_tqStackedWidget::CurrentWidgetClosed()
-{
-    removeWidget(currentWidget());
-    setCurrentIndexLast();
 }
 
 void s_tqStackedWidget::DeleteWidgetFromLayout(QWidget *w)
@@ -123,10 +117,10 @@ void s_tqStackedWidget::removeWidget(QWidget *w)
 
 void s_tqStackedWidget::clear()
 {
-    for (int i=0; i<count(); ++i)
+    while (widgets.size())
     {
-        QWidget *w = widgets.takeAt(i);
-        DeleteWidgetFromLayout(w);
+        QWidget *w = widgets.at(0);
+        removeWidget(w);
     }
     curr_index = 0;
 }

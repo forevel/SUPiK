@@ -56,7 +56,7 @@ int WhPlacesModel::SetupModel(int rootid)
     QStringList cmpvalues = QStringList() << QString::number(RootID);
     QList<QStringList> lsl;
     tfl.valuesbyfieldsmatrix("Склады размещение_полн", fl, cmpfields, cmpvalues, lsl);
-    if (tfl.result != TFRESULT_NOERROR)
+    if (tfl.result == TFRESULT_ERROR)
         return RESULTBAD;
     while (lsl.size() > 0)
     {
@@ -291,30 +291,35 @@ void Wh_Editor::BuildWorkspace()
     QVBoxLayout *vlyout = new QVBoxLayout;
     // построим текстовое поле места размещения
     QString PlaceNameString;
-    WhPlacesModel::WhPlacesItem item = ItemsStack.last();
-//    CurID = ID;
-    int idi = item.Id.toInt();
-    if (idi == -1)
+    if (!ItemsStack.isEmpty())
     {
-        WARNMSG("");
-        return;
-    }
-    while (item.Id != "0")
-    {
-        QStringList tmpsl;
-        QStringList sl = QStringList() << "Наименование" << "Обозначение" << "ИД_а";
-        tfl.valuesbyfield("Склады размещение_полн", sl, "ИД", item.Id, tmpsl);
-        if ((tfl.result) || (tmpsl.size()<3))
+        WhPlacesModel::WhPlacesItem item = ItemsStack.last();
+    //    CurID = ID;
+        int idi = item.Id.toInt();
+        if (idi == -1)
         {
             WARNMSG("");
             return;
         }
-        QString tmps = "/" + tmpsl.at(0) + " " + tmpsl.at(1);
-        PlaceNameString.insert(0, tmps);
-        item.Id = tmpsl.at(2);
+        while (item.Id != "0")
+        {
+            QStringList tmpsl;
+            QStringList sl = QStringList() << "Наименование" << "Обозначение" << "ИД_а";
+            tfl.valuesbyfield("Склады размещение_полн", sl, "ИД", item.Id, tmpsl);
+            if ((tfl.result) || (tmpsl.size()<3))
+            {
+                WARNMSG("");
+                return;
+            }
+            QString tmps = "/" + tmpsl.at(0) + " " + tmpsl.at(1);
+            PlaceNameString.insert(0, tmps);
+            item.Id = tmpsl.at(2);
+        }
+        PlaceNameString.insert(0, ":"); // ":" - обозначение "корня"
+        PlaceNameString.append(WhModel->Item(idi).Alias + " " + WhModel->Item(idi).Name);
     }
-    PlaceNameString.insert(0, ":"); // ":" - обозначение "корня"
-    PlaceNameString.append(WhModel->Item(idi).Alias + " " + WhModel->Item(idi).Name);
+    else
+        PlaceNameString = "";
 
     s_tqLabel *lbl = new s_tqLabel(PlaceNameString);
     vlyout->addWidget(lbl);

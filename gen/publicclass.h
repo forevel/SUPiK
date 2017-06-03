@@ -68,6 +68,7 @@
 
 #define INSERT  1
 #define UPDATE  2
+//#define DEBUGISON // если не закомментировано, таймауты отключены, пинги не идут
 
 #define QTMS_MW_D 0 // номер первой строчки диалога ENTRANCE из языковых файлов
 #define SSD_D 4 // номер первой строчки диалога SETTINGS из языковых файлов

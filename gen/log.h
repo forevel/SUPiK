@@ -37,7 +37,7 @@ public:
     void error(const QString &str);
     void warning(const QString &str);
     void info(const QString &str);
-    void Info(QByteArray &ba);
+//    void Info(QByteArray &ba);
     void intvarvalue(const QString &var, int value);
     void WriteFile(const QString &Prepend, const QString &msg);
     

@@ -17,11 +17,10 @@ public:
     void setCurrentWidget(QWidget *w);
     void removeWidget(QWidget *w);
     void clear();
-    void setCurrentIndexLast();
 
 public slots:
     void setCurrentIndex(int);
-    void CurrentWidgetClosed();
+    void setCurrentIndexLast();
 
 private:
     bool auto_resize;

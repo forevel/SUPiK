@@ -51,7 +51,7 @@ int WhPlacesModel::SetupModel(int rootid)
 {
     RootID = rootid;
     ClearModel();
-    QStringList fl = QStringList() << "ИД" << "Наименование" << "Описание" << "Обозначение" << "Тип размещения";
+    QStringList fl = QStringList() << "ИД" << "Наименование" << "Обозначение" << "Ёмкость размещения" << "Ряд" << "Столбец";
     QStringList cmpfields = QStringList() << "ИД_а";
     QStringList cmpvalues = QStringList() << QString::number(RootID);
     QList<QStringList> lsl;
@@ -61,26 +61,24 @@ int WhPlacesModel::SetupModel(int rootid)
     while (lsl.size() > 0)
     {
         QStringList tmpsl = lsl.takeAt(0);
-        if (tmpsl.size() < 5)
+        if (tmpsl.size() < 6)
             continue;
         WhPlacesItem item;
         item.Id = tmpsl.at(0);
-        item.Alias = tmpsl.at(1);
-        item.Description = tmpsl.at(2);
-        item.Name = tmpsl.at(3);
-        item.WhPlaceTypeID = tmpsl.at(4);
-        QString tmps;
-        tfl.valuesbyfield("Склады типы размещения_полн", QStringList("Тип размещения"), "ИД", item.WhPlaceTypeID, tmpsl);
-        if ((tfl.result == TFRESULT_NOERROR) && !tmpsl.isEmpty())
+        item.Description = tmpsl.at(1);
+        item.Name = tmpsl.at(2);
+        item.Row = tmpsl.at(4);
+        item.Column = tmpsl.at(5);
+        item.WhPlacesTanksID = tmpsl.at(3); // idwhplacestanks
+        if (tmps != "0") // склад
         {
-            tmps = tmpsl.at(0);
-            tfl.valuesbyfield("Склады ёмкости размещения_полн", QStringList("Приоритет вложенности"), "ИД", tmps, tmpsl);
+            tfl.valuesbyfield("Склады ёмкости размещения_полн", QStringList("Приоритет вложенности"), "ИД", item.WhPlacesTanksID, tmpsl);
             if ((tfl.result == TFRESULT_NOERROR) && !tmpsl.isEmpty())
                 item.Priority = tmpsl.at(0).toInt();
             else item.Priority = WRONGNUM;
         }
         else
-            item.Priority = WRONGNUM;
+            item.Priority = -1; // склад
         InsertItem(item);
     }
     return RESULTOK;
@@ -91,8 +89,8 @@ int WhPlacesModel::Save()
     while (Items.size())
     {
         WhPlacesItem item = Items.takeAt(0);
-        QStringList fl = QStringList() << "ИД" << "Наименование" << "Описание" << "Обозначение" << "Тип размещения";
-        QStringList vl = QStringList() << item.Id << item.Alias << item.Description << item.Name << item.WhPlaceTypeID;
+        QStringList fl = QStringList() << "ИД" << "Наименование" << "Обозначение" << "Ёмкость размещения" << "Ряд" << "Столбец";
+        QStringList vl = QStringList() << item.Id << item.Description << item.Name << item.WhPlacesTanksID << item.Row << item.Column;
 
     }
     return RESULTOK;

@@ -6,6 +6,7 @@
 #include "../../widgets/s_tqgroupbox.h"
 #include "../../widgets/s_tqwidget.h"
 #include "../../widgets/s_tqchoosewidget.h"
+#include "../../widgets/s_tqscrollarea.h"
 #include "../../widgets/wd_func.h"
 #include "../../gen/s_tablefields.h"
 #include "../../gen/publicclass.h"
@@ -20,7 +21,6 @@
 #include <QPaintEvent>
 #include <QStringListModel>
 #include <QStandardItemModel>
-#include <QScrollArea>
 
 WhPlacesModel::WhPlacesModel(QObject *parent) : QObject(parent)
 {
@@ -106,6 +106,7 @@ void WhPlacesModel::ClearModel()
     Items.clear();
 }
 
+// ################################# WH_EDITOR #######################################
 
 Wh_Editor::Wh_Editor(QWidget *parent) : QDialog(parent)
 {
@@ -153,7 +154,7 @@ void Wh_Editor::SetupUI()
     hlyout->addWidget(lbl, 0);
     hlyout->setAlignment(lbl, Qt::AlignRight);
     lyout->addLayout(hlyout);
-    hlyout = new QHBoxLayout;
+/*    hlyout = new QHBoxLayout;
     // Комбобокс с наименованиями складов из wh
     s_tqComboBox *cb = WDFunc::NewCB(this, "whcb");
     connect(cb,SIGNAL(currentIndexChanged(QString)),this,SLOT(ChangeWh(QString)));
@@ -161,18 +162,127 @@ void Wh_Editor::SetupUI()
     hlyout->addWidget(lbl, 0);
     hlyout->addWidget(cb, 2);
     hlyout->addStretch(20);
-    lyout->addLayout(hlyout);
+    lyout->addLayout(hlyout); */
     QFrame* line = new QFrame;
     line->setFrameShape(QFrame::HLine);
     line->setFrameShadow(QFrame::Sunken);
     lyout->addWidget(line);
-    // Табвиджет
+/*    // Табвиджет
     s_tqStackedWidget *stw = new s_tqStackedWidget;
     stw->setObjectName("stw");
-    lyout->addWidget(stw);
+    lyout->addWidget(stw); */
+    s_tqWidget *w = new s_tqWidget;
+    w->setObjectName("whmainwidget");
+    s_tqScrollArea *area = new s_tqScrollArea;
+    area->setWidget(w);
+    area->setWidgetResizable(true);
+    lyout->addWidget(area);
     setLayout(lyout);
-    UpdateWhComboBox();
-    cb->setCurrentIndex(0); // принудительный вызов загрузки данных в окно
+    // создаём корневой элемент, в котором находятся склады
+    WhPlacesModel::WhPlacesItem item;
+    item.Id = 0;
+    item.Priority = MAXPRIORITY;
+    ItemsStack.push(item);
+    OpenSpace();
+}
+
+void Wh_Editor::OpenSpace()
+{
+    bool ok;
+    // построим модель от данного корневого ИД склада
+    if (WhModel != 0)
+    {
+        if (SomethingChanged)
+        {
+            if (MessageBox2::question(this, "Данные были изменены", "Сохранить изменения?"))
+                WhModel->Save(); // если модель уже существует, надо сохранить данные в БД, чтобы не потерялись
+        }
+        delete WhModel;
+    }
+    WhModel = new WhPlacesModel;
+    int ID = ItemsStack.last().Id.toInt(&ok);
+    if (!ok)
+    {
+        WARNMSG("Ошибка при построении места размещения"+ItemsStack.last().Id);
+        return;
+    }
+    if (WhModel->SetupModel(ID))
+    {
+        WARNMSG("Ошибка при построении модели WhModel");
+        return;
+    }
+    SomethingChanged = false;
+    s_tqWidget *wdgt = this->findChild<s_tqWidget>("whmainwidget");
+    if (wdgt == 0)
+    {
+        DBGMSG;
+        return;
+    }
+    wdgt->setAttribute(Qt::WA_DeleteOnClose);
+    connect(this,SIGNAL(CloseMainWidget()),wdgt,SLOT(close()));
+    QVBoxLayout *vlyout = new QVBoxLayout;
+    // построим текстовое поле места размещения
+    QString PlaceNameString;
+    if (!ItemsStack.isEmpty())
+    {
+        WhPlacesModel::WhPlacesItem item = ItemsStack.last();
+        int idi = item.Id.toInt();
+        QString Id = item.Id;
+        if (idi == -1)
+        {
+            WARNMSG("");
+            return;
+        }
+        while (Id != "0")
+        {
+            QStringList tmpsl;
+            QStringList sl = QStringList() << "Наименование" << "Обозначение" << "ИД_а";
+            tfl.valuesbyfield("Склады размещение_полн", sl, "ИД", Id, tmpsl);
+            if ((tfl.result) || (tmpsl.size()<3))
+            {
+                WARNMSG("");
+                return;
+            }
+            QString tmps = "/" + tmpsl.at(0) + " " + tmpsl.at(1);
+            PlaceNameString.insert(0, tmps);
+            Id = tmpsl.at(2);
+        }
+        PlaceNameString.insert(0, ":"); // ":" - обозначение "корня"
+        PlaceNameString.append(WhModel->Item(idi).Description + " " + WhModel->Item(idi).Name);
+    }
+    else
+        PlaceNameString = "";
+
+    s_tqLabel *lbl = new s_tqLabel(PlaceNameString);
+    vlyout->addWidget(lbl);
+    QHBoxLayout *hlyout = new QHBoxLayout;
+
+    s_tqWidget *CellW = new s_tqWidget;
+    CellW->setObjectName("cellwidget"); // подготовка виджета для отображения мест размещения
+    hlyout = new QHBoxLayout;
+    s_tqPushButton *pb = new s_tqPushButton("Назад");
+    pb->setIcon(QIcon(":/res/back.png"));
+    connect(pb, SIGNAL(clicked()), this, SLOT(GoBack()));
+    hlyout->addWidget(pb);
+    if (ItemsStack.size() < 2) // this place is warehouse
+        pb->setEnabled(false);
+    else
+        pb->setEnabled(true);
+    pb = new s_tqPushButton("Записать и закрыть");
+    pb->setIcon(QIcon(":/res/icon_zap.png"));
+    connect(pb, SIGNAL(clicked()), this, SLOT(WriteAndClose()));
+    hlyout->addWidget(pb);
+    pb = new s_tqPushButton("Отмена");
+    pb->setIcon(QIcon(":/res/cross.png"));
+    connect(pb, SIGNAL(clicked()), this,SLOT(CancelAndClose()));
+    hlyout->addWidget(pb);
+    vlyout->addLayout(hlyout);
+    wdgt->setLayout(vlyout);
+    stw->addWidget(wdgt);
+    // взять по ID наименование места размещения
+    UpdatePlace(); // принудительное обновление данных в рабочем пространстве
+    stw->repaint();
+
 }
 
 void Wh_Editor::AddNewWh()
@@ -253,128 +363,12 @@ void Wh_Editor::ChangeWh(QString str)
     }
     // закроем все открытые виджеты, включая "корневой"
     emit CloseAllWidgets();
-    // построим модель от данного корневого ИД склада
-    if (WhModel != 0)
-    {
-        if (SomethingChanged)
-        {
-            if (MessageBox2::question(this, "Данные были изменены", "Сохранить изменения?"))
-                WhModel->Save(); // если модель уже существует, надо сохранить данные в БД, чтобы не потерялись
-        }
-        delete WhModel;
-    }
-    WhModel = new WhPlacesModel;
-    int ID = PlaceID.at(0).toInt();
-    Wh = ID;
-    if (WhModel->SetupModel(ID))
-    {
-        WARNMSG("");
-        return;
-    }
-    ItemsStack.clear();
-    PushItemStackByID(ID);
-    SomethingChanged = false;
-    // создадим новый корневой виджет и положим его в stw, вызовем SetCells для нового ID
     BuildWorkspace();
 }
 
 void Wh_Editor::BuildWorkspace()
 {
     CloseAllWidgets();
-    s_tqStackedWidget *stw = this->findChild<s_tqStackedWidget *>("stw");
-    if (stw == 0)
-    {
-        DBGMSG;
-        return;
-    }
-    s_tqWidget *wdgt = new s_tqWidget;
-    wdgt->setAttribute(Qt::WA_DeleteOnClose);
-    connect(this,SIGNAL(CloseAllWidgets()),wdgt,SLOT(close()));
-    QVBoxLayout *vlyout = new QVBoxLayout;
-    // построим текстовое поле места размещения
-    QString PlaceNameString;
-    if (!ItemsStack.isEmpty())
-    {
-        WhPlacesModel::WhPlacesItem item = ItemsStack.last();
-        int idi = item.Id.toInt();
-        QString Id = item.Id;
-        if (idi == -1)
-        {
-            WARNMSG("");
-            return;
-        }
-        while (Id != "0")
-        {
-            QStringList tmpsl;
-            QStringList sl = QStringList() << "Наименование" << "Обозначение" << "ИД_а";
-            tfl.valuesbyfield("Склады размещение_полн", sl, "ИД", Id, tmpsl);
-            if ((tfl.result) || (tmpsl.size()<3))
-            {
-                WARNMSG("");
-                return;
-            }
-            QString tmps = "/" + tmpsl.at(0) + " " + tmpsl.at(1);
-            PlaceNameString.insert(0, tmps);
-            Id = tmpsl.at(2);
-        }
-        PlaceNameString.insert(0, ":"); // ":" - обозначение "корня"
-        PlaceNameString.append(WhModel->Item(idi).Description + " " + WhModel->Item(idi).Name);
-    }
-    else
-        PlaceNameString = "";
-
-    s_tqLabel *lbl = new s_tqLabel(PlaceNameString);
-    vlyout->addWidget(lbl);
-    QHBoxLayout *hlyout = new QHBoxLayout;
-    // если текущий ID относится не к корневому месту размещения (складу), то рисуем дополнительные виджеты выбора типа места размещения
-/*    if (!IsWarehouse)
-    {
-        s_tqLabel *lbl = new s_tqLabel("Тип размещения:");
-        hlyout = new QHBoxLayout;
-        hlyout->addWidget(lbl);
-        hlyout->setAlignment(lbl,Qt::AlignRight);
-        s_tqChooseWidget *cw = new s_tqChooseWidget(true);
-        cw->Setup(("2.2..Склады типы размещения_сокращ.Наименование"));
-        cw->setObjectName("chooseplace");
-        connect(cw,SIGNAL(textchanged(QVariant)),this,SLOT(ChangePlace(QVariant)));
-        hlyout->addWidget(cw);
-        s_tqPushButton *pb = new s_tqPushButton("Создать");
-        pb->setIcon(QIcon(":/res/oblachko.png"));
-        connect(pb,SIGNAL(clicked()),this,SLOT(AddNewPlace()));
-        pb->setToolTip("Создать новый тип размещения");
-        hlyout->addWidget(pb);
-        vlyout->addLayout(hlyout);
-        hlyout = new QHBoxLayout;
-    }*/
-    QScrollArea *area = new QScrollArea;
-    s_tqWidget *CellW = new s_tqWidget;
-    area->setWidget(CellW);
-    area->setWidgetResizable(true);
-    CellW->setObjectName("cellwidget"); // подготовка виджета для отображения мест размещения
-    vlyout->addWidget(area, 1);
-    hlyout = new QHBoxLayout;
-    s_tqPushButton *pb = new s_tqPushButton("Назад");
-    pb->setIcon(QIcon(":/res/back.png"));
-    connect(pb, SIGNAL(clicked()), this, SLOT(GoBack()));
-    hlyout->addWidget(pb);
-    if (ItemsStack.size() < 2) // this place is warehouse
-        pb->setEnabled(false);
-    else
-        pb->setEnabled(true);
-    pb = new s_tqPushButton("Записать и закрыть");
-    pb->setIcon(QIcon(":/res/icon_zap.png"));
-    connect(pb, SIGNAL(clicked()), this, SLOT(WriteAndClose()));
-    hlyout->addWidget(pb);
-    pb = new s_tqPushButton("Отмена");
-    pb->setIcon(QIcon(":/res/cross.png"));
-    connect(pb, SIGNAL(clicked()), this,SLOT(CancelAndClose()));
-    hlyout->addWidget(pb);
-    vlyout->addLayout(hlyout);
-    wdgt->setLayout(vlyout);
-    stw->addWidget(wdgt);
-    // взять по ID наименование места размещения
-    UpdatePlace(); // принудительное обновление данных в рабочем пространстве
-    stw->repaint();
 }
 
 // input: ItemsStack.last() - информация о месте размещения, содержимое которого требуется отобразить

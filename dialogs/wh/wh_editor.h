@@ -9,6 +9,7 @@
 
 #include "../../widgets/s_tqcombobox.h"
 #include "../../widgets/s_tqlabel.h"
+#include "../../widgets/s_tqwidget.h"
 
 #define MAXROWS 2
 #define MAXCOLS 6
@@ -28,7 +29,7 @@ public:
         QString Id; // ИД размещения, копия key
         QString Name; // обозначение размещения в документах
         QString Description; // описание размещения
-        int WhPlacesTanksID; // ссылка на ёмкость размещения
+        QPixmap *Picture; // фотография ёмкости размещения
         int Row; // ряд размещения в вышестоящем
         int Column; // столбец размещения
         int Rows; // количество рядов в размещении
@@ -63,7 +64,6 @@ public:
     explicit Wh_Editor(QWidget *parent=0);
 
 signals:
-    void CloseMainWidget();
 
 private:
     QStack<WhPlacesModel::WhPlacesItem> ItemsStack;
@@ -87,7 +87,8 @@ private:
     void CloseSpace(); // перейти на уровень выше по стеку ItemsStack
     void SaveSpace();
     void EditSpace(); // редактировать информацию о месте размещения
-
+    void CheckChanges(); // проверка наличия внесённых изменений и запись в БД при необходимости
+    s_tqWidget *SetupCells();
 
     void UpdateWhComboBox();
     void SetCells();

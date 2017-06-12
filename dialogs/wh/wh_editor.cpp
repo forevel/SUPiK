@@ -24,6 +24,7 @@
 
 WhPlacesModel::WhPlacesModel(QObject *parent) : QObject(parent)
 {
+
     ClearModel();
 }
 
@@ -144,7 +145,6 @@ void Wh_Editor::SetupUI()
     pb->setIcon(QIcon(":/res/cross.png"));
     connect(pb, SIGNAL(clicked()), this, SLOT(close()));
     pb->setToolTip("Закрыть вкладку");
-    connect(pb,SIGNAL(clicked()),this,SIGNAL(CloseAllWidgets())); // по нажатию кнопки "Закрыть вкладку" закрыть и удалить все виджеты
     hlyout->addWidget(pb);
     hlyout->addStretch(300);
     s_tqLabel *lbl = new s_tqLabel("Редактор складов");
@@ -167,14 +167,12 @@ void Wh_Editor::SetupUI()
     line->setFrameShape(QFrame::HLine);
     line->setFrameShadow(QFrame::Sunken);
     lyout->addWidget(line);
-/*    // Табвиджет
     s_tqStackedWidget *stw = new s_tqStackedWidget;
     stw->setObjectName("stw");
-    lyout->addWidget(stw); */
-    s_tqWidget *w = new s_tqWidget;
-    w->setObjectName("whmainwidget");
+    lyout->addWidget(stw);
+    stw->setAttribute(Qt::WA_DeleteOnClose);
     s_tqScrollArea *area = new s_tqScrollArea;
-    area->setWidget(w);
+    area->setWidget(stw);
     area->setWidgetResizable(true);
     lyout->addWidget(area);
     setLayout(lyout);
@@ -190,15 +188,9 @@ void Wh_Editor::OpenSpace()
 {
     bool ok;
     // построим модель от данного корневого ИД склада
+    CheckChanges();
     if (WhModel != 0)
-    {
-        if (SomethingChanged)
-        {
-            if (MessageBox2::question(this, "Данные были изменены", "Сохранить изменения?"))
-                WhModel->Save(); // если модель уже существует, надо сохранить данные в БД, чтобы не потерялись
-        }
         delete WhModel;
-    }
     WhModel = new WhPlacesModel;
     int ID = ItemsStack.last().Id.toInt(&ok);
     if (!ok)
@@ -212,14 +204,13 @@ void Wh_Editor::OpenSpace()
         return;
     }
     SomethingChanged = false;
-    s_tqWidget *wdgt = this->findChild<s_tqWidget>("whmainwidget");
-    if (wdgt == 0)
+    s_tqStackedWidget *stw = this->findChild<s_tqStackedWidget>("stw");
+    if (stw == 0)
     {
         DBGMSG;
         return;
     }
-    wdgt->setAttribute(Qt::WA_DeleteOnClose);
-    connect(this,SIGNAL(CloseMainWidget()),wdgt,SLOT(close()));
+    s_tqWidget *w = new s_tqWidget;
     QVBoxLayout *vlyout = new QVBoxLayout;
     // построим текстовое поле места размещения
     QString PlaceNameString;
@@ -257,10 +248,10 @@ void Wh_Editor::OpenSpace()
     vlyout->addWidget(lbl);
     QHBoxLayout *hlyout = new QHBoxLayout;
 
-    s_tqWidget *CellW = new s_tqWidget;
-    CellW->setObjectName("cellwidget"); // подготовка виджета для отображения мест размещения
+    s_tqWidget *CellW = SetupCells();
+    vlyout->addWidget(CellW);
     hlyout = new QHBoxLayout;
-    s_tqPushButton *pb = new s_tqPushButton("Назад");
+    s_tqPushButton *pb = new s_tqPushButton("На уровень выше");
     pb->setIcon(QIcon(":/res/back.png"));
     connect(pb, SIGNAL(clicked()), this, SLOT(GoBack()));
     hlyout->addWidget(pb);
@@ -277,16 +268,27 @@ void Wh_Editor::OpenSpace()
     connect(pb, SIGNAL(clicked()), this,SLOT(CancelAndClose()));
     hlyout->addWidget(pb);
     vlyout->addLayout(hlyout);
-    wdgt->setLayout(vlyout);
-    stw->addWidget(wdgt);
+    w->setLayout(vlyout);
+    stw->clear();
+    stw->addWidget(w);
     // взять по ID наименование места размещения
     UpdatePlace(); // принудительное обновление данных в рабочем пространстве
     stw->repaint();
 
 }
 
+void Wh_Editor::CheckChanges()
+{
+    if (SomethingChanged)
+    {
+        if (MessageBox2::question(this, "Данные были изменены", "Сохранить изменения?"))
+            WhModel->Save(); // если модель уже существует, надо сохранить данные в БД, чтобы не потерялись
+    }
+}
+
 void Wh_Editor::AddNewWh()
 {
+    CheckChanges();
     QString newID;
     QString table = "Склады размещение_полн";
     tfl.Insert(table, newID);
@@ -318,19 +320,14 @@ void Wh_Editor::WriteAndClose()
         return;
     else
         MessageBox2::information(this, "Внимание", "Записано успешно!");
-    emit CloseAllWidgets();
+    this->close();
 }
 
 void Wh_Editor::CancelAndClose()
 {
     // удалим новосозданные элементы из таблицы
-/*    if (WhModel->DeleteNew())
-    {
-        WARNMSG("");
-        return;
-    }
-    emit CloseAllWidgets();
-    this->close(); */
+    CheckChanges();
+    this->close();
 }
 
 void Wh_Editor::AddNewPlace()
@@ -361,14 +358,11 @@ void Wh_Editor::ChangeWh(QString str)
         WARNMSG("");
         return;
     }
-    // закроем все открытые виджеты, включая "корневой"
-    emit CloseAllWidgets();
     BuildWorkspace();
 }
 
 void Wh_Editor::BuildWorkspace()
 {
-    CloseAllWidgets();
 }
 
 // input: ItemsStack.last() - информация о месте размещения, содержимое которого требуется отобразить
@@ -424,7 +418,7 @@ void Wh_Editor::ClearLayout()
 
 // input: CurIDProperties - информация о месте размещения, содержимое которого требуется отобразить
 
-void Wh_Editor::SetCells()
+s_tqWidget *Wh_Editor::SetupCells()
 {
 /*    s_tqWidget *w = this->findChild<s_tqWidget *>("cellwidget");
     if (w == 0)

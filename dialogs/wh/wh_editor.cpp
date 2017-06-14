@@ -10,6 +10,7 @@
 #include "../../widgets/wd_func.h"
 #include "../../gen/s_tablefields.h"
 #include "../../gen/publicclass.h"
+#include "../../gen/client.h"
 #include "../gen/messagebox.h"
 #include "../gen/twocoldialog.h"
 
@@ -24,7 +25,6 @@
 
 WhPlacesModel::WhPlacesModel(QObject *parent) : QObject(parent)
 {
-
     ClearModel();
 }
 
@@ -32,6 +32,18 @@ WhPlacesModel::WhPlacesItem WhPlacesModel::Item(int index)
 {
     if ((index < Items.count()) && (index >= 0))
         return Items.at(index);
+    WhPlacesItem item;
+    item.Id = "#"; // неправильный итем
+    return item;
+}
+
+WhPlacesModel::WhPlacesItem WhPlacesModel::Item(int row, int column)
+{
+    foreach (WhPlacesModel::WhPlacesItem item, Items)
+    {
+        if ((item.Row == row) && (item.Column == column))
+            return item;
+    }
     WhPlacesItem item;
     item.Id = "#"; // неправильный итем
     return item;
@@ -68,14 +80,14 @@ int WhPlacesModel::SetupModel(int rootid)
         item.Id = tmpsl.at(0);
         item.Description = tmpsl.at(1);
         item.Name = tmpsl.at(2);
-        item.WhPlacesTanksID = tmpsl.at(3).toInt(); // idwhplacestanks
+        item.PictureIndex = tmpsl.at(3).toInt(); // idwhplacestanks
         item.Row = tmpsl.at(4).toInt();
         item.Column = tmpsl.at(5).toInt();
         item.Rows = tmpsl.at(6).toInt();
         item.Columns = tmpsl.at(7).toInt();
-        if (item.WhPlacesTanksID != "0") // склад
+        if (item.PictureIndex != "0") // склад
         {
-            tfl.valuesbyfield("Склады ёмкости размещения_полн", QStringList("Приоритет вложенности"), "ИД", QString::number(item.WhPlacesTanksID), tmpsl);
+            tfl.valuesbyfield("Склады ёмкости размещения_полн", QStringList("Приоритет вложенности"), "ИД", QString::number(item.PictureIndex), tmpsl);
             if ((tfl.result == TFRESULT_NOERROR) && !tmpsl.isEmpty())
                 item.Priority = tmpsl.at(0).toInt();
             else item.Priority = WRONGNUM;
@@ -111,6 +123,28 @@ void WhPlacesModel::ClearModel()
 
 Wh_Editor::Wh_Editor(QWidget *parent) : QDialog(parent)
 {
+    // подготовка списка картинок
+    QStringList fl = QStringList() << "ИД" << "Картинка";
+    QList<QStringList> lsl;
+    tfl.valuesbyfieldsmatrix("Склады ёмкости размещения_полн", fl, QStringList("deleted"), QStringList("0"), lsl);
+    if (tfl.result)
+    {
+        WARNMSG("");
+        return;
+    }
+    while (!lsl.isEmpty())
+    {
+        QStringList sl = lsl.takeAt(0);
+        bool ok;
+        int id = sl.at(0).toInt(&ok);
+        if (ok)
+        {
+            Cli->GetFile(FLT_WH, FLST_PHOTO, sl.at(1));
+            QString PixFilename = pc.HomeDir + "/wh/photo/" + sl.at(1);
+            QPixmap *pm = new QPixmap(PixFilename);
+            Pictures.insert(Pictures.end(), id, pm);
+        }
+    }
     SomethingChanged = false;
     setAttribute(Qt::WA_DeleteOnClose);
     SetupUI();
@@ -248,7 +282,12 @@ void Wh_Editor::OpenSpace()
     vlyout->addWidget(lbl);
     QHBoxLayout *hlyout = new QHBoxLayout;
 
-    s_tqWidget *CellW = SetupCells();
+    s_tqScrollArea *CellW = SetupCells();
+    if (CellW == 0)
+    {
+        WARNMSG("");
+        return;
+    }
     vlyout->addWidget(CellW);
     hlyout = new QHBoxLayout;
     s_tqPushButton *pb = new s_tqPushButton("На уровень выше");
@@ -418,40 +457,38 @@ void Wh_Editor::ClearLayout()
 
 // input: CurIDProperties - информация о месте размещения, содержимое которого требуется отобразить
 
-s_tqWidget *Wh_Editor::SetupCells()
+s_tqScrollArea *Wh_Editor::SetupCells()
 {
-/*    s_tqWidget *w = this->findChild<s_tqWidget *>("cellwidget");
-    if (w == 0)
+    s_tqScrollArea *SArea = new s_tqScrollArea;
+    SArea->setStyleSheet("QScrollArea {background-color: rgba(0,0,0,0);}");
+    SArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    SArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    s_tqWidget *w = new s_tqWidget;
+    if (ItemsStack.isEmpty())
     {
-        DBGMSG;
-        return;
+        WARNMSG("");
+        return 0;
     }
+    WhPlacesModel::WhPlacesItem item = ItemsStack.last();
 
-    QStringList sl;
-    QList<int> Children = WhModel->Children(CurID);
-    int ChildrenSize = Children.size();
-    int ChildrenIndex = 0;
     QVBoxLayout *lyout = new QVBoxLayout;
-    for (int i = 0; i < CurIDProperties.Rows; i++)
+    for (int i = 0; i < item.Rows; ++i)
     {
         QHBoxLayout *hlyout = new QHBoxLayout;
-        for (int j = 0; j < CurIDProperties.Columns; j++)
+        for (int j = 0; j < item.Columns; ++j)
         {
             QVBoxLayout *v2lyout = new QVBoxLayout;
             s_tqLabel *celllbl = new s_tqLabel;
             celllbl->setMaximumHeight(50);
-            int index = (ChildrenIndex < ChildrenSize) ? Children.at(ChildrenIndex) : 0;
-            ChildrenIndex++;
+            WhPlacesModel::WhPlacesItem ModelItem = WhModel->Item(i, j);
+            if (ModelItem.Id == "#") // нет итема в данном поле
+            {
+                WARNMSG("Отсутствует элемент "+QString::number(i)+","+QString::number(j)+" в модели для ИД "+item.Id);
+                continue;
+            }
             celllbl->setObjectName(QString::number(index));
             connect(celllbl,SIGNAL(clicked()),this,SLOT(GoToPlace()));
-            v2lyout->addWidget(celllbl);
-            v2lyout->setAlignment(celllbl, Qt::AlignCenter);
-            s_tqLineEdit *le = new s_tqLineEdit;
-            le->setObjectName(QString::number(index));
-            v2lyout->addWidget(le);
-            v2lyout->setAlignment(le,Qt::AlignCenter);
-            hlyout->addLayout(v2lyout);
-            sl = NameAndPicture(index);
+            if (ModelItem.Picture)
             if (sl.size() > 1)
             {
                 celllbl->setPixmap(QPixmap(sl.at(1)));
@@ -479,12 +516,23 @@ s_tqWidget *Wh_Editor::SetupCells()
                     le->setObjectName(QString::number(index));
                 }
             }
+
+
+            v2lyout->addWidget(celllbl);
+            v2lyout->setAlignment(celllbl, Qt::AlignCenter);
+            s_tqLineEdit *le = new s_tqLineEdit;
+            le->setObjectName(QString::number(index));
+            v2lyout->addWidget(le);
+            v2lyout->setAlignment(le,Qt::AlignCenter);
+            hlyout->addLayout(v2lyout);
         }
         hlyout->addStretch(1);
         lyout->addLayout(hlyout);
     }
     lyout->addSpacing(50);
-    w->setLayout(lyout); */
+    w->setLayout(lyout);
+    SArea->setWidget(w);
+    return SArea;
 }
 
 void Wh_Editor::GoToPlace()

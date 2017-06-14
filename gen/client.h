@@ -83,21 +83,22 @@
 #define C_CRALT		1301
 
 // описания типов файлов
-#define FLT_NONE     "#"
-#define FLT_TB       "0"
-#define FLT_DOC      "1"
-#define FLT_ALT      "2"
-#define FLT_PERS     "3"
-#define FLT_LOG      "4"
+#define FLT_NONE    "#"
+#define FLT_TB      "0"
+#define FLT_DOC     "1"
+#define FLT_ALT     "2"
+#define FLT_PERS    "3"
+#define FLT_LOG     "4"
+#define FLT_WH      "5"
 
 // описания подтипов файлов
-#define FLST_NONE     "#" // нет подтипа
-#define FLST_PROT     "0" // протоколы
-#define FLST_DSHEET   "1" // техдокументация
-#define FLST_LIBS     "2" // библиотеки
-#define FLST_SYMBOLS  "3" // библиотеки Altium - SchLib
-#define FLST_FOOTPRT  "4" // библиотеки Altium - PcbLib
-#define FLST_PHOTO    "5" // фотографии
+#define FLST_NONE    "#" // нет подтипа
+#define FLST_PROT    "0" // протоколы
+#define FLST_DSHEET  "1" // техдокументация
+#define FLST_LIBS    "2" // библиотеки
+#define FLST_SYMBOLS "3" // библиотеки Altium - SchLib
+#define FLST_FOOTPRT "4" // библиотеки Altium - PcbLib
+#define FLST_PHOTO   "5" // фотографии
 
 #define READBUFMAX  16384
 

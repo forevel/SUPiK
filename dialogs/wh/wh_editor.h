@@ -29,7 +29,7 @@ public:
         QString Id; // ИД размещения, копия key
         QString Name; // обозначение размещения в документах
         QString Description; // описание размещения
-        QPixmap *Picture; // фотография ёмкости размещения
+        int PictureIndex; // номер фотографии ёмкости размещения по Pictures (QMap)
         int Row; // ряд размещения в вышестоящем
         int Column; // столбец размещения
         int Rows; // количество рядов в размещении
@@ -39,6 +39,7 @@ public:
     };
 
     WhPlacesItem Item(int index);
+    WhPlacesItem Item(int row, int column);
     void SetItem(int index, WhPlacesItem &value);
     void InsertItem(WhPlacesItem &value);
     int DeleteItem();
@@ -71,6 +72,7 @@ private:
     QPointer<WhPlacesModel> WhModel;
     int CurID;
     bool SomethingChanged;
+    QMap<int, QPixmap *> Pictures; // картинки мест размещения в соответствии с их ИД в БД
     struct IDProperties
     {
         QString Picture;
@@ -88,7 +90,7 @@ private:
     void SaveSpace();
     void EditSpace(); // редактировать информацию о месте размещения
     void CheckChanges(); // проверка наличия внесённых изменений и запись в БД при необходимости
-    s_tqWidget *SetupCells();
+    s_tqScrollArea *SetupCells();
 
     void UpdateWhComboBox();
     void SetCells();

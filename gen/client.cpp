@@ -42,7 +42,7 @@ Client::Client(QObject *parent) : QObject(parent)
     CmdMap.insert(T_C, {"T_C", 3, "T4", RESULT_STRING, false, false});
     CmdMap.insert(T_DEL, {"T_DEL", 2, "T5", RESULT_NONE, false, false});
     CmdMap.insert(T_RDEL, {"T_RDEL", 2, "T6", RESULT_NONE, false, false});
-    CmdMap.insert(T_GFT, {"T_GFT", 1, "T7", RESULT_MATRIX, false, false});
+    CmdMap.insert(T_GFT, {"T_GFT", 1, "T7", RESULT_VECTOR, false, false});
     CmdMap.insert(T_GID, {"T_GID", 1, "T8", RESULT_INT, false, false});
     CmdMap.insert(T_IDTV, {"T_IDTV", 2, "T9", RESULT_VECTOR, false, false});
     CmdMap.insert(T_TV, {"T_TV", 3, "T:", RESULT_STRING, false, false});
@@ -164,7 +164,7 @@ void Client::SendCmd(int command, QStringList &args)
     // если активна какая-то команда, и пришла другая команда, которая не является продолжением текущей, то выход
     if ((EthStatus.isCommandActive()) && (command != M_ANSLOGIN) && (command != M_NEXT) && (command != M_AGETFILE) && (command != M_APUTFILE))
     {
-        CliLog->error("Command active already: "+QString::number(CurrentCommand));
+        CliLog->error("Command active already: "+QString::number(CurrentCommand)+", command passed by: "+QString::number(command));
         return;
     }
     if (EthStatus.isntConnected()) // if we're disconnected
@@ -230,10 +230,10 @@ void Client::SendCmd(int command, QStringList &args)
         int fltype, flsubtype;
         QString path = pc.HomeDir + "/";
         fltype = args.at(0).toInt(&ok);
-        if ((ok) && (fltype < PathPrefixes.size()))
+        if ((ok) && (fltype < PathPrefixes.size()) && (fltype != FLT_NONE))
             path += PathPrefixes.at(fltype);
         flsubtype = args.at(1).toInt(&ok);
-        if ((ok) && (flsubtype < PathSuffixes.size()))
+        if ((ok) && (flsubtype < PathSuffixes.size()) && (flsubtype != FLST_NONE))
             path += PathSuffixes.at(flsubtype);
         QDir *dr = new QDir;
         dr->mkpath(path);
@@ -646,7 +646,7 @@ void Client::ParseReply(QByteArray ba)
             return;
         }
         emit BytesOverall(RcvDataSize);
-        FinishCommand();
+//        FinishCommand();
         SendCmd(M_AGETFILE);
         return;
     }
@@ -789,21 +789,37 @@ bool Client::CheckArgs(QString cmd, QStringList &args, int argsnum, bool fieldsc
     return true;
 }
 
-int Client::GetFile(const QString &type, const QString &subtype, const QString &filename)
+int Client::GetFile(int type, int subtype, const QString &filename)
 {
     QStringList sl;
-    sl.clear();
-    sl << type << subtype << filename;
+    // проверяем, есть ли такой файл уже у нас локально
+    QString path = pc.HomeDir + "/";
+    if ((type < PathPrefixes.size()) && (type >= 0))
+        path += PathPrefixes.at(type);
+    if ((subtype < PathSuffixes.size()) && (subtype >= 0))
+        path += PathSuffixes.at(subtype);
+    QDir *dr = new QDir;
+    dr->mkpath(path);
+    delete dr;
+    fp.setFileName(path + filename);
+    if (fp.exists()) // файл уже есть
+    {
+        // проверка на то, не новее ли файл на сервере, чем наш локальный
+
+        // не новее, выход
+        return CLIER_NOERROR;
+    }
+    sl << QString::number(type) << QString::number(subtype) << filename;
     SendCmd(M_GETFILE, sl);
     if (EthStatus.isCommandActive())
         CommandFinishedLoop.exec();
     return DetectedError;
 }
 
-int Client::PutFile(const QString &localfilename, const QString &type, const QString &subtype, const QString &filename)
+int Client::PutFile(const QString &localfilename, int type, int subtype, const QString &filename)
 {
     QStringList sl;
-    sl << localfilename << type << subtype << filename;
+    sl << localfilename << QString::number(type) << QString::number(subtype) << filename;
     SendCmd(M_PUTFILE, sl);
     if (EthStatus.isCommandActive())
         CommandFinishedLoop.exec();

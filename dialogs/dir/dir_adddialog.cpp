@@ -667,7 +667,7 @@ void dir_adddialog::TbleChoosed()
         DBGMSG;
         return;
     }
-    tfl.tableheaders(cb->currentText(), sl);
+    tfl.TableHeaders(cb->currentText(), sl);
     if (tfl.result == TFRESULT_ERROR)
     {
         WARNMSG("");

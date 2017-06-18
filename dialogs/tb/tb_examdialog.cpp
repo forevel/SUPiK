@@ -298,7 +298,7 @@ bool tb_examdialog::PrepareQuestions()
     Answers.clear();
     AnswerCount = 0; // номер текущего ответа
     RightAnswerCount = 0;
-    QList<QScrollArea *> tmplw = PrepareQuestionsByTheme(TB_TH_PTE, TB_PTENUM);
+    QList<s_tqScrollArea *> tmplw = PrepareQuestionsByTheme(TB_TH_PTE, TB_PTENUM);
     while (tmplw.size() != 0)
         stw->addWidget(tmplw.takeFirst());
     tmplw = PrepareQuestionsByTheme(TB_TH_PUE, TB_PUENUM);
@@ -318,9 +318,9 @@ bool tb_examdialog::PrepareQuestions()
     return true;
 }
 
-QList<QScrollArea *> tb_examdialog::PrepareQuestionsByTheme(int theme, int questnum)
+QList<s_tqScrollArea *> tb_examdialog::PrepareQuestionsByTheme(int theme, int questnum)
 {
-    QList<QScrollArea *> wdgts;
+    QList<s_tqScrollArea *> wdgts;
 
     if (TBGroup == 0)
     {
@@ -391,7 +391,7 @@ QList<QScrollArea *> tb_examdialog::PrepareQuestionsByTheme(int theme, int quest
         quest.Id = AnotherID.toInt();
         Questions.append(quest);
         w->setLayout(lyout);
-        QScrollArea *sa = new QScrollArea;
+        s_tqScrollArea *sa = new s_tqScrollArea;
         sa->setWidgetResizable(true);
         sa->setWidget(w);
         wdgts.append(sa);
@@ -475,7 +475,7 @@ void tb_examdialog::NextQuestion()
         return;
     }
     stw->setCurrentIndex(AnswerCount);
-    QScrollArea *sa = static_cast<QScrollArea *>(stw->currentWidget());
+    s_tqScrollArea *sa = static_cast<s_tqScrollArea *>(stw->currentWidget());
     sa->verticalScrollBar()->setValue(sa->verticalScrollBar()->minimum());
     stw = this->findChild<s_tqStackedWidget *>("commentstw");
     if (stw == 0)

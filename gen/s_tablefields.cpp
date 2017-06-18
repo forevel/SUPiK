@@ -1,35 +1,35 @@
 #include <QVariant>
 #include <QThread>
 #include <QCoreApplication>
-#include "s_tablefields.h"
+#include "s_TableFields.h"
 #include "client.h"
 
-// класс s_tablefields предназначен для облегчения работы с таблицей tablefields БД supik и содержит в себе высокоуровневые процедуры работы с данной таблицей:
-// 1. GetValuesByColumn ([table:header] to value list) - взять все значения по ссылке table:tablefields из таблицы tablename для данного поля header
+// класс s_TableFields предназначен для облегчения работы с таблицей TableFields БД supik и содержит в себе высокоуровневые процедуры работы с данной таблицей:
+// 1. GetValuesByColumn ([table:header] to value list) - взять все значения по ссылке table:TableFields из таблицы tablename для данного поля header
 // 2. toid - то же, что и 1, но возвращает только одно значение по заданному id<tble>
 // 3. tbtovll - взять все значения по всем полям таблицы tble и вернуть их в QList<QStringList> - полезно для заполнения таблиц twocoldialog
 // 4. idtov - по заданному ИД и строке links вытащить значение
 // 5. vtoid - найти по имени и строке links ИД записи
-// id во всех процедурах имеет смысл значения, получаемого по полю table:tablefields, т.е. значения ИД, получаемого по данному полю, которое ссылается на id записи другой таблицы, указанной в поле links
+// id во всех процедурах имеет смысл значения, получаемого по полю table:TableFields, т.е. значения ИД, получаемого по данному полю, которое ссылается на id записи другой таблицы, указанной в поле links
 // vl - это значение в таблице, указанной в links, для данного id
 
-s_tablefields tfl;
+s_TableFields tfl;
 
-s_tablefields::s_tablefields()
+s_TableFields::s_TableFields()
 {
 }
 
 // процедура для данного поля header таблицы tble берёт все возможные значения
 // и передаёт их в QStringList tmpsl
 
-void s_tablefields::GetValuesByColumn(const QString &tble, const QString &header, QStringList &out)
+void s_TableFields::GetValuesByColumn(const QString &tble, const QString &header, QStringList &out)
 {
     QStringList sl;
     out.clear();
     result = TFRESULT_NOERROR;
     if (pc.AutonomousMode)
     {
-        tablefields(tble, header, sl); // sl.at(0) = <table>, sl.at(1) = <tablefields>
+        TableFields(tble, header, sl); // sl.at(0) = <table>, sl.at(1) = <TableFields>
         if (result)
         {
             WARNMSG("");
@@ -61,12 +61,12 @@ void s_tablefields::GetValuesByColumn(const QString &tble, const QString &header
 // GetValuesByColumnAndField - это процедура GetValuesByColumn с дополнительным условием
 // берёт все значения по полю header таблицы tble, где поле cheader этой же таблицы равно value
 
-void s_tablefields::GetValuesByColumnAndField(const QString &tble, const QString &header, const QString &cheader, const QString &value, QStringList &out)
+void s_TableFields::GetValuesByColumnAndField(const QString &tble, const QString &header, const QString &cheader, const QString &value, QStringList &out)
 {
     GetValuesByColumnAndFields(tble, header, QStringList(cheader), QStringList(value), out);
 }
 
-void s_tablefields::GetValuesByColumnAndFields(const QString &tble, const QString &header, QStringList &cmpfl, QStringList &cmpvl, QStringList &out)
+void s_TableFields::GetValuesByColumnAndFields(const QString &tble, const QString &header, QStringList &cmpfl, QStringList &cmpvl, QStringList &out)
 {
     result = TFRESULT_NOERROR;
     out.clear();
@@ -84,7 +84,7 @@ void s_tablefields::GetValuesByColumnAndFields(const QString &tble, const QStrin
         for (int i=0; i<cmpfl.size(); i++)
         {
             QString field = cmpfl.at(i);
-            tablefields(tble, field, tmpsl);
+            TableFields(tble, field, tmpsl);
             if (result)
             {
                 WARNMSG("");
@@ -93,7 +93,7 @@ void s_tablefields::GetValuesByColumnAndFields(const QString &tble, const QStrin
             realcmpfl << tmpsl.at(1);
         }
         QStringList tmpsl2;
-        tablefields(tble,header,tmpsl2);
+        TableFields(tble,header,tmpsl2);
         if (result)
         {
             WARNMSG("");
@@ -132,14 +132,14 @@ void s_tablefields::GetValuesByColumnAndFields(const QString &tble, const QStrin
 // процедура возвращает список из списков значений, взятых по полям для таблицы tble
 // нужна для организации списка выбора из таблиц а-ля "*_сокращ"
 
-void s_tablefields::GetAllValuesFromTable(const QString &tble, QList<QStringList> &out)
+void s_TableFields::GetAllValuesFromTable(const QString &tble, QStringList &out)
 {
     QStringList tmpsl, sl;
     out.clear();
     result = TFRESULT_NOERROR;
     if (pc.AutonomousMode)
     {
-        tablelinks(tble, sl); // берём links
+/*        tablelinks(tble, sl); // берём links
         int i;
         if (result)
         {
@@ -147,14 +147,14 @@ void s_tablefields::GetAllValuesFromTable(const QString &tble, QList<QStringList
             return;
         }
         out.append(sl);
-        tableheaders(tble, sl); // берём header
+        TableHeaders(tble, sl); // берём header
         if (result)
         {
             WARNMSG("");
             return;
         }
-        out.insert(0, sl); // на поз. 0 заголовки, на поз. 1 - links
-        for (i = 0; i < sl.size(); i++)
+        out.insert(0, sl); // на поз. 0 заголовки, на поз. 1 - links */
+        for (int i = 0; i < sl.size(); i++)
         {
             QString field = sl.at(i);
             GetValuesByColumn(tble, field, tmpsl);
@@ -170,20 +170,20 @@ void s_tablefields::GetAllValuesFromTable(const QString &tble, QList<QStringList
         else if ((res != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
             result = TFRESULT_ERROR;
         else
-            out = Cli->Result;
+            out = Cli->Result.at(0);
     }
 }
 
-// процедура возвращает значение по ссылке tbleid из table.tablefields для заданной таблицы tble и поля header
+// процедура возвращает значение по ссылке tbleid из table.TableFields для заданной таблицы tble и поля header
 
-void s_tablefields::tov(const QString &tble, const QString &header, const QString &tbleid, QString &out)
+void s_TableFields::tov(const QString &tble, const QString &header, const QString &tbleid, QString &out)
 {
     QStringList sl;
     result = TFRESULT_NOERROR;
     out.clear();
     if (pc.AutonomousMode)
     {
-        tablefields(tble, header, sl); // sl.at(0) = <table>, sl.at(1) = <tablefields>
+        TableFields(tble, header, sl); // sl.at(0) = <table>, sl.at(1) = <TableFields>
         if (result != TFRESULT_NOERROR)
         {
             WARNMSG("");
@@ -205,7 +205,7 @@ void s_tablefields::tov(const QString &tble, const QString &header, const QStrin
         int res = Cli->SendAndGetResult(T_TV, sl);
         if (res == Client::CLIER_EMPTY)
         {
-            WARNMSG("tov: Empty result");
+            INFOMSG("tov: Empty result");
             result = TFRESULT_EMPTY;
         }
         else if (res != Client::CLIER_NOERROR)
@@ -218,11 +218,11 @@ void s_tablefields::tov(const QString &tble, const QString &header, const QStrin
     }
 }
 
-// перевод ИД через строку links в таблице tablefields в имя
-// id - ИД элемента в таблице tablefields:table/tablefields
-// links - строка из поля tablefields:links
+// перевод ИД через строку links в таблице TableFields в имя
+// id - ИД элемента в таблице TableFields:table/TableFields
+// links - строка из поля TableFields:links
 
-void s_tablefields::idtov(const QString &links, const QString &id, QString &out)
+void s_TableFields::idtov(const QString &links, const QString &id, QString &out)
 {
     QStringList sl;
     PublicClass::FieldFormat ff;
@@ -260,7 +260,7 @@ void s_tablefields::idtov(const QString &links, const QString &id, QString &out)
             table = ff.link.at(0);
             header = ff.link.at(1);
             tov(table, header, tmpid, out);
-            if (result)
+            if (result == TFRESULT_ERROR)
                 WARNMSG("");
             break;
         }
@@ -416,7 +416,7 @@ void s_tablefields::idtov(const QString &links, const QString &id, QString &out)
 
 // взять все значения по ссылке links в зависимости от типа ссылки
 
-void s_tablefields::idtovl(const QString &links, QStringList &out)
+void s_TableFields::idtovl(const QString &links, QStringList &out)
 {
 //    if (pc.AutonomousMode)
 //    {
@@ -479,10 +479,10 @@ void s_tablefields::idtovl(const QString &links, QStringList &out)
     }*/
 }
 
-// перевод имени в его ИД через строку links в таблице tablefields (поиск в таблице по имени его ИД)
+// перевод имени в его ИД через строку links в таблице TableFields (поиск в таблице по имени его ИД)
 // links = 2.9, value = "ч..ч..чузчузч"
 
-void s_tablefields::vtoid(QString &links, QString &in, QString &out)
+void s_TableFields::vtoid(QString &links, QString &in, QString &out)
 {
 //    if (pc.AutonomousMode)
 //    {
@@ -656,7 +656,7 @@ void s_tablefields::vtoid(QString &links, QString &in, QString &out)
 
 // вспомогательная процедура возвращает ИД по значению value для заданной таблицы tble и поля header
 
-void s_tablefields::toid(const QString &tble, const QString &header, const QString &value, QString &out)
+void s_TableFields::toid(const QString &tble, const QString &header, const QString &value, QString &out)
 {
     QStringList sl;
     QString tmptble;
@@ -664,7 +664,7 @@ void s_tablefields::toid(const QString &tble, const QString &header, const QStri
     out.clear();
     if (pc.AutonomousMode)
     {
-        tablefields(tble, header, sl); // sl.at(0) = <table>, sl.at(1) = <tablefields>
+        TableFields(tble, header, sl); // sl.at(0) = <table>, sl.at(1) = <TableFields>
         if (result)
         {
             WARNMSG("");
@@ -693,10 +693,10 @@ void s_tablefields::toid(const QString &tble, const QString &header, const QStri
     }
 }
 
-// Update - процедура обновления записи values по адресу table:tablefields для таблицы tble
+// Update - процедура обновления записи values по адресу table:TableFields для таблицы tble
 // ИД записи, по которой обновляются значения, хранятся в values.at(headers.indexof("ИД"))
 
-void s_tablefields::Update(const QString &tble, QStringList &headers, QStringList &values)
+void s_TableFields::Update(const QString &tble, QStringList &headers, QStringList &values)
 {
     result = TFRESULT_NOERROR;
     if (headers.size() != values.size())
@@ -710,10 +710,10 @@ void s_tablefields::Update(const QString &tble, QStringList &headers, QStringLis
     if (pc.AutonomousMode)
     {
         // Сначала найдём для данной таблицы ключевое поле ("v") и по нему вытащим реальную БД, таблицу и наименование поля
-        QStringList fl = QStringList() << "table" << "tablefields" << "header";
+        QStringList fl = QStringList() << "table" << "TableFields" << "header";
         QStringList cmpfl = QStringList() << "tablename" << "keyfield";
         QStringList cmpvl = QStringList() << tble << "v";
-        QStringList keydbtble = sqlc.GetValuesFromTableByFields("sup", "tablefields", fl, cmpfl, cmpvl);
+        QStringList keydbtble = sqlc.GetValuesFromTableByFields("sup", "TableFields", fl, cmpfl, cmpvl);
         if (sqlc.result)
         {
             result = TFRESULT_ERROR;
@@ -740,26 +740,26 @@ void s_tablefields::Update(const QString &tble, QStringList &headers, QStringLis
             return;
         }
         keyid = QString::number(keyid.toInt()); // убираем незначащие нули
-        QStringList tmptablefields, tmpvalues;
+        QStringList tmpTableFields, tmpvalues;
         QString tmpdb, tmptble, tmpdbtble;
         int i;
         while (headers.size() > 0)
         {
             QStringList dbtble;
             QString header = headers.at(0);
-            tablefields(tble, header, dbtble);
+            TableFields(tble, header, dbtble);
             if (dbtble.at(0) != "-") // если знак дефиса, поле не пишется в базу
             {
                 tmpdbtble = dbtble.at(0);
                 tmpvalues = QStringList() << values.at(0); // кладём первое значение в выходной буфер значений
-                tmptablefields = QStringList() << dbtble.at(1);
+                tmpTableFields = QStringList() << dbtble.at(1);
                 headers.removeAt(0);
                 values.removeAt(0);
                 i = 0;
                 while (i < headers.size())
                 {
                     header = headers.at(i);
-                    tablefields(tble, header, dbtble);
+                    TableFields(tble, header, dbtble);
                     if (dbtble.size() == 0)
                     {
                         WARNMSG("");
@@ -768,7 +768,7 @@ void s_tablefields::Update(const QString &tble, QStringList &headers, QStringLis
                     }
                     if (dbtble.at(0) == tmpdbtble) // здесь проверка на дефис не нужна, т.к. сравнение ведётся с tmpdbtble, который уже проверен ранее
                     {
-                        tmptablefields << dbtble.at(1);
+                        tmpTableFields << dbtble.at(1);
                         tmpvalues << values.at(i);
                         headers.removeAt(i);
                         values.removeAt(i);
@@ -780,15 +780,15 @@ void s_tablefields::Update(const QString &tble, QStringList &headers, QStringLis
                 tmptble = tmpdbtble.split(".").at(1);
                 if (dateidx == -1)
                 {
-                    tmptablefields << "date";
+                    tmpTableFields << "date";
                     tmpvalues << pc.DateTime;
                 }
                 if (idpersidx == -1)
                 {
-                    tmptablefields << "idpers";
+                    tmpTableFields << "idpers";
                     tmpvalues << QString::number(pc.idPers);
                 }
-                result = sqlc.UpdateValuesInTable(tmpdb, tmptble, tmptablefields, tmpvalues, keydbtble.at(2), keyid);
+                result = sqlc.UpdateValuesInTable(tmpdb, tmptble, tmpTableFields, tmpvalues, keydbtble.at(2), keyid);
                 if (result)
                     WARNMSG(sqlc.LastError);
             }
@@ -813,7 +813,7 @@ void s_tablefields::Update(const QString &tble, QStringList &headers, QStringLis
 // Updatev - процедура обновления записей headers для таблицы tble значениями values
 // ИД записи, по которой обновляются значения, хранятся в values.at(headers.indexof("ИД"))
 
-void s_tablefields::Updatev(const QString &tble, QStringList &headers, QStringList &values)
+void s_TableFields::Updatev(const QString &tble, QStringList &headers, QStringList &values)
 {
     result = TFRESULT_NOERROR;
     if (headers.size() != values.size())
@@ -825,10 +825,10 @@ void s_tablefields::Updatev(const QString &tble, QStringList &headers, QStringLi
 /*    if (pc.AutonomousMode)
     {
         // Сначала найдём для данной таблицы ключевое поле ("v") и по нему вытащим реальную БД, таблицу и наименование поля
-        QStringList fl = QStringList() << "table" << "tablefields" << "header";
+        QStringList fl = QStringList() << "table" << "TableFields" << "header";
         QStringList cmpfl = QStringList() << "tablename" << "keyfield";
         QStringList cmpvl = QStringList() << tble << "v";
-        QStringList keydbtble = sqlc.GetValuesFromTableByFields("sup", "tablefields", fl, cmpfl, cmpvl);
+        QStringList keydbtble = sqlc.GetValuesFromTableByFields("sup", "TableFields", fl, cmpfl, cmpvl);
         if (sqlc.result)
         {
             result = TFRESULT_ERROR;
@@ -855,26 +855,26 @@ void s_tablefields::Updatev(const QString &tble, QStringList &headers, QStringLi
             return;
         }
         keyid = QString::number(keyid.toInt()); // убираем незначащие нули
-        QStringList tmptablefields, tmpvalues;
+        QStringList tmpTableFields, tmpvalues;
         QString tmpdb, tmptble, tmpdbtble;
         int i;
         while (headers.size() > 0)
         {
             QStringList dbtble;
             QString header = headers.at(0);
-            tablefields(tble, header, dbtble);
+            TableFields(tble, header, dbtble);
             if (dbtble.at(0) != "-") // если знак дефиса, поле не пишется в базу
             {
                 tmpdbtble = dbtble.at(0);
                 tmpvalues = QStringList() << values.at(0); // кладём первое значение в выходной буфер значений
-                tmptablefields = QStringList() << dbtble.at(1);
+                tmpTableFields = QStringList() << dbtble.at(1);
                 headers.removeAt(0);
                 values.removeAt(0);
                 i = 0;
                 while (i < headers.size())
                 {
                     header = headers.at(i);
-                    tablefields(tble, header, dbtble);
+                    TableFields(tble, header, dbtble);
                     if (dbtble.size() == 0)
                     {
                         WARNMSG("");
@@ -883,7 +883,7 @@ void s_tablefields::Updatev(const QString &tble, QStringList &headers, QStringLi
                     }
                     if (dbtble.at(0) == tmpdbtble) // здесь проверка на дефис не нужна, т.к. сравнение ведётся с tmpdbtble, который уже проверен ранее
                     {
-                        tmptablefields << dbtble.at(1);
+                        tmpTableFields << dbtble.at(1);
                         tmpvalues << values.at(i);
                         headers.removeAt(i);
                         values.removeAt(i);
@@ -893,9 +893,9 @@ void s_tablefields::Updatev(const QString &tble, QStringList &headers, QStringLi
                 }
                 tmpdb = tmpdbtble.split(".").at(0);
                 tmptble = tmpdbtble.split(".").at(1);
-                tmptablefields << "date" << "idpers";
+                tmpTableFields << "date" << "idpers";
                 tmpvalues << pc.DateTime << QString::number(pc.idPers);
-                result = sqlc.UpdateValuesInTable(tmpdb, tmptble, tmptablefields, tmpvalues, keydbtble.at(2), keyid);
+                result = sqlc.UpdateValuesInTable(tmpdb, tmptble, tmpTableFields, tmpvalues, keydbtble.at(2), keyid);
                 if (result)
                     WARNMSG(sqlc.LastError);
             }
@@ -920,7 +920,7 @@ void s_tablefields::Updatev(const QString &tble, QStringList &headers, QStringLi
 // insert - вставка новой записи в таблицу tble
 // возвращает индекс новой строки
 
-void s_tablefields::Insert(const QString tble, QString &out)
+void s_TableFields::Insert(const QString tble, QString &out)
 {
     out.clear();
     result = TFRESULT_NOERROR;
@@ -928,7 +928,7 @@ void s_tablefields::Insert(const QString tble, QString &out)
     {
         QStringList cmpfl = QStringList() << "tablename" << "keyfield";
         QStringList cmpvl = QStringList() << tble << "v";
-        QString keydbtble = sqlc.GetValueFromTableByFields("sup", "tablefields", "table", cmpfl, cmpvl);
+        QString keydbtble = sqlc.GetValueFromTableByFields("sup", "TableFields", "table", cmpfl, cmpvl);
         if (sqlc.result)
         {
             result = TFRESULT_ERROR;
@@ -960,7 +960,7 @@ void s_tablefields::Insert(const QString tble, QString &out)
 // newid - найти первый свободный ИД в таблице
 // возвращает индекс новой строки
 
-void s_tablefields::NewID(const QString &tble, QString &out)
+void s_TableFields::NewID(const QString &tble, QString &out)
 {
     out.clear();
     result = TFRESULT_NOERROR;
@@ -968,7 +968,7 @@ void s_tablefields::NewID(const QString &tble, QString &out)
     {
         QStringList cmpfl = QStringList() << "tablename" << "keyfield";
         QStringList cmpvl = QStringList() << tble << "v";
-        QString keydbtble = sqlc.GetValueFromTableByFields("sup", "tablefields", "table", cmpfl, cmpvl);
+        QString keydbtble = sqlc.GetValueFromTableByFields("sup", "TableFields", "table", cmpfl, cmpvl);
         if (sqlc.result)
         {
             result = TFRESULT_ERROR;
@@ -1002,15 +1002,15 @@ void s_tablefields::NewID(const QString &tble, QString &out)
 // важно: здесь не удаляются ссылки на данную запись, которая будет удалена, проверку "дохлых" ссылок на записи, у которых deleted=1, необходимо
 // проводить и исправлять при старте СУПиКа или при "обновлении проблем"
 
-void s_tablefields::Remove(const QString &tble, const QString &id)
+void s_TableFields::Remove(const QString &tble, const QString &id)
 {
     result = TFRESULT_NOERROR;
     if (pc.AutonomousMode)
     {
-        QStringList fl = QStringList() << "table" << "tablefields";
+        QStringList fl = QStringList() << "table" << "TableFields";
         QStringList cmpfl = QStringList() << "tablename" << "keyfield";
         QStringList cmpvl = QStringList() << tble << "v";
-        QStringList keydbtble = sqlc.GetValuesFromTableByFields("sup", "tablefields", fl, cmpfl, cmpvl);
+        QStringList keydbtble = sqlc.GetValuesFromTableByFields("sup", "TableFields", fl, cmpfl, cmpvl);
         if (sqlc.result)
         {
             WARNMSG(sqlc.LastError);
@@ -1038,15 +1038,15 @@ void s_tablefields::Remove(const QString &tble, const QString &id)
 // важно: здесь не удаляются ссылки на данную запись, которая будет удалена, проверку "дохлых" ссылок на отсутствующие записи необходимо
 // проводить и исправлять при старте СУПиКа или при "обновлении проблем"
 
-void s_tablefields::Delete(const QString &tble, const QString &id)
+void s_TableFields::Delete(const QString &tble, const QString &id)
 {
     result = TFRESULT_NOERROR;
     if (pc.AutonomousMode)
     {
-        QStringList fl = QStringList() << "table" << "tablefields";
+        QStringList fl = QStringList() << "table" << "TableFields";
         QStringList cmpfl = QStringList() << "tablename" << "keyfield";
         QStringList cmpvl = QStringList() << tble << "v";
-        QStringList keydbtble = sqlc.GetValuesFromTableByFields("sup", "tablefields", fl, cmpfl, cmpvl);
+        QStringList keydbtble = sqlc.GetValuesFromTableByFields("sup", "TableFields", fl, cmpfl, cmpvl);
         if (sqlc.result)
         {
             WARNMSG(sqlc.LastError);
@@ -1073,14 +1073,14 @@ void s_tablefields::Delete(const QString &tble, const QString &id)
     }
 }
 
-bool s_tablefields::Check(const QString &tble, const QString &cmpfield, const QString &cmpvalue)
+bool s_TableFields::Check(const QString &tble, const QString &cmpfield, const QString &cmpvalue)
 {
     result = TFRESULT_NOERROR;
     QStringList sl;
     QString realcmpfield;
     if (pc.AutonomousMode)
     {
-        tfl.tablefields(tble,cmpfield, sl);
+        tfl.TableFields(tble,cmpfield, sl);
         if (result)
         {
             WARNMSG("");
@@ -1118,7 +1118,7 @@ bool s_tablefields::Check(const QString &tble, const QString &cmpfield, const QS
     }
 }
 
-void s_tablefields::valuesbyfield(const QString &tble, QStringList &fl, const QString &cmpfield, const QString &cmpvalue, QStringList &out, bool Warn)
+void s_TableFields::valuesbyfield(const QString &tble, QStringList &fl, const QString &cmpfield, const QString &cmpvalue, QStringList &out, bool Warn)
 {
     valuesbyfields(tble, fl, QStringList(cmpfield), QStringList(cmpvalue), out, Warn);
 /*    QStringList sl;
@@ -1126,7 +1126,7 @@ void s_tablefields::valuesbyfield(const QString &tble, QStringList &fl, const QS
     result = TFRESULT_NOERROR;
     if (pc.AutonomousMode)
     {
-        tfl.tablefields(tble,cmpfield, sl);
+        tfl.TableFields(tble,cmpfield, sl);
         if (result)
         {
             WARNMSG("");
@@ -1138,7 +1138,7 @@ void s_tablefields::valuesbyfield(const QString &tble, QStringList &fl, const QS
         for (int i = 0; i < fl.size(); i++)
         {
             QString field = fl.at(i);
-            tablefields(tble,field, sl);
+            TableFields(tble,field, sl);
             if (result)
             {
                 WARNMSG("");
@@ -1167,7 +1167,7 @@ void s_tablefields::valuesbyfield(const QString &tble, QStringList &fl, const QS
     } */
 }
 
-void s_tablefields::valuesbyfields(const QString &tble, QStringList &fl, QStringList &cmpfields, QStringList &cmpvalues, QStringList &out, bool Warn)
+void s_TableFields::valuesbyfields(const QString &tble, QStringList &fl, QStringList &cmpfields, QStringList &cmpvalues, QStringList &out, bool Warn)
 {
     Q_UNUSED(Warn);
     QList<QStringList> lsl;
@@ -1176,7 +1176,7 @@ void s_tablefields::valuesbyfields(const QString &tble, QStringList &fl, QString
         out = lsl.at(0);
 }
 
-void s_tablefields::valuesbyfieldsmatrix(const QString &tble, QStringList &fl, QStringList &cmpfields, QStringList &cmpvalues, QList<QStringList> &out)
+void s_TableFields::valuesbyfieldsmatrix(const QString &tble, QStringList &fl, QStringList &cmpfields, QStringList &cmpvalues, QList<QStringList> &out)
 {
     QStringList cmpfl, sl;
     out.clear();
@@ -1193,7 +1193,7 @@ void s_tablefields::valuesbyfieldsmatrix(const QString &tble, QStringList &fl, Q
         for (int i=0; i<cmpfields.size(); i++)
         {
             QString cmpfield = cmpfields.at(i);
-            tablefields(tble,cmpfield, sl);
+            TableFields(tble,cmpfield, sl);
             if (result)
             {
                 WARNMSG("");
@@ -1204,7 +1204,7 @@ void s_tablefields::valuesbyfieldsmatrix(const QString &tble, QStringList &fl, Q
         for (int i = 0; i < fl.size(); i++)
         {
             QString field = fl.at(i);
-            tablefields(tble,field, sl);
+            TableFields(tble,field, sl);
             if (result)
             {
                 WARNMSG("");
@@ -1246,9 +1246,9 @@ void s_tablefields::valuesbyfieldsmatrix(const QString &tble, QStringList &fl, Q
     }
 }
 
-void s_tablefields::TableColumn(const QString &tble, const QString &field, QStringList &out)
+void s_TableFields::TableColumn(const QString &tble, const QString &field, QStringList &out)
 {
-    out = sqlc.GetValuesFromTableByColumnAndFields("sup", "tablefields", field, QStringList("tablename"), QStringList(tble), "fieldsorder");
+    out = sqlc.GetValuesFromTableByColumnAndFields("sup", "TableFields", field, QStringList("tablename"), QStringList(tble), "fieldsorder");
     if (sqlc.result)
     {
         WARNMSG(sqlc.LastError);
@@ -1259,12 +1259,12 @@ void s_tablefields::TableColumn(const QString &tble, const QString &field, QStri
     result = TFRESULT_NOERROR;
 }
 
-void s_tablefields::tablefields(const QString &tble, const QString &header, QStringList &out)
+void s_TableFields::TableFields(const QString &tble, const QString &header, QStringList &out)
 {
-    QStringList fl = QStringList() << "table" << "tablefields" << "links";
+    QStringList fl = QStringList() << "table" << "TableFields" << "links";
     QStringList cmpfl = QStringList() << "tablename" << "header";
     QStringList cmpvl = QStringList() << tble << header;
-    out = sqlc.GetValuesFromTableByFields("sup", "tablefields", fl, cmpfl, cmpvl);
+    out = sqlc.GetValuesFromTableByFields("sup", "TableFields", fl, cmpfl, cmpvl);
     if ((sqlc.result) || (out.isEmpty()))
     {
         WARNMSG(sqlc.LastError);
@@ -1275,9 +1275,9 @@ void s_tablefields::tablefields(const QString &tble, const QString &header, QStr
     result = TFRESULT_NOERROR;
 }
 
-void s_tablefields::tableheaders(const QString &tble, QStringList &out)
+void s_TableFields::TableHeaders(const QString &tble, QStringList &out)
 {
-    out = sqlc.GetValuesFromTableByColumnAndFields("sup", "tablefields", "header", QStringList("tablename"), QStringList(tble), "fieldsorder", true);
+    out = sqlc.GetValuesFromTableByColumnAndFields("sup", "TableFields", "header", QStringList("tablename"), QStringList(tble), "fieldsorder", true);
     if ((sqlc.result) || (out.isEmpty()))
     {
         WARNMSG(sqlc.LastError);
@@ -1288,9 +1288,9 @@ void s_tablefields::tableheaders(const QString &tble, QStringList &out)
     result = TFRESULT_NOERROR;
 }
 
-void s_tablefields::tablelinks(const QString &tble, QStringList &out)
+void s_TableFields::tablelinks(const QString &tble, QStringList &out)
 {
-    out = sqlc.GetValuesFromTableByColumnAndFields("sup", "tablefields", "links", QStringList("tablename"), QStringList(tble), "fieldsorder", true);
+    out = sqlc.GetValuesFromTableByColumnAndFields("sup", "TableFields", "links", QStringList("tablename"), QStringList(tble), "fieldsorder", true);
     if ((sqlc.result) || (out.isEmpty()))
     {
         WARNMSG(sqlc.LastError);
@@ -1301,11 +1301,11 @@ void s_tablefields::tablelinks(const QString &tble, QStringList &out)
     result = TFRESULT_NOERROR;
 }
 
-bool s_tablefields::tableistree(const QString &tble)
+bool s_TableFields::tableistree(const QString &tble)
 {
-    QStringList tmpfl = QStringList() << "tablefields" << "tablename";
+    QStringList tmpfl = QStringList() << "TableFields" << "tablename";
     QStringList tmpvl = QStringList() << "alias" << tble;
-    sqlc.GetValueFromTableByFields("sup","tablefields","tablefields",tmpfl,tmpvl);
+    sqlc.GetValueFromTableByFields("sup","TableFields","TableFields",tmpfl,tmpvl);
     if (sqlc.result)
         return false;
     else

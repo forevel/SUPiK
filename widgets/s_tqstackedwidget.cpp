@@ -20,7 +20,7 @@ void s_tqStackedWidget::addWidget(QWidget *w)
 {
     widgets.append(w);
     lyout->addWidget(w);
-    connect(w, SIGNAL(destroyed(QObject*)),this,SLOT(setCurrentIndexLast()));
+    connect(w, SIGNAL(destroyed(QObject*)),this,SLOT(WidgetDestroyed()));
     setCurrentIndexLast();
 }
 
@@ -52,6 +52,12 @@ void s_tqStackedWidget::DeleteWidgetFromLayout(QWidget *w)
             return;
         }
     }
+}
+
+void s_tqStackedWidget::WidgetDestroyed()
+{
+    QWidget *w = qobject_cast<QWidget *>(sender());
+    removeWidget(w);
 }
 
 void s_tqStackedWidget::setCurrentIndexLast()

@@ -124,7 +124,7 @@ void SysmenuEditor::Delete()
     QStringList sl;
     QString table = tble+"_полн";
     QString idfield = "ИД";
-    tfl.tablefields(table, idfield, sl); // возьмём реальное имя таблицы из tablefields. sl(0) - <table>, sl(1) - <tablefields>, sl(2) - <links>
+    tfl.TableFields(table, idfield, sl); // возьмём реальное имя таблицы из tablefields. sl(0) - <table>, sl(1) - <tablefields>, sl(2) - <links>
     if (tfl.result == TFRESULT_ERROR)
     {
         WARNMSG("");

@@ -24,7 +24,7 @@ void sys_ImportClass_T::Run()
     RowNum = 1;
     QStringList sl;
     QString field = "ИД";
-    tfl.tablefields(ImpInitial.tablename, field, sl);
+    tfl.TableFields(ImpInitial.tablename, field, sl);
     if (tfl.result == TFRESULT_ERROR)
     {
         ERMSG("Проблема получения данных из таблицы "+ImpInitial.tablename);
@@ -41,15 +41,15 @@ void sys_ImportClass_T::Run()
     }
     QString TableName = sl.at(1);
     QString TableDB = sl.at(0);
-    QStringList TableFields; // подготовка списка полей для записи
+    QStringList Fields; // подготовка списка полей для записи
     QMap<QString, QString>::const_iterator i;
     for (i=ImpInitial.map->constBegin(); i!=ImpInitial.map->constEnd(); i++)
     {
         QStringList tmpsl;
         QString Key = i.key();
-        tfl.tablefields(ImpInitial.tablename, Key, tmpsl);
+        tfl.TableFields(ImpInitial.tablename, Key, tmpsl);
         if (tmpsl.size()>1)
-            TableFields.append(tmpsl.at(1));
+            Fields.append(tmpsl.at(1));
         else
         {
             ERMSG("Пустой ответ");
@@ -59,12 +59,12 @@ void sys_ImportClass_T::Run()
     if (ImpInitial.istree)
     {
         QString ParentID;
-        TableFields.append("idalias");
+        Fields.append("idalias");
         while (true)
         {
             QString ClassNum = TableDoc.read(RowNum,1).toString();
             QStringList TableValues;
-            for (int j=0; j<TableFields.size()-1; j++) // кроме idalias
+            for (int j=0; j<Fields.size()-1; j++) // кроме idalias
             {
                 QString tmps = ImpInitial.map->values().at(j);
                 if (tmps.isEmpty())
@@ -103,7 +103,7 @@ void sys_ImportClass_T::Run()
             TableValues.append(ParentID);
             if (sqlc.result == 1) // нет такой записи
             {
-                sqlc.InsertValuesToTable(TableDB,TableName, TableFields, TableValues);
+                sqlc.InsertValuesToTable(TableDB,TableName, Fields, TableValues);
                 if (sqlc.result)
                 {
                     ERMSG("Проблема при записи очередного поля № "+QString::number(RowNum));
@@ -113,7 +113,7 @@ void sys_ImportClass_T::Run()
             }
             else if (sqlc.result == 0)
             {
-                sqlc.UpdateValuesInTable(TableDB,TableName,TableFields,TableValues,"id"+TableName,tmps);
+                sqlc.UpdateValuesInTable(TableDB,TableName,Fields,TableValues,"id"+TableName,tmps);
                 if (sqlc.result)
                 {
                     ERMSG("Проблема при обновлении очередного поля № "+QString::number(RowNum));
@@ -136,7 +136,7 @@ void sys_ImportClass_T::Run()
         {
             QStringList TableValues;
             bool RecordIsEmpty = true;
-            for (int j=0; j<TableFields.size(); j++) // кроме idalias
+            for (int j=0; j<Fields.size(); j++) // кроме idalias
             {
                 QString tmps = ImpInitial.map->values().at(j);
                 if (tmps.isEmpty())
@@ -160,10 +160,10 @@ void sys_ImportClass_T::Run()
             }
             if (RecordIsEmpty) // пустая строка
                 break;
-            QString tmps = sqlc.GetValueFromTableByFields(TableDB,TableName,"id"+TableName,TableFields,TableValues);
+            QString tmps = sqlc.GetValueFromTableByFields(TableDB,TableName,"id"+TableName,Fields,TableValues);
             if (sqlc.result == SQLC_EMPTY) // нет такой записи
             {
-                sqlc.InsertValuesToTable(TableDB, TableName, TableFields, TableValues);
+                sqlc.InsertValuesToTable(TableDB, TableName, Fields, TableValues);
                 if (sqlc.result != SQLC_OK)
                 {
                     ERMSG("Проблема при записи очередного поля № "+QString::number(RowNum));
@@ -173,7 +173,7 @@ void sys_ImportClass_T::Run()
             }
             else if (sqlc.result == SQLC_OK)
             {
-                sqlc.UpdateValuesInTable(TableDB,TableName,TableFields,TableValues,"id"+TableName,tmps);
+                sqlc.UpdateValuesInTable(TableDB,TableName,Fields,TableValues,"id"+TableName,tmps);
                 if (sqlc.result != SQLC_OK)
                 {
                     ERMSG("Проблема при обновлении очередного поля № "+QString::number(RowNum));

@@ -30,6 +30,9 @@ private:
 
     void DeleteWidgetFromLayout(QWidget *w);
 
+private slots:
+    void WidgetDestroyed();
+
 protected:
     void showCurrentWidget();
 

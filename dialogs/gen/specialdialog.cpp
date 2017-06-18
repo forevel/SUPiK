@@ -104,7 +104,7 @@ void SpecialDialog::SetupUI(QStringList links, QString hdr, QString MainSlaveIte
     FindAndSetId(MainTV, QString::number(MainId));
     // заполним второстепенную таблицу в зависимости от переданного id
     // найдём реальное наименование столбца таблицы (tablefields) по ссылке
-/*    tmpsl = tfl.tablefields(TableName,TableField);
+/*    tmpsl = tfl.TableFields(TableName,TableField);
     if (tmpsl.size()>1)
         MainTableFieldInRus = tmpsl.at(1);
     else
@@ -114,7 +114,7 @@ void SpecialDialog::SetupUI(QStringList links, QString hdr, QString MainSlaveIte
         return;
     } */
     QString tmps = "Наименование";
-    tfl.tablefields(TableName, tmps, tmpsl); // берём table, tablefields, links из tablefields таблицы links.at(0) с headers="Наименование"
+    tfl.TableFields(TableName, tmps, tmpsl); // берём table, tablefields, links из tablefields таблицы links.at(0) с headers="Наименование"
     if (tfl.result == TFRESULT_ERROR)
     {
         QApplication::restoreOverrideCursor();
@@ -173,7 +173,7 @@ void SpecialDialog::Refresh()
 
 void SpecialDialog::Setup()
 {
-//    QStringList tmpsl = tfl.tablefields(links.at(0),links.at(1));
+//    QStringList tmpsl = tfl.TableFields(links.at(0),links.at(1));
 }
 
 void SpecialDialog::paintEvent(QPaintEvent *e)

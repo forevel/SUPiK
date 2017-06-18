@@ -1,6 +1,5 @@
 #include "dev_maindialog.h"
 #include <QAction>
-#include <QScrollArea>
 #include <QMenu>
 #include <QIcon>
 #include <QGridLayout>
@@ -25,6 +24,7 @@
 #include "../../widgets/s_tqsplitter.h"
 #include "../../widgets/s_tqstackedwidget.h"
 #include "../../widgets/s_tqwidget.h"
+#include "../../widgets/s_tqscrollarea.h"
 #include "../../gen/publicclass.h"
 #include "../../gen/s_tablefields.h"
 #include "../../gen/ftp.h"
@@ -59,9 +59,8 @@ void DevMainDialog::paintEvent(QPaintEvent *event)
 void DevMainDialog::SetupUI()
 {
     QVBoxLayout *lyout = new QVBoxLayout;
-    QScrollArea *SArea = new QScrollArea;
+    s_tqScrollArea *SArea = new s_tqScrollArea;
     s_tqWidget *w = new s_tqWidget;
-    SArea->setStyleSheet("QScrollArea {background-color: rgba(0,0,0,0);}");
     SArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     SArea->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     QVBoxLayout *slyout = new QVBoxLayout;

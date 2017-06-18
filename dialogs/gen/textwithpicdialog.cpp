@@ -111,7 +111,7 @@ void TextWithPicDialog::tepbclicked()
             // отправим файл на сервер в нужный каталог
             if (link.size() < 2)
                 DBGMSG;
-            else if (Cli->PutFile(destfile, link.at(0), link.at(1), shortfile) != Client::CLIER_NOERROR)
+            else if (Cli->PutFile(destfile, link.at(0).toInt(), link.at(1).toInt(), shortfile) != Client::CLIER_NOERROR)
                 WARNMSG("Can't send file to server:"+destfile);
             tmps.insert(0, shortfile);
         }

@@ -22,7 +22,7 @@
 ChooseItemDialog::ChooseItemDialog(QWidget *parent) :
     QDialog(parent)
 {
-    setStyleSheet("QDialog {background-color: rgba(204,204,153);}");
+//    setStyleSheet("QDialog {background-color: rgba(204,204,153);}");
     setAttribute(Qt::WA_DeleteOnClose);
 }
 

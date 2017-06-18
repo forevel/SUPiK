@@ -19,10 +19,10 @@
 #define TB_EX_TIME  10 // minutes to finish exam
 
 #include <QDialog>
-class QScrollArea;
 
 #include "../../models/treemodel.h"
 #include "../../widgets/s_tqwidget.h"
+#include "../../widgets/s_tqscrollarea.h"
 
 class tb_examdialog : public QDialog
 {
@@ -75,7 +75,7 @@ private:
     QList<Answers_s> Answers;
 
     bool PrepareQuestions();
-    QList<QScrollArea *> PrepareQuestionsByTheme(int theme, int questnum); // подготовка набора виджетов по теме theme в количестве questnum
+    QList<s_tqScrollArea *> PrepareQuestionsByTheme(int theme, int questnum); // подготовка набора виджетов по теме theme в количестве questnum
     void SetupUI();
 };
 

@@ -83,22 +83,22 @@
 #define C_CRALT		1301
 
 // описания типов файлов
-#define FLT_NONE    "#"
-#define FLT_TB      "0"
-#define FLT_DOC     "1"
-#define FLT_ALT     "2"
-#define FLT_PERS    "3"
-#define FLT_LOG     "4"
-#define FLT_WH      "5"
+#define FLT_NONE    -1
+#define FLT_TB      0
+#define FLT_DOC     1
+#define FLT_ALT     2
+#define FLT_PERS    3
+#define FLT_LOG     4
+#define FLT_WH      5
 
 // описания подтипов файлов
-#define FLST_NONE    "#" // нет подтипа
-#define FLST_PROT    "0" // протоколы
-#define FLST_DSHEET  "1" // техдокументация
-#define FLST_LIBS    "2" // библиотеки
-#define FLST_SYMBOLS "3" // библиотеки Altium - SchLib
-#define FLST_FOOTPRT "4" // библиотеки Altium - PcbLib
-#define FLST_PHOTO   "5" // фотографии
+#define FLST_NONE       -1 // нет подтипа
+#define FLST_PROT       0 // протоколы
+#define FLST_DSHEET     1 // техдокументация
+#define FLST_LIBS       2 // библиотеки
+#define FLST_SYMBOLS    3 // библиотеки Altium - SchLib
+#define FLST_FOOTPRT    4 // библиотеки Altium - PcbLib
+#define FLST_PHOTO      5 // фотографии
 
 #define READBUFMAX  16384
 
@@ -237,15 +237,15 @@ public:
     QList<QStringList> Result;
     QString ResultStr;
     int ResultInt;
-    const QStringList PathPrefixes = QStringList() << "tb/" << "doc/" << "alt/" << "pers/" << "log/";
+    const QStringList PathPrefixes = QStringList() << "tb/" << "doc/" << "alt/" << "pers/" << "log/" << "wh/";
     const QStringList PathSuffixes = QStringList() << "prot/" << "dsheet/" << "libs/" << "symbols/" << "footprints/" << "photo/";
 
     int Connect(QString host, QString port, int clientmode);
     bool isConnected();
     void Disconnect();
     void SendCmd(int command, QStringList &args=QStringList());
-    int GetFile(const QString &type, const QString &subtype, const QString &filename);
-    int PutFile(const QString &localfilename, const QString &type, const QString &subtype, const QString &filename);
+    int GetFile(int type, int subtype, const QString &filename);
+    int PutFile(const QString &localfilename, int type, int subtype, const QString &filename);
     int SendAndGetResult(int command, QStringList &args=QStringList()); // send command with arguments and wait for result
     void StartLog();
 

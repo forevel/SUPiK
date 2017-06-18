@@ -10,6 +10,7 @@
 #include "../../widgets/s_tqcombobox.h"
 #include "../../widgets/s_tqlabel.h"
 #include "../../widgets/s_tqwidget.h"
+#include "../../widgets/s_tqscrollarea.h"
 
 #define MAXROWS 2
 #define MAXCOLS 6
@@ -35,7 +36,6 @@ public:
         int Rows; // количество рядов в размещении
         int Columns; // количество столбцов в размещении
         int Priority; // приоритет места размещения
-        int UpdIns; // признак того, что элемент менялся (=1), был создан (=3), был создан и изменён (но не записан в БД, =2) или без изменений (=0)
     };
 
     WhPlacesItem Item(int index);
@@ -93,15 +93,10 @@ private:
     s_tqScrollArea *SetupCells();
 
     void UpdateWhComboBox();
-    void SetCells();
-    void BuildWorkspace(); // отобразить рабочее поле (размещения внутри размещения с данным ID)
-    void UpdatePlace();
-//    void Update();
     void Disband(int ID); // расформирование единицы размещения
-    QStringList NameAndPicture(int ID); // вытащить картинку по ИД размещения
     void ClearLayout ();
     bool CheckPriorities (QString PlaceName);
-    void PushItemStackByID(int ID);
+    void PushItemStack(int row, int column);
 
 private slots:
     void AddNewPlace();

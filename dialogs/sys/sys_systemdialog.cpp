@@ -460,16 +460,16 @@ void sys_systemdialog::DeleteTable()
         return;
     }
     QString tblename = tv->model()->data(tv->model()->index(tv->currentIndex().row(),1,QModelIndex()),Qt::DisplayRole).toString();
-    QStringList TableHeaders;
-    tfl.tableheaders(tblename, TableHeaders);
+    QStringList Headers;
+    tfl.TableHeaders(tblename, Headers);
     if (tfl.result == TFRESULT_ERROR)
         return;
     if (!(MessageBox2::question(this, "Уверены?", "Вы уверены, что хотите удалить все сведения о таблице?")))
         return;
-    for (int i=0; i<TableHeaders.size(); i++)
+    for (int i=0; i<Headers.size(); i++)
     {
         QStringList fl = QStringList() << "tablename" << "header";
-        QStringList vl = QStringList() << tblename << TableHeaders.at(i);
+        QStringList vl = QStringList() << tblename << Headers.at(i);
         sqlc.RealDeleteFromDB("sup","tablefields",fl,vl);
         if (sqlc.result)
         {

@@ -31,6 +31,7 @@
 #define M_PUTFILE   1007 // отправка файла на сервер
 #define M_GETFILE   1008 // прием файла с сервера
 #define M_ACTIVATE  1009 // активация пользователя
+#define M_GETFILEI  1010 // get file info
 // M-statuses
 #define M_IDLE		1050
 #define M_NEXT		1053 // подтверждение готовности приёма следующей порции данных

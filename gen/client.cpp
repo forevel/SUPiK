@@ -58,6 +58,7 @@ Client::Client(QObject *parent) : QObject(parent)
     CmdMap.insert(M_PUTFILE, {"M_PUTFILE", 4, "M7", RESULT_NONE, false, false}); // 0 - local filename, 1 - type, 2 - subtype, 3 - filename, [4] - filesize, added in SendCmd
     CmdMap.insert(M_GETFILE, {"M_GETFILE", 3, "M8", RESULT_NONE, false, false}); // 0 - type, 1 - subtype, 2 - filename
     CmdMap.insert(M_ACTIVATE, {"M_ACTIVATE", 2, "M9", RESULT_STRING, false, false}); // 0 - code, 1 - newpass
+    CmdMap.insert(M_GETFILEI, {"M_GETFILEINF", 3, "M:", RESULT_VECTOR, false, false}); // 0 - type, 1 - subtype, 2 - filename
     InitiateTimers();
     connect(this,SIGNAL(CommandFinished()),&CommandFinishedLoop,SLOT(quit()));
     connect(TimeoutTimer,SIGNAL(timeout()),&CommandFinishedLoop,SLOT(quit()));
@@ -520,6 +521,7 @@ void Client::ParseReply(QByteArray ba)
     case T_TID:
     case T_VTID:
     case T_C:
+    case M_GETFILEI:
     {
         // Формат ответа на запрос:
         //      <number_of_records><0x7F>value[0]<0x7F>value[1]...
@@ -802,14 +804,25 @@ int Client::GetFile(int type, int subtype, const QString &filename)
     dr->mkpath(path);
     delete dr;
     fp.setFileName(path + filename);
+    sl << QString::number(type) << QString::number(subtype) << filename;
     if (fp.exists()) // файл уже есть
     {
         // проверка на то, не новее ли файл на сервере, чем наш локальный
-
+        SendCmd(M_GETFILEI, sl); // Result.at(0): [0] - file exists, [1] - size, [2] - datetime, [3] - mode
+        if (EthStatus.isCommandActive())
+            CommandFinishedLoop.exec();
+        if ((DetectedError != CLIER_NOERROR) || (Result.isEmpty()))
+            return DetectedError;
+        QStringList vl = Result.at(0);
+        if (vl.size() < 4)
+            return CLIER_GETFER;
+        QFileInfo fpi(fp);
+        uint datetime = fpi.created().toTime_t();
+        uint datetimeg = vl.at(2).toInt();
         // не новее, выход
-        return CLIER_NOERROR;
+        if (datetimeg <= datetime)
+            return CLIER_NOERROR;
     }
-    sl << QString::number(type) << QString::number(subtype) << filename;
     SendCmd(M_GETFILE, sl);
     if (EthStatus.isCommandActive())
         CommandFinishedLoop.exec();

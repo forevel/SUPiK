@@ -496,26 +496,18 @@ void PersDialog::SetPhoto()
     QFile fp;
     QPixmap pm;
     fp.setFileName(pc.HomeDir+"/pers/photo/"+idPers);
-    if (!fp.open(QIODevice::ReadOnly))
+    if (Cli->GetFile(FLT_PERS, FLST_PHOTO, idPers) == Client::CLIER_NOERROR)
     {
-        if (Cli->GetFile(FLT_PERS, FLST_PHOTO, idPers) == Client::CLIER_NOERROR)
+        if (fp.open(QIODevice::ReadOnly))
         {
-            if (fp.open(QIODevice::ReadOnly))
-            {
-                pm.load(fp.fileName());
-                fp.close();
-            }
-        }
-        else
-        {
-            WARNMSG("Нет фотографии для сотрудника с ИД " + idPers);
-            pm.load(":/res/Einstein.png");
+            pm.load(fp.fileName());
+            fp.close();
         }
     }
     else
     {
-        pm.load(fp.fileName());
-        fp.close();
+        WARNMSG("Нет фотографии для сотрудника с ИД " + idPers);
+        pm.load(":/res/Einstein.png");
     }
     WDFunc::SetLBLImage(this, "photo", &pm);
 }

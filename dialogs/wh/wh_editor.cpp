@@ -377,7 +377,7 @@ s_tqScrollArea *Wh_Editor::SetupCells()
                 ModelItem.Columns = 0;
                 WhModel->InsertItem(ModelItem);
                 SomethingChanged = true; // добавили элемент, которого нет в БД, надо записать в будущем
-                continue;
+//                continue;
             }
             if (item.PictureIndex != 0) // не пустое место размещения
             {

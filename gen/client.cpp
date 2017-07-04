@@ -116,7 +116,7 @@ int Client::Connect(QString host, QString port, int clientmode)
     connect(MainEthernet,SIGNAL(disconnected()),this,SLOT(ClientDisconnected()));
     connect(MainEthernet,SIGNAL(NewDataArrived(QByteArray)),this,SLOT(ParseReply(QByteArray)));
     connect(MainEthernet,SIGNAL(byteswritten(qint64)),this,SLOT(UpdateWrittenBytes(qint64)));
-    connect(MainEthernet,SIGNAL(connected()),&ConnectLoop,SLOT(quit()));
+    connect(this,SIGNAL(Connected()),&ConnectLoop,SLOT(quit()));
     connect(TimeoutTimer,SIGNAL(timeout()),&ConnectLoop,SLOT(quit()));
     DetectedError = CLIER_NOERROR;
     TimeoutTimer->start();
@@ -141,7 +141,8 @@ int Client::Connect(QString host, QString port, int clientmode)
     EthStatus.clearCommandActive();
 
     SendCmd(M_START, QStringList());
-    CommandFinishedLoop.exec();
+    if (EthStatus.isCommandActive())
+        CommandFinishedLoop.exec();
     if (!LoginOk)
     {
         CliLog->warning("Wrong login or password");

@@ -311,9 +311,17 @@ int EditModel::Setup(QString Table, QString Id)
         {
             QString tmps;
             tfl.idtov(TableLinksSl.at(i), ValuesSl.at(i), tmps);
-            ValuesToAdd.append(tmps);
-            ValuesToAdd.append(TableLinksSl.at(i));
+            if (tfl.result != TFRESULT_ERROR)
+                ValuesToAdd.append(tmps);
+            else
+                ValuesToAdd.append("");
         }
+        else
+            ValuesToAdd.append("");
+        if (i < TableLinksSl.size())
+            ValuesToAdd.append(TableLinksSl.at(i));
+        else
+            ValuesToAdd.append("");
         AddRow(ValuesToAdd);
     }
     return RESULTOK;
@@ -361,9 +369,12 @@ void EditModel::AddRow(QStringList &sl)
 {
     int LastIndex = rowCount();
     insertRows(LastIndex, 1);
-    setData(index(LastIndex, FIELDCOLUMN, QModelIndex()), sl.at(0), Qt::EditRole);
-    setData(index(LastIndex, VALUECOLUMN, QModelIndex()), sl.at(1), Qt::EditRole);
-    setData(index(LastIndex, VALUECOLUMN, QModelIndex()), sl.at(2), EditModel::LinksRole);
+    if (sl.size() > 0)
+        setData(index(LastIndex, FIELDCOLUMN, QModelIndex()), sl.at(0), Qt::EditRole);
+    if (sl.size() > 1)
+        setData(index(LastIndex, VALUECOLUMN, QModelIndex()), sl.at(1), Qt::EditRole);
+    if (sl.size() > 2)
+        setData(index(LastIndex, VALUECOLUMN, QModelIndex()), sl.at(2), EditModel::LinksRole);
 }
 
 QStringList EditModel::Values()

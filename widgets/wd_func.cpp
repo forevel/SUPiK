@@ -144,6 +144,7 @@ void WDFunc::SetCBList(QWidget *w, const QString &cbname, const QStringList &cbs
     }
     cb->clear();
     cb->insertItems(0, cbsl);
+    cb->updateGeometry();
     cb->setCurrentIndex(0);
 }
 

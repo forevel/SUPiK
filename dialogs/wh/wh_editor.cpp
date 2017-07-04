@@ -194,8 +194,8 @@ void Wh_Editor::SetupUI()
     pb->setIcon(QIcon(":/res/whPB-red.png"));
     connect(pb, SIGNAL(clicked()), this, SLOT(DeleteWh()));
     pb->setToolTip("Расформировать и удалить склад");
-    hlyout->addWidget(pb); */
-    hlyout->addSpacing(5);
+    hlyout->addWidget(pb);
+    hlyout->addSpacing(5); */
     pb = new s_tqPushButton;
     pb->setIcon(QIcon(":/res/cross.png"));
     connect(pb, SIGNAL(clicked()), this, SLOT(close()));
@@ -216,6 +216,10 @@ void Wh_Editor::SetupUI()
     lbl = new s_tqLabel("Склад:");
     hlyout->addWidget(lbl, 0);
     hlyout->addWidget(cb, 2);
+    pb = new s_tqPushButton;
+    pb->setIcon(QIcon(":/res/editdoc.png"));
+    connect(pb,SIGNAL(clicked(bool)),this,SLOT(EditWarehouse()));
+    hlyout->addWidget(pb);
     hlyout->addStretch(20);
     lyout->addLayout(hlyout);
     QFrame* line = new QFrame;
@@ -225,14 +229,13 @@ void Wh_Editor::SetupUI()
     s_tqStackedWidget *stw = new s_tqStackedWidget;
     stw->setObjectName("stw");
     lyout->addWidget(stw);
-    stw->setAttribute(Qt::WA_DeleteOnClose);
-    s_tqScrollArea *area = new s_tqScrollArea;
+/*    s_tqScrollArea *area = new s_tqScrollArea;
     area->setWidget(stw);
     area->setWidgetResizable(true);
-    lyout->addWidget(area);
+    lyout->addWidget(area); */
     setLayout(lyout);
     UpdateWhComboBox(); // обновляем комбобокс со складами
-    ChangeWh(cb->currentText());
+//    ChangeWh(cb->currentText());
 }
 
 void Wh_Editor::OpenSpace()
@@ -377,26 +380,32 @@ s_tqScrollArea *Wh_Editor::SetupCells()
                 ModelItem.Columns = 0;
                 WhModel->InsertItem(ModelItem);
                 SomethingChanged = true; // добавили элемент, которого нет в БД, надо записать в будущем
-//                continue;
             }
-            if (item.PictureIndex != 0) // не пустое место размещения
+            if (ModelItem.PictureIndex != 0) // не пустое место размещения
             {
-                if (Pictures.keys().contains(item.PictureIndex))
-                    celllbl->setPixmap(*(Pictures[item.PictureIndex]));
+                if (Pictures.keys().contains(ModelItem.PictureIndex))
+                    celllbl->setPixmap(*(Pictures[ModelItem.PictureIndex]));
                 else
                     celllbl->setPixmap(QPixmap());
-                le->setText(item.Description + " " + item.Name);
+                le->setText(ModelItem.Description + " " + ModelItem.Name);
             }
             else
             {
-                Cli->GetFile(FLT_WH, FLST_PHOTO, "EmptyCell.png");
-                celllbl->setPixmap(QPixmap(pc.HomeDir + "/wh/photo/EmptyCell.png"));
-                le->setText(item.Description + " " + item.Name);
+                Cli->GetFile(FLT_WH, FLST_PHOTO, "EmptyCell");
+                celllbl->setPixmap(QPixmap(pc.HomeDir + "/wh/photo/EmptyCell"));
+                le->setText(ModelItem.Description + " " + ModelItem.Name);
             }
             v2lyout->addWidget(celllbl);
             v2lyout->setAlignment(celllbl, Qt::AlignCenter);
-            v2lyout->addWidget(le);
-            v2lyout->setAlignment(le,Qt::AlignCenter);
+            QHBoxLayout *h2lyout = new QHBoxLayout;
+            h2lyout->addWidget(le);
+            s_tqPushButton *pb = new s_tqPushButton;
+            pb->setIcon(QIcon(":/res/editdoc.png"));
+            pb->setObjectName(QString::number(i)+"."+QString::number(j));
+            connect(pb,SIGNAL(clicked(bool)),this,SLOT(EditPlace()));
+            h2lyout->addWidget(pb);
+            v2lyout->addLayout(h2lyout);
+//            v2lyout->setAlignment(le,Qt::AlignCenter);
             hlyout->addLayout(v2lyout);
         }
         hlyout->addStretch(1);
@@ -456,6 +465,33 @@ void Wh_Editor::AddNewWh()
     else
         dlg->exec();
     UpdateWhComboBox();
+}
+
+void Wh_Editor::EditPlace()
+{
+    QStringList sl = sender()->objectName().split(".");
+    if (sl.size() < 2)
+        return;
+    int row = sl.at(0).toInt();
+    int column = sl.at(1).toInt();
+    WhPlacesModel::WhPlacesItem item = WhModel->Item(row, column);
+    TwoColDialog *dlg = new TwoColDialog("Склады::Редактировать");
+    if (dlg->setup("Склады размещение_полн", MODE_EDITNEW, item.Id) == RESULTBAD)
+        WARNMSG("");
+    else
+        dlg->exec();
+    OpenSpace();
+}
+
+void Wh_Editor::EditWarehouse()
+{
+    WhPlacesModel::WhPlacesItem item = ItemsStack.first(); // первый элемент - это сам склад
+    TwoColDialog *dlg = new TwoColDialog("Склады::Редактировать");
+    if (dlg->setup("Склады размещение_полн", MODE_EDITNEW, item.Id) == RESULTBAD)
+        WARNMSG("");
+    else
+        dlg->exec();
+    OpenSpace();
 }
 
 void Wh_Editor::UpdateWhComboBox()

@@ -464,6 +464,8 @@ void Wh_Editor::AddNewWh()
         WARNMSG("");
     else
         dlg->exec();
+    // сформировать структуру склада в БД
+
     UpdateWhComboBox();
 }
 
@@ -476,10 +478,11 @@ void Wh_Editor::EditPlace()
     int column = sl.at(1).toInt();
     WhPlacesModel::WhPlacesItem item = WhModel->Item(row, column);
     TwoColDialog *dlg = new TwoColDialog("Склады::Редактировать");
-    if (dlg->setup("Склады размещение_полн", MODE_EDITNEW, item.Id) == RESULTBAD)
+    if (dlg->setup("Склады размещение_полн", MODE_EDIT, item.Id) == RESULTBAD)
         WARNMSG("");
     else
         dlg->exec();
+    // проверить изменения склада сравнением записанного в БД по индексу item.Id с данными item (rows, columns)
     OpenSpace();
 }
 
@@ -487,7 +490,7 @@ void Wh_Editor::EditWarehouse()
 {
     WhPlacesModel::WhPlacesItem item = ItemsStack.first(); // первый элемент - это сам склад
     TwoColDialog *dlg = new TwoColDialog("Склады::Редактировать");
-    if (dlg->setup("Склады размещение_полн", MODE_EDITNEW, item.Id) == RESULTBAD)
+    if (dlg->setup("Склады размещение_полн", MODE_EDIT, item.Id) == RESULTBAD)
         WARNMSG("");
     else
         dlg->exec();

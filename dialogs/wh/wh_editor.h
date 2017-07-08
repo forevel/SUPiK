@@ -89,7 +89,6 @@ private:
     void CloseSpace(); // перейти на уровень выше по стеку ItemsStack
     void SaveSpace();
     void EditSpace(); // редактировать информацию о месте размещения
-    void EditWarehouse(); // редактировать информацию о складе
     void CheckChanges(); // проверка наличия внесённых изменений и запись в БД при необходимости
     s_tqScrollArea *SetupCells();
 
@@ -109,6 +108,7 @@ private slots:
     void ChangeWh(QString);
     void AddNewWh();
     void EditPlace();
+    void EditWarehouse(); // редактировать информацию о складе
 
 protected:
     void paintEvent(QPaintEvent *);

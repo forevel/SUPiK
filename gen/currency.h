@@ -29,16 +29,24 @@ public:
         GOOGLE
     };
 
-    void EURUSD();
-    void EURRUB();
-    void USDRUB();
-    void CHFRUB();
-    void GBPRUB();
-    void UAHRUB();
+    const QMap<int, QString> Curs()
+    {
+        QMap<int, QString> sl;
+        sl.insert(USD, "USD");
+        sl.insert(EUR, "EUR");
+        sl.insert(CHF, "CHF");
+        sl.insert(GBP, "GBP");
+        sl.insert(UAH, "UAH");
+        sl.insert(BYN, "BYN");
+        sl.insert(RUB, "RUB");
+        return sl;
+    }
+
     void GetRates(int funcnum);
+    void SetBaseCurrency(int Curr);
+    QList<double> Rates;
 
 private:
-    QList<double> Rates;
     QMap<int, void (Currency::*)()> RateFunctions()
     {
         QMap<int, void (Currency::*)()> sl;
@@ -47,7 +55,7 @@ private:
         sl[GOOGLE] = &Currency::GetGoogle;
         return sl;
     }
-
+    QString BaseCurrency;
 
     void GetSBRF();
     void GetEURCB();

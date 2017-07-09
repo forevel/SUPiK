@@ -5,8 +5,7 @@
 #include <QPaintEvent>
 #include <QCloseEvent>
 #include <QResizeEvent>
-//#include "gen/publicclass.h"
-//#include "widgets/waitwidget.h"
+#include "gen/currency.h"
 
 #define SUPIKMENUBAR_BG "transparent"
 #define SUPIKMENUBAR_ITEM_SELECTED "#EEEEEE"
@@ -16,6 +15,7 @@
 #define SYS_TAB_BGCOLOR "#FF373A"
 
 #define SUPIK_PINGPERIOD    10
+#define SUPIK_CURRPERIOD    5 // период обновления данных о валютах
 
 #define PROGVER    "2.1.52"
 
@@ -35,11 +35,10 @@ public slots:
 
 private:
     bool IsProblemsDetected, PeriodicOddSecond;
-    int PingSecCounter, WarningActionIndex;
+    int PingSecCounter, CurrRefreshCounter, CurrCounter, WarningActionIndex;
     QHash <QString, void (supik::*)()> pf;
+    Currency *Curr;
     int ErMsgNum;
-    // базовой валютой назначаем наш родной рубль
-    double EURRate, USDRate, GBPRate, CHFRate, BYNRate, UAHRate;
 
     void SetSupikMenuBar();
     QMenu *AddChildToMenu(int);

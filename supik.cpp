@@ -20,19 +20,19 @@
 #include "dialogs/wh/wh_dialog.h"
 #include "dialogs/wh/wh_editor.h"
 #include "gen/client.h"
-#include "gen/currency.h"
 #include "gen/publiclang.h"
 #include "gen/s_sql.h"
 #include "widgets/s_colortabwidget.h"
 #include "widgets/s_statusbar.h"
 #include "widgets/s_tqlabel.h"
 #include "widgets/waitwidget.h"
+#include "widgets/wd_func.h"
 
 supik::supik()
 {
     IsProblemsDetected = false;
     PeriodicOddSecond = true;
-    PingSecCounter = 0;
+    PingSecCounter = CurrRefreshCounter = CurrCounter = 0;
     SetSupikWindow();
     pf["ExitSupik"] = &supik::ExitSupik;
     pf["SysStructEdit"] = &supik::SysStructEdit;
@@ -55,8 +55,8 @@ supik::supik()
     pf["TBExam"] = &supik::TBExam;
     pf["TBMain"] = &supik::TBMain;
     ErMsgNum = 0;
-    Currency cur;
-    cur.GetRates(Currency::GOOGLE);
+    Curr = new Currency;
+    Curr->GetRates(Currency::GOOGLE);
 }
 
 void supik::showEvent(QShowEvent *event)
@@ -124,6 +124,7 @@ void supik::SetSupikWindow()
     s_tqLabel *datetime = new s_tqLabel;
     datetime->setObjectName("datetime");
     upperLayout->addWidget(datetime, 0);
+    upperLayout->addWidget(WDFunc::NewLBL(this, "currencies"), 0);
     pb = new s_tqPushButton;
     pb->setIcon(QIcon(":/res/cross.png"));
     connect(pb, SIGNAL(clicked()), this, SLOT(close()));
@@ -568,6 +569,7 @@ void supik::executeDirDialog()
 void supik::periodic1s()
 {
     ++PingSecCounter;
+    ++CurrRefreshCounter;
 #ifndef DEBUGISON
     if (PingSecCounter > SUPIK_PINGPERIOD)
     {
@@ -575,6 +577,14 @@ void supik::periodic1s()
         Cli->SendCmd(M_PING); // проверка связи
     }
 #endif
+    if (CurrRefreshCounter > SUPIK_CURRPERIOD)
+    {
+        CurrRefreshCounter = 0;
+        ++CurrCounter;
+        if (CurrCounter >= CURNUM)
+            CurrCounter = 0;
+        WDFunc::SetLBLText(this, "currencies", QString::number(Curr->Rates.at(CurrCounter), 'f', 3));
+    }
     PeriodicOddSecond = !PeriodicOddSecond;
     pc.DateTime = QDateTime::currentDateTime().toString(DATETIMEFORMAT);
     s_tqLabel *le = this->findChild<s_tqLabel *>("datetime");

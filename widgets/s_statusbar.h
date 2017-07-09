@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QTimer>
 #include <QPixmap>
+#include "s_tqprogressbar.h"
 
 #define SB_MAXHEIGHT    16
 
@@ -26,6 +27,9 @@ public slots:
     void UpdateOutgoingBytes(quint64 bytes);
     void SetStatusDisconnected();
     void SetStatusConnected();
+    void SetProgressBarText(const QString &txt);
+    void SetProgressBarRange(quint64 max);
+    void SetProgressBarValue(quint64 value);
 
 private slots:
     void ClearActiveServerState();
@@ -34,6 +38,7 @@ private:
     quint64 IncBytes, OutBytes;
     QTimer *ActiveTimer;
     QPixmap *Sf, *Sna, *Snp;
+    s_tqProgressBar *PRB;
 
 protected:
     void paintEvent(QPaintEvent *e);

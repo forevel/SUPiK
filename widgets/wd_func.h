@@ -6,6 +6,7 @@
 #include "s_tqspinbox.h"
 #include "s_tqcheckbox.h"
 #include "s_tqlineedit.h"
+#include "s_tqlabel.h"
 
 class WDFunc
 {
@@ -29,6 +30,7 @@ public:
     static void SetSPBData(QWidget *w, const QString &spbname, const double &spbvalue);
     static void SPBData(QWidget *w, const QString &spbname, double &spbvalue);
     static void SetLEColor(QWidget *w, const QString &lename, const QColor &color);
+    static s_tqLabel *NewLBL(QWidget *parent, const QString &lblname, const QString &txt, QPixmap *pm=Q_NULLPTR);
     static void SetLBLImage(QWidget *w, const QString &lblname, QPixmap *pm);
     static void SetLBLText(QWidget *w, const QString &lblname, const QString &lbltext, bool enabled=true);
     static QString TVField(QWidget *w, const QString &tvname, int column, bool isid=false);

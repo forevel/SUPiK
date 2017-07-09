@@ -91,6 +91,7 @@ private:
     void EditSpace(); // редактировать информацию о месте размещения
     void CheckChanges(); // проверка наличия внесённых изменений и запись в БД при необходимости
     s_tqScrollArea *SetupCells();
+    void CheckItem(WhPlacesModel::WhPlacesItem &item); // проверка изменений по итему в БД и сравнение: если стало меньше, Disband, если больше - добавить поля в БД
 
     void UpdateWhComboBox();
     void Disband(int ID); // расформирование единицы размещения

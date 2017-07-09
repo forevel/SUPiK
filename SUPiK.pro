@@ -30,8 +30,10 @@ SOURCES += main.cpp\
     dialogs/gen/chooseitemdialog.cpp \
     dialogs/gen/messagebox.cpp \
     dialogs/gen/specialdialog.cpp \
+    dialogs/gen/textwithpicdialog.cpp \
     dialogs/gen/twocoldialog.cpp \
     dialogs/pers/persdialog.cpp \
+    dialogs/sys/serverdialog.cpp \
     dialogs/sys/sys_backuprestoredirdialog.cpp \
     dialogs/sys/sys_erdialog.cpp \
     dialogs/sys/sys_importclass.cpp \
@@ -48,6 +50,7 @@ SOURCES += main.cpp\
     dialogs/wh/wh_editor.cpp \
     gen/client.cpp \
     gen/ftp.cpp \
+    gen/http.cpp \
     gen/log.cpp \
     gen/pdfout.cpp \
     gen/publicclass.cpp \
@@ -59,6 +62,8 @@ SOURCES += main.cpp\
     models/baseitemmodel.cpp \
     models/editmodel.cpp \
     models/errorprotocolmodel.cpp \
+    models/fileitem.cpp \
+    models/filemodel.cpp \
     models/griddelegate.cpp \
     models/proxymodel.cpp \
     models/s_duniversal.cpp \
@@ -72,6 +77,7 @@ SOURCES += main.cpp\
     widgets/s_colortabbar.cpp \
     widgets/s_colortabwidget.cpp \
     widgets/s_maskedle.cpp \
+    widgets/s_statusbar.cpp \
     widgets/s_tqcalendarwidget.cpp \
     widgets/s_tqcheckbox.cpp \
     widgets/s_tqchoosewidget.cpp \
@@ -81,6 +87,8 @@ SOURCES += main.cpp\
     widgets/s_tqgroupbox.cpp \
     widgets/s_tqlabel.cpp \
     widgets/s_tqlineedit.cpp \
+    widgets/s_tqlinkswidget.cpp \
+    widgets/s_tqprogressbar.cpp \
     widgets/s_tqpushbutton.cpp \
     widgets/s_tqradiobutton.cpp \
     widgets/s_tqscrollarea.cpp \
@@ -93,12 +101,8 @@ SOURCES += main.cpp\
     widgets/treeview.cpp \
     widgets/waitwidget.cpp \
     widgets/wd_func.cpp \
-    widgets/s_statusbar.cpp \
-    models/fileitem.cpp \
-    models/filemodel.cpp \
-    dialogs/sys/serverdialog.cpp \
-    dialogs/gen/textwithpicdialog.cpp \
-    widgets/s_tqlinkswidget.cpp
+    gen/currency.cpp \
+    gen/files.cpp
 
 HEADERS  += startwindow.h \
     supik.h \
@@ -114,8 +118,10 @@ HEADERS  += startwindow.h \
     dialogs/gen/chooseitemdialog.h \
     dialogs/gen/messagebox.h \
     dialogs/gen/specialdialog.h \
+    dialogs/gen/textwithpicdialog.h \
     dialogs/gen/twocoldialog.h \
     dialogs/pers/persdialog.h \
+    dialogs/sys/serverdialog.h \
     dialogs/sys/sys_backuprestoredirdialog.h \
     dialogs/sys/sys_erdialog.h \
     dialogs/sys/sys_importclass.h \
@@ -132,6 +138,7 @@ HEADERS  += startwindow.h \
     dialogs/wh/wh_editor.h \
     gen/client.h \
     gen/ftp.h \
+    gen/http.h \
     gen/log.h \
     gen/pdfout.h \
     gen/publicclass.h \
@@ -143,6 +150,8 @@ HEADERS  += startwindow.h \
     models/baseitemmodel.h \
     models/editmodel.h \
     models/errorprotocolmodel.h \
+    models/fileitem.h \
+    models/filemodel.h \
     models/griddelegate.h \
     models/proxymodel.h \
     models/s_duniversal.h \
@@ -156,6 +165,7 @@ HEADERS  += startwindow.h \
     widgets/s_colortabbar.h \
     widgets/s_colortabwidget.h \
     widgets/s_maskedle.h \
+    widgets/s_statusbar.h \
     widgets/s_tqcalendarwidget.h \
     widgets/s_tqcheckbox.h \
     widgets/s_tqchoosewidget.h \
@@ -165,6 +175,8 @@ HEADERS  += startwindow.h \
     widgets/s_tqgroupbox.h \
     widgets/s_tqlabel.h \
     widgets/s_tqlineedit.h \
+    widgets/s_tqlinkswidget.h \
+    widgets/s_tqprogressbar.h \
     widgets/s_tqpushbutton.h \
     widgets/s_tqradiobutton.h \
     widgets/s_tqscrollarea.h \
@@ -177,12 +189,8 @@ HEADERS  += startwindow.h \
     widgets/treeview.h \
     widgets/waitwidget.h \
     widgets/wd_func.h \
-    widgets/s_statusbar.h \
-    models/fileitem.h \
-    models/filemodel.h \
-    dialogs/sys/serverdialog.h \
-    dialogs/gen/textwithpicdialog.h \
-    widgets/s_tqlinkswidget.h
+    gen/currency.h \
+    gen/files.h
 
 RESOURCES += \
     pic.qrc

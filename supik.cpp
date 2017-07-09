@@ -4,27 +4,29 @@
 #include <QTextEdit>
 #include <QPropertyAnimation>
 #include "supik.h"
-#include "dialogs/dev/dev_docdialog.h"
+#include "dialogs/cmp/cmp_compdialog.h"
 #include "dialogs/dev/dev_devdialog.h"
+#include "dialogs/dev/dev_docdialog.h"
+#include "dialogs/dir/dir_maindialog.h"
+#include "dialogs/sys/serverdialog.h"
+#include "dialogs/sys/sys_backuprestoredirdialog.h"
+#include "dialogs/sys/sys_erdialog.h"
+#include "dialogs/sys/sys_importclass.h"
+#include "dialogs/sys/sys_probsdialog.h"
 #include "dialogs/sys/sys_settingsdialog.h"
 #include "dialogs/sys/sys_systemdialog.h"
-#include "dialogs/dir/dir_maindialog.h"
-#include "dialogs/sys/sys_probsdialog.h"
-#include "dialogs/cmp/cmp_compdialog.h"
-#include "dialogs/wh/wh_dialog.h"
-#include "dialogs/wh/wh_editor.h"
-#include "dialogs/sys/sys_backuprestoredirdialog.h"
-#include "dialogs/sys/sys_importclass.h"
-#include "dialogs/sys/sys_erdialog.h"
-#include "dialogs/sys/serverdialog.h"
 #include "dialogs/tb/tb_maindialog.h"
 #include "dialogs/tb/tb_examdialog.h"
-#include "widgets/s_tqlabel.h"
+#include "dialogs/wh/wh_dialog.h"
+#include "dialogs/wh/wh_editor.h"
+#include "gen/client.h"
+#include "gen/currency.h"
+#include "gen/publiclang.h"
+#include "gen/s_sql.h"
 #include "widgets/s_colortabwidget.h"
 #include "widgets/s_statusbar.h"
-#include "gen/publiclang.h"
-#include "gen/client.h"
-#include "gen/s_sql.h"
+#include "widgets/s_tqlabel.h"
+#include "widgets/waitwidget.h"
 
 supik::supik()
 {
@@ -53,6 +55,8 @@ supik::supik()
     pf["TBExam"] = &supik::TBExam;
     pf["TBMain"] = &supik::TBMain;
     ErMsgNum = 0;
+    Currency cur;
+    cur.GetRates(Currency::GOOGLE);
 }
 
 void supik::showEvent(QShowEvent *event)
@@ -194,8 +198,8 @@ void supik::SetSupikMenuBar()
             }
         }
     }
-    SupikMenuBar->setStyleSheet("QMenuBar::item {background: " + QString (SUPIKMENUBAR_BG) + \
-                                ";} QMenuBar::item::selected {background: " + QString (SUPIKMENUBAR_ITEM_SELECTED) + ";}");
+    SupikMenuBar->setStyleSheet("QMenuBar::item {background: transparent;} " \
+                                "QMenuBar::item::selected {background: " + QString (SUPIKMENUBAR_ITEM_SELECTED) + ";}");
 
     setMenuBar(SupikMenuBar);
 }

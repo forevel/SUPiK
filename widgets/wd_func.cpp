@@ -230,6 +230,16 @@ void WDFunc::SetSPBData(QWidget *w, const QString &spbname, const double &spbval
     spb->setValue(spbvalue);
 }
 
+s_tqLabel *WDFunc::NewLBL(QWidget *parent, const QString &lblname, const QString &txt, QPixmap *pm)
+{
+    QScopedPointer<s_tqLabel> lbl(new s_tqLabel(parent));
+    lbl->setObjectName(lblname);
+    lbl->setText(txt);
+    if (pm != Q_NULLPTR)
+        lbl->setPixmap(*pm);
+    return lbl.take();
+}
+
 void WDFunc::SetLBLImage(QWidget *w, const QString &lblname, QPixmap *pm)
 {
     s_tqLabel *lbl = w->findChild<s_tqLabel *>(lblname);

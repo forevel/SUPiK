@@ -1,7 +1,7 @@
-#include "s_statusbar.h"
 #include <QPixmap>
 #include <QHBoxLayout>
 #include <QStyleOptionFrameV2>
+#include "s_statusbar.h"
 #include "s_tqlabel.h"
 #include "wd_func.h"
 
@@ -14,7 +14,9 @@ s_StatusBar::s_StatusBar(QWidget *parent) : QWidget(parent)
     Sna = new QPixmap(":/res/server_online_active.png");
     Snp = new QPixmap(":/res/server_online_passive.png");
     QHBoxLayout *hlyout = new QHBoxLayout;
-    hlyout->addStretch(600);
+    PRB = new s_tqProgressBar;
+    hlyout->addWidget(PRB);
+    hlyout->addStretch(100);
     s_tqLabel *lbl = new s_tqLabel;
     lbl->setObjectName("serverstatus");
     lbl->setPixmap(*Sf);
@@ -78,6 +80,16 @@ void s_StatusBar::SetStatusConnected()
     SetServerStatusOnline();
 }
 
+void s_StatusBar::SetProgressBarRange(quint64 max)
+{
+    PRB->setRange(0, max);
+}
+
+void s_StatusBar::SetProgressBarValue(quint64 value)
+{
+    PRB->setValue(value);
+}
+
 void s_StatusBar::SetServerStatusOffline()
 {
     WDFunc::SetLBLImage(this, "serverstatus", Sf);
@@ -86,4 +98,9 @@ void s_StatusBar::SetServerStatusOffline()
 void s_StatusBar::SetServerStatusOnline()
 {
     WDFunc::SetLBLImage(this, "serverstatus", Snp);
+}
+
+void s_StatusBar::SetProgressBarText(const QString &txt)
+{
+    PRB->setText(txt);
 }

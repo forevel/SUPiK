@@ -5,8 +5,8 @@
 #include <QPaintEvent>
 #include <QCloseEvent>
 #include <QResizeEvent>
-#include "gen/publicclass.h"
-#include "widgets/waitwidget.h"
+//#include "gen/publicclass.h"
+//#include "widgets/waitwidget.h"
 
 #define SUPIKMENUBAR_BG "transparent"
 #define SUPIKMENUBAR_ITEM_SELECTED "#EEEEEE"
@@ -19,7 +19,7 @@
 
 #define PROGVER    "2.1.52"
 
-#define SYSSTYLESHEET "background-image: url(:/res/SysWallpaper.png);"
+//#define SYSSTYLESHEET "background-image: url(:/res/SysWallpaper.png);"
 
 class supik : public QMainWindow
 {
@@ -38,6 +38,8 @@ private:
     int PingSecCounter, WarningActionIndex;
     QHash <QString, void (supik::*)()> pf;
     int ErMsgNum;
+    // базовой валютой назначаем наш родной рубль
+    double EURRate, USDRate, GBPRate, CHFRate, BYNRate, UAHRate;
 
     void SetSupikMenuBar();
     QMenu *AddChildToMenu(int);
@@ -47,6 +49,7 @@ private:
     int CheckForWidget (int);
     int CreateTab(quint32 access, QDialog *dlg, QString tabname, int tabtype);
 
+    void GetCurrencyRates();
     void SetSupikWindow();
     void ExitSupik ();
     void BackupDir();

@@ -238,6 +238,17 @@ void Wh_Editor::SetupUI()
 //    ChangeWh(cb->currentText());
 }
 
+void Wh_Editor::UpdateWhComboBox()
+{
+    QStringList vl;
+    QString table = "Склады размещение_полн";
+    QString field = "Наименование";
+    QString cmpfield = "ИД_а";
+    QString cmpvalue = "0";
+    tfl.GetValuesByColumnAndField(table, field, cmpfield, cmpvalue, vl);
+    WDFunc::SetCBList(this, "whcb", vl);
+}
+
 void Wh_Editor::OpenSpace()
 {
     bool ok;
@@ -497,15 +508,21 @@ void Wh_Editor::EditWarehouse()
     OpenSpace();
 }
 
-void Wh_Editor::UpdateWhComboBox()
+void Wh_Editor::CheckItem(WhPlacesModel::WhPlacesItem &item)
 {
+    // взять из БД информацию по количеству рядов и столбцов для данного элемента
+    QStringList fl = QStringList() << "Рядов" << "Столбцов";
     QStringList vl;
-    QString table = "Склады размещение_полн";
-    QString field = "Наименование";
-    QString cmpfield = "ИД_а";
-    QString cmpvalue = "0";
-    tfl.GetValuesByColumnAndField(table, field, cmpfield, cmpvalue, vl);
-    WDFunc::SetCBList(this, "whcb", vl);
+    tfl.valuesbyfield("Склады размещение_полн", fl, "ИД", item.Id, vl);
+    if ((tfl.result) || (vl.size() < 2))
+    {
+        WARNMSG("Ошибка получения данных из БД");
+        return;
+    }
+    // сравнить с текущими в item
+
+    // если стало больше, добавить в БД соответствующие поля
+    // если меньше - по каждой из освобождающихся ячеек сделать Disband
 }
 
 void Wh_Editor::WriteAndClose()

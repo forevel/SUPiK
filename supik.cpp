@@ -121,10 +121,10 @@ void supik::SetSupikWindow()
     pb->setObjectName("errorprotpb");
     upperLayout->addWidget(pb);
     upperLayout->addStretch(99);
+    upperLayout->addWidget(WDFunc::NewLBL(this, "currencies"), 0);
     s_tqLabel *datetime = new s_tqLabel;
     datetime->setObjectName("datetime");
     upperLayout->addWidget(datetime, 0);
-    upperLayout->addWidget(WDFunc::NewLBL(this, "currencies"), 0);
     pb = new s_tqPushButton;
     pb->setIcon(QIcon(":/res/cross.png"));
     connect(pb, SIGNAL(clicked()), this, SLOT(close()));
@@ -583,7 +583,8 @@ void supik::periodic1s()
         ++CurrCounter;
         if (CurrCounter >= CURNUM)
             CurrCounter = 0;
-        WDFunc::SetLBLText(this, "currencies", QString::number(Curr->Rates.at(CurrCounter), 'f', 3));
+        WDFunc::SetLBLText(this, "currencies", \
+                           "1 " + Curr->Curs()[CurrCounter] + " = " + QString::number(Curr->Rates.at(CurrCounter),'f', 3) + " " + Curr->GetBaseCurrency());
     }
     PeriodicOddSecond = !PeriodicOddSecond;
     pc.DateTime = QDateTime::currentDateTime().toString(DATETIMEFORMAT);

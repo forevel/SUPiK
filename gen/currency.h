@@ -44,6 +44,7 @@ public:
 
     void GetRates(int funcnum);
     void SetBaseCurrency(int Curr);
+    QString GetBaseCurrency();
     QList<double> Rates;
 
 private:

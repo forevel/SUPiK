@@ -520,7 +520,52 @@ void Wh_Editor::CheckItem(WhPlacesModel::WhPlacesItem &item)
         return;
     }
     // сравнить с текущими в item
-
+    bool ok;
+    int rows = vl.at(0).toInt(&ok);
+    if (ok)
+    {
+        int columns = vl.at(1).toInt(&ok);
+        if (ok)
+        {
+            if ((item.Rows == rows) && (item.Columns == columns))
+                return;
+            if (item.Rows < rows)
+            {
+                if (item.Columns <= columns) // добавили и рядов, и, возможно, столбцов
+                {
+                    // добавляем в БД записи для row = item.Rows...rows, columns=0...columns
+                    RangeAdd(item.Id, item.Rows, rows, 0, columns);
+                    // и в существующие записи для row = 0...item.Rows, columns = item.Columns...columns
+                    RangeAdd(item.Id, 0, item.Rows, item.Columns, columns);
+                }
+                else // добавили рядов и убрали столбцов
+                {
+                    // по ячейкам с индексом (row=0..item.Rows, column=columns...item.Columns) делаем Disband
+                    RangeDisband(item.Id, 0, item.Rows, columns, item.Columns);
+                    // по ячейкам (row=item.Rows...rows, column = 0...columns) делаем новые записи
+                    RangeAdd(item.Id, item.Rows, rows, 0, columns);
+                }
+            }
+            else // item.Rows >= rows
+            {
+                if (item.Columns <= columns) // добавили столбцов и, возможно, удалили рядов
+                {
+                    // добавляем в БД записи для row = item.Rows...rows, columns=0...columns
+                    RangeAdd(item.Id, item.Rows, rows, 0, columns);
+                    // и в существующие записи для row = 0...item.Rows, columns = item.Columns...columns
+                    RangeAdd(item.Id, 0, item.Rows, item.Columns, columns);
+                }
+                else // добавили и рядов, и столбцов
+                {
+                    // по ячейкам с индексом (row=0..item.Rows, column=columns...item.Columns) делаем Disband
+                    RangeDisband(item.Id, 0, item.Rows, columns, item.Columns);
+                    // по ячейкам (row=item.Rows...rows, column = 0...columns) делаем новые записи
+                    RangeAdd(item.Id, item.Rows, rows, 0, columns);
+                }
+            }
+        }
+    }
+    WARNMSG("Некорректное число рядов или столбцов в БД по индексу "+item.Id);
     // если стало больше, добавить в БД соответствующие поля
     // если меньше - по каждой из освобождающихся ячеек сделать Disband
 }
@@ -750,7 +795,7 @@ bool Wh_Editor::CheckPriorities(QString PlaceName)
     return true;
 }
 
-void Wh_Editor::Disband(int ID)
+void Wh_Editor::Disband(QString ID)
 {
     Q_UNUSED(ID);
     // сначала по ИД вытаскиваем элемент из модели

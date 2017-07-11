@@ -22,6 +22,11 @@ void Currency::SetBaseCurrency(int Curr)
     BaseCurrency = Curs()[Curr];
 }
 
+QString Currency::GetBaseCurrency()
+{
+    return BaseCurrency;
+}
+
 void Currency::GetSBRF()
 {
 
@@ -43,6 +48,11 @@ void Currency::GetGoogle()
     for (int i=0; i<Curs().keys().size(); ++i)
     {
         QString curstr = Curs()[Curs().keys().at(i)];
+        if (curstr == BaseCurrency)
+        {
+            Rates.replace(Curs().keys().at(i), 1.0); // курс валюты сам к себе равен единице
+            continue;
+        }
         QString Query = QueryPrefix + curstr + QuerySuffix;
         http->downloadFile(Query, tmpfile);
         DownloadLoop.exec();

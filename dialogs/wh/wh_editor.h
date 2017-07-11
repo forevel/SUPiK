@@ -94,7 +94,9 @@ private:
     void CheckItem(WhPlacesModel::WhPlacesItem &item); // проверка изменений по итему в БД и сравнение: если стало меньше, Disband, если больше - добавить поля в БД
 
     void UpdateWhComboBox();
-    void Disband(int ID); // расформирование единицы размещения
+    void RangeDisband(QString ID, int minrow, int maxrow, int mincol, int maxcol);
+    void RangeAdd(QString ID, int minrow, int maxrow, int mincol, int maxcol);
+    void Disband(QString ID); // расформирование единицы размещения
     void ClearLayout ();
     bool CheckPriorities (QString PlaceName);
     void PushItemStack(int row, int column);

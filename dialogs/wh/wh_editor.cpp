@@ -249,6 +249,23 @@ void Wh_Editor::UpdateWhComboBox()
     WDFunc::SetCBList(this, "whcb", vl);
 }
 
+void Wh_Editor::RangeDisband(QString ID, int minrow, int maxrow, int mincol, int maxcol)
+{
+    // из таблицы "Склады размещение" взять "ИД", "Ряд", "Столбец" всех элементов, для которых ИД_а равен ID (vl1)
+    // для каждой записи в vl1 из таблицы "Движение по складам" взять все элементы и их количества, у которых "Место на складе" равно ID (vl2)
+    // посчитать остатки каждого элемента по vl2, и для каждого элемента создать новую запись в "Движение по складам", где "Место на складе" равно нулю (общая "куча")
+    // обновить срез текущих остатков по данному ID в таблице "Склады срез остатков"
+}
+
+void Wh_Editor::RangeAdd(QString ID, int minrow, int maxrow, int mincol, int maxcol)
+{
+    // для каждого ряда от minrow до maxrow (row)
+    // для каждого столбца от mincol до maxcol (column)
+    // проверить наличие записи в таблице "Склады размещение", где "ИД_а" равно ID, "Ряд" равен row и "Столбец" равен column
+    // если нет записи, создать её со ссылкой на пустое место размещения ("Ёмкость размещения" = 8),
+    // "Обозначение" = "A"+row, column, "ИД_а" = ID
+}
+
 void Wh_Editor::OpenSpace()
 {
     bool ok;
@@ -550,17 +567,16 @@ void Wh_Editor::CheckItem(WhPlacesModel::WhPlacesItem &item)
             {
                 if (item.Columns <= columns) // добавили столбцов и, возможно, удалили рядов
                 {
-                    // добавляем в БД записи для row = item.Rows...rows, columns=0...columns
-                    RangeAdd(item.Id, item.Rows, rows, 0, columns);
-                    // и в существующие записи для row = 0...item.Rows, columns = item.Columns...columns
-                    RangeAdd(item.Id, 0, item.Rows, item.Columns, columns);
+                    // добавляем в БД записи для row = 0...rows, columns=item.Columns...columns
+                    RangeAdd(item.Id, 0, rows, item.Columns, columns);
+                    // удаляем записи для row = rows...item.Rows, columns=0...item.Columns
+                    RangeDisband(item.Id, rows, item.Rows, 0, item.Columns);
                 }
-                else // добавили и рядов, и столбцов
+                else // удалили и ряды, и столбцы
                 {
-                    // по ячейкам с индексом (row=0..item.Rows, column=columns...item.Columns) делаем Disband
-                    RangeDisband(item.Id, 0, item.Rows, columns, item.Columns);
-                    // по ячейкам (row=item.Rows...rows, column = 0...columns) делаем новые записи
-                    RangeAdd(item.Id, item.Rows, rows, 0, columns);
+                    // делаем Disband
+                    RangeDisband(item.Id, 0, rows, columns, item.Columns);
+                    RangeDisband(item.Id, rows, item.Rows, 0, item.Columns);
                 }
             }
         }

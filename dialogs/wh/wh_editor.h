@@ -115,6 +115,7 @@ private slots:
 
 protected:
     void paintEvent(QPaintEvent *);
+    void closeEvent(QCloseEvent *);
 };
 
 #endif // WH_EDITOR_H

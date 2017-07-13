@@ -14,7 +14,10 @@ Currency::Currency(QObject *parent) : QObject(parent)
 
 void Currency::GetRates(int funcnum)
 {
+    // проверить наличие курсов валют на текущую дату в БД
+    // вызвать соответствующую функцию получения данных по валютам
     (this->*RateFunctions()[funcnum])();
+    // сделать запись по курсам валют в таблицу "Валюты движения"
 }
 
 void Currency::SetBaseCurrency(int Curr)
@@ -56,7 +59,7 @@ void Currency::GetGoogle()
         QString Query = QueryPrefix + curstr + QuerySuffix;
         http->downloadFile(Query, tmpfile);
         DownloadLoop.exec();
-        QRegExp pattern("<div id=currency_converter_result>1 "+curstr+" = <span class=bld>(.*) RUB</span>");
+        QRegExp pattern("<div id=currency_converter_result>1 "+curstr+" = <span class=bld>(.*) "+BaseCurrency+"</span>");
         Files file;
         QFile *fp = file.openFileForRead(tmpfile);
         if (fp == Q_NULLPTR)

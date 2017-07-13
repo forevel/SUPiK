@@ -104,9 +104,11 @@ int WhPlacesModel::Save()
     while (Items.size())
     {
         WhPlacesItem item = Items.takeAt(0);
-        QStringList fl = QStringList() << "ИД" << "Наименование" << "Обозначение" << "Ёмкость размещения" << "Ряд" << "Столбец" << "Рядов" << "Столбцов";
-        QStringList vl = QStringList() << item.Id << item.Description << item.Name << QString::number(item.PictureIndex) << \
-                                          QString::number(item.Row) << QString::number(item.Column) << QString::number(item.Rows) << QString::number(item.Columns);
+        QStringList fl = QStringList() << "ИД" << "ИД_а" << "Наименование" << "Обозначение" << "Ёмкость размещения" << \
+                                          "Ряд" << "Столбец" << "Рядов" << "Столбцов";
+        QStringList vl = QStringList() << item.Id << QString::number(RootID) << item.Description << item.Name << \
+                                          QString::number(item.PictureIndex) << QString::number(item.Row) << \
+                                          QString::number(item.Column) << QString::number(item.Rows) << QString::number(item.Columns);
         tfl.Update("Склады размещение_полн", fl, vl);
         if (tfl.result != RESULTOK)
             WARNMSG("Ошибка при обновлении данных, ИД=" + item.Id);
@@ -176,6 +178,11 @@ void Wh_Editor::paintEvent(QPaintEvent *e)
     QPainter painter(this);
     painter.drawPixmap(rect(), QPixmap(":/res/WhWallpaper.png"));
     e->accept();
+}
+
+void Wh_Editor::closeEvent(QCloseEvent *)
+{
+    CheckChanges();
 }
 
 void Wh_Editor::SetupUI()
@@ -398,8 +405,8 @@ s_tqScrollArea *Wh_Editor::SetupCells()
                 // создать новое пустое размещение с родителем idalias = CurID
                 ModelItem.Description = "";
                 ModelItem.Name = QString::number(i+10, 36).toUpper()+QString::number(j+1);
-                tfl.NewID("Склады размещение_полн", tmps);
-                ModelItem.Id = tmps.toInt();
+                tfl.Insert("Склады размещение_полн", ModelItem.Id);
+//                ModelItem.Id = tmps.toInt();
                 ModelItem.PictureIndex = 0;
                 ModelItem.Priority = 0;
                 ModelItem.Row = i;
@@ -407,7 +414,7 @@ s_tqScrollArea *Wh_Editor::SetupCells()
                 ModelItem.Rows = 0;
                 ModelItem.Columns = 0;
                 WhModel->InsertItem(ModelItem);
-                SomethingChanged = true; // добавили элемент, которого нет в БД, надо записать в будущем
+                SomethingChanged = true; // записать при выходе информацию о размещении
             }
             if (ModelItem.PictureIndex != 0) // не пустое место размещения
             {

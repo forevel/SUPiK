@@ -61,6 +61,7 @@ private:
     void GetSBRF();
     void GetEURCB();
     void GetGoogle();
+    void SaveRates();
 };
 
 #endif // CURRENCY_H

@@ -209,7 +209,7 @@ bool PersDialog::Fill()
 {
     QStringList fl = QStringList() << "Полные ФИО" << "Дата рождения" << "Должность";
     QStringList vl;
-    tfl.valuesbyfield("Персонал_полн", fl, "ИД", idPers, vl);
+    tfl.GetValuesByField("Персонал_полн", fl, "ИД", idPers, vl);
     if ((tfl.result != TFRESULT_NOERROR) || (vl.size() < 3))
     {
         WARNMSG("");
@@ -230,7 +230,7 @@ bool PersDialog::Fill()
             QStringList headers = QStringList() << "Группа" << "Дата профосмотра" << "Дата ПБ" << "Дата ОТ" << "ИД";
             QStringList sl;
             QString TBGroup, PO, PB, OT;
-            tfl.valuesbyfield(table, headers, "ИД сотрудника", idPers, sl);
+            tfl.GetValuesByField(table, headers, "ИД сотрудника", idPers, sl);
             if ((tfl.result != TFRESULT_NOERROR) || (sl.size() < 5))
             {
                 WARNMSG("Bad tfl result");

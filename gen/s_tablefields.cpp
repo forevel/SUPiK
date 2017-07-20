@@ -348,15 +348,20 @@ void s_TableFields::idtov(const QString &links, const QString &id, QString &out)
         }
         case FW_BOOL:
         {
-            bool ok;
-            int tmpb = id.toInt(&ok);
-            if (!ok)
+            if (id.isEmpty())
+                out = "0";
+            else
             {
-                result = TFRESULT_ERROR;
-                DBGMSG;
-                return;
+                bool ok;
+                int tmpb = id.toInt(&ok);
+                if (!ok)
+                {
+                    result = TFRESULT_ERROR;
+                    DBGMSG;
+                    return;
+                }
+                out = (tmpb == 0) ? "0" : "1";
             }
-            out = (tmpb == 0) ? "0" : "1";
             break;
         }
         case FW_CRYPT:
@@ -1118,65 +1123,37 @@ bool s_TableFields::Check(const QString &tble, const QString &cmpfield, const QS
     }
 }
 
-void s_TableFields::valuesbyfield(const QString &tble, QStringList &fl, const QString &cmpfield, const QString &cmpvalue, QStringList &out, bool Warn)
+void s_TableFields::GetValuesByField(const QString &tble, QStringList &fl, const QString &cmpfield, const QString &cmpvalue, QStringList &out, bool Warn)
 {
-    valuesbyfields(tble, fl, QStringList(cmpfield), QStringList(cmpvalue), out, Warn);
-/*    QStringList sl;
-    out.clear();
-    result = TFRESULT_NOERROR;
-    if (pc.AutonomousMode)
-    {
-        tfl.TableFields(tble,cmpfield, sl);
-        if (result)
-        {
-            WARNMSG("");
-            return;
-        }
-        QString cmpdb = sl.at(0).split(".").at(0); // реальное имя БД
-        QString cmptble = sl.at(0).split(".").at(1); // реальное название таблицы
-        QString realcmpfield = sl.at(1); // реальное название поля сравнения
-        for (int i = 0; i < fl.size(); i++)
-        {
-            QString field = fl.at(i);
-            TableFields(tble,field, sl);
-            if (result)
-            {
-                WARNMSG("");
-                return;
-            }
-            fl.replace(i, sl.at(1)); // заменяем русское наименование поля на его реальное название
-        }
-        out = sqlc.GetValuesFromTableByField(cmpdb,cmptble,fl,realcmpfield,cmpvalue);
-        if ((sqlc.result) && (Warn))
-        {
-            WARNMSG(sqlc.LastError);
-            result = TFRESULT_ERROR;
-            return;
-        }
-    }
-    else
-    {
-        sl << QString::number(fl.size()) << "1" << tble << fl << cmpfield << cmpvalue;
-        int res = Cli->SendAndGetResult(T_GVSBFS, sl);
-        if (res == Client::CLIER_EMPTY)
-            result = TFRESULT_EMPTY;
-        else if ((res != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
-            result = TFRESULT_ERROR;
-        else
-            out = Cli->Result.at(0);
-    } */
+    GetValuesByFields(tble, fl, QStringList(cmpfield), QStringList(cmpvalue), out, Warn);
 }
 
-void s_TableFields::valuesbyfields(const QString &tble, QStringList &fl, QStringList &cmpfields, QStringList &cmpvalues, QStringList &out, bool Warn)
+void s_TableFields::GetValuesByFields(const QString &tble, QStringList &fl, QStringList &cmpfields, QStringList &cmpvalues, QStringList &out, bool Warn)
 {
     Q_UNUSED(Warn);
     QList<QStringList> lsl;
-    valuesbyfieldsmatrix(tble, fl, cmpfields, cmpvalues, lsl);
+    GetValuesByFieldsMatrix(tble, fl, cmpfields, cmpvalues, lsl);
     if (result == TFRESULT_NOERROR)
         out = lsl.at(0);
 }
 
-void s_TableFields::valuesbyfieldsmatrix(const QString &tble, QStringList &fl, QStringList &cmpfields, QStringList &cmpvalues, QList<QStringList> &out)
+void s_TableFields::GetValueByField(const QString &tble, const QString &field, const QString &cmpfield, const QString &cmpvalue, QString &out)
+{
+    QStringList sl;
+    GetValuesByField(tble, QStringList(field), cmpfield, cmpvalue, sl);
+    if (!sl.isEmpty())
+        out = sl.at(0);
+}
+
+void s_TableFields::GetValueByFields(const QString &tble, const QString &field, QStringList &cmpfields, QStringList &cmpvalues, QString &out)
+{
+    QStringList sl;
+    GetValuesByFields(tble, QStringList(field), cmpfields, cmpvalues, sl);
+    if (!sl.isEmpty())
+        out = sl.at(0);
+}
+
+void s_TableFields::GetValuesByFieldsMatrix(const QString &tble, QStringList &fl, QStringList &cmpfields, QStringList &cmpvalues, QList<QStringList> &out)
 {
     QStringList cmpfl, sl;
     out.clear();
@@ -1215,7 +1192,6 @@ void s_TableFields::valuesbyfieldsmatrix(const QString &tble, QStringList &fl, Q
         QString cmpdb = sl.at(0).split(".").at(0); // реальное имя БД
         QString cmptble = sl.at(0).split(".").at(1); // реальное название таблицы
         out = sqlc.GetMoreValuesFromTableByFields(cmpdb,cmptble,fl,cmpfl,cmpvalues);
-//        if ((sqlc.result) && (Warn))
         if (sqlc.result)
         {
             WARNMSG(sqlc.LastError);

@@ -90,7 +90,7 @@ void dir_adddialog::setupUI()
     le->setObjectName("dirAlias");
     connect(le, SIGNAL(editingFinished()), this, SLOT(transliteDirName()));
     dlg1Layout->addWidget(le, 0, 1);
-    lbl = new s_tqLabel("Количество полей (исключая id и deleted, но включая idpers и date)");
+    lbl = new s_tqLabel("Количество полей");
     spb = WDFunc::NewSPB(this, "dirFieldNum", 1, FSIZE, 1, 0);
     WDFunc::SetSPBData(this, "dirFieldNum", 1);
     connect(spb, SIGNAL(valueChanged(double)), this, SLOT(updateTWFields(double)));
@@ -748,7 +748,7 @@ void dir_adddialog::fillFields()
         QStringList values;
         QString table = dirtype+"_полн";
         QString field = "Наименование";
-        tfl.valuesbyfield(table,fields,field,tmpdir, values);
+        tfl.GetValuesByField(table,fields,field,tmpdir, values);
         if (tfl.result == TFRESULT_ERROR)
         {
             WARNMSG("");

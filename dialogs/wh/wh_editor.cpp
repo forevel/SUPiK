@@ -68,7 +68,7 @@ int WhPlacesModel::SetupModel(int rootid)
     QStringList cmpfields = QStringList() << "ИД_а";
     QStringList cmpvalues = QStringList() << QString::number(RootID);
     QList<QStringList> lsl;
-    tfl.valuesbyfieldsmatrix("Склады размещение_полн", fl, cmpfields, cmpvalues, lsl);
+    tfl.GetValuesByFieldsMatrix("Склады размещение_полн", fl, cmpfields, cmpvalues, lsl);
     if (tfl.result == TFRESULT_ERROR)
         return RESULTBAD;
     while (lsl.size() > 0)
@@ -87,7 +87,7 @@ int WhPlacesModel::SetupModel(int rootid)
         item.Columns = tmpsl.at(7).toInt();
         if (item.PictureIndex != 0) // не склад и не пустое место размещения
         {
-            tfl.valuesbyfield("Склады ёмкости размещения_полн", QStringList("Приоритет вложенности"), "ИД", QString::number(item.PictureIndex), tmpsl);
+            tfl.GetValuesByField("Склады ёмкости размещения_полн", QStringList("Приоритет вложенности"), "ИД", QString::number(item.PictureIndex), tmpsl);
             if ((tfl.result == TFRESULT_NOERROR) && !tmpsl.isEmpty())
                 item.Priority = tmpsl.at(0).toInt();
             else item.Priority = WRONGNUM;
@@ -197,12 +197,12 @@ void Wh_Editor::SetupUI()
     pb->setToolTip("Создать новый склад");
     hlyout->addWidget(pb);
     hlyout->addSpacing(5);
-/*    pb = new s_tqPushButton;
+    pb = new s_tqPushButton;
     pb->setIcon(QIcon(":/res/whPB-red.png"));
     connect(pb, SIGNAL(clicked()), this, SLOT(DeleteWh()));
     pb->setToolTip("Расформировать и удалить склад");
     hlyout->addWidget(pb);
-    hlyout->addSpacing(5); */
+    hlyout->addSpacing(5);
     pb = new s_tqPushButton;
     pb->setIcon(QIcon(":/res/cross.png"));
     connect(pb, SIGNAL(clicked()), this, SLOT(close()));
@@ -317,7 +317,7 @@ void Wh_Editor::OpenSpace()
         {
             QStringList tmpsl;
             QStringList sl = QStringList() << "Наименование" << "Обозначение" << "ИД_а";
-            tfl.valuesbyfield("Склады размещение_полн", sl, "ИД", Id, tmpsl);
+            tfl.GetValuesByField("Склады размещение_полн", sl, "ИД", Id, tmpsl);
             if ((tfl.result) || (tmpsl.size()<3))
             {
                 WARNMSG("");
@@ -504,6 +504,12 @@ void Wh_Editor::AddNewWh()
     UpdateWhComboBox();
 }
 
+void Wh_Editor::DeleteWh()
+{
+    // идти по всему дереву, корнем которого является склад с текущим ItemStack.last().Id
+    // для каждого элемента сделать Disband(Id) и удалить его
+}
+
 void Wh_Editor::EditPlace()
 {
     QStringList sl = sender()->objectName().split(".");
@@ -537,7 +543,7 @@ void Wh_Editor::CheckItem(WhPlacesModel::WhPlacesItem &item)
     // взять из БД информацию по количеству рядов и столбцов для данного элемента
     QStringList fl = QStringList() << "Рядов" << "Столбцов";
     QStringList vl;
-    tfl.valuesbyfield("Склады размещение_полн", fl, "ИД", item.Id, vl);
+    tfl.GetValuesByField("Склады размещение_полн", fl, "ИД", item.Id, vl);
     if ((tfl.result) || (vl.size() < 2))
     {
         WARNMSG("Ошибка получения данных из БД");
@@ -630,7 +636,7 @@ void Wh_Editor::ChangeWh(QString str)
     QString table = "Склады размещение_полн";
     QStringList fields = QStringList() << "ИД" << "Рядов" << "Столбцов";
     QString field = "Наименование";
-    tfl.valuesbyfield(table, fields, field, str, PlaceID, false);
+    tfl.GetValuesByField(table, fields, field, str, PlaceID, false);
     if ((tfl.result == TFRESULT_ERROR) || (PlaceID.size() < 3))
     {
         WARNMSG("");
@@ -710,7 +716,7 @@ void Wh_Editor::ChangePlace(QVariant PlaceName)
     QStringList fields = QStringList("Наименование");
     QString field = "ИД";
     QString value = QString::number(item->Id);
-    tfl.valuesbyfield(table, fields, field, value, PlaceType, false);
+    tfl.GetValuesByField(table, fields, field, value, PlaceType, false);
     if (!PlaceType.isEmpty()) // есть такое размещение
     {
         if (PlaceType.at(0).toInt() != 0) // непустое размещение
@@ -739,7 +745,7 @@ void Wh_Editor::ChangePlace(QVariant PlaceName)
     fields = QStringList("ИД");
     field = "Наименование";
     value = PlaceName.toString();
-    tfl.valuesbyfield(table, fields, field, value, vl);
+    tfl.GetValuesByField(table, fields, field, value, vl);
     if (tfl.result == TFRESULT_ERROR)
     {
         WARNMSG("");
@@ -760,7 +766,7 @@ bool Wh_Editor::CheckPriorities(QString PlaceName)
     QString table = "Склады типы размещения_полн";
     QStringList fields = QStringList("Тип размещения");
     QString field = "Наименование";
-    tfl.valuesbyfield(table, fields, field, PlaceName, vl);
+    tfl.GetValuesByField(table, fields, field, PlaceName, vl);
     if ((tfl.result == TFRESULT_ERROR) || (vl.size() < 1))
     {
         WARNMSG("");
@@ -770,7 +776,7 @@ bool Wh_Editor::CheckPriorities(QString PlaceName)
     fields = QStringList("Приоритет вложенности");
     field = "ИД";
     QString value = vl.at(0);
-    tfl.valuesbyfield(table, fields, field, value, vl);
+    tfl.GetValuesByField(table, fields, field, value, vl);
     if ((tfl.result == TFRESULT_ERROR) || (vl.size() < 1))
     {
         WARNMSG("");
@@ -783,7 +789,7 @@ bool Wh_Editor::CheckPriorities(QString PlaceName)
     table = "Склады размещение_полн";
     fields = QStringList("Тип размещения");
     value = QString::number(IdAlias);
-    tfl.valuesbyfield(table,fields,field,value, vl);
+    tfl.GetValuesByField(table,fields,field,value, vl);
     if ((tfl.result == TFRESULT_ERROR) || (vl.size() < 1))
     {
         WARNMSG("");
@@ -791,7 +797,7 @@ bool Wh_Editor::CheckPriorities(QString PlaceName)
     }
     table = "Склады типы размещения_полн";
     value = vl.at(0);
-    tfl.valuesbyfield(table, fields, field, value, vl);
+    tfl.GetValuesByField(table, fields, field, value, vl);
     if ((tfl.result == TFRESULT_ERROR) || (vl.size() < 1))
     {
         WARNMSG("");
@@ -800,7 +806,7 @@ bool Wh_Editor::CheckPriorities(QString PlaceName)
     table = "Склады ёмкости размещения_полн";
     fields = QStringList("Приоритет вложенности");
     value = vl.at(0);
-    tfl.valuesbyfield(table, fields, field, value, vl);
+    tfl.GetValuesByField(table, fields, field, value, vl);
     if ((tfl.result == TFRESULT_ERROR) || (vl.size() < 1))
     {
         WARNMSG("");

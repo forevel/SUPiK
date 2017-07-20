@@ -113,13 +113,13 @@ void tb_maindialog::Refresh()
 void tb_maindialog::ShowPersDlg()
 {
     QStringList IdPers, IdTBPers;
-    tfl.valuesbyfield("Персонал_полн", QStringList("ИД"), "ФИО", Pers, IdPers);
+    tfl.GetValuesByField("Персонал_полн", QStringList("ИД"), "ФИО", Pers, IdPers);
     if ((tfl.result != TFRESULT_NOERROR) || (IdPers.isEmpty()))
     {
         WARNMSG("Ошибка обработки или пустой результат");
         return;
     }
-    tfl.valuesbyfield("Персонал_ТБ_полн", QStringList("ИД"), "ИД сотрудника", IdPers.at(0), IdTBPers);
+    tfl.GetValuesByField("Персонал_ТБ_полн", QStringList("ИД"), "ИД сотрудника", IdPers.at(0), IdTBPers);
     if ((tfl.result != TFRESULT_ERROR) && (!IdTBPers.isEmpty()) && (Mode == MODE_EDITNEW)) // если такой сотрудник уже есть в списке
         Mode = MODE_EDIT;
     else if (tfl.result == TFRESULT_ERROR)
@@ -172,7 +172,7 @@ void tb_maindialog::SetPers(const QString &pers)
 void tb_maindialog::SetupModel()
 {
     int i;
-    WaitWidget *w = new WaitWidget;
+    QScopedPointer<WaitWidget> w(new WaitWidget);
     w->Start();
     w->SetMessage("Подготовка таблицы: база...");
     QStringList PersIds, FIOs, TBGroups, POs, PBs, OTs;
@@ -191,8 +191,8 @@ void tb_maindialog::SetupModel()
     if (PersIds.empty())
     {
         WARNMSG("Список пуст");
-        w->Stop();
-        delete w;
+/*        w->Stop();
+        delete w; */
         return;
     }
     table = "Персонал_полн";
@@ -215,8 +215,8 @@ void tb_maindialog::SetupModel()
     if ((TBGroups.size() < PIDSize) || (POs.size() < PIDSize) || (OTs.size() < PIDSize) || (PBs.size() < PIDSize))
     {
         WARNMSG("Размеры не совпадают");
-        w->Stop();
-        delete w;
+/*        w->Stop();
+        delete w; */
         return;
     }
     // заполняем таблицу
@@ -245,8 +245,8 @@ void tb_maindialog::SetupModel()
         else
             SetMainModelData(row, 2, TB_NODATA, CList.at(TBDATE_BAD));
     }
-    w->Stop();
-    delete w;
+/*    w->Stop();
+    delete w; */
 }
 
 void tb_maindialog::SetMainModelData(int row, int column, const QString &data, const QColor &color)

@@ -167,7 +167,7 @@ void dir_maindialog::ShowSlaveTree(QString str)
     fields << "Наименование" << "Родительский справочник" << "Права доступа";
     QString table = MainTable+"_полн";
     QString cmpfield = "Наименование";
-    tfl.valuesbyfield(table,fields,cmpfield,str, values);
+    tfl.GetValuesByField(table,fields,cmpfield,str, values);
     if (tfl.result != TFRESULT_ERROR)
     {
         if (values.size() < 3)

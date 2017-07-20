@@ -46,16 +46,12 @@ public:
     int SetupModel(int rootid);
     int Save(); // сохранить информацию о месте размещения в БД
     void ClearModel();
-//    QList<int> Children(int Index); // выдать индексы всех дочерних элементов для данного элемента
-//    int Find(quint8 mask, QStringList cmpvl); // инициировать поиск элемента, у которого элементы с номерами по маске mask равны элементам списка cmpvl. Mask начинается с элемента Alias (не с Id!)
-//    WhPlacesTreeItem *Next(); // продолжить поиск после Find (или перебрать все элементы с начала)
 
 private:
     QList <WhPlacesItem> Items;
     int RootID;
 
     int Build();
-//    void AddItem (QStringList sl);
 };
 
 class Wh_Editor : public QDialog
@@ -110,6 +106,7 @@ private slots:
     void CancelAndClose();
     void ChangeWh(QString);
     void AddNewWh();
+    void DeleteWh();
     void EditPlace();
     void EditWarehouse(); // редактировать информацию о складе
 

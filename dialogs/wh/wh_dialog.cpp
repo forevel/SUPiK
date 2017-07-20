@@ -674,6 +674,7 @@ void wh_dialog::dateChoosed(QDate dte)
 void wh_dialog::CBChanged(QWidget *wdgt)
 {
     Q_UNUSED(wdgt);
+    // таблицы periodic больше нет! Пользоваться таблицей [Валюты движения]
 /*    QComboBox *cb = static_cast<QComboBox *>(wdgt);
     if (mainmodel->headerData(mainTV->currentIndex().column(), Qt::Horizontal, Qt::DisplayRole) == "Валюта")
     {

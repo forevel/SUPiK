@@ -358,7 +358,7 @@ QList<s_tqScrollArea *> tb_examdialog::PrepareQuestionsByTheme(int theme, int qu
         QStringList mainvl;
         QString table = "Экзамен ТБ_полн";
         QString field = "ИД";
-        tfl.valuesbyfield(table, mainfl, field, AnotherID, mainvl);
+        tfl.GetValuesByField(table, mainfl, field, AnotherID, mainvl);
         if ((tfl.result == TFRESULT_ERROR) || (mainvl.size() < 9))
         {
             WARNMSG("");

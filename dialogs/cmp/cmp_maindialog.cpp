@@ -120,7 +120,7 @@ void cmp_maindialog::SetupUI(int CompType, int CompTable, int CompID)
     QString table, idfield;
     table = sl.at(CompType)+"Компоненты_описание_полн";
     idfield = "ИД";
-    tfl.valuesbyfield(table,fl,idfield,QString::number(CompTable), tblesl);
+    tfl.GetValuesByField(table,fl,idfield,QString::number(CompTable), tblesl);
     if ((tfl.result == TFRESULT_ERROR) || (tblesl.size() < 3))
     {
         WARNMSG("");
@@ -739,7 +739,7 @@ QStringList cmp_maindialog::GetAltData()
     QString table = "Единицы измерения_полн";
     QStringList idf = QStringList("ИД");
     QString cmpfield = "Наименование";
-    tfl.valuesbyfield(table,idf,cmpfield,CBData("par0le"), sl);
+    tfl.GetValuesByField(table,idf,cmpfield,CBData("par0le"), sl);
     if (sl.size() > 0)
         vl.append(sl.at(0)); // Unit = 28
     else

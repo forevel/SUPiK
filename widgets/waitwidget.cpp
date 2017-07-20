@@ -31,7 +31,8 @@ WaitWidget::WaitWidget(QWidget *parent) : QWidget(parent)
 
 WaitWidget::~WaitWidget()
 {
-
+/*    if (!Finished)
+        Stop();*/
 }
 
 void WaitWidget::Start()
@@ -45,14 +46,6 @@ void WaitWidget::Start()
     tmrsec->setInterval(1000);
     connect(tmrsec,SIGNAL(timeout()),this,SLOT(SecondsPlusPlus()));
     tmrsec->start();
-/*    QTime tme;
-    while (!Finished)
-    {
-        tme.start();
-        while (tme.elapsed() < 100)
-            qApp->processEvents();
-    }
-    emit finished(); */
 }
 
 void WaitWidget::Stop()

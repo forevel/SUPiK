@@ -175,7 +175,7 @@ void cmp_compdialog::MainItemChoosed(QModelIndex idx)
     QStringList sl;
     QString table = CompLetter+"Компоненты_описание_полн";
     QString field = "ИД";
-    tfl.valuesbyfield(table,fl,field,tvid,sl); // взяли имя таблицы в БД, описание которой выбрали в главной таблице
+    tfl.GetValuesByField(table,fl,field,tvid,sl); // взяли имя таблицы в БД, описание которой выбрали в главной таблице
     if (tfl.result != TFRESULT_NOERROR)
     {
         QApplication::restoreOverrideCursor();
@@ -251,7 +251,7 @@ void cmp_compdialog::AddNewItem()
     QStringList sl;
     QString table = CompLetter+"Компоненты_описание_полн";
     QString field = "ИД";
-    tfl.valuesbyfield(table,fl,field,tmps, sl); // взяли имя таблицы в БД, описание которой выбрали в главной таблице
+    tfl.GetValuesByField(table,fl,field,tmps, sl); // взяли имя таблицы в БД, описание которой выбрали в главной таблице
     if (tfl.result == TFRESULT_ERROR)
     {
         WARNMSG("");
@@ -322,7 +322,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
     if (vl.size()>1)
     {
         value = vl.at(1);
-        tfl.valuesbyfield(table,fl,field,value, cmpvl); // в cmpvl один нулевой элемент - индекс производителя
+        tfl.GetValuesByField(table,fl,field,value, cmpvl); // в cmpvl один нулевой элемент - индекс производителя
     }
     else
     {
@@ -340,13 +340,13 @@ void cmp_compdialog::CheckNkAndAdd(int id)
     cmpvl.insert(0, vl.at(0)); // вставка перед производителем наименования компонента
     table = "Номенклатура_полн";
     QStringList nkidsl;
-    tfl.valuesbyfields(table,fl,cmpfl,cmpvl, nkidsl);
+    tfl.GetValuesByFields(table,fl,cmpfl,cmpvl, nkidsl);
     QString tmps;
     QString ManufId = cmpvl.at(1);
     if ((tfl.result == TFRESULT_ERROR) || (nkidsl.isEmpty())) // нет такого или ошибка
     {
         table = "Номенклатура карантин_полн";
-        tfl.valuesbyfields(table,fl,cmpfl,cmpvl, nkidsl);
+        tfl.GetValuesByFields(table,fl,cmpfl,cmpvl, nkidsl);
         if (nkidsl.isEmpty())
         {
             // создаём новый элемент в БД карантинной номенклатуры
@@ -359,7 +359,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
             QStringList sl;
             table = CompLetter+"Компоненты_описание_полн";
             field = "ИД";
-            tfl.valuesbyfield(table,fl,field,tmps, sl); // взяли имя таблицы в БД, описание которой выбрали в главной таблице
+            tfl.GetValuesByField(table,fl,field,tmps, sl); // взяли имя таблицы в БД, описание которой выбрали в главной таблице
             if (tfl.result == TFRESULT_ERROR)
             {
                 WARNMSG("");
@@ -376,7 +376,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
             }
             table = "Категории_сокращ";
             field = "Наименование";
-            tfl.valuesbyfield(table,fl,field,tmps, sl);
+            tfl.GetValuesByField(table,fl,field,tmps, sl);
             if ((tfl.result == TFRESULT_ERROR) || (sl.isEmpty()))
             {
                 WARNMSG("");
@@ -420,7 +420,7 @@ void cmp_compdialog::CheckNkAndAdd(int id)
         table = "Номенклатура_полн";
         field = "ИД";
         value = nkidsl.at(0);
-        tfl.valuesbyfield(table,sl,field,value,vl);
+        tfl.GetValuesByField(table,sl,field,value,vl);
         if ((tfl.result == TFRESULT_ERROR) || (vl.size()<8))
         {
             WARNMSG("");

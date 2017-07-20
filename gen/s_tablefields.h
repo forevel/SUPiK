@@ -36,9 +36,11 @@ public:
     void TableHeaders(const QString &tble, QStringList &out);
     void tablelinks(const QString &tble, QStringList &out);
     bool tableistree (const QString &tble);
-    void valuesbyfield(const QString &tble, QStringList &fl, const QString &cmpfield, const QString &cmpvalue, QStringList &out, bool Warn=true);
-    void valuesbyfields(const QString &tble, QStringList &fl, QStringList &cmpfields, QStringList &cmpvalues, QStringList &out, bool Warn=true);
-    void valuesbyfieldsmatrix(const QString &tble, QStringList &fl, QStringList &cmpfields, QStringList &cmpvalues, QList<QStringList> &out);
+    void GetValuesByField(const QString &tble, QStringList &fl, const QString &cmpfield, const QString &cmpvalue, QStringList &out, bool Warn=true);
+    void GetValuesByFields(const QString &tble, QStringList &fl, QStringList &cmpfields, QStringList &cmpvalues, QStringList &out, bool Warn=true);
+    void GetValueByField(const QString &tble, const QString &field, const QString &cmpfield, const QString &cmpvalue, QString &out);
+    void GetValueByFields(const QString &tble, const QString &field, QStringList &cmpfields, QStringList &cmpvalues, QString &out);
+    void GetValuesByFieldsMatrix(const QString &tble, QStringList &fl, QStringList &cmpfields, QStringList &cmpvalues, QList<QStringList> &out);
     void TableColumn(const QString &tble, const QString &field, QStringList &out); // взять значения поля field, где tablename=tble
 
     int result;

@@ -61,7 +61,7 @@ Client::Client(QObject *parent) : QObject(parent)
     CmdMap.insert(M_GETFILEI, {"M_GETFILEINF", 3, "M:", RESULT_VECTOR, false, false}); // 0 - type, 1 - subtype, 2 - filename
     InitiateTimers();
     connect(this,SIGNAL(CommandFinished()),&CommandFinishedLoop,SLOT(quit()));
-    connect(TimeoutTimer,SIGNAL(timeout()),&CommandFinishedLoop,SLOT(quit()));
+//    connect(TimeoutTimer,SIGNAL(timeout()),&CommandFinishedLoop,SLOT(quit()));
 }
 
 Client::~Client()
@@ -325,13 +325,13 @@ void Client::SendCmd(int command, QStringList &args)
     default:
         break;
     }
-    EthStatus.setCommandActive();
     if (command == M_ANSLOGIN)
         CliLog->info(">"+Pers);
     else
         CliLog->info(">"+CommandString);
     QByteArray ba = CommandString.toUtf8();
     MainEthernet->WriteData(ba);
+    EthStatus.setCommandActive();
 #ifndef DEBUGISON
     TimeoutTimer->start();
 #endif
@@ -419,7 +419,8 @@ void Client::ParseReply(QByteArray ba)
         {
 #ifndef DEBUGISON
             TimeoutTimer->start();
-#endif            if (!WaitActive)
+#endif
+            if (!WaitActive)
             {
                 emit WaitStarted();
                 WaitActive = true;
@@ -545,6 +546,8 @@ void Client::ParseReply(QByteArray ba)
             RcvDataSize += tmps.size() + 1; // to substract the size with token at the following line
             NextActive = true;
         }
+//        if (RcvDataSize >= 685)
+//            WARNMSG("");
         if (RcvList.isEmpty()) // нет ничего после размера
         {
             Error("Wrong answer", CLIER_WRANSW);
@@ -620,6 +623,8 @@ void Client::ParseReply(QByteArray ba)
             FinishCommand();
             return;
         }
+        else
+            WARNMSG("");
 #ifndef DEBUGISON
         TimeoutTimer->start();
 #endif

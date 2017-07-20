@@ -38,7 +38,7 @@ int TBFunc_Check(int type, const QDateTime &dtm)
     if (months == 0)
     {
         fl << "Значение";
-        tfl.valuesbyfield("Настройки_ТБ_полн", fl, "Обозначение", TypesMap[type].TypeString, vl); // в vl - значение в месяцах периода проверок
+        tfl.GetValuesByField("Настройки_ТБ_полн", fl, "Обозначение", TypesMap[type].TypeString, vl); // в vl - значение в месяцах периода проверок
         if ((tfl.result != TFRESULT_NOERROR) || (vl.isEmpty()))
         {
             WARNMSG("");

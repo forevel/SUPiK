@@ -52,6 +52,7 @@ Client::Client(QObject *parent) : QObject(parent)
     CmdMap.insert(T_INS, {"T_INS", 1, "T>", RESULT_INT, false, false});
     CmdMap.insert(T_UPD, {"T_UPD", 3, "T?", RESULT_NONE, false, false});
     CmdMap.insert(T_UPDV, {"T_UPDV", 3, "TC", RESULT_NONE, false, false});
+    CmdMap.insert(T_GVSBFSR, {"T_GVSBFSR", 5, "TD", RESULT_MATRIX, true, false});
     CmdMap.insert(M_STATUS, {"M_STATUS", 0, "M3", RESULT_STRING, false, false});
     CmdMap.insert(M_PING, {"M_PING", 0, "M4", RESULT_STRING, false, false});
     CmdMap.insert(M_START, {"M_START", 0, "M6", RESULT_STRING, false, false});
@@ -60,8 +61,6 @@ Client::Client(QObject *parent) : QObject(parent)
     CmdMap.insert(M_ACTIVATE, {"M_ACTIVATE", 2, "M9", RESULT_STRING, false, false}); // 0 - code, 1 - newpass
     CmdMap.insert(M_GETFILEI, {"M_GETFILEINF", 3, "M:", RESULT_VECTOR, false, false}); // 0 - type, 1 - subtype, 2 - filename
     InitiateTimers();
-    connect(this,SIGNAL(CommandFinished()),&CommandFinishedLoop,SLOT(quit()));
-//    connect(TimeoutTimer,SIGNAL(timeout()),&CommandFinishedLoop,SLOT(quit()));
 }
 
 Client::~Client()
@@ -116,15 +115,19 @@ int Client::Connect(QString host, QString port, int clientmode)
     connect(MainEthernet,SIGNAL(disconnected()),this,SLOT(ClientDisconnected()));
     connect(MainEthernet,SIGNAL(NewDataArrived(QByteArray)),this,SLOT(ParseReply(QByteArray)));
     connect(MainEthernet,SIGNAL(byteswritten(qint64)),this,SLOT(UpdateWrittenBytes(qint64)));
-    connect(this,SIGNAL(Connected()),&ConnectLoop,SLOT(quit()));
-    connect(TimeoutTimer,SIGNAL(timeout()),&ConnectLoop,SLOT(quit()));
+    connect(this,SIGNAL(Connected()),this,SLOT(FinishCommand()));
     DetectedError = CLIER_NOERROR;
     TimeoutTimer->start();
 
+    EthStatus.setStatus(STAT_CONNECTING);
     MainEthernet->SetEthernet(Host, Port.toInt(), Ethernet::ETH_SSL);
-
-    ConnectLoop.exec();
-
+    while (EthStatus.isConnectingActive())
+    {
+        QTime tme;
+        tme.start();
+        while (tme.elapsed() < TIME_GENERAL)
+            QCoreApplication::processEvents(QEventLoop::AllEvents);
+    }
     if (EthStatus.isntConnected())
     {
         CliLog->warning("Entering autonomous mode...");
@@ -141,8 +144,7 @@ int Client::Connect(QString host, QString port, int clientmode)
     EthStatus.clearCommandActive();
 
     SendCmd(M_START, QStringList());
-    if (EthStatus.isCommandActive())
-        CommandFinishedLoop.exec();
+    WaitForCommandToFinish();
     if (!LoginOk)
     {
         CliLog->warning("Wrong login or password");
@@ -161,181 +163,193 @@ void Client::Disconnect()
     }
 }
 
-void Client::SendCmd(int command, QStringList &args)
+int Client::SendCmd(int command, QStringList &args)
 {
-    // если активна какая-то команда, и пришла другая команда, которая не является продолжением текущей, то выход
-    if ((EthStatus.isCommandActive()) && (command != M_ANSLOGIN) && (command != M_NEXT) && (command != M_AGETFILE) && (command != M_APUTFILE))
+    try
     {
-        CliLog->error("Command active already: "+QString::number(CurrentCommand)+", command passed by: "+QString::number(command));
-        return;
-    }
-    if (EthStatus.isntConnected()) // if we're disconnected
-    {
-        CliLog->error("Ethernet disconnected");
-        PingIsDisabled = true;
-        DetectedError = CLIER_CLOSED;
-        if (!EthStatus.isAboutToClose())
-            ClientDisconnected();
-        RetrTimer->start();
-        return;
-    }
-    CurrentCommand = command;
-    NextActive = false;
-    PrevLastBA.clear();
-    if ((command != M_LOGIN) && (command != M_ANSLOGIN) && (command != M_AGETFILE) && (command != M_NEXT)) // not "RDY"
-    {
-        LastCommand = command;
-        LastArgs = args; // store command arguments for retrying
-    }
-    if (!ServRetryActive) // if this send is not a retry
-        ServRetryCount = 0;
-    if (EthStatus.isTestMode() && (command != M_ACTIVATE) && (command != M_ANSLOGIN) && (command != M_QUIT))
-    {
-        CliLog->warning("illegal test command");
-        DetectedError = CLIER_CMDER;
-        return;
-    }
-    if (command != M_NEXT)
-    {
-        Result.clear(); // очищаем результаты
-        ResultStr.clear();
-    }
-    DetectedError = CLIER_NOERROR;
-    QString CommandString;
-    if (CmdMap.keys().contains(command))
-    {
-        CmdStruct st = CmdMap[command];
-        FieldsNum = 0;
-        if (!CheckArgs(st.CmdString, args, st.ArgsNum, st.CheckForFieldsNum, st.CheckForPairsNum))
-            return;
-        if (FieldsNum == 0)
-            FieldsNum = 1; // если не выставлено значение поля в функции CheckArgs, выставить его принудительно в 1 (одно поле на запись)
-        QStringList sl;
-        sl << st.Prefix;
-        sl.append(args);
-        QString tmps = sl.join(TOKEN);
-        CommandString = tmps;
-        ResultType = st.ResultType;
-    }
-    switch (command)
-    {
-    case M_PING:
-        if (PingIsDisabled)
-            return;
-    case M_START:
-    case M_STATUS:
-    case M_ACTIVATE:
-        break; // no operands or all is already included in CommandString
-    case M_GETFILE:
-    {
-        bool ok;
-        int fltype, flsubtype;
-        QString path = pc.HomeDir + "/";
-        fltype = args.at(0).toInt(&ok);
-        if ((ok) && (fltype < PathPrefixes.size()) && (fltype != FLT_NONE))
-            path += PathPrefixes.at(fltype);
-        flsubtype = args.at(1).toInt(&ok);
-        if ((ok) && (flsubtype < PathSuffixes.size()) && (flsubtype != FLST_NONE))
-            path += PathSuffixes.at(flsubtype);
-        QDir *dr = new QDir;
-        dr->mkpath(path);
-        delete dr;
-        fp.setFileName(path + args.at(2));
-        if (!fp.open(QIODevice::WriteOnly))
+        // если активна какая-то команда, и пришла другая команда, которая не является продолжением текущей, то выход
+        if ((EthStatus.isCommandActive()) && (command != M_ANSLOGIN) && (command != M_NEXT) && (command != M_AGETFILE) && (command != M_APUTFILE))
         {
-            ERMSG("Невозможно создать файл" + args.at(2));
-            DetectedError = CLIER_GETFER;
-            return;
+            CliLog->error("Command active already: "+QString::number(CurrentCommand)+", command passed by: "+QString::number(command));
+            return CLIER_BUSY;
         }
-        ReadBytes = 0;
-        RcvDataSize = 0;
-        break;
-    }
-    case M_PUTFILE:
-    {
-        fp.setFileName(args.at(0));
-        if (!fp.open(QIODevice::ReadOnly))
+        if (EthStatus.isntConnected()) // if we're disconnected
         {
-            ERMSG("Невозможно открыть файл "+args.at(0));
-            DetectedError = CLIER_PUTFER;
-            return;
+            CliLog->error("Ethernet disconnected");
+            PingIsDisabled = true;
+            DetectedError = CLIER_CLOSED;
+            if (!EthStatus.isAboutToClose())
+                ClientDisconnected();
+            RetrTimer->start();
+            return CLIER_CLOSED;
         }
-        WrittenBytes = 0;
-        XmitDataSize = fp.size();
-        emit BytesOverall(XmitDataSize);
-        CommandString.push_back(TOKEN);
-        CommandString += QString::number(XmitDataSize); // file length added
-        break;
-    }
-    case M_APUTFILE:
-    {
-        while ((WrittenBytes < XmitDataSize) && (DetectedError == CLIER_NOERROR))
+        CurrentCommand = command;
+        NextActive = false;
+        PrevLastBA.clear();
+        if ((command != M_LOGIN) && (command != M_ANSLOGIN) && (command != M_AGETFILE) && (command != M_NEXT)) // not "RDY"
         {
-            quint64 BytesToSend = XmitDataSize - WrittenBytes;
-            quint64 NextThr;
-            if (BytesToSend > READBUFMAX)
-                BytesToSend = READBUFMAX;
-            if (fp.isOpen())
+            LastCommand = command;
+            LastArgs = args; // store command arguments for retrying
+        }
+        if (!ServRetryActive) // if this send is not a retry
+            ServRetryCount = 0;
+        if (EthStatus.isTestMode() && (command != M_ACTIVATE) && (command != M_ANSLOGIN) && (command != M_QUIT))
+        {
+            CliLog->warning("illegal test command");
+            DetectedError = CLIER_CMDER;
+            EthStatus.clearCommandActive();
+            return CLIER_CMDER;
+        }
+        if (command != M_NEXT)
+        {
+            Result.clear(); // очищаем результаты
+            ResultStr.clear();
+        }
+        DetectedError = CLIER_NOERROR;
+        QString CommandString;
+        if (CmdMap.keys().contains(command))
+        {
+            CmdStruct st = CmdMap[command];
+            FieldsNum = 0;
+            if (!CheckArgs(st.CmdString, args, st.ArgsNum, st.CheckForFieldsNum, st.CheckForPairsNum))
             {
-                WrData = QByteArray(fp.read(BytesToSend));
-                if (WrData.isEmpty())
+                EthStatus.clearCommandActive();
+                return CLIER_CMDER;
+            }
+            if (FieldsNum == 0)
+                FieldsNum = 1; // если не выставлено значение поля в функции CheckArgs, выставить его принудительно в 1 (одно поле на запись)
+            QStringList sl;
+            sl << st.Prefix;
+            sl.append(args);
+            QString tmps = sl.join(TOKEN);
+            CommandString = tmps;
+            ResultType = st.ResultType;
+        }
+        switch (command)
+        {
+        case M_PING:
+            if (PingIsDisabled)
+                return CLIER_CMDER;
+        case M_START:
+        case M_STATUS:
+        case M_ACTIVATE:
+            break; // no operands or all is already included in CommandString
+        case M_GETFILE:
+        {
+            bool ok;
+            int fltype, flsubtype;
+            QString path = pc.HomeDir + "/";
+            fltype = args.at(0).toInt(&ok);
+            if ((ok) && (fltype < PathPrefixes.size()) && (fltype != FLT_NONE))
+                path += PathPrefixes.at(fltype);
+            flsubtype = args.at(1).toInt(&ok);
+            if ((ok) && (flsubtype < PathSuffixes.size()) && (flsubtype != FLST_NONE))
+                path += PathSuffixes.at(flsubtype);
+            QDir *dr = new QDir;
+            dr->mkpath(path);
+            delete dr;
+            fp.setFileName(path + args.at(2));
+            if (!fp.open(QIODevice::WriteOnly))
+            {
+                Error("Невозможно создать файл" + args.at(2), CLIER_GETFER);
+                return CLIER_GETFER;
+            }
+            ReadBytes = 0;
+            RcvDataSize = 0;
+            break;
+        }
+        case M_PUTFILE:
+        {
+            fp.setFileName(args.at(0));
+            if (!fp.open(QIODevice::ReadOnly))
+            {
+                Error("Невозможно открыть файл "+args.at(0), CLIER_PUTFER);
+                return CLIER_PUTFER;
+            }
+            WrittenBytes = 0;
+            XmitDataSize = fp.size();
+            emit BytesOverall(XmitDataSize);
+            CommandString.push_back(TOKEN);
+            CommandString += QString::number(XmitDataSize); // file length added
+            break;
+        }
+        case M_APUTFILE:
+        {
+            while ((WrittenBytes < XmitDataSize) && (DetectedError == CLIER_NOERROR))
+            {
+                quint64 BytesToSend = XmitDataSize - WrittenBytes;
+                quint64 NextThr;
+                if (BytesToSend > READBUFMAX)
+                    BytesToSend = READBUFMAX;
+                if (fp.isOpen())
                 {
-                    Error("Error while reading file", CLIER_PUTFER);
-                    return;
+                    WrData = QByteArray(fp.read(BytesToSend));
+                    if (WrData.isEmpty())
+                    {
+                        Error("Error while reading file", CLIER_PUTFER);
+                        return CLIER_PUTFER;
+                    }
+    #ifndef DEBUGISON
+                    TimeoutTimer->start();
+    #endif
+                    CliLog->info("> ...binary data " + QString::number(WrData.size()) + " size...");
+                    NextThr = WrittenBytes + WrData.size();
+                    MainEthernet->WriteData(WrData);
+                    emit BytesWritten(WrData.size());
                 }
-#ifndef DEBUGISON
-                TimeoutTimer->start();
-#endif
-                CliLog->info("> ...binary data " + QString::number(WrData.size()) + " size...");
-                NextThr = WrittenBytes + WrData.size();
-                MainEthernet->WriteData(WrData);
-                emit BytesWritten(WrData.size());
+                else
+                {
+                    Error("File error", CLIER_PUTFER);
+                    return CLIER_PUTFER;
+                }
+                while (WrittenBytes < NextThr)
+                    qApp->processEvents(QEventLoop::AllEvents, 100);
             }
-            else
-            {
-                Error("File error", CLIER_PUTFER);
-                return;
-            }
-            while (WrittenBytes < NextThr)
-                qApp->processEvents(QEventLoop::AllEvents, 100);
+            if (fp.isOpen())
+                fp.close();
+            emit TransferComplete();
+            EthStatus.clearCommandActive();
+            CurrentCommand = M_IDLE;
+            return CLIER_NOERROR;
         }
-        if (fp.isOpen())
-            fp.close();
-        emit TransferComplete();
-        FinishCommand();
-        CurrentCommand = M_IDLE;
-        return;
+        case M_AGETFILE:
+        case M_NEXT:
+        {
+            CommandString = "RDY";
+            break;
+        }
+        case M_QUIT:
+        {
+            CommandString = "M1";
+            break;
+        }
+        case M_ANSLOGIN:
+        {
+            CommandString = Pers + TOKEN + Pass + TOKEN + PROGVER;
+            break;
+        }
+        default:
+            break;
+        }
+        if (command == M_ANSLOGIN)
+            CliLog->info(">"+Pers);
+        else
+            CliLog->info(">"+CommandString);
+        QByteArray ba = CommandString.toUtf8();
+        MainEthernet->WriteData(ba);
+        EthStatus.setCommandActive();
+    #ifndef DEBUGISON
+        TimeoutTimer->start();
+    #endif
+        emit BytesWritten(ba.size());
+        return CLIER_NOERROR;
     }
-    case M_AGETFILE:
-    case M_NEXT:
+    catch(...)
     {
-        CommandString = "RDY";
-        break;
+        DetectedError = CLIER_EXCEPT;
+        EthStatus.clearCommandActive();
+        return CLIER_EXCEPT;
     }
-    case M_QUIT:
-    {
-        CommandString = "M1";
-        break;
-    }
-    case M_ANSLOGIN:
-    {
-        CommandString = Pers + TOKEN + Pass + TOKEN + PROGVER;
-        break;
-    }
-    default:
-        break;
-    }
-    if (command == M_ANSLOGIN)
-        CliLog->info(">"+Pers);
-    else
-        CliLog->info(">"+CommandString);
-    QByteArray ba = CommandString.toUtf8();
-    MainEthernet->WriteData(ba);
-    EthStatus.setCommandActive();
-#ifndef DEBUGISON
-    TimeoutTimer->start();
-#endif
-    emit BytesWritten(ba.size());
 }
 
 void Client::UpdateWrittenBytes(qint64 bytes)
@@ -362,6 +376,7 @@ void Client::ParseReply(QByteArray ba)
     if (EthStatus.isntConnected()) // if there's a real connection but the flag wasn't set (at the start)
     {
         PrevLastBA += ba;
+        EthStatus.clearCommandActive();
         return;
     }
     emit BytesRead(ba.size());
@@ -511,6 +526,7 @@ void Client::ParseReply(QByteArray ba)
     case T_GVSBC:
     case T_GVSBCF:
     case T_GVSBFS:
+    case T_GVSBFSR:
     case T_IDTV:
 //    case T_IDTVL:
     case T_GFT:
@@ -654,7 +670,6 @@ void Client::ParseReply(QByteArray ba)
             return;
         }
         emit BytesOverall(RcvDataSize);
-//        FinishCommand();
         SendCmd(M_AGETFILE);
         return;
     }
@@ -734,9 +749,7 @@ void Client::ClientDisconnected()
 
 void Client::Timeout()
 {
-    ERMSG("Timeout detected");
-    DetectedError = CLIER_TIMEOUT;
-    FinishCommand();
+    Error("Timeout detected", CLIER_TIMEOUT);
 }
 
 // проверка аргументов
@@ -814,9 +827,7 @@ int Client::GetFile(int type, int subtype, const QString &filename)
     if (fp.exists()) // файл уже есть
     {
         // проверка на то, не новее ли файл на сервере, чем наш локальный
-        SendCmd(M_GETFILEI, sl); // Result.at(0): [0] - file exists, [1] - size, [2] - datetime, [3] - mode
-        if (EthStatus.isCommandActive())
-            CommandFinishedLoop.exec();
+        DetectedError = SendAndGetResult(M_GETFILEI, sl); // Result.at(0): [0] - file exists, [1] - size, [2] - datetime, [3] - mode
         if ((DetectedError != CLIER_NOERROR) || (Result.isEmpty()))
             return DetectedError;
         QStringList vl = Result.at(0);
@@ -829,27 +840,26 @@ int Client::GetFile(int type, int subtype, const QString &filename)
         if (datetimeg <= datetime)
             return CLIER_NOERROR;
     }
-    SendCmd(M_GETFILE, sl);
-    if (EthStatus.isCommandActive())
-        CommandFinishedLoop.exec();
-    return DetectedError;
+    return SendAndGetResult(M_GETFILE, sl);
 }
 
 int Client::PutFile(const QString &localfilename, int type, int subtype, const QString &filename)
 {
     QStringList sl;
     sl << localfilename << QString::number(type) << QString::number(subtype) << filename;
-    SendCmd(M_PUTFILE, sl);
-    if (EthStatus.isCommandActive())
-        CommandFinishedLoop.exec();
-    return DetectedError;
+    return SendAndGetResult(M_PUTFILE, sl);
 }
 
 int Client::SendAndGetResult(int command, QStringList &args)
 {
-    SendCmd(command, args);
-    if (EthStatus.isCommandActive())
-        CommandFinishedLoop.exec();
+    while (SendCmd(command, args) == CLIER_BUSY)
+    {
+        QTime tme;
+        tme.start();
+        while (tme.elapsed() < TIME_GENERAL)
+            QCoreApplication::processEvents(QEventLoop::AllEvents);
+    }
+    WaitForCommandToFinish();
     return DetectedError;
 }
 
@@ -881,9 +891,20 @@ void Client::SetWaitEnded()
     }
 }
 
+void Client::WaitForCommandToFinish()
+{
+    while (EthStatus.isCommandActive())
+    {
+        QTime tme;
+        tme.start();
+        while (tme.elapsed() < TIME_GENERAL)
+            QCoreApplication::processEvents(QEventLoop::AllEvents);
+    }
+}
+
 void Client::FinishCommand()
 {
     EthStatus.clearCommandActive();
+    EthStatus.clearConnectingActive();
     TimeoutTimer->stop();
-    emit CommandFinished();
 }

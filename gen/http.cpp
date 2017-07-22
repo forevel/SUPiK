@@ -53,39 +53,25 @@
 #include <QUrl>
 
 #include "http.h"
+#include "files.h"
 #include "publicclass.h"
 #include "../widgets/s_tqlabel.h"
 #include "../widgets/s_tqlineedit.h"
 #include "../widgets/s_tqpushbutton.h"
 
-#ifndef QT_NO_SSL
-static const char defaultUrl[] = "https://www.qt.io/";
-#else
-static const char defaultUrl[] = "http://www.qt.io/";
-#endif
 static const char defaultFileName[] = "index.html";
 
 Http::Http(QObject *parent) : QObject(parent)
 {
-    connect(&qnam, &QNetworkAccessManager::authenticationRequired, this, &Http::slotAuthenticationRequired);
+    connect(&NAM, &QNetworkAccessManager::authenticationRequired, this, &Http::AuthenticationRequired);
 #ifndef QT_NO_SSL
-    connect(&qnam, &QNetworkAccessManager::sslErrors, this, &Http::sslErrors);
+    connect(&NAM, &QNetworkAccessManager::sslErrors, this, &Http::SSLErrors);
 #endif
 }
 
-void Http::startRequest(const QUrl &requestedUrl)
+void Http::DownloadFile(int thrnum, const QString &httpurl)
 {
-    url = requestedUrl;
-    httpRequestAborted = false;
-    reply = qnam.get(QNetworkRequest(url));
-    connect(reply, &QNetworkReply::downloadProgress, this, &Http::DownloadProgress);
-    connect(reply, &QNetworkReply::finished, this, &Http::httpFinished);
-    connect(reply, &QIODevice::readyRead, this, &Http::httpReadyRead);
-}
-
-void Http::downloadFile(const QString &httpurl, const QString &filename)
-{
-    QString fname = filename;
+    ThrNum = thrnum;
     const QString urlSpec = httpurl.trimmed(); // removes whitespaces
     if (urlSpec.isEmpty())
     {
@@ -99,115 +85,122 @@ void Http::downloadFile(const QString &httpurl, const QString &filename)
         WARNMSG("Invalid url");
         return;
     }
-    if (fname.isEmpty())
-        fname = newUrl.fileName();
-    if (QFile::exists(fname))
-        QFile::remove(fname);
-    file = openFileForWrite(fname);
-    if (!file)
-        return;
-    startRequest(newUrl);
-}
-
-QFile *Http::openFileForWrite(const QString &fileName)
-{
-    QScopedPointer<QFile> file(new QFile(fileName));
-    if (!file->open(QIODevice::WriteOnly))
+    FileName = pc.HomeDir + "/tmp/";
+    for (int i=0; i<FILENAMEMAXSYMBOLS; ++i)
     {
-        WARNMSG("Ошибка открытия файла "+fileName+" для записи");
-        return Q_NULLPTR;
+        QChar chr = (qrand() % 0x19) + 0x61; // from 0x61 to 0x7A
+        FileName += chr;
     }
-    return file.take();
+    Files file;
+    Fp = file.openFileForWrite(FileName);
+    if (!Fp)
+    {
+        emit Error(ThrNum, FILEERROR);
+        return;
+    }
+    StartRequest(newUrl);
 }
 
-void Http::cancelDownload()
+void Http::StartRequest(const QUrl &requestedUrl)
 {
-    httpRequestAborted = true;
-    reply->abort();
+    Url = requestedUrl;
+    HttpRequestAborted = false;
+    Reply = NAM.get(QNetworkRequest(Url));
+    connect(Reply, &QNetworkReply::downloadProgress, this, &Http::DownloadProgress);
+    connect(Reply, &QNetworkReply::finished, this, &Http::HttpFinished);
+    connect(Reply, &QIODevice::readyRead, this, &Http::HttpReadyRead);
+}
+
+void Http::CancelDownload()
+{
+    HttpRequestAborted = true;
+    Reply->abort();
+    emit Error(ThrNum, ABORTED);
 }
 
 void Http::DownloadProgress(qint64 bytesreceived, qint64 bytesoverall)
 {
-    emit CurrentFileDownloaded(url.toString());
+    emit CurrentFileDownloaded(Url.toString());
     emit BytesOverall(bytesoverall);
     emit BytesRead(bytesreceived);
 }
 
-void Http::httpFinished()
+void Http::HttpFinished()
 {
     QFileInfo fi;
-    if (file)
+    if (Fp)
     {
-        fi.setFile(file->fileName());
-        file->close();
-        delete file;
-        file = Q_NULLPTR;
+        fi.setFile(Fp->fileName());
+        Fp->close();
+        delete Fp;
+        Fp = Q_NULLPTR;
     }
 
-    if (httpRequestAborted)
+    if (HttpRequestAborted)
     {
-        reply->deleteLater();
-        reply = Q_NULLPTR;
-        emit Finished();
+        Reply->deleteLater();
+        Reply = Q_NULLPTR;
+        emit Error(ThrNum, ABORTED);
         return;
     }
 
-    if (reply->error())
+    if (Reply->error())
     {
         QFile::remove(fi.absoluteFilePath());
-        WARNMSG("Download failed: " + reply->errorString());
-        reply->deleteLater();
-        reply = Q_NULLPTR;
-        emit Finished();
+        WARNMSG("Download failed: " + Reply->errorString());
+        Reply->deleteLater();
+        Reply = Q_NULLPTR;
+        emit Error(ThrNum, FAILED);
         return;
     }
 
-    const QVariant redirectionTarget = reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
+    const QVariant redirectionTarget = Reply->attribute(QNetworkRequest::RedirectionTargetAttribute);
 
-    reply->deleteLater();
-    reply = Q_NULLPTR;
+    Reply->deleteLater();
+    Reply = Q_NULLPTR;
 
     if (!redirectionTarget.isNull()) {
-        const QUrl redirectedUrl = url.resolved(redirectionTarget.toUrl());
-        file = openFileForWrite(fi.absoluteFilePath());
-        if (!file)
+        const QUrl redirectedUrl = Url.resolved(redirectionTarget.toUrl());
+        Files file;
+        Fp = file.openFileForWrite(FileName);
+        if (!Fp)
         {
-            emit Finished();
+            emit Error(ThrNum, FILEERROR);
             return;
         }
-        startRequest(redirectedUrl);
-        emit Finished();
+        StartRequest(redirectedUrl);
+//        emit Finished();
         return;
     }
-    emit Finished();
+    emit Finished(ThrNum, FileName);
 }
 
-void Http::httpReadyRead()
+void Http::HttpReadyRead()
 {
       // this slot gets called every time the QNetworkReply has new data.
       // We read all of its new data and write it into the file.
       // That way we use less RAM than when reading it at the finished()
       // signal of the QNetworkReply
-    if (file)
-        file->write(reply->readAll());
+    if (Fp)
+        Fp->write(Reply->readAll());
 }
 
-void Http::slotAuthenticationRequired(QNetworkReply*, QAuthenticator *authenticator)
+void Http::AuthenticationRequired(QNetworkReply*, QAuthenticator *authenticator)
 {
     QDialog *dlg = new QDialog;
     dlg->setAttribute(Qt::WA_DeleteOnClose);
     QVBoxLayout *vlyout = new QVBoxLayout;
-    s_tqLabel *lbl = new s_tqLabel("Введите данные для доступа к " + url.host());
+    s_tqLabel *lbl = new s_tqLabel("Введите данные для доступа к " + Url.host());
     vlyout->addWidget(lbl, Qt::AlignHCenter);
     // Did the URL have information? Fill the UI
     // This is only relevant if the URL-supplied credentials were wrong
     lbl = new s_tqLabel("Имя:");
     vlyout->addWidget(lbl, Qt::AlignLeft);
-    s_tqLineEdit *namele = new s_tqLineEdit(url.userName());
+    s_tqLineEdit *namele = new s_tqLineEdit(Url.userName());
     vlyout->addWidget(namele, Qt::AlignLeft);
     lbl = new s_tqLabel("Пароль:");
     vlyout->addWidget(lbl, Qt::AlignLeft);
-    s_tqLineEdit *pswle = new s_tqLineEdit(url.password());
+    s_tqLineEdit *pswle = new s_tqLineEdit(Url.password());
     vlyout->addWidget(pswle, Qt::AlignLeft);
     QHBoxLayout *hlyout = new QHBoxLayout;
     s_tqPushButton *pb = new s_tqPushButton("Ага");
@@ -224,12 +217,12 @@ void Http::slotAuthenticationRequired(QNetworkReply*, QAuthenticator *authentica
         authenticator->setPassword(pswle->text());
     }
     else
-        cancelDownload();
+        CancelDownload();
     dlg->close();
  }
 
 #ifndef QT_NO_SSL
-void Http::sslErrors(QNetworkReply*,const QList<QSslError> &errors)
+void Http::SSLErrors(QNetworkReply*,const QList<QSslError> &errors)
 {
     QString errorString;
     foreach (const QSslError &error, errors) {

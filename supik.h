@@ -5,7 +5,6 @@
 #include <QPaintEvent>
 #include <QCloseEvent>
 #include <QResizeEvent>
-#include "gen/currency.h"
 
 #define SUPIKMENUBAR_BG "transparent"
 #define SUPIKMENUBAR_ITEM_SELECTED "#EEEEEE"
@@ -37,7 +36,6 @@ private:
     bool IsProblemsDetected, PeriodicOddSecond;
     int PingSecCounter, CurrRefreshCounter, CurrCounter, WarningActionIndex;
     QHash <QString, void (supik::*)()> pf;
-    Currency *Curr;
     int ErMsgNum;
 
     void SetSupikMenuBar();

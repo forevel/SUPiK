@@ -41,6 +41,7 @@ public:
     void GetValueByField(const QString &tble, const QString &field, const QString &cmpfield, const QString &cmpvalue, QString &out);
     void GetValueByFields(const QString &tble, const QString &field, QStringList &cmpfields, QStringList &cmpvalues, QString &out);
     void GetValuesByFieldsMatrix(const QString &tble, QStringList &fl, QStringList &cmpfields, QStringList &cmpvalues, QList<QStringList> &out);
+    void SearchRLike(const QString &tble, QStringList &fl, const QString &cmpfield, const QString &regexp, QList<QStringList> &out);
     void TableColumn(const QString &tble, const QString &field, QStringList &out); // взять значения поля field, где tablename=tble
 
     int result;

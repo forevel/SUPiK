@@ -138,6 +138,8 @@
 #define TOKEN       0x7F // разделитель полей при передаче
 #define DATA_TOKEN  0x1F // разделитель внутри поля (файл/текст для FW_PIXTE)
 
+#define TIME_GENERAL    20 // в мс интервал для функций ожидания
+
 enum twocoldialog_modes
 {
     MODE_CHOOSE,
@@ -154,6 +156,17 @@ class PublicClass
 public:
     PublicClass();
     ~PublicClass();
+
+    enum Currencies
+    {
+        EUR,
+        USD,
+        CHF,
+        GBP,
+        UAH,
+        BYN,
+        RUB
+    };
 
     // диалоговые окна в СУПиКе
     enum SupikDialogWindows
@@ -187,6 +200,19 @@ public:
         PT_DOC,
         PT_ALL
     };
+
+    static QMap<int, QString> Curs()
+    {
+        QMap<int, QString> sl;
+        sl.insert(USD, "USD");
+        sl.insert(EUR, "EUR");
+        sl.insert(CHF, "CHF");
+        sl.insert(GBP, "GBP");
+        sl.insert(UAH, "UAH");
+        sl.insert(BYN, "BYN");
+        sl.insert(RUB, "RUB");
+        return sl;
+    }
 
     static QMap<int, QColor> ProblemBackgroundColors()
     {
@@ -297,6 +323,8 @@ public:
     int Altium; // граница между списком справочников и списком компонентов (для maintree)
     quint32 access; // текущие права доступа. Зашифрованы тройками бит (с младшего до старшего: право на чтение/изменение/удаление) (начиная с младших):
                 // Системные, Складские, Альтиумовские, ГлавноИнженерские, Сисадминские, Архивариусовские
+    QList<double> Rates; // курсы валют в порядке, определённом в Curs()
+    QString BaseCurrency; // Базовая валюта расчётов
 
     struct
     {

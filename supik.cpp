@@ -20,6 +20,7 @@
 #include "dialogs/wh/wh_dialog.h"
 #include "dialogs/wh/wh_editor.h"
 #include "gen/client.h"
+#include "gen/currency.h"
 #include "gen/publiclang.h"
 #include "gen/s_sql.h"
 #include "widgets/s_colortabwidget.h"
@@ -55,8 +56,6 @@ supik::supik()
     pf["TBExam"] = &supik::TBExam;
     pf["TBMain"] = &supik::TBMain;
     ErMsgNum = 0;
-    Curr = new Currency;
-    Curr->GetRates(Currency::GOOGLE);
 }
 
 void supik::showEvent(QShowEvent *event)
@@ -583,8 +582,8 @@ void supik::periodic1s()
         ++CurrCounter;
         if (CurrCounter >= CURNUM)
             CurrCounter = 0;
-        WDFunc::SetLBLText(this, "currencies", \
-                           "1 " + Curr->Curs()[CurrCounter] + " = " + QString::number(Curr->Rates.at(CurrCounter),'f', 3) + " " + Curr->GetBaseCurrency());
+        WDFunc::SetLBLText(this, "currencies", "1 " + pc.Curs()[CurrCounter] + " = " + \
+                           QString::number(pc.Rates.at(CurrCounter),'f', 3) + " " + pc.BaseCurrency);
     }
     PeriodicOddSecond = !PeriodicOddSecond;
     pc.DateTime = QDateTime::currentDateTime().toString(DATETIMEFORMAT);

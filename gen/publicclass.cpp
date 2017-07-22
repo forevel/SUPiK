@@ -27,6 +27,7 @@ PublicClass::PublicClass()
     TabColors[TW_PERS] = QColor(102, 204, 255); // PERS
     AutonomousMode = true; // изначально неизвестно, доступен ли сервер, поэтому на всякий случай ставим признак автономности
     ErNum = 1;
+    BaseCurrency = "RUB";
     TBFunc_Initialize();
 }
 

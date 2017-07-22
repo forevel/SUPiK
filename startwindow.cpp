@@ -9,6 +9,7 @@
 #include "startwindow.h"
 #include "gen/s_sql.h"
 #include "gen/s_tablefields.h"
+#include "gen/currency.h"
 #include "widgets/s_tqcheckbox.h"
 #include "dialogs/gen/messagebox.h"
 #include "gen/client.h"
@@ -275,6 +276,8 @@ void StartWindow::OkPBClicked()
         ERMSG("Сервер СУПиК недоступен");
         break;
     }
+    Currency *Curr = new Currency;
+    Curr->GetRates(Currency::GOOGLE);
     this->hide();
 
     if (pc.AutonomousMode)

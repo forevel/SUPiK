@@ -51,6 +51,8 @@
 #ifndef HTTP_H
 #define HTTP_H
 
+#define FILENAMEMAXSYMBOLS  10
+
 #include <QNetworkAccessManager>
 #include <QUrl>
 
@@ -64,37 +66,47 @@ class Http : public QObject
     Q_OBJECT
 
 public:
+    enum HttpErrors
+    {
+        FILEERROR,
+        FAILED,
+        ABORTED,
+        NOTFOUND
+    };
+
     explicit Http(QObject *parent = Q_NULLPTR);
 
-    void startRequest(const QUrl &requestedUrl);
-    void downloadFile(const QString &httpurl, const QString &filename=""); // скачать файл по ссылке httpurl и поместить в файл filename
+    void DownloadFile(int thrnum, const QString &httpurl); // скачать файл по ссылке httpurl и поместить в файл filename
 
 public slots:
-    void cancelDownload();
+    void CancelDownload();
 
 signals:
     void CurrentFileDownloaded(const QString &file);
     void BytesOverall(quint64 bytes);
     void BytesRead(quint64 bytes);
-    void Finished();
+    void Finished(int thrnum, QString fname);
+    void Error(int thrnum, int errnum);
 
 private slots:
     void DownloadProgress(qint64 bytesreceived, qint64 bytesoverall);
-    void httpFinished();
-    void httpReadyRead();
-    void slotAuthenticationRequired(QNetworkReply*,QAuthenticator *);
+    void HttpFinished();
+    void HttpReadyRead();
+    void AuthenticationRequired(QNetworkReply*,QAuthenticator *);
 #ifndef QT_NO_SSL
-    void sslErrors(QNetworkReply*,const QList<QSslError> &errors);
+    void SSLErrors(QNetworkReply*,const QList<QSslError> &errors);
 #endif
 
 private:
-    QFile *openFileForWrite(const QString &fileName);
+    QUrl Url;
+    QNetworkAccessManager NAM;
+    QNetworkReply *Reply;
+    QFile *Fp;
+    QString FileName;
+    int ThrNum;
+    bool HttpRequestAborted;
 
-    QUrl url;
-    QNetworkAccessManager qnam;
-    QNetworkReply *reply;
-    QFile *file;
-    bool httpRequestAborted;
+    void StartRequest(const QUrl &requestedUrl);
 };
 
 #endif // HTTP_H

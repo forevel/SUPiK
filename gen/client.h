@@ -6,7 +6,6 @@
 #include <QFile>
 #include <QMap>
 #include <QPointer>
-#include <QEventLoop>
 #include "../threads/ethernet.h"
 #include "publicclass.h"
 #include "log.h"
@@ -78,6 +77,7 @@
 #define T_TH        1217
 #define T_TL        1218
 #define T_UPDV      1219 // "C"
+#define T_GVSBFSR   1220 // "D": get values rlike expr
 
 #define T_END       1299
 // C-commands (components)
@@ -121,6 +121,7 @@
 #define STAT_CLOSED         8
 #define STAT_MODETEST       16
 #define STAT_MODEWORK       32
+#define STAT_CONNECTING     64
 
 class EthStatusClass
 {
@@ -137,6 +138,10 @@ public:
     bool isCommandActive()
     {
         return (status & STAT_COMACTIVE);
+    }
+    bool isConnectingActive()
+    {
+        return (status & STAT_CONNECTING);
     }
     bool isAboutToClose()
     {
@@ -159,6 +164,10 @@ public:
     {
         int nOTaCTIVE = ~STAT_COMACTIVE;
         status &= nOTaCTIVE;
+    }
+    void clearConnectingActive()
+    {
+        status &= ~STAT_CONNECTING;
     }
     void setMode(int mode)
     {
@@ -204,7 +213,8 @@ public:
         CLIER_WRANSW,    // кривой ответ от сервера
         CLIER_CMDER,     // ошибка обработки команды
         CLIER_EMPTY,     // пустой ответ
-        CLIER_BUSY      // предыдущий запрос ещё не обработан
+        CLIER_BUSY,      // предыдущий запрос ещё не обработан
+        CLIER_EXCEPT    // выскочило исключение
     };
 
     enum Messages
@@ -244,7 +254,7 @@ public:
     int Connect(QString host, QString port, int clientmode);
     bool isConnected();
     void Disconnect();
-    void SendCmd(int command, QStringList &args=QStringList());
+    int SendCmd(int command, QStringList &args=QStringList());
     int GetFile(int type, int subtype, const QString &filename);
     int PutFile(const QString &localfilename, int type, int subtype, const QString &filename);
     int SendAndGetResult(int command, QStringList &args=QStringList()); // send command with arguments and wait for result
@@ -269,7 +279,6 @@ private:
     QByteArray RcvData, WrData;
     QPointer<Ethernet> MainEthernet;
     QTimer *RetrTimer, *TimeoutTimer, *EthStateChangeTimer; // general timeout, timer for server reply, getfile timer
-    QEventLoop ConnectLoop, CommandFinishedLoop;
     bool LoginOk;
     QString Host, Port;
     quint64 WrittenBytes, ReadBytes, RcvDataSize, XmitDataSize;
@@ -295,9 +304,10 @@ private:
     bool CheckArgs(QString cmd, QStringList &args, int argsnum, bool fieldscheck=false, bool pairscheck=false);
     void InitiateTimers();
     void SetWaitEnded();
-    void FinishCommand();
+    void WaitForCommandToFinish();
 
 private slots:
+    void FinishCommand();
     void ClientConnected();
     void ClientDisconnected();
     void Timeout();

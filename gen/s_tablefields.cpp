@@ -1160,7 +1160,7 @@ void s_TableFields::GetValuesByFieldsMatrix(const QString &tble, QStringList &fl
     result = TFRESULT_NOERROR;
     if ((cmpfields.size() != cmpvalues.size()) || (cmpfields.size() == 0) || (fl.size() == 0))
     {
-        result = 1;
+        result = TFRESULT_ERROR;
         DBGMSG;
         return;
     }
@@ -1213,6 +1213,68 @@ void s_TableFields::GetValuesByFieldsMatrix(const QString &tble, QStringList &fl
             sl << cmpvalues.at(i);
         }
         int res = Cli->SendAndGetResult(T_GVSBFS, sl);
+        if (res == Client::CLIER_EMPTY)
+            result = TFRESULT_EMPTY;
+        else if ((res != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))
+            result = TFRESULT_ERROR;
+        else
+            out = Cli->Result;
+    }
+}
+
+void s_TableFields::SearchRLike(const QString &tble, QStringList &fl, const QString &cmpfield, const QString &regexp, QList<QStringList> &out)
+{
+    QStringList sl;
+    QString cmpf = cmpfield;
+    out.clear();
+    result = TFRESULT_NOERROR;
+    if (fl.isEmpty())
+    {
+        result = TFRESULT_ERROR;
+        DBGMSG;
+        return;
+    }
+    if (pc.AutonomousMode)
+    {
+        // взяли все реальные названия полей сравнения
+        TableFields(tble, cmpf, sl);
+        if ((result) || (sl.size() < 2))
+        {
+            WARNMSG("");
+            return;
+        }
+        cmpf = sl.at(1);
+        for (int i = 0; i < fl.size(); i++)
+        {
+            QString field = fl.at(i);
+            TableFields(tble,field, sl);
+            if (result)
+            {
+                WARNMSG("");
+                return;
+            }
+            fl.replace(i, sl.at(1)); // заменяем русское наименование поля на его реальное название
+        }
+        QString cmpdb = sl.at(0).split(".").at(0); // реальное имя БД
+        QString cmptble = sl.at(0).split(".").at(1); // реальное название таблицы
+        out = sqlc.SearchInTableLike(cmpdb,cmptble,fl,cmpf,regexp);
+        if (sqlc.result)
+        {
+            WARNMSG(sqlc.LastError);
+            result = TFRESULT_ERROR;
+            return;
+        }
+    }
+    else
+    {
+        int i;
+        int fields_num = fl.size();
+        sl << QString::number(fields_num) << tble;
+        for (i=0; i<fields_num; i++)
+            sl << fl.at(i);
+        sl << cmpfield;
+        sl << regexp;
+        int res = Cli->SendAndGetResult(T_GVSBFSR, sl);
         if (res == Client::CLIER_EMPTY)
             result = TFRESULT_EMPTY;
         else if ((res != Client::CLIER_NOERROR) || (Cli->Result.size() == 0))

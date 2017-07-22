@@ -1085,7 +1085,7 @@ int s_sql::RealDeleteFromDB(QString db, QString tble, QStringList fields, QStrin
 
 // вернуть список из записей, для которых field похож на regexpstr
 
-QList<QStringList> s_sql::SearchInTableLike(QString &db, QString &tble, QStringList &fields, QString &cmpfield, QString &cmpvalue)
+QList<QStringList> s_sql::SearchInTableLike(const QString &db, const QString &tble, QStringList &fields, const QString &cmpfield, const QString &cmpvalue)
 {
     if (pc.AutonomousMode)
     {
@@ -1094,9 +1094,6 @@ QList<QStringList> s_sql::SearchInTableLike(QString &db, QString &tble, QStringL
         QSqlQuery exec_db(GetDB(db));
         int i;
         sl.clear();
-//        QStringList col = GetColumnsFromTable(db, tble);
-//        if (result)
-//            return QList<QStringList>();
         QString tmpString = "SELECT ";
         for (i = 0; i < fields.size(); i++)
             tmpString += "`"+fields.at(i)+"`,";
@@ -1129,7 +1126,6 @@ QList<QStringList> s_sql::SearchInTableLike(QString &db, QString &tble, QStringL
     {
         QList<QStringList> QueryResult;
         QStringList sl;
-        QStringList col = GetColumnsFromTable(db, tble);
         if (result)
             return QList<QStringList>();
         sl << QString::number(fields.size()) << db << tble;

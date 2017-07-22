@@ -5,22 +5,12 @@
 #include "http.h"
 
 #define CURNUM  7
+
 class Currency : public QObject
 {
     Q_OBJECT
 public:
     Currency(QObject *parent = Q_NULLPTR);
-
-    enum Currencies
-    {
-        EUR,
-        USD,
-        CHF,
-        GBP,
-        UAH,
-        BYN,
-        RUB
-    };
 
     enum RateFuncs
     {
@@ -29,23 +19,9 @@ public:
         GOOGLE
     };
 
-    const QMap<int, QString> Curs()
-    {
-        QMap<int, QString> sl;
-        sl.insert(USD, "USD");
-        sl.insert(EUR, "EUR");
-        sl.insert(CHF, "CHF");
-        sl.insert(GBP, "GBP");
-        sl.insert(UAH, "UAH");
-        sl.insert(BYN, "BYN");
-        sl.insert(RUB, "RUB");
-        return sl;
-    }
-
     void GetRates(int funcnum);
     void SetBaseCurrency(int Curr);
     QString GetBaseCurrency();
-    QList<double> Rates;
 
 private:
     QMap<int, void (Currency::*)()> RateFunctions()
@@ -56,12 +32,16 @@ private:
         sl[GOOGLE] = &Currency::GetGoogle;
         return sl;
     }
-    QString BaseCurrency;
 
+    int ThrCounter;
     void GetSBRF();
     void GetEURCB();
     void GetGoogle();
-    void SaveRates();
+    void SaveRate(int rateidx);
+
+private slots:
+    void SetRate(int thrnum, QString fname);
+    void SetError(int thrnum, int errnum);
 };
 
 #endif // CURRENCY_H

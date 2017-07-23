@@ -170,16 +170,16 @@ int Client::SendCmd(int command, QStringList &args)
         // если активна какая-то команда, и пришла другая команда, которая не является продолжением текущей, то выход
         if ((EthStatus.isCommandActive()) && (command != M_ANSLOGIN) && (command != M_NEXT) && (command != M_AGETFILE) && (command != M_APUTFILE))
         {
-            CliLog->error("Command active already: "+QString::number(CurrentCommand)+", command passed by: "+QString::number(command));
+            CliLog->info("Command active already: "+QString::number(CurrentCommand)+", command passed by: "+QString::number(command));
             return CLIER_BUSY;
         }
+        EthStatus.setCommandActive();
         if (EthStatus.isntConnected()) // if we're disconnected
         {
-            CliLog->error("Ethernet disconnected");
             PingIsDisabled = true;
-            DetectedError = CLIER_CLOSED;
             if (!EthStatus.isAboutToClose())
                 ClientDisconnected();
+            Error("Ethernet disconnected", CLIER_CLOSED);
             RetrTimer->start();
             return CLIER_CLOSED;
         }
@@ -195,9 +195,7 @@ int Client::SendCmd(int command, QStringList &args)
             ServRetryCount = 0;
         if (EthStatus.isTestMode() && (command != M_ACTIVATE) && (command != M_ANSLOGIN) && (command != M_QUIT))
         {
-            CliLog->warning("illegal test command");
-            DetectedError = CLIER_CMDER;
-            EthStatus.clearCommandActive();
+            Error("illegal test command", CLIER_CMDER);
             return CLIER_CMDER;
         }
         if (command != M_NEXT)
@@ -213,7 +211,7 @@ int Client::SendCmd(int command, QStringList &args)
             FieldsNum = 0;
             if (!CheckArgs(st.CmdString, args, st.ArgsNum, st.CheckForFieldsNum, st.CheckForPairsNum))
             {
-                EthStatus.clearCommandActive();
+                Error("Wrong argument number", CLIER_CMDER);
                 return CLIER_CMDER;
             }
             if (FieldsNum == 0)
@@ -229,7 +227,10 @@ int Client::SendCmd(int command, QStringList &args)
         {
         case M_PING:
             if (PingIsDisabled)
+            {
+                Error("Ping is disabled", CLIER_CMDER);
                 return CLIER_CMDER;
+            }
         case M_START:
         case M_STATUS:
         case M_ACTIVATE:
@@ -308,8 +309,8 @@ int Client::SendCmd(int command, QStringList &args)
             if (fp.isOpen())
                 fp.close();
             emit TransferComplete();
-            EthStatus.clearCommandActive();
             CurrentCommand = M_IDLE;
+            FinishCommand();
             return CLIER_NOERROR;
         }
         case M_AGETFILE:
@@ -337,7 +338,6 @@ int Client::SendCmd(int command, QStringList &args)
             CliLog->info(">"+CommandString);
         QByteArray ba = CommandString.toUtf8();
         MainEthernet->WriteData(ba);
-        EthStatus.setCommandActive();
     #ifndef DEBUGISON
         TimeoutTimer->start();
     #endif
@@ -346,8 +346,7 @@ int Client::SendCmd(int command, QStringList &args)
     }
     catch(...)
     {
-        DetectedError = CLIER_EXCEPT;
-        EthStatus.clearCommandActive();
+        Error("Exception in SendCmd", CLIER_EXCEPT);
         return CLIER_EXCEPT;
     }
 }

@@ -34,7 +34,7 @@ void Currency::GetRates(int funcnum)
                 if (sl.size() < 2)
                     continue;
                 QString tmps;
-                tfl.GetValueByField("Валюты_полн", "Валюта", "ИД", sl.at(0), tmps);
+                tfl.GetValueByField("Валюты_полн", "ИД", "Валюта", sl.at(0), tmps);
                 if ((tfl.result != TFRESULT_NOERROR) || (tmps.isEmpty()))
                 {
                     WARNMSG("");

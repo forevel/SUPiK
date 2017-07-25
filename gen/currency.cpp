@@ -10,8 +10,35 @@
 
 Currency::Currency(QObject *parent) : QObject(parent)
 {
-    for (int i=0; i<CURNUM; ++i)
-        pc.Rates.append(0.0);
+}
+
+int Currency::Init()
+{
+    Curry curr;
+    QStringList IDs, Currs;
+    tfl.GetValuesByColumn("Валюты_полн", "ИД", IDs);
+    if (tfl.result)
+    {
+        WARNMSG("Ошибка получения значений по справочнику Валюты");
+        return;
+    }
+    tfl.GetValuesByColumn("Валюты_полн", "Валюты", Currs);
+    if (tfl.result)
+    {
+        WARNMSG("Ошибка получения значений по справочнику Валюты");
+        return;
+    }
+    for (int i=0; i<IDs.size(); ++i)
+    {
+        if (i < Currs.size())
+        {
+            curr.Id = IDs.at(i);
+            curr.Name = Currs.at(i);
+            curr.RateToRUB = 0;
+            Curs.append(curr);
+        }
+    }
+    CurrNum = Curs.size();
 }
 
 void Currency::GetRates(int funcnum)
@@ -31,18 +58,14 @@ void Currency::GetRates(int funcnum)
             while (!lsl.isEmpty())
             {
                 QStringList sl = lsl.takeAt(0);
-                if (sl.size() < 2)
-                    continue;
-                QString tmps;
-                tfl.GetValueByField("Валюты_полн", "ИД", "Валюта", sl.at(0), tmps);
-                if ((tfl.result != TFRESULT_NOERROR) || (tmps.isEmpty()))
+                for (int i=0; i<Curs.size(); ++i)
                 {
-                    WARNMSG("");
-                    return;
+                    if (Curs.at(i).Name == sl.at(0))
+                    {
+                        Curs[i].RateToRUB = sl.at(1).toDouble();
+                        break;
+                    }
                 }
-                QList<int> tmpil = pc.Curs().keys(tmps);
-                if (!tmpil.isEmpty())
-                    pc.Rates.replace(tmpil.at(0), sl.at(1).toDouble());
             }
         }
     }
@@ -52,14 +75,27 @@ void Currency::GetRates(int funcnum)
     }
 }
 
-void Currency::SetBaseCurrency(int Curr)
+void Currency::SetBaseCurrency(QString basecurr)
 {
-    pc.BaseCurrency = pc.Curs()[Curr];
+    for (int i=0; i<Curs.size(); ++i)
+    {
+        if (Curs.at(i).Name == basecurr)
+        {
+            BaseCurrency = i;
+            return;
+        }
+    }
 }
 
-QString Currency::GetBaseCurrency()
+QString Currency::RateText(int curridx)
 {
-    return pc.BaseCurrency;
+    if (curridx >= Curs.size())
+        return QString();
+    double rate = Curs.at(curridx).RateToRUB;
+    double baserate = Curs.at(BaseCurrency).RateToRUB;
+    QString tmps = "1 " + Curs.at(curridx).Name + " = " + \
+            QString::number((rate/baserate),'f', 3) + " " + Curs.at(BaseCurrency).Name;
+    return tmps;
 }
 
 void Currency::GetSBRF()
@@ -75,17 +111,17 @@ void Currency::GetEURCB()
 void Currency::GetGoogle()
 {
     QString QueryPrefix = "https://www.google.com/finance/converter?a=1&from=";
-    QString QuerySuffix = "&to="+pc.BaseCurrency;
+    QString QuerySuffix = "&to=RUB";
     ThrCounter = 0;
-    for (int i=0; i<pc.Curs().keys().size(); ++i)
+    for (int i=0; i<Curs.size(); ++i)
     {
         Http *http = new Http;
         connect(http,SIGNAL(Finished(int, QString)),this,SLOT(SetRate(int,QString)));
         connect(http,SIGNAL(Error(int,int)),this,SLOT(SetError(int,int)));
-        QString curstr = pc.Curs()[pc.Curs().keys().at(i)];
-        if (curstr == pc.BaseCurrency)
+        QString curstr = Curs.at(i).Name;
+        if (curstr == "RUB")
         {
-            pc.Rates.replace(pc.Curs().keys().at(i), 1.0); // курс валюты сам к себе равен единице
+            Curs[i].RateToRUB = 1.0; // курс валюты сам к себе равен единице
             continue;
         }
         QString Query = QueryPrefix + curstr + QuerySuffix;
@@ -103,14 +139,8 @@ void Currency::GetGoogle()
 
 void Currency::SaveRate(int rateidx)
 {
-    QString tmps, newid, curr;
-    curr = pc.Curs().value(pc.Curs().keys().at(rateidx));
-    tfl.GetValueByField("Валюты_полн", "ИД", "Валюта", curr, tmps);
-    if ((tfl.result != RESULTOK) || (tmps.isEmpty()))
-    {
-        WARNMSG("Ошибка получения данных по справочнику [Валюты], "+curr);
-        return;
-    }
+    QString newid, curr;
+    curr = Curs.at(rateidx).Id;
     tfl.Insert("Валюты движения_полн", newid);
     if (tfl.result != RESULTOK)
     {
@@ -118,7 +148,7 @@ void Currency::SaveRate(int rateidx)
         return;
     }
     QStringList fl = QStringList() << "ИД" << "Валюта" << "Значение";
-    QStringList vl = QStringList() << newid << curr << QString::number(pc.Rates.at(rateidx));
+    QStringList vl = QStringList() << newid << curr << QString::number(Curs.at(rateidx).RateToRUB);
     tfl.Update("Валюты движения_полн", fl, vl);
     if (tfl.result != RESULTOK)
         WARNMSG("Не удалось записать движение валют по ИД="+newid);
@@ -126,30 +156,33 @@ void Currency::SaveRate(int rateidx)
 
 void Currency::SetRate(int thrnum, QString fname)
 {
-    QRegExp pattern("<div id=currency_converter_result>1 "+pc.Curs()[thrnum]+ \
-                    " = <span class=bld>(.*) "+pc.BaseCurrency+"</span>");
-    Files file;
-    QFile *fp = file.openFileForRead(fname);
-    if (fp == Q_NULLPTR)
+    if (thrnum < Curs.size())
     {
+        QRegExp pattern("<div id=currency_converter_result>1 "+Curs.at(thrnum).Name+ \
+                        " = <span class=bld>(.*) RUB</span>");
+        Files file;
+        QFile *fp = file.openFileForRead(fname);
+        if (fp == Q_NULLPTR)
+        {
+            --ThrCounter;
+            return;
+        }
+        QString ba = fp->readAll();
+        fp->remove();
+        int pos = pattern.indexIn(ba);
+        if (pos > -1)
+        {
+            QString valuestr = pattern.cap(1);
+            bool ok;
+            double value = valuestr.toDouble(&ok);
+            if (ok)
+                Curs[thrnum].RateToRUB = value;
+            SaveRate(thrnum);
+        }
+        else
+            SetError(thrnum, Http::NOTFOUND);
         --ThrCounter;
-        return;
     }
-    QString ba = fp->readAll();
-    fp->remove();
-    int pos = pattern.indexIn(ba);
-    if (pos > -1)
-    {
-        QString valuestr = pattern.cap(1);
-        bool ok;
-        double value = valuestr.toDouble(&ok);
-        if (ok)
-            pc.Rates.replace(pc.Curs().keys().at(thrnum), value);
-        SaveRate(thrnum);
-    }
-    else
-        SetError(thrnum, Http::NOTFOUND);
-    --ThrCounter;
 }
 
 void Currency::SetError(int thrnum, int errnum)

@@ -29,6 +29,8 @@
 #include "widgets/waitwidget.h"
 #include "widgets/wd_func.h"
 
+Currency *Curr;
+
 supik::supik()
 {
     IsProblemsDetected = false;
@@ -56,6 +58,16 @@ supik::supik()
     pf["TBExam"] = &supik::TBExam;
     pf["TBMain"] = &supik::TBMain;
     ErMsgNum = 0;
+}
+
+void supik::InitiateCurrency()
+{
+    Curr = new Currency;
+    if (Curr->Init() != RESULTBAD)
+    {
+        Curr->SetBaseCurrency("RUB");
+        Curr->GetRates(Currency::GOOGLE);
+    }
 }
 
 void supik::showEvent(QShowEvent *event)
@@ -578,12 +590,14 @@ void supik::periodic1s()
 #endif
     if (CurrRefreshCounter > SUPIK_CURRPERIOD)
     {
-        CurrRefreshCounter = 0;
-        ++CurrCounter;
-        if (CurrCounter >= CURNUM)
-            CurrCounter = 0;
-        WDFunc::SetLBLText(this, "currencies", "1 " + pc.Curs()[CurrCounter] + " = " + \
-                           QString::number(pc.Rates.at(CurrCounter),'f', 3) + " " + pc.BaseCurrency);
+        if (Curr->CurrNum != 0) // если есть, чего отображать
+        {
+            CurrRefreshCounter = 0;
+            ++CurrCounter;
+            if (CurrCounter >= Curr->CurrNum)
+                CurrCounter = 0;
+            WDFunc::SetLBLText(this, "currencies", Curr->RateText(CurrCounter));
+        }
     }
     PeriodicOddSecond = !PeriodicOddSecond;
     pc.DateTime = QDateTime::currentDateTime().toString(DATETIMEFORMAT);

@@ -12,6 +12,17 @@ class Currency : public QObject
 public:
     Currency(QObject *parent = Q_NULLPTR);
 
+/*    enum Currencies
+    {
+        EUR,
+        USD,
+        CHF,
+        GBP,
+        UAH,
+        BYN,
+        RUB
+    }; */
+
     enum RateFuncs
     {
         SBRF,
@@ -19,9 +30,13 @@ public:
         GOOGLE
     };
 
+    int CurrNum;
+
+    int Init();
     void GetRates(int funcnum);
-    void SetBaseCurrency(int Curr);
+    void SetBaseCurrency(QString basecurr);
     QString GetBaseCurrency();
+    QString RateText(int curridx);
 
 private:
     QMap<int, void (Currency::*)()> RateFunctions()
@@ -33,7 +48,17 @@ private:
         return sl;
     }
 
+    struct Curry
+    {
+        QString Id; // ИД деньги по таблице
+        QString Name; // трёхбуквенное обозначение (RUB)
+        double RateToRUB; // курс валюты по отношению к рублю
+    };
+
+    QList<Curry> Curs;
+
     int ThrCounter;
+    int BaseCurrency; // индекс по списку Curs базовой валюты
     void GetSBRF();
     void GetEURCB();
     void GetGoogle();

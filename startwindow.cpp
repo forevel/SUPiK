@@ -276,9 +276,6 @@ void StartWindow::OkPBClicked()
         ERMSG("Сервер СУПиК недоступен");
         break;
     }
-    Currency *Curr = new Currency;
-    Curr->GetRates(Currency::GOOGLE);
-    this->hide();
 
     if (pc.AutonomousMode)
     {
@@ -362,8 +359,10 @@ void StartWindow::OkPBClicked()
     StartWindowSplashScreen->finish(this);
 
     supik *supik_main_window = new supik;
+    supik_main_window->InitiateCurrency();
     supik_main_window->setVisible(true);
     supik_main_window->setEnabled(true);
+    this->hide();
 }
 
 void StartWindow::PasswdLEReturnPressed()

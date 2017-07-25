@@ -26,6 +26,8 @@ class supik : public QMainWindow
 public:
     supik ();
 
+    void InitiateCurrency();
+
 signals:
     void newnotify();
     void stopall();

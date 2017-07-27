@@ -6,6 +6,7 @@
 #include <QFile>
 #include <QMap>
 #include <QPointer>
+#include <QQueue>
 #include "../threads/ethernet.h"
 #include "publicclass.h"
 #include "log.h"
@@ -111,7 +112,7 @@
 #define ETHTIMEOUT  200 // таймаут на закрытие сокетов в Ethernet - 200 мс
 #define MAINTIMEOUT 5000 // таймаут на ответ от сервера - 5 секунд
 
-#define MAINSLEEP       200  // количество мс сна в процессах
+#define MAINSLEEP       20  // количество мс сна в процессах
 #define CL_RETRPERIOD   8000 // период повторения попыток реконнекта
 #define CL_MAXRETRCOUNT 3 // максимальное число повторов по инициативе сервера
 
@@ -162,8 +163,8 @@ public:
     }
     void clearCommandActive()
     {
-        int nOTaCTIVE = ~STAT_COMACTIVE;
-        status &= nOTaCTIVE;
+        int NotActive = ~STAT_COMACTIVE;
+        status &= NotActive;
     }
     void clearConnectingActive()
     {
@@ -245,11 +246,26 @@ public:
         bool CheckForPairsNum;
     };
 
-    QList<QStringList> Result;
+    struct MainData
+    {
+        int num; // порядковый номер обработки
+        int command; // команда на обработку
+        QStringList args; // агрументы команды
+        QList<QStringList> Result; // результат в виде матрицы
+/*        QString ResultStr;// результат в виде строки
+        int ResultInt; // результат в виде числа */
+    };
+
+/*    QList<QStringList> Result;
     QString ResultStr;
-    int ResultInt;
+    int ResultInt; */
+    QQueue<MainData> MainDataQueue;
     const QStringList PathPrefixes = QStringList() << "tb/" << "doc/" << "alt/" << "pers/" << "log/" << "wh/";
     const QStringList PathSuffixes = QStringList() << "prot/" << "dsheet/" << "libs/" << "symbols/" << "footprints/" << "photo/";
+
+    void Run();
+    void Stop();
+    void AddToQueue(int command, QStringList &args=QStringList());
 
     int Connect(QString host, QString port, int clientmode);
     bool isConnected();
@@ -257,12 +273,14 @@ public:
     int SendCmd(int command, QStringList &args=QStringList());
     int GetFile(int type, int subtype, const QString &filename);
     int PutFile(const QString &localfilename, int type, int subtype, const QString &filename);
-    int SendAndGetResult(int command, QStringList &args=QStringList()); // send command with arguments and wait for result
+    int SendAndGetResult(MainData &MD); // send command with arguments and wait for result
     void StartLog();
 
 public slots:
 
 signals:
+    void Finished();
+    void ResultReady(int, QList<QStringList> *);
     void BytesOverall(quint64 bytes);
     void BytesRead(quint64 bytes);
     void BytesWritten(quint64 bytes);
@@ -275,6 +293,7 @@ signals:
     void CommandFinished(); // обработка команды окончена
 
 private:
+    int MainDataNum;
     QMap<int, CmdStruct> CmdMap;
     QByteArray RcvData, WrData;
     QPointer<Ethernet> MainEthernet;
@@ -299,6 +318,7 @@ private:
     bool PingIsDisabled; // flag indicates that no ping command should be sent
     int DetectedError;
     EthStatusClass EthStatus;
+    bool IsAboutToFinish;
 
     void Error(QString ErMsg, int ErrorInt=CLIER_GENERAL);
     bool CheckArgs(QString cmd, QStringList &args, int argsnum, bool fieldscheck=false, bool pairscheck=false);

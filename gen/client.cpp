@@ -1,6 +1,5 @@
 ﻿#define _CRT_SECURE_NO_WARNINGS
 
-#include <QThread>
 #include <QCoreApplication>
 #include <QRegularExpression>
 #include <QDateTime>
@@ -13,6 +12,8 @@ Client *Cli = 0;
 
 Client::Client(QObject *parent) : QObject(parent)
 {
+    MainDataNum = 1; // стартовый номер
+    IsAboutToFinish = false;
     PingIsDisabled = false;
     NextActive = false;
     ServRetryActive = false;
@@ -65,6 +66,48 @@ Client::Client(QObject *parent) : QObject(parent)
 
 Client::~Client()
 {
+}
+
+void Client::Run()
+{
+    while (!IsAboutToFinish)
+    {
+        while (EthStatus.isCommandActive())
+        {
+            QTime tme;
+            while (tme.elapsed()<MAINSLEEP)
+                QCoreApplication.processEvents(QEventLoop::AllEvents);
+        }
+        if (!MainDataQueue.isEmpty())
+        {
+            EthStatus.setCommandActive();
+            MainData MD = MainDataQueue.dequeue();
+            if (MD.command == M_GETFILE)
+            {
+
+            }
+            else
+            {
+                SendAndGetResult(MD);
+                emit ResultReady(MD.num, MD.Result);
+            }
+        }
+    }
+    emit Finished();
+}
+
+void Client::Stop()
+{
+    IsAboutToFinish = true;
+}
+
+void Client::AddToQueue(int command, QStringList &args)
+{
+    MainData MD;
+    MD.command = command;
+    MD.args = args;
+    MD.num = MainDataNum++;
+    MainDataQueue.enqueue(MD);
 }
 
 void Client::InitiateTimers()
@@ -849,9 +892,9 @@ int Client::PutFile(const QString &localfilename, int type, int subtype, const Q
     return SendAndGetResult(M_PUTFILE, sl);
 }
 
-int Client::SendAndGetResult(int command, QStringList &args)
+int Client::SendAndGetResult(MainData &MD)
 {
-    while (SendCmd(command, args) == CLIER_BUSY)
+    while (SendCmd(MD, args) == CLIER_BUSY)
     {
         QTime tme;
         tme.start();

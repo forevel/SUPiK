@@ -265,7 +265,7 @@ public:
 
     void Run();
     void Stop();
-    void AddToQueue(int command, QStringList &args=QStringList());
+    int AddToQueue(int command, QStringList &args=QStringList());
 
     int Connect(QString host, QString port, int clientmode);
     bool isConnected();

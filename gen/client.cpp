@@ -9,6 +9,7 @@
 #include "supik.h"
 
 Client *Cli = 0;
+QMutex Mutex;
 
 Client::Client(QObject *parent) : QObject(parent)
 {
@@ -80,17 +81,12 @@ void Client::Run()
         }
         if (!MainDataQueue.isEmpty())
         {
+            Mutex.lock();
             EthStatus.setCommandActive();
             MainData MD = MainDataQueue.dequeue();
-            if (MD.command == M_GETFILE)
-            {
-
-            }
-            else
-            {
-                SendAndGetResult(MD);
-                emit ResultReady(MD.num, MD.Result);
-            }
+            Mutex.unlock();
+            SendAndGetResult(MD);
+            emit ResultReady(MD.num, MD.Result);
         }
     }
     emit Finished();
@@ -101,13 +97,16 @@ void Client::Stop()
     IsAboutToFinish = true;
 }
 
-void Client::AddToQueue(int command, QStringList &args)
+int Client::AddToQueue(int command, QStringList &args)
 {
     MainData MD;
     MD.command = command;
     MD.args = args;
     MD.num = MainDataNum++;
+    Mutex.lock();
     MainDataQueue.enqueue(MD);
+    Mutex.unlock();
+    return MD.num;
 }
 
 void Client::InitiateTimers()

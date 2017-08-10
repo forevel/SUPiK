@@ -5,6 +5,7 @@
 #include <QDateTime>
 #include <QTextCodec>
 #include <QDir>
+#include <QThread>
 #include "client.h"
 #include "supik.h"
 
@@ -24,44 +25,44 @@ Client::Client(QObject *parent) : QObject(parent)
     ResultType = RESULT_NONE;
     LastArgs.clear();
     LastCommand = M_IDLE;
-    CmdMap.insert(S_GVSBFS, {"S_GVSBFS", 7, "S1", RESULT_MATRIX, true, true});
-    CmdMap.insert(S_GVSBC, {"S_GVSBC", 3, "S2", RESULT_VECTOR, false, false});
-    CmdMap.insert(S_GVSBCF, {"S_GVSBCF", 6, "S3", RESULT_VECTOR, false, true});
-    CmdMap.insert(S_GCS, {"S_GCS", 2, "S4", RESULT_VECTOR, false, false});
-    CmdMap.insert(S_GVBFS, {"S_GVBFS", 7, "S5", RESULT_VECTOR, true, true});
-    CmdMap.insert(S_TC, {"S_TC", 3, "S6", RESULT_NONE, false, false});
-    CmdMap.insert(S_TA, {"S_TA", 5, "S7", RESULT_NONE, false, false});
-    CmdMap.insert(S_TD, {"S_TD", 2, "S8", RESULT_NONE, false, false});
-    CmdMap.insert(S_INS, {"S_INS", 2, "S9", RESULT_INT, false, false});
-    CmdMap.insert(S_UPD, {"S_UPD", 6, "S:", RESULT_NONE, false, false});
-    CmdMap.insert(S_DEL, {"S_DEL", 4, "S;", RESULT_NONE, false, false});
-    CmdMap.insert(S_RDEL, {"S_RDEL", 4, "S<", RESULT_NONE, false, false});
-    CmdMap.insert(S_SRCH, {"S_SRCH", 6, "S=", RESULT_MATRIX, true, false});
-    CmdMap.insert(S_GID, {"S_GID", 2, "S>", RESULT_INT, false, false});
-    CmdMap.insert(T_GVSBFS, {"T_GVSBFS", 6, "T1", RESULT_MATRIX, true, true});
-    CmdMap.insert(T_GVSBC, {"T_GVSBC", 2, "T2", RESULT_VECTOR, false, false});
-    CmdMap.insert(T_GVSBCF, {"T_GVSBCF", 5, "T3", RESULT_VECTOR, false, false});
-    CmdMap.insert(T_C, {"T_C", 3, "T4", RESULT_STRING, false, false});
-    CmdMap.insert(T_DEL, {"T_DEL", 2, "T5", RESULT_NONE, false, false});
-    CmdMap.insert(T_RDEL, {"T_RDEL", 2, "T6", RESULT_NONE, false, false});
-    CmdMap.insert(T_GFT, {"T_GFT", 1, "T7", RESULT_VECTOR, false, false});
-    CmdMap.insert(T_GID, {"T_GID", 1, "T8", RESULT_INT, false, false});
-    CmdMap.insert(T_IDTV, {"T_IDTV", 2, "T9", RESULT_VECTOR, false, false});
-    CmdMap.insert(T_TV, {"T_TV", 3, "T:", RESULT_STRING, false, false});
-    CmdMap.insert(T_IDTVL, {"T_IDTVL", 1, "T;", RESULT_VECTOR, false, false});
-    CmdMap.insert(T_TID, {"T_TID", 3, "T<", RESULT_STRING, false, false});
-    CmdMap.insert(T_VTID, {"T_VTID", 2, "T=", RESULT_STRING, false, false});
-    CmdMap.insert(T_INS, {"T_INS", 1, "T>", RESULT_INT, false, false});
-    CmdMap.insert(T_UPD, {"T_UPD", 3, "T?", RESULT_NONE, false, false});
-    CmdMap.insert(T_UPDV, {"T_UPDV", 3, "TC", RESULT_NONE, false, false});
-    CmdMap.insert(T_GVSBFSR, {"T_GVSBFSR", 5, "TD", RESULT_MATRIX, true, false});
-    CmdMap.insert(M_STATUS, {"M_STATUS", 0, "M3", RESULT_STRING, false, false});
-    CmdMap.insert(M_PING, {"M_PING", 0, "M4", RESULT_STRING, false, false});
-    CmdMap.insert(M_START, {"M_START", 0, "M6", RESULT_STRING, false, false});
-    CmdMap.insert(M_PUTFILE, {"M_PUTFILE", 4, "M7", RESULT_NONE, false, false}); // 0 - local filename, 1 - type, 2 - subtype, 3 - filename, [4] - filesize, added in SendCmd
-    CmdMap.insert(M_GETFILE, {"M_GETFILE", 3, "M8", RESULT_NONE, false, false}); // 0 - type, 1 - subtype, 2 - filename
-    CmdMap.insert(M_ACTIVATE, {"M_ACTIVATE", 2, "M9", RESULT_STRING, false, false}); // 0 - code, 1 - newpass
-    CmdMap.insert(M_GETFILEI, {"M_GETFILEINF", 3, "M:", RESULT_VECTOR, false, false}); // 0 - type, 1 - subtype, 2 - filename
+    CmdMap.insert(S_GVSBFS, {"S_GVSBFS", 7, RESULT_MATRIX, true, true});
+    CmdMap.insert(S_GVSBC, {"S_GVSBC", 3, RESULT_VECTOR, false, false});
+    CmdMap.insert(S_GVSBCF, {"S_GVSBCF", 6, RESULT_VECTOR, false, true});
+    CmdMap.insert(S_GCS, {"S_GCS", 2, RESULT_VECTOR, false, false});
+    CmdMap.insert(S_GVBFS, {"S_GVBFS", 7, RESULT_VECTOR, true, true});
+    CmdMap.insert(S_TC, {"S_TC", 3, RESULT_NONE, false, false});
+    CmdMap.insert(S_TA, {"S_TA", 5, RESULT_NONE, false, false});
+    CmdMap.insert(S_TD, {"S_TD", 2, RESULT_NONE, false, false});
+    CmdMap.insert(S_INS, {"S_INS", 2, RESULT_INT, false, false});
+    CmdMap.insert(S_UPD, {"S_UPD", 6, RESULT_NONE, false, false});
+    CmdMap.insert(S_DEL, {"S_DEL", 4, RESULT_NONE, false, false});
+    CmdMap.insert(S_RDEL, {"S_RDEL", 4, RESULT_NONE, false, false});
+    CmdMap.insert(S_SRCH, {"S_SRCH", 6, RESULT_MATRIX, true, false});
+    CmdMap.insert(S_GID, {"S_GID", 2, RESULT_INT, false, false});
+    CmdMap.insert(T_GVSBFS, {"T_GVSBFS", 6, RESULT_MATRIX, true, true});
+    CmdMap.insert(T_GVSBC, {"T_GVSBC", 2, RESULT_VECTOR, false, false});
+    CmdMap.insert(T_GVSBCF, {"T_GVSBCF", 5, RESULT_VECTOR, false, false});
+    CmdMap.insert(T_C, {"T_C", 3, RESULT_STRING, false, false});
+    CmdMap.insert(T_DEL, {"T_DEL", 2, RESULT_NONE, false, false});
+    CmdMap.insert(T_RDEL, {"T_RDEL", 2, RESULT_NONE, false, false});
+    CmdMap.insert(T_GFT, {"T_GFT", 1, RESULT_VECTOR, false, false});
+    CmdMap.insert(T_GID, {"T_GID", 1, RESULT_INT, false, false});
+    CmdMap.insert(T_IDTV, {"T_IDTV", 2, RESULT_VECTOR, false, false});
+    CmdMap.insert(T_TV, {"T_TV", 3, RESULT_STRING, false, false});
+    CmdMap.insert(T_IDTVL, {"T_IDTVL", 1, RESULT_VECTOR, false, false});
+    CmdMap.insert(T_TID, {"T_TID", 3, RESULT_STRING, false, false});
+    CmdMap.insert(T_VTID, {"T_VTID", 2, RESULT_STRING, false, false});
+    CmdMap.insert(T_INS, {"T_INS", 1, RESULT_INT, false, false});
+    CmdMap.insert(T_UPD, {"T_UPD", 3, RESULT_NONE, false, false});
+    CmdMap.insert(T_UPDV, {"T_UPDV", 3, RESULT_NONE, false, false});
+    CmdMap.insert(T_GVSBFSR, {"T_GVSBFSR", 5, RESULT_MATRIX, true, false});
+    CmdMap.insert(M_STATUS, {"M_STATUS", 0, RESULT_STRING, false, false});
+    CmdMap.insert(M_PING, {"M_PING", 0, RESULT_STRING, false, false});
+    CmdMap.insert(M_START, {"M_START", 0, RESULT_STRING, false, false});
+    CmdMap.insert(M_PUTFILE, {"M_PUTFILE", 4, RESULT_NONE, false, false}); // 0 - local filename, 1 - type, 2 - subtype, 3 - filename, [4] - filesize, added in SendCmd
+    CmdMap.insert(M_GETFILE, {"M_GETFILE", 3, RESULT_NONE, false, false}); // 0 - type, 1 - subtype, 2 - filename
+    CmdMap.insert(M_ACTIVATE, {"M_ACTIVATE", 2, RESULT_STRING, false, false}); // 0 - code, 1 - newpass
+    CmdMap.insert(M_GETFILEI, {"M_GETFILEINF", 3, RESULT_VECTOR, false, false}); // 0 - type, 1 - subtype, 2 - filename
     InitiateTimers();
 }
 
@@ -97,6 +98,21 @@ void Client::Stop()
     IsAboutToFinish = true;
 }
 
+void Client::UpdateWrittenBytes(qint64 bytes)
+{
+    switch(CurrentCommand)
+    {
+    case M_APUTFILE:
+    {
+        CliLog->info(QString::number(bytes)+" bytes written to file");
+        WrittenBytes += bytes;
+        break;
+    }
+    default:
+        break;
+    }
+}
+
 int Client::AddToQueue(int command, QStringList &args)
 {
     MainData MD;
@@ -111,9 +127,6 @@ int Client::AddToQueue(int command, QStringList &args)
 
 void Client::InitiateTimers()
 {
-    TimeoutTimer = new QTimer;
-    TimeoutTimer->setInterval(MAINTIMEOUT);
-    connect(TimeoutTimer,SIGNAL(timeout()),this,SLOT(Timeout()));
     EthStateChangeTimer = new QTimer;
     EthStateChangeTimer->setInterval(ETHTIMEOUT);
     EthStateChangeTimer->setSingleShot(true);
@@ -205,18 +218,277 @@ void Client::Disconnect()
     }
 }
 
-int Client::SendCmd(int command, QStringList &args)
+void Client::EthStateChangeTimerTimeout()
+{
+    Disconnect();
+    emit Disconnected();
+}
+
+void Client::ClientConnected()
+{
+    EthStatus.setStatus(STAT_CONNECTED);
+#ifndef DEBUGISON
+    TimeoutTimer->start(); // рестарт таймера для получения запроса от сервера
+#endif
+    emit Connected();
+    PingIsDisabled = false;
+}
+
+void Client::ClientDisconnected()
+{
+    EthStatus.setStatus(STAT_ABOUTTOCLOSE); // delete MainEthernet to try connect later if needed
+    EthStateChangeTimer->start();
+}
+
+// проверка аргументов
+
+bool Client::CheckArgs(QString cmd, QStringList &args, int argsnum, bool fieldscheck, bool pairscheck)
+{
+    int pnum;
+    if (args.size() < argsnum)
+    {
+        CliLog->error(cmd + ": Number of arguments is less than " + QString::number(argsnum));
+        DetectedError = CLIER_WRARGS;
+        return false;
+    }
+    if (fieldscheck)
+    {
+        if (args.size()<1)
+        {
+            ERMSG("DBG: Fieldscheck");
+            return false;
+        }
+        QString fieldsnum = args.at(0);
+        bool ok;
+        FieldsNum = fieldsnum.toInt(&ok);
+        if (!ok)
+        {
+            CliLog->error(cmd + ": argument is not a number");
+            DetectedError = CLIER_WRARGS;
+            return false;
+        }
+    }
+    if (pairscheck)
+    {
+        int pidx = (fieldscheck) ? 1 : 0;
+        if (args.size()<(pidx+1))
+        {
+            ERMSG("DBG: Pairscheck");
+            return false;
+        }
+        QString pairsnum = args.at(pidx);
+        bool ok;
+        pnum = pairsnum.toInt(&ok);
+        if (!ok)
+        {
+            CliLog->error(cmd + ": argument is not a number");
+            DetectedError = CLIER_WRARGS;
+            return false;
+        }
+    }
+    if (fieldscheck && pairscheck)
+    {
+        if (args.size() < FieldsNum+2*pnum+2) // +1 - db, table
+        {
+            CliLog->error(cmd + ": Number of fields is less than mentioned in header: "+QString::number(args.size())+" "+QString::number(FieldsNum+2*pnum+1));
+            DetectedError = CLIER_WRARGS;
+            return false;
+        }
+    }
+    return true;
+}
+
+int Client::GetFile(int type, int subtype, const QString &filename)
+{
+    QStringList sl;
+    // проверяем, есть ли такой файл уже у нас локально
+    QString path = pc.HomeDir + "/";
+    if ((type < PathPrefixes.size()) && (type >= 0))
+        path += PathPrefixes.at(type);
+    if ((subtype < PathSuffixes.size()) && (subtype >= 0))
+        path += PathSuffixes.at(subtype);
+    QDir *dr = new QDir;
+    dr->mkpath(path);
+    delete dr;
+    fp.setFileName(path + filename);
+    sl << QString::number(type) << QString::number(subtype) << filename;
+    if (fp.exists()) // файл уже есть
+    {
+        // проверка на то, не новее ли файл на сервере, чем наш локальный
+        DetectedError = SendAndGetResult(M_GETFILEI, sl); // Result.at(0): [0] - file exists, [1] - size, [2] - datetime, [3] - mode
+        if ((DetectedError != CLIER_NOERROR) || (Result.isEmpty()))
+            return DetectedError;
+        QStringList vl = Result.at(0);
+        if (vl.size() < 4)
+            return CLIER_GETFER;
+        QFileInfo fpi(fp);
+        uint datetime = fpi.created().toTime_t();
+        uint datetimeg = vl.at(2).toInt();
+        // не новее, выход
+        if (datetimeg <= datetime)
+            return CLIER_NOERROR;
+    }
+    return SendAndGetResult(M_GETFILE, sl);
+}
+
+int Client::PutFile(const QString &localfilename, int type, int subtype, const QString &filename)
+{
+    QStringList sl;
+    sl << localfilename << QString::number(type) << QString::number(subtype) << filename;
+    return SendAndGetResult(M_PUTFILE, sl);
+}
+
+int Client::SendAndGetResult(MainData &MD)
+{
+    if (EthStatus.isTestMode() && (MD.command != M_ACTIVATE) && (MD.command != M_ANSLOGIN) && (MD.command != M_QUIT))
+    {
+        Error("illegal test command");
+        return ClientThread::CLIER_CMDER;
+    }
+    if (CmdMap.keys().contains(MD.command))
+    {
+        CmdStruct st = CmdMap[MD.command];
+        FieldsNum = 0;
+        if (!CheckArgs(st.CmdString, MD.args, st.ArgsNum, st.CheckForFieldsNum, st.CheckForPairsNum))
+        {
+            Error("Wrong argument number");
+            return ClientThread::CLIER_CMDER;
+        }
+        if (FieldsNum == 0)
+            FieldsNum = 1; // если не выставлено значение поля в функции CheckArgs, выставить его принудительно в 1 (одно поле на запись)
+    }
+    QThread *thr = new QThread;
+    ClientThread *client = new ClientThread;
+    client->moveToThread(thr);
+    connect(thr,SIGNAL(started()),client,SLOT(Run()));
+    connect(thr,SIGNAL(finished()),client,SLOT(deleteLater()));
+    connect(thr,SIGNAL(finished()),thr,SLOT(deleteLater()));
+    connect(this,SIGNAL(FinishClientThread()),client,SLOT(Finish()));
+    client->command = MD.command;
+    client->args = MD.args;
+    client->Busy = true;
+    client->FieldsNum = FieldsNum;
+    thr->start();
+    while (client->Busy)
+    {
+        QTime tme;
+        tme.start();
+        while (tme.elapsed() < TIME_GENERAL)
+            QCoreApplication::processEvents(QEventLoop::AllEvents);
+    }
+    MD.Result = client->Result;
+    DetectedError = client->ResultCode;
+    emit FinishClientThread();
+}
+
+bool Client::isConnected()
+{
+    return EthStatus.isConnected();
+}
+
+void Client::RetrTimeout()
+{
+    RetrTimer->stop();
+    if (Connect(Host, Port, ClientMode) == CLIER_NOERROR) // if the connection was successful send previous command with previous arguments
+    {
+        PingIsDisabled = false;
+        EthStatus.clearCommandActive();
+        SendCmd(LastCommand, LastArgs);
+        return;
+    }
+    // else try again later
+    RetrTimer->start();
+}
+
+void Client::SetWaitEnded()
+{
+    if (WaitActive)
+    {
+        WaitActive = false;
+        emit WaitEnded();
+    }
+}
+
+void Client::WaitForCommandToFinish()
+{
+    while (EthStatus.isCommandActive())
+    {
+        QTime tme;
+        tme.start();
+        while (tme.elapsed() < TIME_GENERAL)
+            QCoreApplication::processEvents(QEventLoop::AllEvents);
+    }
+}
+
+void Client::Error(QString ErMsg)
+{
+    CliLog->warning(ErMsg);
+    FinishCommand();
+}
+
+void Client::FinishCommand()
+{
+    EthStatus.clearCommandActive();
+    EthStatus.clearConnectingActive();
+    TimeoutTimer->stop();
+}
+
+// ################################## CLIENT THREAD ##########################################
+
+ClientThread::ClientThread(QObject *parent) : QObject(parent)
+{
+    Prefixes.insert(S_GVSBFS, "S1");
+    Prefixes.insert(S_GVSBC, "S2");
+    Prefixes.insert(S_GVSBCF, "S3");
+    Prefixes.insert(S_GCS, "S4");
+    Prefixes.insert(S_GVBFS, "S5");
+    Prefixes.insert(S_TC, "S6");
+    Prefixes.insert(S_TA, "S7");
+    Prefixes.insert(S_TD, "S8");
+    Prefixes.insert(S_INS, "S9");
+    Prefixes.insert(S_UPD, "S:");
+    Prefixes.insert(S_DEL, "S;");
+    Prefixes.insert(S_RDEL, "S<");
+    Prefixes.insert(S_SRCH, "S=");
+    Prefixes.insert(S_GID, "S>");
+    Prefixes.insert(T_GVSBFS, "T1");
+    Prefixes.insert(T_GVSBC, "T2");
+    Prefixes.insert(T_GVSBCF, "T3");
+    Prefixes.insert(T_C, "T4");
+    Prefixes.insert(T_DEL, "T5");
+    Prefixes.insert(T_RDEL, "T6");
+    Prefixes.insert(T_GFT, "T7");
+    Prefixes.insert(T_GID, "T8");
+    Prefixes.insert(T_IDTV, "T9");
+    Prefixes.insert(T_TV, "T:");
+    Prefixes.insert(T_IDTVL, "T;");
+    Prefixes.insert(T_TID, "T<");
+    Prefixes.insert(T_VTID, "T=");
+    Prefixes.insert(T_INS, "T>");
+    Prefixes.insert(T_UPD, "T?");
+    Prefixes.insert(T_UPDV, "TC");
+    Prefixes.insert(T_GVSBFSR, "TD");
+    Prefixes.insert(M_STATUS, "M3");
+    Prefixes.insert(M_PING, "M4");
+    Prefixes.insert(M_START, "M6");
+    Prefixes.insert(M_PUTFILE, "M7");
+    Prefixes.insert(M_GETFILE, "M8");
+    Prefixes.insert(M_ACTIVATE, "M9");
+    Prefixes.insert(M_GETFILEI, "M:");
+}
+
+int ClientThread::SendCmd()
 {
     try
     {
-        // если активна какая-то команда, и пришла другая команда, которая не является продолжением текущей, то выход
+/*        // если активна какая-то команда, и пришла другая команда, которая не является продолжением текущей, то выход
         if ((EthStatus.isCommandActive()) && (command != M_ANSLOGIN) && (command != M_NEXT) && (command != M_AGETFILE) && (command != M_APUTFILE))
         {
             CliLog->info("Command active already: "+QString::number(CurrentCommand)+", command passed by: "+QString::number(command));
             return CLIER_BUSY;
         }
-        EthStatus.setCommandActive();
-        if (EthStatus.isntConnected()) // if we're disconnected
+        EthStatus.setCommandActive(); */
+/*        if (EthStatus.isntConnected()) // if we're disconnected
         {
             PingIsDisabled = true;
             if (!EthStatus.isAboutToClose())
@@ -225,46 +497,24 @@ int Client::SendCmd(int command, QStringList &args)
             RetrTimer->start();
             return CLIER_CLOSED;
         }
-        CurrentCommand = command;
+        CurrentCommand = command; */
         NextActive = false;
-        PrevLastBA.clear();
+/*        PrevLastBA.clear();
         if ((command != M_LOGIN) && (command != M_ANSLOGIN) && (command != M_AGETFILE) && (command != M_NEXT)) // not "RDY"
         {
             LastCommand = command;
             LastArgs = args; // store command arguments for retrying
         }
         if (!ServRetryActive) // if this send is not a retry
-            ServRetryCount = 0;
-        if (EthStatus.isTestMode() && (command != M_ACTIVATE) && (command != M_ANSLOGIN) && (command != M_QUIT))
-        {
-            Error("illegal test command", CLIER_CMDER);
-            return CLIER_CMDER;
-        }
+            ServRetryCount = 0; */
         if (command != M_NEXT)
-        {
             Result.clear(); // очищаем результаты
-            ResultStr.clear();
-        }
-        DetectedError = CLIER_NOERROR;
         QString CommandString;
-        if (CmdMap.keys().contains(command))
-        {
-            CmdStruct st = CmdMap[command];
-            FieldsNum = 0;
-            if (!CheckArgs(st.CmdString, args, st.ArgsNum, st.CheckForFieldsNum, st.CheckForPairsNum))
-            {
-                Error("Wrong argument number", CLIER_CMDER);
-                return CLIER_CMDER;
-            }
-            if (FieldsNum == 0)
-                FieldsNum = 1; // если не выставлено значение поля в функции CheckArgs, выставить его принудительно в 1 (одно поле на запись)
-            QStringList sl;
-            sl << st.Prefix;
-            sl.append(args);
-            QString tmps = sl.join(TOKEN);
-            CommandString = tmps;
-            ResultType = st.ResultType;
-        }
+        QStringList sl;
+        sl << st.Prefix;
+        sl.append(MD.args);
+        QString tmps = sl.join(TOKEN);
+        CommandString = tmps;
         switch (command)
         {
         case M_PING:
@@ -318,7 +568,7 @@ int Client::SendCmd(int command, QStringList &args)
         }
         case M_APUTFILE:
         {
-            while ((WrittenBytes < XmitDataSize) && (DetectedError == CLIER_NOERROR))
+            while ((WrittenBytes < XmitDataSize) && (ResultCode == CLIER_NOERROR))
             {
                 quint64 BytesToSend = XmitDataSize - WrittenBytes;
                 quint64 NextThr;
@@ -393,24 +643,45 @@ int Client::SendCmd(int command, QStringList &args)
     }
 }
 
-void Client::UpdateWrittenBytes(qint64 bytes)
+void ClientThread::Run()
 {
-    switch(CurrentCommand)
-    {
-    case M_APUTFILE:
-    {
-        CliLog->info(QString::number(bytes)+" bytes written to file");
-        WrittenBytes += bytes;
-        break;
-    }
-    default:
-        break;
-    }
+    CliThrLog = new Log;
+    CliThrLog->Init("clithr.log");
+    CliThrLog->info("=== Log started ===");
+    TimeoutTimer = new QTimer;
+    TimeoutTimer->setInterval(MAINTIMEOUT);
+    connect(TimeoutTimer,SIGNAL(timeout()),this,SLOT(Timeout()));
+    FinishThread = TimeoutDetected = false;
+    Result.clear();
+    ResultCode = CLIER_NOERROR;
+    SendCmd();
+    while (!TimeoutDetected && Busy) // ждём, пока либо сервер не отработает, либо не наступит таймаут
+        pc.Wait(TIME_GENERAL);
+    while (!FinishThread) // ждём, пока вышестоящий поток не заберёт результаты
+        pc.Wait(TIME_GENERAL);
+}
+
+void ClientThread::Finish()
+{
+    FinishThread = true;
+}
+
+void ClientThread::Error(QString ErMsg, int ErrorInt)
+{
+    CliThrLog->warning(ErMsg);
+    ResultCode = ErrorInt;
+    FinishCommand();
+}
+
+void ClientThread::FinishCommand()
+{
+    TimeoutTimer->stop();
+    Busy = false;
 }
 
 // ############################################ ОБРАБОТКА ОТВЕТА ##############################################
 
-void Client::ParseReply(QByteArray ba)
+void ClientThread::ParseReply(QByteArray ba)
 {
     if (ba.isEmpty())
         return;
@@ -423,7 +694,7 @@ void Client::ParseReply(QByteArray ba)
     emit BytesRead(ba.size());
     QString RcvDataString;
     ServRetryActive = false; // if there should be a retry, set it at SERVRETSTR processing
-    DetectedError = CLIER_NOERROR;
+    ResultCode = CLIER_NOERROR;
     QTextCodec *codec = QTextCodec::codecForName("Windows-1251");
     if (CurrentCommand != M_AGETFILE) // приём файла обрабатывается по-другому
     {
@@ -758,194 +1029,7 @@ void Client::ParseReply(QByteArray ba)
     FinishCommand();
 }
 
-void Client::Error(QString ErMsg, int ErrorInt)
-{
-    CliLog->warning(ErMsg);
-    DetectedError = ErrorInt;
-    FinishCommand();
-    CurrentCommand = M_IDLE;
-}
-
-void Client::EthStateChangeTimerTimeout()
-{
-    Disconnect();
-    emit Disconnected();
-}
-
-void Client::ClientConnected()
-{
-    EthStatus.setStatus(STAT_CONNECTED);
-#ifndef DEBUGISON
-    TimeoutTimer->start(); // рестарт таймера для получения запроса от сервера
-#endif
-    emit Connected();
-    PingIsDisabled = false;
-}
-
-void Client::ClientDisconnected()
-{
-    EthStatus.setStatus(STAT_ABOUTTOCLOSE); // delete MainEthernet to try connect later if needed
-    EthStateChangeTimer->start();
-}
-
-void Client::Timeout()
+void ClientThread::Timeout()
 {
     Error("Timeout detected", CLIER_TIMEOUT);
-}
-
-// проверка аргументов
-
-bool Client::CheckArgs(QString cmd, QStringList &args, int argsnum, bool fieldscheck, bool pairscheck)
-{
-    int pnum;
-    if (args.size() < argsnum)
-    {
-        CliLog->error(cmd + ": Number of arguments is less than " + QString::number(argsnum));
-        DetectedError = CLIER_WRARGS;
-        return false;
-    }
-    if (fieldscheck)
-    {
-        if (args.size()<1)
-        {
-            ERMSG("DBG: Fieldscheck");
-            return false;
-        }
-        QString fieldsnum = args.at(0);
-        bool ok;
-        FieldsNum = fieldsnum.toInt(&ok);
-        if (!ok)
-        {
-            CliLog->error(cmd + ": argument is not a number");
-            DetectedError = CLIER_WRARGS;
-            return false;
-        }
-    }
-    if (pairscheck)
-    {
-        int pidx = (fieldscheck) ? 1 : 0;
-        if (args.size()<(pidx+1))
-        {
-            ERMSG("DBG: Pairscheck");
-            return false;
-        }
-        QString pairsnum = args.at(pidx);
-        bool ok;
-        pnum = pairsnum.toInt(&ok);
-        if (!ok)
-        {
-            CliLog->error(cmd + ": argument is not a number");
-            DetectedError = CLIER_WRARGS;
-            return false;
-        }
-    }
-    if (fieldscheck && pairscheck)
-    {
-        if (args.size() < FieldsNum+2*pnum+2) // +1 - db, table
-        {
-            CliLog->error(cmd + ": Number of fields is less than mentioned in header: "+QString::number(args.size())+" "+QString::number(FieldsNum+2*pnum+1));
-            DetectedError = CLIER_WRARGS;
-            return false;
-        }
-    }
-    return true;
-}
-
-int Client::GetFile(int type, int subtype, const QString &filename)
-{
-    QStringList sl;
-    // проверяем, есть ли такой файл уже у нас локально
-    QString path = pc.HomeDir + "/";
-    if ((type < PathPrefixes.size()) && (type >= 0))
-        path += PathPrefixes.at(type);
-    if ((subtype < PathSuffixes.size()) && (subtype >= 0))
-        path += PathSuffixes.at(subtype);
-    QDir *dr = new QDir;
-    dr->mkpath(path);
-    delete dr;
-    fp.setFileName(path + filename);
-    sl << QString::number(type) << QString::number(subtype) << filename;
-    if (fp.exists()) // файл уже есть
-    {
-        // проверка на то, не новее ли файл на сервере, чем наш локальный
-        DetectedError = SendAndGetResult(M_GETFILEI, sl); // Result.at(0): [0] - file exists, [1] - size, [2] - datetime, [3] - mode
-        if ((DetectedError != CLIER_NOERROR) || (Result.isEmpty()))
-            return DetectedError;
-        QStringList vl = Result.at(0);
-        if (vl.size() < 4)
-            return CLIER_GETFER;
-        QFileInfo fpi(fp);
-        uint datetime = fpi.created().toTime_t();
-        uint datetimeg = vl.at(2).toInt();
-        // не новее, выход
-        if (datetimeg <= datetime)
-            return CLIER_NOERROR;
-    }
-    return SendAndGetResult(M_GETFILE, sl);
-}
-
-int Client::PutFile(const QString &localfilename, int type, int subtype, const QString &filename)
-{
-    QStringList sl;
-    sl << localfilename << QString::number(type) << QString::number(subtype) << filename;
-    return SendAndGetResult(M_PUTFILE, sl);
-}
-
-int Client::SendAndGetResult(MainData &MD)
-{
-    while (SendCmd(MD, args) == CLIER_BUSY)
-    {
-        QTime tme;
-        tme.start();
-        while (tme.elapsed() < TIME_GENERAL)
-            QCoreApplication::processEvents(QEventLoop::AllEvents);
-    }
-    WaitForCommandToFinish();
-    return DetectedError;
-}
-
-bool Client::isConnected()
-{
-    return EthStatus.isConnected();
-}
-
-void Client::RetrTimeout()
-{
-    RetrTimer->stop();
-    if (Connect(Host, Port, ClientMode) == CLIER_NOERROR) // if the connection was successful send previous command with previous arguments
-    {
-        PingIsDisabled = false;
-        EthStatus.clearCommandActive();
-        SendCmd(LastCommand, LastArgs);
-        return;
-    }
-    // else try again later
-    RetrTimer->start();
-}
-
-void Client::SetWaitEnded()
-{
-    if (WaitActive)
-    {
-        WaitActive = false;
-        emit WaitEnded();
-    }
-}
-
-void Client::WaitForCommandToFinish()
-{
-    while (EthStatus.isCommandActive())
-    {
-        QTime tme;
-        tme.start();
-        while (tme.elapsed() < TIME_GENERAL)
-            QCoreApplication::processEvents(QEventLoop::AllEvents);
-    }
-}
-
-void Client::FinishCommand()
-{
-    EthStatus.clearCommandActive();
-    EthStatus.clearConnectingActive();
-    TimeoutTimer->stop();
 }

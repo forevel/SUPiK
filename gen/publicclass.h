@@ -427,7 +427,7 @@ public:
     void AddErrMsg(ermsgtype msgtype, QString file, int line, QString msg="");
     void ConvertId(bool ColumnZero, QString &Id); // преобразование <tble>.000<id> в нормальный id
     bool OpenAndCheckDBs();
-
+    void Wait(int ms);
 
 private:
     bool openBD(int dbnum);

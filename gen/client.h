@@ -181,22 +181,10 @@ public:
     }
 };
 
-class Client : public QObject
+class ClientThread : public QObject
 {
     Q_OBJECT
 public:
-    explicit Client(QObject *parent=0);
-    ~Client();
-
-    enum ResultTypes
-    {
-        RESULT_MATRIX,  // результат - таблица строк
-        RESULT_VECTOR,  // результат - вектор значений
-        RESULT_STRING,  // результат - одна строка
-        RESULT_NONE,    // без результата
-        RESULT_INT      // результат - целое число
-    };
-
     enum ClientErrors
     {
         CLIER_NOERROR,
@@ -216,6 +204,50 @@ public:
         CLIER_EMPTY,     // пустой ответ
         CLIER_BUSY,      // предыдущий запрос ещё не обработан
         CLIER_EXCEPT    // выскочило исключение
+    };
+
+    explicit ClientThread(QObject *parent=0);
+
+    int SendCmd();
+    int command; // команда на обработку
+    QStringList args; // агрументы команды
+    QList<QStringList> Result; // результат в виде матрицы
+    int ResultCode; // код возврата из потока
+    int FieldsNum; // количество полей для запросов
+    bool Busy, TimeoutDetected, FinishThread;
+    QMap<int, QString> Prefixes; // соответствие команд и их символьное обозначение в протоколе
+
+public slots:
+    void Run();
+    void Finish();
+
+private:
+    QTimer *TimeoutTimer;
+    Log *CliThrLog;
+
+    void Error(QString ErMsg, int ErrorInt=CLIER_GENERAL);
+    void FinishCommand();
+
+private slots:
+    void ParseReply(QByteArray ba);
+    void Timeout();
+
+};
+
+class Client : public QObject
+{
+    Q_OBJECT
+public:
+    explicit Client(QObject *parent=0);
+    ~Client();
+
+    enum ResultTypes
+    {
+        RESULT_MATRIX,  // результат - таблица строк
+        RESULT_VECTOR,  // результат - вектор значений
+        RESULT_STRING,  // результат - одна строка
+        RESULT_NONE,    // без результата
+        RESULT_INT      // результат - целое число
     };
 
     enum Messages
@@ -240,7 +272,6 @@ public:
     {
         QString CmdString;
         int ArgsNum;
-        QString Prefix;
         int ResultType;
         bool CheckForFieldsNum;
         bool CheckForPairsNum;
@@ -270,7 +301,6 @@ public:
     int Connect(QString host, QString port, int clientmode);
     bool isConnected();
     void Disconnect();
-    int SendCmd(int command, QStringList &args=QStringList());
     int GetFile(int type, int subtype, const QString &filename);
     int PutFile(const QString &localfilename, int type, int subtype, const QString &filename);
     int SendAndGetResult(MainData &MD); // send command with arguments and wait for result
@@ -279,6 +309,7 @@ public:
 public slots:
 
 signals:
+    void FinishClientThread();
     void Finished();
     void ResultReady(int, QList<QStringList> *);
     void BytesOverall(quint64 bytes);
@@ -297,7 +328,7 @@ private:
     QMap<int, CmdStruct> CmdMap;
     QByteArray RcvData, WrData;
     QPointer<Ethernet> MainEthernet;
-    QTimer *RetrTimer, *TimeoutTimer, *EthStateChangeTimer; // general timeout, timer for server reply, getfile timer
+    QTimer *RetrTimer, *EthStateChangeTimer; // general timeout, timer for server reply, getfile timer
     bool LoginOk;
     QString Host, Port;
     quint64 WrittenBytes, ReadBytes, RcvDataSize, XmitDataSize;
@@ -320,7 +351,7 @@ private:
     EthStatusClass EthStatus;
     bool IsAboutToFinish;
 
-    void Error(QString ErMsg, int ErrorInt=CLIER_GENERAL);
+    void Error(QString ErMsg);
     bool CheckArgs(QString cmd, QStringList &args, int argsnum, bool fieldscheck=false, bool pairscheck=false);
     void InitiateTimers();
     void SetWaitEnded();
@@ -330,8 +361,6 @@ private slots:
     void FinishCommand();
     void ClientConnected();
     void ClientDisconnected();
-    void Timeout();
-    void ParseReply(QByteArray ba);
     void EthStateChangeTimerTimeout();
     void RetrTimeout();
     void UpdateWrittenBytes(qint64 bytes); // slot called by signal bytesWritten from the socket

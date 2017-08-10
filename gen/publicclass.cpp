@@ -4,6 +4,7 @@
 #include <QString>
 #include <QSettings>
 #include <QDate>
+#include <QCoreApplication>
 #include "s_sql.h"
 #include "log.h"
 #include "../dialogs/tb/tb_func.h"
@@ -99,6 +100,14 @@ bool PublicClass::OpenAndCheckDBs()
     if (DbNotOpened != 0x0000)
         return false;
     return true;
+}
+
+void PublicClass::Wait(int ms)
+{
+    QTime tme;
+    tme.start();
+    while (tme.elapsed() < TIME_GENERAL)
+        QCoreApplication::processEvents(QEventLoop::AllEvents);
 }
 
 bool PublicClass::openBD(int dbnum)

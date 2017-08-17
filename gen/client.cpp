@@ -477,7 +477,7 @@ ClientThread::ClientThread(QObject *parent) : QObject(parent)
     Prefixes.insert(M_GETFILEI, "M:");
 }
 
-int ClientThread::SendCmd()
+int Client::SendCmd()
 {
     try
     {
@@ -641,29 +641,6 @@ int ClientThread::SendCmd()
         Error("Exception in SendCmd", CLIER_EXCEPT);
         return CLIER_EXCEPT;
     }
-}
-
-void ClientThread::Run()
-{
-    CliThrLog = new Log;
-    CliThrLog->Init("clithr.log");
-    CliThrLog->info("=== Log started ===");
-    TimeoutTimer = new QTimer;
-    TimeoutTimer->setInterval(MAINTIMEOUT);
-    connect(TimeoutTimer,SIGNAL(timeout()),this,SLOT(Timeout()));
-    FinishThread = TimeoutDetected = false;
-    Result.clear();
-    ResultCode = CLIER_NOERROR;
-    SendCmd();
-    while (!TimeoutDetected && Busy) // ждём, пока либо сервер не отработает, либо не наступит таймаут
-        pc.Wait(TIME_GENERAL);
-    while (!FinishThread) // ждём, пока вышестоящий поток не заберёт результаты
-        pc.Wait(TIME_GENERAL);
-}
-
-void ClientThread::Finish()
-{
-    FinishThread = true;
 }
 
 void ClientThread::Error(QString ErMsg, int ErrorInt)

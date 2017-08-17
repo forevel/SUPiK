@@ -7,7 +7,6 @@
 #include <QMap>
 #include <QPointer>
 #include <QQueue>
-#include "../threads/ethernet.h"
 #include "publicclass.h"
 #include "log.h"
 
@@ -124,67 +123,13 @@
 #define STAT_MODEWORK       32
 #define STAT_CONNECTING     64
 
-class EthStatusClass
-{
-public:
-    int status;
-    bool isConnected()
-    {
-        return (status & STAT_CONNECTED);
-    }
-    bool isntConnected()
-    {
-        return ((status & STAT_CONNECTED) == 0);
-    }
-    bool isCommandActive()
-    {
-        return (status & STAT_COMACTIVE);
-    }
-    bool isConnectingActive()
-    {
-        return (status & STAT_CONNECTING);
-    }
-    bool isAboutToClose()
-    {
-        return (status & STAT_ABOUTTOCLOSE);
-    }
-    bool isTestMode()
-    {
-        return (status & STAT_MODETEST);
-    }
-    void setStatus(int stat)
-    {
-        status &= 0x30; // leave mode bits
-        status |= stat;
-    }
-    void setCommandActive()
-    {
-        status |= STAT_COMACTIVE;
-    }
-    void clearCommandActive()
-    {
-        int NotActive = ~STAT_COMACTIVE;
-        status &= NotActive;
-    }
-    void clearConnectingActive()
-    {
-        status &= ~STAT_CONNECTING;
-    }
-    void setMode(int mode)
-    {
-        status &= 0x0F; // leave status bits
-        status |= mode;
-    }
-    void clear()
-    {
-        status = 0;
-    }
-};
-
-class ClientThread : public QObject
+class Client : public QObject
 {
     Q_OBJECT
 public:
+    explicit Client(QObject *parent=0);
+    ~Client();
+
     enum ClientErrors
     {
         CLIER_NOERROR,
@@ -205,41 +150,6 @@ public:
         CLIER_BUSY,      // предыдущий запрос ещё не обработан
         CLIER_EXCEPT    // выскочило исключение
     };
-
-    explicit ClientThread(QObject *parent=0);
-
-    int SendCmd();
-    int command; // команда на обработку
-    QStringList args; // агрументы команды
-    QList<QStringList> Result; // результат в виде матрицы
-    int ResultCode; // код возврата из потока
-    int FieldsNum; // количество полей для запросов
-    bool Busy, TimeoutDetected, FinishThread;
-    QMap<int, QString> Prefixes; // соответствие команд и их символьное обозначение в протоколе
-
-public slots:
-    void Run();
-    void Finish();
-
-private:
-    QTimer *TimeoutTimer;
-    Log *CliThrLog;
-
-    void Error(QString ErMsg, int ErrorInt=CLIER_GENERAL);
-    void FinishCommand();
-
-private slots:
-    void ParseReply(QByteArray ba);
-    void Timeout();
-
-};
-
-class Client : public QObject
-{
-    Q_OBJECT
-public:
-    explicit Client(QObject *parent=0);
-    ~Client();
 
     enum ResultTypes
     {
@@ -305,6 +215,8 @@ public:
     int PutFile(const QString &localfilename, int type, int subtype, const QString &filename);
     int SendAndGetResult(MainData &MD); // send command with arguments and wait for result
     void StartLog();
+
+    int SendCmd();
 
 public slots:
 

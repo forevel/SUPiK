@@ -61,6 +61,26 @@ void Ethernet::Disconnect()
         sslsock->close();
 }
 
+void Ethernet::Run()
+{
+    TimeoutTimer = new QTimer;
+    TimeoutTimer->setInterval(MAINTIMEOUT);
+    connect(TimeoutTimer,SIGNAL(timeout()),this,SLOT(Timeout()));
+    FinishThread = TimeoutDetected = false;
+    Result.clear();
+    ResultCode = CLIER_NOERROR;
+    SendCmd();
+    while (!TimeoutDetected && Busy) // ждём, пока либо сервер не отработает, либо не наступит таймаут
+        pc.Wait(TIME_GENERAL);
+    while (!FinishThread) // ждём, пока вышестоящий поток не заберёт результаты
+        pc.Wait(TIME_GENERAL);
+}
+
+void Ethernet::Finish()
+{
+    FinishThread = true;
+}
+
 void Ethernet::SslSocketEncrypted()
 {
     EthLog->info("SSL: Secure connection established!");

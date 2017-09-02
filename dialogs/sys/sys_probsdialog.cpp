@@ -168,7 +168,7 @@ void SysProblemsDialog::InitialModelFill()
 void SysProblemsDialog::NewProblemsDetected()
 {
     QFont font = QFont("MS Sans Serif", -1, QFont::Normal);
-    pc.EPLMutex.lock();
+    EPLMutex.lock();
     while (!pc.ExchangeProblemsList.isEmpty())
     {
         PublicClass::ProblemStruct pl = pc.ExchangeProblemsList.takeFirst();
@@ -178,7 +178,7 @@ void SysProblemsDialog::NewProblemsDetected()
         mainmodel->SetLastItem(PublicClass::ProblemForegroundColors()[pl.ProblemType], PublicClass::ProblemBackgroundColors()[pl.ProblemType], \
                                font, QIcon());
     }
-    pc.EPLMutex.unlock();
+    EPLMutex.unlock();
     emit ProblemsNumberUpdated();
     UpdateMainTv();
 }

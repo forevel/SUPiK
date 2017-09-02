@@ -7,6 +7,18 @@
 
 #define SQLWARN WARNMSG(PublicClass::ER_SQL, __LINE__, exec_db.lastError().text())
 
+#define DB_ALT      0x0001
+#define DB_ENT      0x0002
+#define DB_SUP      0x0004
+#define DB_SOL      0x0008
+#define DB_DEV      0x0010
+#define DB_SCH      0x0020
+#define DB_CON      0x0040
+#define DB_TB       0x0080
+#define DB_SADM     0x0100
+#define DB_OK       0x0200
+#define DB_COUNT    10
+
 #define SQLC_OK     0
 #define SQLC_EMPTY  1
 #define SQLC_FAILED 2
@@ -68,6 +80,17 @@ public:
     QString LastError;
 
 private:
+    struct DbConnections
+    {
+        QSqlDatabase db;
+        QString connname;
+        QString dbname;
+        QString user;
+        QString pswd;
+    };
+
+    QSqlDatabase dbs_array[DB_COUNT];
+    QMap<int, DbConnections> DBMap;
 };
 
 extern s_sql sqlc;

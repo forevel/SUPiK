@@ -38,7 +38,7 @@ PublicClass::~PublicClass()
 
 void PublicClass::InitiatePublicClass()
 {
-    colors[0] = Qt::black;
+/*    colors[0] = Qt::black;
     colors[1] = Qt::red;
     colors[2] = Qt::blue;
     colors[3] = Qt::darkRed;
@@ -53,7 +53,7 @@ void PublicClass::InitiatePublicClass()
     icons[2] = QIcon(":/res/cross.png");
     icons[3] = QIcon(":/res/calend.png");
     icons[4] = QIcon(":/res/refresh.png");
-    icons[5] = QIcon(":/res/TN.png");
+    icons[5] = QIcon(":/res/TN.png"); */
     DateTime = QDateTime::currentDateTime().toString(DATETIMEFORMAT);
     SQLPath = RegValue("settings/SQLPath","localhost");
     PathToLibs = RegValue("settings/pathtolibs","");
@@ -62,22 +62,6 @@ void PublicClass::InitiatePublicClass()
     FtpServer = RegValue("settings/FtpServer","ftp.asu-vei.ru");
     SupikServer = RegValue("settings/Server","supik.mycompany.ru");
     SupikPort = RegValue("settings/Port","9687");
-    DBMap.insert(DB_ALT, {QSqlDatabase(), "ALT", "altium", DBLOGIN, DBPSWD});
-    DBMap.insert(DB_CON, {QSqlDatabase(), "CON", "constructives", DBLOGIN, DBPSWD});
-    DBMap.insert(DB_DEV, {QSqlDatabase(), "DEV", "devices", DBLOGIN, DBPSWD});
-    DBMap.insert(DB_ENT, {QSqlDatabase(), "ENT", "enterprise", DBLOGIN, DBPSWD});
-    DBMap.insert(DB_SCH, {QSqlDatabase(), "SCH", "schemagee", DBLOGIN, DBPSWD});
-    DBMap.insert(DB_SOL, {QSqlDatabase(), "SOL", "solidworks", DBLOGIN, DBPSWD});
-    DBMap.insert(DB_SUP, {QSqlDatabase(), "SUP", "supik", DBLOGIN, DBPSWD});
-    DBMap.insert(DB_TB, {QSqlDatabase(), "TB", "tb", DBLOGIN, DBPSWD});
-    DBMap.insert(DB_SADM, {QSqlDatabase(), "SADM", "sysadm", DBLOGIN, DBPSWD});
-    DBMap.insert(DB_OK, {QSqlDatabase(), "OK", "ok", DBLOGIN, DBPSWD});
-    for (int i=0; i<DBMap.keys().size(); ++i)
-    {
-        DbConnections dbc = DBMap.value(DBMap.keys().at(i));
-        dbc.db = dbs_array[i];
-        DBMap[DBMap.keys().at(i)] = dbc;
-    }
     symfind = "LIBREFERENCE=";
     footfind = "PATTERN=";
     idRecord = -1;
@@ -100,14 +84,6 @@ bool PublicClass::OpenAndCheckDBs()
     if (DbNotOpened != 0x0000)
         return false;
     return true;
-}
-
-void PublicClass::Wait(int ms)
-{
-    QTime tme;
-    tme.start();
-    while (tme.elapsed() < TIME_GENERAL)
-        QCoreApplication::processEvents(QEventLoop::AllEvents);
 }
 
 bool PublicClass::openBD(int dbnum)

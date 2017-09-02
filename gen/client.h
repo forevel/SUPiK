@@ -9,6 +9,7 @@
 #include <QQueue>
 #include "publicclass.h"
 #include "log.h"
+#include "ethernet.h"
 
 #define SERVERRSTR  "ERROR"
 #define SERVEMPSTR  "EMPTY"
@@ -25,7 +26,6 @@
 #define M_GROUP		1002 // группа доступа
 #define M_STATUS	1003
 #define M_PING		1004
-#define M_LOGIN		1005 // запрос имени пользователя
 #define M_START		1006 // команда старта обмена
 #define M_PUTFILE   1007 // отправка файла на сервер
 #define M_GETFILE   1008 // прием файла с сервера
@@ -36,7 +36,6 @@
 #define M_NEXT		1053 // подтверждение готовности приёма следующей порции данных
 #define M_AGETFILE  1092
 #define M_APUTFILE  1093
-#define M_ANSLOGIN	1095
 #define M_BYE		1099
 
 // S-commands (sql)
@@ -115,13 +114,46 @@
 #define CL_RETRPERIOD   8000 // период повторения попыток реконнекта
 #define CL_MAXRETRCOUNT 3 // максимальное число повторов по инициативе сервера
 
-#define STAT_CONNECTED      1
-#define STAT_COMACTIVE      2 // command CurrentCommand is active
-#define STAT_ABOUTTOCLOSE   4
-#define STAT_CLOSED         8
-#define STAT_MODETEST       16
-#define STAT_MODEWORK       32
-#define STAT_CONNECTING     64
+class ClientThread : public QObject
+{
+    Q_OBJECT
+public:
+    explicit ClientThread(Log *log, QObject *parent=0);
+    ~ClientThread();
+
+    void Init(int command, const QStringList &args, int fieldsnum);
+    int Result(QList<QStringList> &Result);
+    bool isBusy();
+
+private:
+    int Command; // команда на обработку
+    QStringList Args; // агрументы команды
+    QList<QStringList> ResultData; // результат в виде матрицы
+    int ResultCode; // код возврата из потока
+    int FieldsNum; // количество полей для запросов
+    bool Busy, TimeoutDetected, FinishThread;
+    QMap<int, QString> Prefixes;
+    Log *CliLog;
+    QTimer *TimeoutTimer;
+    quint64 WrittenBytes, ReadBytes, RcvDataSize, XmitDataSize;
+    QByteArray RcvData, WrData;
+
+    int SendCmd();
+    void Error(QString ErMsg, int ErrorInt);
+    void FinishCommand();
+
+signals:
+    void Write(QByteArray &);
+
+public slots:
+    void Run();
+    void Finish();
+    void UpdateWrittenBytes(qint64 bytes); // slot called by signal bytesWritten from the socket
+    void ParseReply(QByteArray &ba);
+
+private slots:
+    void Timeout();
+};
 
 class Client : public QObject
 {
@@ -208,15 +240,12 @@ public:
     void Stop();
     int AddToQueue(int command, QStringList &args=QStringList());
 
-    int Connect(QString host, QString port, int clientmode);
+    int Connect(int clientmode);
     bool isConnected();
-    void Disconnect();
     int GetFile(int type, int subtype, const QString &filename);
-    int PutFile(const QString &localfilename, int type, int subtype, const QString &filename);
+//    int PutFile(const QString &localfilename, int type, int subtype, const QString &filename);
     int SendAndGetResult(MainData &MD); // send command with arguments and wait for result
     void StartLog();
-
-    int SendCmd();
 
 public slots:
 
@@ -236,14 +265,11 @@ signals:
     void CommandFinished(); // обработка команды окончена
 
 private:
-    int MainDataNum;
+    quint32 MainDataNum;
     QMap<int, CmdStruct> CmdMap;
-    QByteArray RcvData, WrData;
     QPointer<Ethernet> MainEthernet;
-    QTimer *RetrTimer, *EthStateChangeTimer; // general timeout, timer for server reply, getfile timer
+    QTimer *RetrTimer; //, *EthStateChangeTimer; // general timeout, timer for server reply, getfile timer
     bool LoginOk;
-    QString Host, Port;
-    quint64 WrittenBytes, ReadBytes, RcvDataSize, XmitDataSize;
     int CurrentCommand, CliMode, LastCommand;
     QFile fp;
     int ClientMode; // mode = CLIMODE_TEST or CLIMODE_WORK
@@ -260,22 +286,23 @@ private:
     bool Busy;
     bool PingIsDisabled; // flag indicates that no ping command should be sent
     int DetectedError;
-    EthStatusClass EthStatus;
     bool IsAboutToFinish;
+    EthStatusClass EthStatus; // Статус Ethernet-подключения и режим (тестовый/рабочий)
 
     void Error(QString ErMsg);
     bool CheckArgs(QString cmd, QStringList &args, int argsnum, bool fieldscheck=false, bool pairscheck=false);
     void InitiateTimers();
     void SetWaitEnded();
     void WaitForCommandToFinish();
+    int CheckLogin();
 
 private slots:
-    void FinishCommand();
+//    void FinishCommand();
     void ClientConnected();
-    void ClientDisconnected();
-    void EthStateChangeTimerTimeout();
+//    void ClientDisconnected();
+//    void EthStateChangeTimerTimeout();
     void RetrTimeout();
-    void UpdateWrittenBytes(qint64 bytes); // slot called by signal bytesWritten from the socket
+    void Disconnect();
 };
 
 extern Client *Cli;

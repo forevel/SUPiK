@@ -9,6 +9,7 @@ QMAKE_TARGET_COPYRIGHT = EvelSoft
 QMAKE_TARGET_PRODUCT = SUPiK
 RC_ICONS = res/SUPiK.ico
 VERSION = 2.1.52
+DEFINES += PROGVER='\\"2.1.52\\"'
 
 QT       += widgets core gui sql network printsupport
 
@@ -69,7 +70,6 @@ SOURCES += main.cpp\
     models/s_duniversal.cpp \
     models/treeitem.cpp \
     models/treemodel.cpp \
-    threads/ethernet.cpp \
     threads/sys_importclass_t.cpp \
     threads/waitthread.cpp \
     widgets/clevertimer.cpp \
@@ -102,7 +102,8 @@ SOURCES += main.cpp\
     widgets/waitwidget.cpp \
     widgets/wd_func.cpp \
     gen/currency.cpp \
-    gen/files.cpp
+    gen/files.cpp \
+    gen/ethernet.cpp
 
 HEADERS  += startwindow.h \
     supik.h \
@@ -157,7 +158,6 @@ HEADERS  += startwindow.h \
     models/s_duniversal.h \
     models/treeitem.h \
     models/treemodel.h \
-    threads/ethernet.h \
     threads/sys_importclass_t.h \
     threads/waitthread.h \
     widgets/clevertimer.h \
@@ -190,7 +190,8 @@ HEADERS  += startwindow.h \
     widgets/waitwidget.h \
     widgets/wd_func.h \
     gen/currency.h \
-    gen/files.h
+    gen/files.h \
+    gen/ethernet.h
 
 RESOURCES += \
     pic.qrc

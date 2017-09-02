@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QTcpSocket>
 #include <QMutex>
+#include <QTimer>
 #include <QByteArray>
 #include <QSslSocket>
 #include "../gen/log.h"
@@ -34,63 +35,6 @@
 #define SKT_SSLINVDATAER    23 // некорректные данные SSL
 #define SKT_TEMPER          24 // повторите операцию позже
 #define SKT_SENDDATAER      25 // ошибка при отправке данных
-
-class EthStatusClass
-{
-public:
-    int status;
-    bool isConnected()
-    {
-        return (status & STAT_CONNECTED);
-    }
-    bool isntConnected()
-    {
-        return ((status & STAT_CONNECTED) == 0);
-    }
-    bool isCommandActive()
-    {
-        return (status & STAT_COMACTIVE);
-    }
-    bool isConnectingActive()
-    {
-        return (status & STAT_CONNECTING);
-    }
-    bool isAboutToClose()
-    {
-        return (status & STAT_ABOUTTOCLOSE);
-    }
-    bool isTestMode()
-    {
-        return (status & STAT_MODETEST);
-    }
-    void setStatus(int stat)
-    {
-        status &= 0x30; // leave mode bits
-        status |= stat;
-    }
-    void setCommandActive()
-    {
-        status |= STAT_COMACTIVE;
-    }
-    void clearCommandActive()
-    {
-        int NotActive = ~STAT_COMACTIVE;
-        status &= NotActive;
-    }
-    void clearConnectingActive()
-    {
-        status &= ~STAT_CONNECTING;
-    }
-    void setMode(int mode)
-    {
-        status &= 0x0F; // leave status bits
-        status |= mode;
-    }
-    void clear()
-    {
-        status = 0;
-    }
-};
 
 class Ethernet : public QObject
 {
@@ -138,20 +82,21 @@ public:
         return map;
     }
 
-    void SetEthernet(const QString &Host, int Port, int Type=ETH_PLAIN);
-    void WriteData(QByteArray &ba);
     void Disconnect();
+    int Connect(int Type=ETH_PLAIN);
 
 public slots:
-    void Run();
-    void Finish();
+    void WriteData(QByteArray &ba);
+/*    void Run();
+    void Finish(); */
 
 signals:
-    void error(int);
-    void connected();
-    void disconnected();
-    void NewDataArrived(QByteArray ba);
-    void byteswritten(qint64 bytes);
+    void Error(int);
+    void Connected();
+    void Disconnected();
+    void NewDataArrived(QByteArray &ba);
+    void BytesRead(quint64 bytes);
+    void BytesWritten(quint64 bytes);
 
 private slots:
     void CheckForData();
@@ -160,30 +105,18 @@ private slots:
     void SslErrors(QList<QSslError> errlist);
     void SocketStateChanged(QAbstractSocket::SocketState state);
     void SslSocketEncrypted();
-    void ParseReply(QByteArray ba);
-    void Timeout();
+//    void Timeout();
 
 private:
-    QString Host;
-    quint16 Port;
     int EthType;
     QByteArray ReadData;
     quint64 ReadDataSize;
-    int Level;
+    bool Receiving;
     Log *EthLog;
-    int command; // команда на обработку
-    QStringList args; // агрументы команды
-    QList<QStringList> Result; // результат в виде матрицы
-    int ResultCode; // код возврата из потока
-    int FieldsNum; // количество полей для запросов
-    bool Busy, TimeoutDetected, FinishThread;
-    QMap<int, QString> Prefixes; // соответствие команд и их символьное обозначение в протоколе
-    QTimer *TimeoutTimer;
-    Log *CliThrLog;
 
-    void SendData();
-    void Error(QString ErMsg, int ErrorInt=CLIER_GENERAL);
-    void FinishCommand();
+//    void SendData();
+//    void Error(QString ErMsg, int ErrorInt=CLIER_GENERAL);
+//    void FinishCommand();
 
 protected:
 };

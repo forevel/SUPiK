@@ -30,6 +30,7 @@
 Log::Log(QObject *parent) : QObject(parent)
 {
     fp = 0;
+    Mtx = new QMutex;
 }
 
 Log::~Log()
@@ -88,6 +89,7 @@ void Log::intvarvalue(const QString &var, int value)
 
 void Log::WriteFile(const QString &Prepend, const QString &msg)
 {
+    Mtx->lock();
     QString tmps = "[" + QDateTime::currentDateTime().toString("dd-MM-yyyy hh:mm:ss") + "]";
     fp->write(tmps.toLocal8Bit());
     tmps = "["+Prepend+"] ";
@@ -96,6 +98,7 @@ void Log::WriteFile(const QString &Prepend, const QString &msg)
     fp->write("\n");
     fp->flush();
     CheckAndGz();
+    Mtx->unlock();
 }
 /*
 void Log::Info(QByteArray &ba)

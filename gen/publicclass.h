@@ -2,24 +2,8 @@
 #define PUBLICCLASS_H
 
 #include <QObject>
-
+#include <QCoreApplication>
 #include <QMap>
-#include <QDateTime>
-#include <QStringList>
-#include <QSettings>
-#include <QColor>
-#include <QFont>
-#include <QIcon>
-#include <QMutex>
-#include <QPixmap>
-#include "../widgets/s_tqlineedit.h"
-#include "../widgets/s_tqlabel.h"
-
-#include <QtSql/QSqlDatabase>
-#include <QtSql/QSqlError>
-#include <QtSql/QSqlQuery>
-
-#include "publiclang.h"
 
 // Макросы для выдачи сообщений
 
@@ -38,18 +22,6 @@
 
 // Максимальный размер буфера ошибок
 #define ER_BUFMAX   0x40 // 64 элемента
-
-#define DB_ALT      0x0001
-#define DB_ENT      0x0002
-#define DB_SUP      0x0004
-#define DB_SOL      0x0008
-#define DB_DEV      0x0010
-#define DB_SCH      0x0020
-#define DB_CON      0x0040
-#define DB_TB       0x0080
-#define DB_SADM     0x0100
-#define DB_OK       0x0200
-#define DB_COUNT    10
 
 #define ACC_SYS_RO      0x0001
 #define ACC_SYS_WR      0x0002
@@ -124,8 +96,8 @@
 #define VS_ICON     1 // значение в виде ссылки на иконку
 
 // общие результаты
-#define RESULTBAD   -1
-#define RESULTOK    0
+#define GENERALERROR   -1
+#define NOERROR         0
 
 #define DATEFORMAT  "dd-MM-yyyy"
 #define DATETIMEFORMAT  "dd-MM-yyyy hh:mm:ss"
@@ -140,6 +112,14 @@
 
 #define TIME_GENERAL    20 // в мс интервал для функций ожидания
 
+#define STAT_CONNECTED      1
+#define STAT_COMACTIVE      2 // command CurrentCommand is active
+#define STAT_ABOUTTOCLOSE   4
+#define STAT_CLOSED         8
+#define STAT_MODETEST       16
+#define STAT_MODEWORK       32
+#define STAT_CONNECTING     64
+
 enum twocoldialog_modes
 {
     MODE_CHOOSE,
@@ -149,6 +129,50 @@ enum twocoldialog_modes
     MODE_CHOOSE_RAW,
     MODE_EDIT_RAW,
     MODE_EDITNEW_RAW
+};
+
+class EthStatusClass
+{
+public:
+    quint16 status;
+    bool isConnected()
+    {
+        return (status & STAT_CONNECTED);
+    }
+    bool isCommandActive()
+    {
+        return (status & STAT_COMACTIVE);
+    }
+    bool isAboutToClose()
+    {
+        return (status & STAT_ABOUTTOCLOSE);
+    }
+    bool isTestMode()
+    {
+        return (status & STAT_MODETEST);
+    }
+    void setStatus(int stat)
+    {
+        status &= 0x30; // leave mode bits
+        status |= stat;
+    }
+    void setCommandActive()
+    {
+        status |= STAT_COMACTIVE;
+    }
+    void clearCommandActive()
+    {
+        status &= ~STAT_COMACTIVE;
+    }
+    void setMode(int mode)
+    {
+        status &= 0x0F; // leave status bits
+        status |= mode;
+    }
+    void clear()
+    {
+        status = 0;
+    }
 };
 
 class PublicClass
@@ -258,21 +282,7 @@ public:
         QString ProblemPerson;
     };
 
-    struct DbConnections
-    {
-        QSqlDatabase db;
-        QString connname;
-        QString dbname;
-        QString user;
-        QString pswd;
-    };
-
-    QSqlDatabase dbs_array[DB_COUNT];
-
-    QMap<int, DbConnections> DBMap;
-
     QList<ProblemStruct> ExchangeProblemsList, ProblemsList;
-    QMutex EPLMutex;
 
     double timerperiod; //, ErWidgetPeriod;
 //    bool ErWidgetShowing;
@@ -385,9 +395,9 @@ public:
     int S_TabWidgetWidth;
 
     QMap <int, QColor> TabColors;
-    QColor colors[6]; // определение набора цветов шрифта
+/*    QColor colors[6]; // определение набора цветов шрифта
     QFont fonts[6]; // определение набора шрифтов
-    QIcon icons[6]; // определение набора иконок
+    QIcon icons[6]; // определение набора иконок */
     typedef struct
     {
         int ftype;
@@ -427,7 +437,13 @@ public:
     void AddErrMsg(ermsgtype msgtype, QString file, int line, QString msg="");
     void ConvertId(bool ColumnZero, QString &Id); // преобразование <tble>.000<id> в нормальный id
     bool OpenAndCheckDBs();
-    void Wait(int ms);
+    inline void Wait(int ms)
+    {
+        QTime tme;
+        tme.start();
+        while (tme.elapsed() < ms)
+            QCoreApplication::processEvents(QEventLoop::AllEvents);
+    }
 
 private:
     bool openBD(int dbnum);

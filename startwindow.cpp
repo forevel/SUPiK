@@ -416,7 +416,7 @@ void StartWindow::CreateDirs()
 
 void StartWindow::StartLogs()
 {
-    Cli->StartLog();
+//    Cli->StartLog();
     pc.StartLog();
 }
 

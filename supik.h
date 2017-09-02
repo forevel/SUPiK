@@ -16,8 +16,6 @@
 #define SUPIK_PINGPERIOD    10
 #define SUPIK_CURRPERIOD    5 // период обновления данных о валютах
 
-#define PROGVER    "2.1.52"
-
 //#define SYSSTYLESHEET "background-image: url(:/res/SysWallpaper.png);"
 
 class supik : public QMainWindow

@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include <QPoint>
+#include <QMutex>
 #include <QPaintEvent>
 #include <QStringListModel>
 
@@ -33,6 +34,7 @@ private:
     QString tble;
 //    QSqlDatabase db;
     QDialog *dlg;
+    QMutex EPLMutex;
 
 private slots:
     void MainTvContextMenu(QPoint);

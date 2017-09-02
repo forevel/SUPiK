@@ -4,22 +4,39 @@
 #include <QThread>
 #include <QCoreApplication>
 #include <QDebug>
+#include <QCryptographicHash>
 #include "client.h"
 
 s_sql sqlc;
 
 s_sql::s_sql()
 {
+    DBMap.insert(DB_ALT, {QSqlDatabase(), "ALT", "altium", DBLOGIN, DBPSWD});
+    DBMap.insert(DB_CON, {QSqlDatabase(), "CON", "constructives", DBLOGIN, DBPSWD});
+    DBMap.insert(DB_DEV, {QSqlDatabase(), "DEV", "devices", DBLOGIN, DBPSWD});
+    DBMap.insert(DB_ENT, {QSqlDatabase(), "ENT", "enterprise", DBLOGIN, DBPSWD});
+    DBMap.insert(DB_SCH, {QSqlDatabase(), "SCH", "schemagee", DBLOGIN, DBPSWD});
+    DBMap.insert(DB_SOL, {QSqlDatabase(), "SOL", "solidworks", DBLOGIN, DBPSWD});
+    DBMap.insert(DB_SUP, {QSqlDatabase(), "SUP", "supik", DBLOGIN, DBPSWD});
+    DBMap.insert(DB_TB, {QSqlDatabase(), "TB", "tb", DBLOGIN, DBPSWD});
+    DBMap.insert(DB_SADM, {QSqlDatabase(), "SADM", "sysadm", DBLOGIN, DBPSWD});
+    DBMap.insert(DB_OK, {QSqlDatabase(), "OK", "ok", DBLOGIN, DBPSWD});
+    for (int i=0; i<DBMap.keys().size(); ++i)
+    {
+        DbConnections dbc = DBMap.value(DBMap.keys().at(i));
+        dbc.db = dbs_array[i];
+        DBMap[DBMap.keys().at(i)] = dbc;
+    }
 }
 
 // процедура возвращает базу данных по её имени в dbname
 
 QSqlDatabase s_sql::GetDB(QString dbname)
 {
-    for (int i=0; i<pc.DBMap.keys().size(); ++i)
+    for (int i=0; i<DBMap.keys().size(); ++i)
     {
         PublicClass::DbConnections dbcon;
-        dbcon = pc.DBMap.value(pc.DBMap.keys().at(i));
+        dbcon = DBMap.value(DBMap.keys().at(i));
         if (dbcon.dbname == dbname)
             return dbcon.db;
     }
